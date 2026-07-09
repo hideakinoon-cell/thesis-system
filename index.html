@@ -2693,15 +2693,19 @@ function initSheetStructure(){
             return sheetsUpdateRow('MasterData', 1, [JSON.stringify(masterData)]);
           });
         }
-        // Records / Files: read the full header row and add any missing columns at the end
-        // (append-only, so existing columns/data never shift position) — this is what
-        // lets the button double as a "verify/upgrade structure" action on older sheets.
+        // Records / Files: read the full header row and add any missing columns.
+        // 'deleted' must always stay the LAST column, because recordToRow/fileToRow
+        // always write it last (matching the current RECORD_COLUMNS/FILE_COLUMNS order) —
+        // any newly-added field must be inserted BEFORE 'deleted', never after it,
+        // otherwise the header labels and the actual data columns go out of sync.
         return sheetsGetValues(w.title+'!1:1').then(function(vals){
           var existingHeaders = vals[0] || [];
           if(existingHeaders.length===0) return sheetsUpdateRow(w.title, 1, w.headers);
-          var merged = existingHeaders.slice();
-          w.headers.forEach(function(h){ if(merged.indexOf(h)===-1) merged.push(h); });
-          if(merged.length===existingHeaders.length) return; // nothing missing
+          var merged = existingHeaders.filter(function(h){ return h!=='deleted'; });
+          w.headers.forEach(function(h){ if(h!=='deleted' && merged.indexOf(h)===-1) merged.push(h); });
+          merged.push('deleted');
+          var same = merged.length===existingHeaders.length && merged.every(function(h,i){ return h===existingHeaders[i]; });
+          if(same) return; // nothing to fix
           return sheetsUpdateRow(w.title, 1, merged);
         });
       }));

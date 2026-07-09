@@ -103,6 +103,14 @@
   .multi-row-list{display:flex;flex-direction:column;gap:8px;}
   .multi-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .multi-row select{flex:1;min-width:160px;}
+  .combo{position:relative;width:100%;box-sizing:border-box;}
+  .multi-row .combo{flex:1;min-width:160px;}
+  .combo-input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:14.5px;background:#fff;color:var(--text);}
+  .combo-input:focus{outline:none;border-color:var(--primary);}
+  .combo-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.15);max-height:220px;overflow-y:auto;z-index:50;}
+  .combo-option{padding:9px 12px;font-size:14px;cursor:pointer;}
+  .combo-option:hover,.combo-option.active{background:#f2f4f7;}
+  .combo-empty{padding:9px 12px;font-size:13.5px;color:var(--muted);}
   .multi-row input[type=text]{flex:1;min-width:140px;padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:14.5px;background:#fff;color:var(--text);}
   .multi-row input.pub-year{flex:0 0 90px;min-width:90px;}
   .icon-btn{border:1px solid var(--border);background:#fff;border-radius:6px;width:34px;height:34px;cursor:pointer;font-size:15px;color:var(--muted);flex-shrink:0;}
@@ -294,7 +302,7 @@
     <div class="grid">
       <div class="field">
         <label>อาจารย์ที่ปรึกษาหลัก <span class="req">*</span></label>
-        <select id="f_mainAdvisor"></select>
+        <div id="f_mainAdvisor" class="combo"></div>
       </div>
       <div class="field">
         <label>อาจารย์ที่ปรึกษาร่วม</label>
@@ -329,7 +337,7 @@
         <div class="field"><label>วันที่สอบเค้าโครง <span class="req">*</span></label><input type="date" id="p_date"></div>
         <div class="field"><label>เวลาสอบ <span class="req">*</span></label><input type="text" id="p_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
         <div class="field"><label>สถานที่สอบ</label><input type="text" id="p_location" placeholder="เช่น ห้องประชุม 301"></div>
-        <div class="field"><label>ประธานกรรมการ <span class="req">*</span></label><select id="p_chair"></select></div>
+        <div class="field"><label>ประธานกรรมการ <span class="req">*</span></label><div id="p_chair" class="combo"></div></div>
         <div class="field full">
           <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
           <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
@@ -343,7 +351,7 @@
         <div class="field"><label>วันที่สอบป้องกัน <span class="req">*</span></label><input type="date" id="d_date"></div>
         <div class="field"><label>เวลาสอบ <span class="req">*</span></label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
         <div class="field"><label>สถานที่สอบ</label><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div>
-        <div class="field"><label>ประธานกรรมการ <span class="req">*</span></label><select id="d_chair"></select></div>
+        <div class="field"><label>ประธานกรรมการ <span class="req">*</span></label><div id="d_chair" class="combo"></div></div>
         <div class="field full">
           <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
           <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
@@ -565,7 +573,11 @@
         <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor">เพิ่ม</button></div>
         <div class="help" style="margin:10px 0 4px;">เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):</div>
         <div class="radio-group" id="m_advisor_roles"></div>
-        <div class="chip-list" id="m_advisors" style="margin-top:14px;"></div>
+        <div class="field" style="max-width:340px;margin-top:14px;">
+          <input type="text" id="m_advisor_search" placeholder="🔍 ค้นหาชื่ออาจารย์...">
+        </div>
+        <div class="help" id="m_advisor_count" style="margin:6px 0 2px;"></div>
+        <div class="chip-list" id="m_advisors" style="margin-top:8px;"></div>
       </div>
     </div>
   </div>
@@ -683,6 +695,18 @@ var pCommitteeCount = 0, dCommitteeCount = 0;
 
 /* ================= INIT ================= */
 window.addEventListener('DOMContentLoaded', function(){
+  function reportGlobalError(msg){
+    try{ toast('เกิดข้อผิดพลาด: '+msg, true); }
+    catch(e2){ alert('เกิดข้อผิดพลาด: '+msg); }
+  }
+  window.addEventListener('error', function(e){
+    console.error('Uncaught error:', e.error || e.message);
+    reportGlobalError(e.message || 'unknown error');
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    console.error('Unhandled rejection:', e.reason);
+    reportGlobalError(e.reason && e.reason.message ? e.reason.message : e.reason);
+  });
   openDB().then(function(_db){
     db = _db;
     return loadMeta();
@@ -793,12 +817,103 @@ function advisorNamesByRole(roleOrRoles){
   }).map(function(a){ return a.name; });
 }
 function setSelectValueWithFallback(selectEl, value){
-  if(!value) return;
+  if(!value || !selectEl) return;
+  if(selectEl.setValueWithFallback){ selectEl.setValueWithFallback(value); return; }
   selectEl.value = value;
   if(selectEl.value !== value){
     selectEl.appendChild(el('option',{value:value, text:value+' (ไม่ได้ติดแท็กตำแหน่งนี้)'}));
     selectEl.value = value;
   }
+}
+
+/* ================= SEARCHABLE SELECT (พิมพ์ค้นหา-เลือกชื่ออาจารย์) ================= */
+function buildSearchSelect(hostEl, list, placeholder){
+  hostEl.classList.add('combo');
+  hostEl.innerHTML = '';
+  var input = el('input',{type:'text', class:'combo-input', placeholder:placeholder||'พิมพ์เพื่อค้นหา...', autocomplete:'off'});
+  var dropdown = el('div',{class:'combo-dropdown'});
+  hostEl.appendChild(input);
+  hostEl.appendChild(dropdown);
+  hostEl._list = list||[];
+  hostEl._extra = [];
+  hostEl._value = '';
+  var activeIndex = -1;
+  var currentMatches = [];
+
+  function allOptions(){ return hostEl._list.concat(hostEl._extra); }
+
+  function closeDropdown(){ dropdown.innerHTML=''; dropdown.style.display='none'; activeIndex=-1; currentMatches=[]; }
+
+  function highlight(idx){
+    var opts = dropdown.querySelectorAll('.combo-option');
+    opts.forEach(function(o,i){ o.classList.toggle('active', i===idx); });
+    if(opts[idx]) opts[idx].scrollIntoView({block:'nearest'});
+  }
+
+  function selectValue(name){
+    hostEl._value = name;
+    input.value = name;
+    closeDropdown();
+    input.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+
+  function openDropdown(filterText){
+    var q = (filterText||'').trim().toLowerCase();
+    var opts = allOptions();
+    currentMatches = q ? opts.filter(function(o){ return o.toLowerCase().indexOf(q)>-1; }) : opts;
+    dropdown.innerHTML='';
+    activeIndex = -1;
+    if(currentMatches.length===0){
+      dropdown.appendChild(el('div',{class:'combo-empty', text:'ไม่พบชื่อที่ตรงกัน'}));
+    } else {
+      currentMatches.slice(0,50).forEach(function(name){
+        dropdown.appendChild(el('div',{
+          class:'combo-option', text:name,
+          onmousedown:function(ev){ ev.preventDefault(); },
+          onclick:function(){ selectValue(name); }
+        }));
+      });
+    }
+    dropdown.style.display='block';
+  }
+
+  input.addEventListener('input', function(){ openDropdown(input.value); });
+  input.addEventListener('focus', function(){ openDropdown(input.value); });
+  input.addEventListener('keydown', function(ev){
+    if(dropdown.style.display!=='block') return;
+    if(ev.key==='ArrowDown'){ ev.preventDefault(); activeIndex = Math.min(activeIndex+1, currentMatches.length-1); highlight(activeIndex); }
+    else if(ev.key==='ArrowUp'){ ev.preventDefault(); activeIndex = Math.max(activeIndex-1, 0); highlight(activeIndex); }
+    else if(ev.key==='Enter'){
+      ev.preventDefault();
+      if(activeIndex>-1 && currentMatches[activeIndex]) selectValue(currentMatches[activeIndex]);
+      else if(currentMatches.length===1) selectValue(currentMatches[0]);
+    } else if(ev.key==='Escape'){ closeDropdown(); }
+  });
+  input.addEventListener('blur', function(){
+    setTimeout(function(){
+      var typed = input.value.trim();
+      if(!typed){ hostEl._value=''; closeDropdown(); return; }
+      if(allOptions().indexOf(typed)>-1){ hostEl._value = typed; }
+      else {
+        input.value = hostEl._value || '';
+        toast('กรุณาเลือกชื่อจากรายการค้นหาเท่านั้น', true);
+      }
+      closeDropdown();
+    }, 180);
+  });
+
+  Object.defineProperty(hostEl, 'value', {
+    configurable:true,
+    get:function(){ return hostEl._value; },
+    set:function(v){ hostEl._value = v||''; input.value = hostEl._value; }
+  });
+  hostEl.setOptions = function(list){ hostEl._list = list||[]; };
+  hostEl.setValueWithFallback = function(value){
+    if(!value) return;
+    if(hostEl._list.concat(hostEl._extra).indexOf(value)===-1){ hostEl._extra.push(value); }
+    hostEl.value = value;
+  };
+  return hostEl;
 }
 
 /* ================= LOCK SCREEN ================= */
@@ -1172,20 +1287,32 @@ function fillSelect(selectEl, list, placeholder){
   list.forEach(function(item){ selectEl.appendChild(el('option',{value:item, text:item})); });
   if(list.indexOf(current)>-1) selectEl.value = current;
 }
+function ensureSearchSelect(id, list, placeholder){
+  var hostEl = document.getElementById(id);
+  if(!hostEl) return null;
+  if(!hostEl._searchSelectInit){
+    buildSearchSelect(hostEl, list, placeholder);
+    hostEl._searchSelectInit = true;
+  } else {
+    hostEl.setOptions(list);
+  }
+  return hostEl;
+}
 function renderAllSelects(){
   fillSelect(document.getElementById('f_program'), masterData.programs, 'เลือกหลักสูตร');
   fillSelect(document.getElementById('f_department'), masterData.departments, 'เลือกสาขาวิชา');
   fillSelect(document.getElementById('f_plan'), masterData.plans, 'เลือกแผนการเรียน');
-  fillSelect(document.getElementById('f_mainAdvisor'), advisorNamesByRole(positionsBySlot('mainAdvisor')), 'ระบุชื่ออาจารย์ที่ปรึกษาหลัก');
-  fillSelect(document.getElementById('p_chair'), advisorNamesByRole(positionsBySlot('chair')), 'ระบุชื่อประธานกรรมการ');
-  fillSelect(document.getElementById('d_chair'), advisorNamesByRole(positionsBySlot('chair')), 'ระบุชื่อประธานกรรมการ');
-  document.querySelectorAll('#coAdvisorList select').forEach(function(sel){
-    fillSelect(sel, advisorNamesByRole(positionsBySlot('coAdvisor')), 'ระบุชื่ออาจารย์ร่วม');
+  ensureSearchSelect('f_mainAdvisor', advisorNamesByRole(positionsBySlot('mainAdvisor')), 'พิมพ์ชื่ออาจารย์ที่ปรึกษาหลัก...');
+  ensureSearchSelect('p_chair', advisorNamesByRole(positionsBySlot('chair')), 'พิมพ์ชื่อประธานกรรมการ...');
+  ensureSearchSelect('d_chair', advisorNamesByRole(positionsBySlot('chair')), 'พิมพ์ชื่อประธานกรรมการ...');
+  document.querySelectorAll('#coAdvisorList .combo').forEach(function(combo){
+    combo.setOptions(advisorNamesByRole(positionsBySlot('coAdvisor')));
   });
   document.querySelectorAll('#p_committeeList .multi-row, #d_committeeList .multi-row').forEach(function(row){
-    var sels = row.querySelectorAll('select');
-    if(sels[0]) fillSelect(sels[0], allAdvisorNames(), 'ระบุชื่อกรรมการ');
-    if(sels[1]) fillSelect(sels[1], allPositionNames(), 'ระบุตำแหน่ง');
+    var nameCombo = row.querySelector('.combo');
+    var posSel = row.querySelector('select');
+    if(nameCombo) nameCombo.setOptions(allAdvisorNames());
+    if(posSel) fillSelect(posSel, allPositionNames(), 'ระบุตำแหน่ง');
   });
 }
 
@@ -1193,16 +1320,15 @@ function renderAllSelects(){
 function addDynamicRow(containerId, placeholder, slot){
   var container = document.getElementById(containerId);
   var row = el('div',{class:'multi-row'});
-  var sel = el('select',{});
-  fillSelect(sel, advisorNamesByRole(positionsBySlot(slot)), placeholder);
+  var combo = buildSearchSelect(el('div',{}), advisorNamesByRole(positionsBySlot(slot)), placeholder);
   var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
-  row.appendChild(sel); row.appendChild(rm);
+  row.appendChild(combo); row.appendChild(rm);
   container.appendChild(row);
   return row;
 }
 function getDynamicValues(containerId){
   var vals=[];
-  document.querySelectorAll('#'+containerId+' select').forEach(function(s){ if(s.value) vals.push(s.value); });
+  document.querySelectorAll('#'+containerId+' .combo').forEach(function(s){ if(s.value) vals.push(s.value); });
   return vals;
 }
 function clearDynamicRows(containerId){ document.getElementById(containerId).innerHTML=''; }
@@ -1213,23 +1339,23 @@ function allPositionNames(){ return masterData.positions.map(function(p){ return
 function addCommitteeRow(containerId, existingName, existingPosition){
   var container = document.getElementById(containerId);
   var row = el('div',{class:'multi-row'});
-  var nameSel = el('select',{});
-  fillSelect(nameSel, allAdvisorNames(), 'ระบุชื่อกรรมการ');
+  var nameCombo = buildSearchSelect(el('div',{}), allAdvisorNames(), 'ระบุชื่อกรรมการ');
   var posSel = el('select',{});
   fillSelect(posSel, allPositionNames(), 'ระบุตำแหน่ง');
   var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
-  row.appendChild(nameSel); row.appendChild(posSel); row.appendChild(rm);
+  row.appendChild(nameCombo); row.appendChild(posSel); row.appendChild(rm);
   container.appendChild(row);
-  if(existingName) setSelectValueWithFallback(nameSel, existingName);
+  if(existingName) setSelectValueWithFallback(nameCombo, existingName);
   if(existingPosition) setSelectValueWithFallback(posSel, existingPosition);
   return row;
 }
 function getCommitteeValues(containerId){
   var vals=[];
   document.querySelectorAll('#'+containerId+' .multi-row').forEach(function(row){
-    var sels = row.querySelectorAll('select');
-    var name = sels[0] ? sels[0].value : '';
-    var position = sels[1] ? sels[1].value : '';
+    var nameCombo = row.querySelector('.combo');
+    var posSel = row.querySelector('select');
+    var name = nameCombo ? nameCombo.value : '';
+    var position = posSel ? posSel.value : '';
     if(name) vals.push({name:name, position:position});
   });
   return vals;
@@ -1356,7 +1482,7 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
   setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
   clearDynamicRows('coAdvisorList');
-  (rec.coAdvisors||[]).forEach(function(name){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); setSelectValueWithFallback(r.querySelector('select'), name); });
+  (rec.coAdvisors||[]).forEach(function(name){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); setSelectValueWithFallback(r.querySelector('.combo'), name); });
   document.getElementById('f_titleTh').value = rec.titleTh||'';
   document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');
@@ -1432,7 +1558,7 @@ function searchExistingStudent(){
     document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
     setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
     clearDynamicRows('coAdvisorList');
-    (rec.coAdvisors||[]).forEach(function(name){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); setSelectValueWithFallback(r.querySelector('select'), name); });
+    (rec.coAdvisors||[]).forEach(function(name){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); setSelectValueWithFallback(r.querySelector('.combo'), name); });
     document.getElementById('f_titleTh').value = rec.titleTh||'';
     document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');
@@ -1532,9 +1658,16 @@ function collectFormData(){
   return rec;
 }
 function saveRecord(){
-  var err = validateForm();
-  if(err){ toast(err, true); return; }
-  var rec = collectFormData();
+  var err, rec;
+  try{
+    err = validateForm();
+    if(err){ toast(err, true); return; }
+    rec = collectFormData();
+  }catch(ex){
+    toast('เกิดข้อผิดพลาดขณะเตรียมข้อมูล: '+(ex && ex.message ? ex.message : ex), true);
+    console.error('saveRecord/collectFormData error', ex);
+    return;
+  }
   recordsGet(rec.id).then(function(existing){
     rec.createdAt = existing ? existing.createdAt : Date.now();
     if(cloudModeEnabled && existing && formOpenedAt && existing.updatedAt && existing.updatedAt > formOpenedAt){
@@ -1876,6 +2009,7 @@ function bindSettingsEvents(){
     masterData.advisors.push({name:name, roles:roles});
     saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); input.value=''; });
   });
+  document.getElementById('m_advisor_search').addEventListener('input', function(){ renderAdvisorList(); });
   document.getElementById('btnAddPosition').addEventListener('click', function(){
     var input = document.getElementById('m_position_input');
     var name = input.value.trim();
@@ -2015,10 +2149,28 @@ function renderBackupStatus(){
     el2.textContent = 'ยังไม่เคยสำรองข้อมูล';
   }
 }
+var ADVISOR_LIST_DEFAULT_CAP = 10;
 function renderAdvisorList(){
   var container = document.getElementById('m_advisors');
+  var countEl = document.getElementById('m_advisor_count');
+  var searchEl = document.getElementById('m_advisor_search');
+  var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
   container.innerHTML='';
-  masterData.advisors.forEach(function(advisor){
+  var all = masterData.advisors || [];
+  var filtered = q ? all.filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : all;
+  var capped = q ? filtered : filtered.slice(0, ADVISOR_LIST_DEFAULT_CAP);
+
+  if(countEl){
+    if(q){
+      countEl.textContent = 'พบ '+filtered.length+' รายชื่อ จากทั้งหมด '+all.length+' รายชื่อ';
+    } else if(all.length > ADVISOR_LIST_DEFAULT_CAP){
+      countEl.textContent = 'แสดง '+capped.length+' จากทั้งหมด '+all.length+' รายชื่อ — พิมพ์ในช่องค้นหาด้านบนเพื่อหาชื่อที่ต้องการ';
+    } else {
+      countEl.textContent = 'ทั้งหมด '+all.length+' รายชื่อ';
+    }
+  }
+
+  capped.forEach(function(advisor){
     var badges = (advisor.roles||[]).map(function(r){ return el('span',{class:'role-badge', text:r}); });
     var chip = el('span',{class:'chip'}, [el('span',{text:advisor.name})].concat(badges).concat([
       el('button',{type:'button', text:'✎', title:'แก้ไขชื่อ/ตำแหน่ง', onclick:function(){ openAdvisorEditModal(advisor); }}),

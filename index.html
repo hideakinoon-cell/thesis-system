@@ -1,0 +1,2766 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --primary:#1e4d8b; --primary-dark:#153a68; --primary-light:#e8f0fb;
+    --accent:#2f8f5b; --danger:#c0392b; --warn:#b7791f;
+    --border:#d7dee8; --bg:#f4f6fa; --card:#ffffff; --text:#1f2937; --muted:#6b7280;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Sarabun',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55;}
+  header.topbar{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+  header.topbar .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:18px;}
+  header.topbar .brand .logo{width:34px;height:34px;border-radius:8px;background:#fff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;}
+  header.topbar .badge{background:rgba(255,255,255,.18);padding:4px 12px;border-radius:20px;font-size:13px;}
+  nav.tabs{display:flex;gap:6px;background:#fff;padding:8px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;position:sticky;top:0;z-index:20;}
+  nav.tabs button{background:none;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:15px;color:var(--muted);font-weight:600;}
+  nav.tabs button.active{background:var(--primary-light);color:var(--primary);}
+  nav.tabs .spacer{flex:1;}
+  nav.tabs .drive-status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;padding:6px 10px;}
+  nav.tabs .drive-status .dot{width:9px;height:9px;border-radius:50%;background:#c7ccd3;}
+  nav.tabs .drive-status.on .dot{background:var(--accent);}
+  main{max-width:1100px;margin:0 auto;padding:20px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px;}
+  .card h3{margin:0 0 14px;font-size:16px;color:var(--primary-dark);border-left:4px solid var(--primary);padding-left:10px;}
+  .card h4{margin:24px 0 14px;font-size:15.5px;font-weight:700;color:var(--primary-dark);padding-bottom:9px;border-bottom:2px solid var(--primary-light);}
+  .card h4:first-child{margin-top:2px;}
+  #lookupSearch{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px;}
+  .lookup-result-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:360px;overflow:auto;}
+  .lookup-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border:1px solid var(--border);border-radius:9px;cursor:pointer;background:#fff;transition:.15s;}
+  .lookup-item:hover{background:var(--primary-light);border-color:var(--primary);}
+  .lookup-item.active{background:var(--primary-light);border-color:var(--primary);}
+  .lookup-item .li-main{display:flex;flex-direction:column;gap:3px;}
+  .lookup-item .li-name{font-weight:700;font-size:15.5px;color:var(--text);}
+  .lookup-item .li-sub{font-size:13px;color:var(--muted);}
+  .lookup-item .li-count{font-size:12px;color:var(--primary-dark);background:var(--primary-light);padding:2px 9px;border-radius:20px;font-weight:600;white-space:nowrap;}
+  .profile-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .profile-header .ph-name{font-size:22px;font-weight:700;color:var(--primary-dark);}
+  .profile-header .ph-id{font-size:14px;color:var(--muted);margin-top:4px;}
+  .kv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 14px;}
+  .kv-item{display:flex;flex-direction:column;gap:4px;background:#f7f9fc;border:1px solid #eaeef4;border-radius:9px;padding:11px 13px;}
+  .kv-item.full{grid-column:1/-1;}
+  .kv-item .k{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .kv-item .v{font-size:15.5px;font-weight:600;color:var(--text);white-space:pre-line;line-height:1.5;}
+  .kv-item .v.empty{color:#adb3bd;font-weight:400;}
+  .kv-item .v.doc-link{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer;}
+  .kv-item .v.doc-link:hover{text-decoration:underline;}
+  .exam-profile-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-top:16px;box-shadow:0 1px 3px rgba(15,23,42,.04);}
+  .exam-profile-card.proposal{border-left:5px solid var(--warn);}
+  .exam-profile-card.defense{border-left:5px solid var(--accent);}
+  .exam-profile-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+  .exam-profile-head .title{font-weight:700;font-size:16.5px;color:var(--primary-dark);}
+  .section-card{border-top:4px solid transparent;}
+  .section-card.sec-blue{border-top-color:var(--primary);}
+  .section-card.sec-blue h3{border-left-color:var(--primary);color:var(--primary-dark);}
+  .section-card.sec-blue .kv-item{background:#eef4fc;border-color:#dbe6f8;}
+  .section-card.sec-amber{border-top-color:var(--warn);}
+  .section-card.sec-amber h3{border-left-color:var(--warn);color:#92660a;}
+  .section-card.sec-amber .kv-item{background:#fef6e9;border-color:#f5e2bb;}
+  .section-card.sec-green{border-top-color:var(--accent);}
+  .section-card.sec-green h3{border-left-color:var(--accent);color:#1f6b46;}
+  .section-card.sec-green .kv-item{background:#eaf7f0;border-color:#cfe9db;}
+  .section-card.sec-purple{border-top-color:#7c3aed;}
+  .section-card.sec-purple h3{border-left-color:#7c3aed;color:#5b21b6;}
+  .publication-rows{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+  .publication-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-radius:9px;background:#f8f5fe;border:1px solid #e6dcfb;flex-wrap:wrap;}
+  .publication-row .pr-info{display:flex;flex-direction:column;gap:2px;}
+  .publication-row .pr-venue{font-weight:600;font-size:14.5px;color:var(--text);}
+  .publication-row .pr-year{font-size:12.5px;color:var(--muted);}
+  .committee-block{margin-top:14px;}
+  .committee-block .cb-label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
+  .committee-rows{display:flex;flex-direction:column;gap:8px;}
+  .committee-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-radius:9px;background:#f7f9fc;border:1px solid #eaeef4;}
+  .committee-row.chair{background:var(--primary-light);border-color:#c3d4ec;}
+  .committee-row .cr-name{font-weight:600;font-size:14.5px;color:var(--text);}
+  .committee-row.chair .cr-name{color:var(--primary-dark);font-weight:700;}
+  .role-badge.chair{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .exam-type-picker{display:flex;gap:12px;flex-wrap:wrap;}
+  .exam-type-picker button{flex:1;min-width:220px;padding:16px;border:2px solid var(--border);border-radius:var(--radius);background:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;color:var(--text);}
+  .exam-type-picker button.selected{border-color:var(--primary);background:var(--primary-light);color:var(--primary-dark);}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:13.5px;font-weight:600;color:#374151;}
+  .field label .req{color:var(--danger);}
+  .field input[type=text],.field input[type=number],.field input[type=date],.field input[type=time],.field select,.field textarea{
+    padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:14.5px;background:#fff;color:var(--text);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row-with-btn{display:flex;gap:8px;}
+  .field-row-with-btn input{flex:1;}
+  .radio-group{display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+  .radio-group label{display:flex;align-items:center;gap:6px;font-weight:500;font-size:14.5px;cursor:pointer;}
+  .radio-group input[type=text]{width:110px;margin-left:4px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;}
+  .multi-row-list{display:flex;flex-direction:column;gap:8px;}
+  .multi-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .multi-row select{flex:1;min-width:160px;}
+  .multi-row input[type=text]{flex:1;min-width:140px;padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:14.5px;background:#fff;color:var(--text);}
+  .multi-row input.pub-year{flex:0 0 90px;min-width:90px;}
+  .icon-btn{border:1px solid var(--border);background:#fff;border-radius:6px;width:34px;height:34px;cursor:pointer;font-size:15px;color:var(--muted);flex-shrink:0;}
+  .icon-btn:hover{background:#f2f4f7;}
+  .link-btn{background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px;padding:0;}
+  .btn{padding:10px 18px;border-radius:8px;border:none;font-family:inherit;font-weight:600;font-size:14.5px;cursor:pointer;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text);}
+  .btn-danger{background:#fdeceb;color:var(--danger);border:1px solid #f3c8c3;}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-sm{padding:6px 12px;font-size:13px;border-radius:6px;}
+  .form-footer{display:flex;gap:10px;justify-content:flex-end;padding:16px 0 4px;}
+  .exam-section{display:none;}
+  .exam-section.visible{display:block;}
+  .exam-type-tag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12.5px;font-weight:600;}
+  .exam-type-tag.proposal{background:#fdf0e0;color:var(--warn);}
+  .exam-type-tag.defense{background:#e5f4ec;color:var(--accent);}
+  .result-tag{padding:4px 12px;border-radius:20px;font-size:12.5px;font-weight:600;}
+  .result-tag.pass{background:#e5f4ec;color:var(--accent);}
+  .result-tag.cond{background:#fdf0e0;color:var(--warn);}
+  .result-tag.fail{background:#fdeceb;color:var(--danger);}
+  .attach-box{border:1px dashed var(--border);border-radius:8px;padding:12px;}
+  .attach-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .attach-item{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13.5px;}
+  .attach-item .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .attach-item .size{color:var(--muted);font-size:12px;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+  .toolbar input[type=text]{padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;min-width:220px;}
+  .toolbar select{padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;}
+  .toolbar .spacer{flex:1;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  table th{text-align:left;background:#f1f4f9;padding:10px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);}
+  table td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}
+  table tr:hover td{background:#fafbfd;}
+  .empty-state{text-align:center;padding:40px 10px;color:var(--muted);}
+  .master-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+  .master-card{border:1px solid var(--border);border-radius:8px;padding:14px;}
+  .master-card h4{margin:0 0 10px;color:var(--text);font-size:14.5px;}
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;min-height:20px;}
+  .chip{background:var(--primary-light);color:var(--primary-dark);padding:5px 10px;border-radius:20px;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .chip button{border:none;background:none;cursor:pointer;color:var(--primary-dark);font-weight:700;}
+  .role-badge{background:#fff;border:1px solid #c7d5ea;color:#3b5c8a;font-size:11.5px;padding:2px 9px;border-radius:8px;font-weight:600;}
+  .modal .field{margin-bottom:10px;}
+  .toast{position:fixed;bottom:20px;right:20px;background:#2d3748;color:#fff;padding:12px 18px;border-radius:8px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:100;opacity:0;transform:translateY(10px);transition:.25s;}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.error{background:var(--danger);}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:200;}
+  .lock-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;z-index:500;}
+  .lock-box{background:#fff;border-radius:14px;padding:32px 28px;width:min(380px,90vw);text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);}
+  .lock-box .lock-icon{font-size:40px;margin-bottom:6px;}
+  .lock-box h2{margin:0 0 6px;color:var(--primary-dark);font-size:19px;}
+  .lock-box input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px;margin-top:10px;}
+  .lock-box .lock-error{color:var(--danger);font-size:13px;margin-top:8px;min-height:16px;}
+  .lock-box .btn{width:100%;margin-top:12px;}
+  .btn-lock-nav{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;font-size:13px;}
+  .btn-lock-nav:hover{background:#f2f4f7;}
+  .modal{background:#fff;border-radius:10px;padding:22px;width:min(520px,92vw);max-height:80vh;overflow:auto;}
+  .modal h3{margin-top:0;}
+  .modal .list-item{display:flex;justify-content:space-between;align-items:center;padding:9px 4px;border-bottom:1px solid var(--border);font-size:14px;}
+  .help{font-size:12.5px;color:var(--muted);margin-top:4px;}
+  .hint-box{background:#fff8e6;border:1px solid #f0dca0;color:#7a5b06;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;}
+  @media(max-width:720px){.grid,.grid.cols-3,.master-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="lock-overlay">
+  <div class="lock-box">
+    <div class="lock-icon">🔒</div>
+    <h2 id="lockTitle">เข้าสู่ระบบ</h2>
+    <div id="lockLoginForm">
+      <input type="password" id="lockPinInput" placeholder="กรอกรหัสผ่าน" autocomplete="current-password">
+      <div class="lock-error" id="lockError"></div>
+      <button type="button" class="btn btn-primary" id="btnLockSubmit">ปลดล็อก</button>
+    </div>
+    <div id="lockSetupForm" style="display:none;">
+      <div class="help" style="text-align:left;">ตั้งรหัสผ่านสำหรับเข้าใช้งานระบบนี้ครั้งแรก (อย่างน้อย 4 ตัวอักษร) โปรดจดจำไว้ให้ดี — หากลืมจะไม่สามารถกู้คืนได้ ต้องล้างข้อมูลเบราว์เซอร์ทั้งหมดเพื่อเริ่มใหม่</div>
+      <input type="password" id="lockSetupPin1" placeholder="ตั้งรหัสผ่าน" autocomplete="new-password">
+      <input type="password" id="lockSetupPin2" placeholder="ยืนยันรหัสผ่านอีกครั้ง" autocomplete="new-password">
+      <div class="lock-error" id="lockSetupError"></div>
+      <button type="button" class="btn btn-primary" id="btnLockSetupSubmit">ตั้งรหัสผ่านและเริ่มใช้งาน</button>
+    </div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
+  <div class="badge">เจ้าหน้าที่ (Admin)</div>
+</header>
+<nav class="tabs">
+  <button data-view="dashboard" class="active">🔍 ตรวจสอบข้อมูล</button>
+  <button data-view="form">📝 บันทึกข้อมูล</button>
+  <button data-view="list">📋 รายการทั้งหมด</button>
+  <button data-view="settings">⚙️ ตั้งค่า</button>
+  <div class="spacer"></div>
+  <div class="drive-status" id="driveStatus"><span class="dot"></span><span id="driveStatusText">ยังไม่เชื่อมต่อ Google Drive</span></div>
+  <button type="button" class="btn-lock-nav" id="btnLockNow">🔒 ล็อกระบบ</button>
+</nav>
+<main>
+
+<!-- ============ DASHBOARD / LOOKUP VIEW ============ -->
+<section id="view-dashboard">
+  <div class="card">
+    <h3>🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
+    <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา...">
+    <div class="lookup-result-list" id="lookupResultList"></div>
+    <div class="empty-state" id="lookupEmpty" style="display:none;">ไม่พบนักศึกษาที่ตรงกับคำค้นหา</div>
+  </div>
+  <div id="lookupDetail">
+    <div class="empty-state">เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด</div>
+  </div>
+</section>
+
+<!-- ============ FORM VIEW ============ -->
+<section id="view-form" style="display:none;">
+  <div class="card">
+    <h3>หมวดที่ 1: ข้อมูลนักศึกษา</h3>
+    <div class="grid">
+      <div class="field">
+        <label>รหัสนักศึกษา <span class="req">*</span></label>
+        <div class="field-row-with-btn">
+          <input type="text" id="f_studentId" placeholder="66010xxx">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnFindStudent">🔍 ค้นหาข้อมูลเดิม</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>ชื่อ - นามสกุล <span class="req">*</span></label>
+        <input type="text" id="f_studentName" placeholder="นายสมศักดิ์ รักเรียน">
+      </div>
+      <div class="field">
+        <label>ระดับการศึกษา <span class="req">*</span></label>
+        <div class="radio-group" id="g_degreeLevel">
+          <label><input type="radio" name="degreeLevel" value="ปริญญาโท" checked> ปริญญาโท</label>
+          <label><input type="radio" name="degreeLevel" value="ปริญญาเอก"> ปริญญาเอก</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>แผนการเรียน</label>
+        <select id="f_plan"></select>
+      </div>
+      <div class="field">
+        <label>หลักสูตร <span class="req">*</span></label>
+        <select id="f_program"></select>
+      </div>
+      <div class="field">
+        <label>สาขาวิชา <span class="req">*</span></label>
+        <select id="f_department"></select>
+      </div>
+    </div>
+
+    <h4>หมวดที่ 1.1: เกณฑ์สำเร็จการศึกษา</h4>
+    <div class="grid">
+      <div class="field full">
+        <label>ผลภาษาอังกฤษ <span class="req">*</span></label>
+        <div class="radio-group" id="g_englishResult">
+          <label><input type="radio" name="englishResult" value="สอบผ่าน" checked> สอบผ่าน</label>
+          <label><input type="radio" name="englishResult" value="เรียนผ่าน"> เรียนผ่าน</label>
+          <label><input type="radio" name="englishResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+          <label><input type="radio" name="englishResult" value="ยกเว้น/เทียบเท่า"> ยกเว้น/เทียบเท่า
+            <input type="text" id="f_englishScore" placeholder="คะแนน" disabled>
+          </label>
+        </div>
+        <input type="text" id="f_englishDocLink" placeholder="ลิงก์เอกสารแนบผลภาษาอังกฤษ (เช่น ลิงก์ Google Drive) — ถ้ามี" style="margin-top:8px;">
+      </div>
+      <div class="field full">
+        <label>ผลคอมพิวเตอร์ <span class="req">*</span></label>
+        <div class="radio-group">
+          <label><input type="radio" name="computerResult" value="สอบผ่าน" checked> สอบผ่าน</label>
+          <label><input type="radio" name="computerResult" value="เรียนผ่าน"> เรียนผ่าน</label>
+          <label><input type="radio" name="computerResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+        </div>
+        <input type="text" id="f_computerDocLink" placeholder="ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี" style="margin-top:8px;">
+      </div>
+      <div class="field full">
+        <label>การสอบวัดความรู้ <span class="req">*</span></label>
+        <div class="radio-group">
+          <label><input type="radio" name="qualifyingExam" value="ผ่านสอบประมวลความรู้ (ป.โท)" checked> ผ่านสอบประมวลความรู้ (ป.โท)</label>
+          <label><input type="radio" name="qualifyingExam" value="ผ่านสอบวัดคุณสมบัติ (ป.เอก)"> ผ่านสอบวัดคุณสมบัติ (ป.เอก)</label>
+          <label><input type="radio" name="qualifyingExam" value="ยังไม่ผ่าน/อยู่ระหว่างรอผล"> ยังไม่ผ่าน / อยู่ระหว่างรอผล</label>
+        </div>
+        <input type="text" id="f_qualifyingDocLink" placeholder="ลิงก์เอกสารแนบการสอบวัดความรู้ (เช่น ลิงก์ Google Drive) — ถ้ามี" style="margin-top:8px;">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>หมวดที่ 2: อาจารย์ที่ปรึกษา &amp; หัวข้อ</h3>
+    <div class="grid">
+      <div class="field">
+        <label>อาจารย์ที่ปรึกษาหลัก <span class="req">*</span></label>
+        <select id="f_mainAdvisor"></select>
+      </div>
+      <div class="field">
+        <label>อาจารย์ที่ปรึกษาร่วม</label>
+        <div class="multi-row-list" id="coAdvisorList"></div>
+        <button type="button" class="link-btn" id="btnAddCoAdvisor" style="margin-top:8px;text-align:left;">＋ เพิ่มอาจารย์ร่วม</button>
+      </div>
+      <div class="field full">
+        <label>หัวข้อวิทยานิพนธ์ (TH) <span class="req">*</span></label>
+        <textarea id="f_titleTh" placeholder="การพัฒนาแอปพลิเคชันระบบจัดการข้อมูล..."></textarea>
+      </div>
+      <div class="field full">
+        <label>หัวข้อวิทยานิพนธ์ (EN)</label>
+        <textarea id="f_titleEn" placeholder="Development of an Application for Data Management..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>หมวดที่ 3: เลือกประเภทและกำหนดการสอบ</h3>
+    <div class="exam-type-picker">
+      <button type="button" id="btnTypeProposal" data-type="proposal">📑 สอบเค้าโครงวิทยานิพนธ์</button>
+      <button type="button" id="btnTypeDefense" data-type="defense">🎓 สอบป้องกันวิทยานิพนธ์ / การค้นคว้าอิสระ (IS)</button>
+    </div>
+    <div class="help" style="margin-top:10px;">เลือกประเภทของ "การสอบครั้งนี้" ที่จะบันทึก — หมวดที่ 4 จะแสดงผลสอบให้ตรงกับประเภทที่เลือกไว้นี้โดยอัตโนมัติ ถ้านักศึกษาเคยสอบมาก่อน (เช่น สอบไม่ผ่านและต้องสอบใหม่) ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 ก่อน แล้วค่อยเลือกประเภทและกรอกกำหนดการของครั้งใหม่ที่นี่ ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม</div>
+    <div id="studentHistoryBox" style="display:none;margin-top:14px;">
+      <h4>ประวัติการสอบของนักศึกษาคนนี้</h4>
+      <div id="studentHistoryList"></div>
+    </div>
+
+    <div class="exam-section" id="sched-proposal" style="margin-top:16px;">
+      <div class="grid cols-3">
+        <div class="field"><label>วันที่สอบเค้าโครง <span class="req">*</span></label><input type="date" id="p_date"></div>
+        <div class="field"><label>เวลาสอบ <span class="req">*</span></label><input type="text" id="p_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
+        <div class="field"><label>สถานที่สอบ</label><input type="text" id="p_location" placeholder="เช่น ห้องประชุม 301"></div>
+        <div class="field"><label>ประธานกรรมการ <span class="req">*</span></label><select id="p_chair"></select></div>
+        <div class="field full">
+          <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
+          <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
+          <div class="multi-row-list" id="p_committeeList"></div>
+          <button type="button" class="link-btn" id="p_btnAddCommittee" style="margin-top:8px;text-align:left;">＋ เพิ่มกรรมการ</button>
+        </div>
+      </div>
+    </div>
+    <div class="exam-section" id="sched-defense" style="margin-top:16px;">
+      <div class="grid cols-3">
+        <div class="field"><label>วันที่สอบป้องกัน <span class="req">*</span></label><input type="date" id="d_date"></div>
+        <div class="field"><label>เวลาสอบ <span class="req">*</span></label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
+        <div class="field"><label>สถานที่สอบ</label><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div>
+        <div class="field"><label>ประธานกรรมการ <span class="req">*</span></label><select id="d_chair"></select></div>
+        <div class="field full">
+          <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
+          <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
+          <div class="multi-row-list" id="d_committeeList"></div>
+          <button type="button" class="link-btn" id="d_btnAddCommittee" style="margin-top:8px;text-align:left;">＋ เพิ่มกรรมการ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>หมวดที่ 4: ผลสอบ</h3>
+    <div class="exam-section" id="result-proposal">
+      <div class="grid">
+        <div class="field full">
+          <label>ผลประเมิน <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="proposalResult" value="ผ่าน" checked> ผ่าน</label>
+            <label><input type="radio" name="proposalResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+          </div>
+        </div>
+      </div>
+      <h4>แนบเอกสาร (เช่น ใบเซ็นชื่อเค้าโครง)</h4>
+      <div class="attach-box">
+        <input type="file" id="p_fileInput" multiple>
+        <div class="attach-list" id="p_attachList"></div>
+      </div>
+    </div>
+    <div class="exam-section" id="result-defense">
+      <div class="grid cols-3">
+        <div class="field"><label>คะแนนเต็ม</label><input type="number" id="d_fullScore" min="0"></div>
+        <div class="field"><label>คะแนนที่สอบได้</label><input type="number" id="d_obtainedScore" min="0"></div>
+        <div class="field"><label>กำหนดส่งเล่ม</label><input type="date" id="d_dueDate"></div>
+        <div class="field full">
+          <label>ผลการประเมิน <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="defenseResult" value="ผ่าน" checked> ผ่าน</label>
+            <label><input type="radio" name="defenseResult" value="ผ่านแบบมีเงื่อนไข"> ผ่านแบบมีเงื่อนไข</label>
+            <label><input type="radio" name="defenseResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+          </div>
+        </div>
+      </div>
+      <h4>แนบเอกสาร (เช่น ใบรวมคะแนน/เซ็นชื่อ)</h4>
+      <div class="attach-box">
+        <input type="file" id="d_fileInput" multiple>
+        <div class="attach-list" id="d_attachList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>หมวดที่ 5: การเผยแพร่ผลงานวิจัย</h3>
+    <div class="help" style="margin-bottom:10px;">กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน</div>
+    <div class="field full">
+      <div class="multi-row-list" id="publicationList"></div>
+      <button type="button" class="link-btn" id="btnAddPublication" style="margin-top:8px;text-align:left;">＋ เพิ่มผลงานตีพิมพ์</button>
+    </div>
+  </div>
+
+  <div class="form-footer">
+    <button type="button" class="btn btn-secondary" id="btnCancelForm">❌ ยกเลิก</button>
+    <button type="button" class="btn btn-primary" id="btnSaveForm">💾 บันทึกข้อมูล</button>
+  </div>
+</section>
+
+<!-- ============ LIST VIEW ============ -->
+<section id="view-list" style="display:none;">
+  <div class="card">
+    <div class="toolbar">
+      <input type="text" id="listSearch" placeholder="ค้นหา รหัส/ชื่อ/หัวข้อ">
+      <select id="listFilterType">
+        <option value="">ทุกประเภทการสอบ</option>
+        <option value="proposal">สอบเค้าโครง</option>
+        <option value="defense">สอบป้องกัน/IS</option>
+      </select>
+      <select id="listFilterResult">
+        <option value="">ทุกผลสอบ</option>
+        <option value="ผ่าน">ผ่าน</option>
+        <option value="ผ่านแบบมีเงื่อนไข">ผ่านแบบมีเงื่อนไข</option>
+        <option value="ไม่ผ่าน">ไม่ผ่าน</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn btn-secondary btn-sm" id="btnExportCsv">⬇ CSV</button>
+      <button class="btn btn-accent btn-sm" id="btnExportXlsx">⬇ Excel</button>
+      <button class="btn btn-primary btn-sm" id="btnNewFromList">＋ เพิ่มข้อมูลใหม่</button>
+    </div>
+    <table>
+      <thead>
+        <tr><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>ประเภทสอบ</th><th>วันที่สอบ</th><th>ผลสอบ</th><th>ไฟล์แนบ</th><th>จัดการ</th></tr>
+      </thead>
+      <tbody id="listTbody"></tbody>
+    </table>
+    <div class="empty-state" id="listEmpty" style="display:none;">ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย</div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS VIEW ============ -->
+<section id="view-settings" style="display:none;">
+  <div class="card">
+    <h3>🔒 ความปลอดภัย — เปลี่ยนรหัสผ่านเข้าระบบ</h3>
+    <div class="grid cols-3">
+      <div class="field"><label>รหัสผ่านปัจจุบัน</label><input type="password" id="pin_current" autocomplete="current-password"></div>
+      <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="pin_new1" autocomplete="new-password"></div>
+      <div class="field"><label>ยืนยันรหัสผ่านใหม่</label><input type="password" id="pin_new2" autocomplete="new-password"></div>
+    </div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnChangePin">เปลี่ยนรหัสผ่าน</button>
+    </div>
+    <div class="help">ระบบล็อกนี้ป้องกันเฉพาะการเปิดดูผ่านหน้าจอเท่านั้น (กันคนเดินผ่านมาเปิดดู) ข้อมูลจริงเก็บในเบราว์เซอร์เครื่องนี้ ควรตั้งรหัสผ่าน Windows และล็อกหน้าจอเมื่อไม่ใช้งานด้วยเพื่อความปลอดภัยที่สมบูรณ์ยิ่งขึ้น</div>
+  </div>
+
+  <div class="card">
+    <h3>เชื่อมต่อ Google Drive (สำรอง/กู้คืนข้อมูล และอัปโหลดไฟล์แนบ)</h3>
+    <div class="grid">
+      <div class="field full">
+        <label>Google OAuth Client ID</label>
+        <input type="text" id="s_clientId" placeholder="xxxxxxxxxx.apps.googleusercontent.com">
+        <div class="help">ต้องสร้างจาก Google Cloud Console ของคุณเอง ดูขั้นตอนใน SETUP.md ที่แนบมาด้วย ต้องเปิดไฟล์นี้ผ่านเซิร์ฟเวอร์ local (เช่น http://localhost:8765) หรือผ่านลิงก์เว็บที่เผยแพร่แล้ว (เช่น https://ชื่อผู้ใช้.github.io/...) จึงจะ Sign in ได้ — เปิดไฟล์แบบ double-click (file://) จะ Sign in ไม่ได้</div>
+      </div>
+    </div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnSaveClientId">บันทึก Client ID</button>
+      <button class="btn btn-primary" id="btnSignIn">🔐 เชื่อมต่อ Google Drive</button>
+      <button class="btn btn-secondary" id="btnSignOut" style="display:none;">ออกจากระบบ Drive</button>
+    </div>
+    <div class="form-footer" style="justify-content:flex-start;border-top:1px solid var(--border);margin-top:6px;padding-top:16px;">
+      <button class="btn btn-accent" id="btnBackupNow">☁️ สำรองข้อมูลขึ้น Drive ตอนนี้</button>
+      <button class="btn btn-secondary" id="btnRestore">⬇️ กู้คืนจาก Drive</button>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:6px;padding-top:16px;">
+      <label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;cursor:pointer;">
+        <input type="checkbox" id="s_autoBackup"> สำรองข้อมูลขึ้น Drive อัตโนมัติทุก 12 ชั่วโมง
+      </label>
+      <div class="help">ทำงานเฉพาะขณะเปิดหน้าเว็บนี้ค้างไว้และเชื่อมต่อ Google Drive อยู่เท่านั้น ถ้าปิดแท็บ/ปิดเครื่อง หรือหลุดการเชื่อมต่อ จะไม่มีการสำรองอัตโนมัติเกิดขึ้นจนกว่าจะเปิดและเชื่อมต่อใหม่</div>
+      <div class="help" id="s_lastBackupText" style="margin-top:4px;">ยังไม่เคยสำรองข้อมูล</div>
+      <div class="field" style="max-width:260px;margin-top:12px;">
+        <label>เก็บไฟล์สำรองล่าสุดไว้กี่ไฟล์</label>
+        <input type="number" id="s_backupKeepCount" min="1" max="100" value="5">
+        <div class="help">ไฟล์สำรองเก่าที่เกินจำนวนนี้จะถูกลบออกจาก Drive อัตโนมัติทุกครั้งที่สำรองข้อมูลสำเร็จ เพื่อไม่ให้พื้นที่ Drive บานปลาย</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)</h3>
+    <div class="help" style="margin-bottom:14px;">เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md</div>
+    <div class="grid">
+      <div class="field full">
+        <label>Spreadsheet ID หรือลิงก์ Google Sheet กลาง</label>
+        <input type="text" id="s_sheetId" placeholder="วางลิงก์ Google Sheet หรือ Spreadsheet ID ที่นี่">
+        <div class="help">สร้าง Google Sheet เปล่าขึ้นมา 1 ไฟล์ แชร์สิทธิ์ "แก้ไขได้" ให้อีเมลของเจ้าหน้าที่ทุกคนที่จะใช้งาน แล้ววางลิงก์ของชีทนั้นที่นี่ (ทำครั้งเดียวต่อ 1 เครื่อง เจ้าหน้าที่แต่ละคนต้องตั้งค่าช่องนี้ด้วยลิงก์ชีทเดียวกัน)</div>
+      </div>
+    </div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnSaveSheetId">บันทึก Spreadsheet ID</button>
+      <button class="btn btn-secondary" id="btnInitSheet">🛠️ สร้าง/ตรวจสอบโครงสร้างชีท</button>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:6px;padding-top:16px;">
+      <label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;cursor:pointer;">
+        <input type="checkbox" id="s_cloudMode"> เปิดใช้งานระบบข้อมูลกลาง (ทุกคนอ่าน/บันทึกข้อมูลจากชีทนี้ร่วมกัน)
+      </label>
+      <div class="help">เมื่อเปิดใช้งาน หน้ารายการ/ตรวจสอบข้อมูล/ฟอร์มบันทึกข้อมูลทั้งหมดจะอ่าน-เขียนจาก Google Sheet กลางแทน IndexedDB ในเครื่อง ไฟล์แนบจะอัปโหลดขึ้น Drive ทันทีที่แนบ (ไม่เก็บสำเนาในเครื่อง) หากปิดใช้งาน ระบบจะกลับไปใช้ข้อมูลในเครื่องนี้ตามปกติ</div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+      <button class="btn btn-accent" id="btnMigrateToCloud">📤 ย้ายข้อมูลเดิมในเครื่องนี้เข้าระบบกลาง</button>
+      <div class="help" style="margin-top:8px;">ใช้ครั้งเดียวตอนเริ่มต้นใช้ระบบกลาง — ดึงรายการสอบ/ไฟล์แนบ/ข้อมูลตั้งต้นที่เคยบันทึกไว้ในเครื่องนี้ทั้งหมด ส่งเข้าชีทกลาง + Google Drive ให้อัตโนมัติ (ควรทำจากเครื่องที่มีข้อมูลเดิมมากที่สุดเพียงเครื่องเดียว เพื่อไม่ให้ข้อมูลซ้ำ)</div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+      <label style="font-weight:600;font-size:14.5px;">🔐 ตรวจสอบสิทธิ์การเข้าถึง</label>
+      <div class="help" style="margin-top:2px;margin-bottom:10px;">เมื่อมีเจ้าหน้าที่ลาออกหรือเปลี่ยนหน้าที่ ต้องเอาอีเมลออกจาก 2 จุดนี้ด้วยตัวเอง — ระบบไม่สามารถดึงหรือแก้รายชื่อ Test users ให้อัตโนมัติได้ เพราะ Google ไม่มี API ให้เว็บแอปภายนอกเข้าถึงส่วนนี้ ปุ่มด้านล่างเป็นแค่ทางลัดเปิดหน้าให้ตรวจสอบเองเร็วขึ้น</div>
+      <button class="btn btn-secondary btn-sm" id="btnOpenSheetShare" type="button">🔗 เปิดชีทกลาง (ตรวจสอบ/แก้ไขสิทธิ์แชร์)</button>
+      <button class="btn btn-secondary btn-sm" id="btnOpenTestUsers" type="button" style="margin-left:8px;">🔗 เปิดหน้า Test users (Google Cloud Console)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>ข้อมูลตั้งต้น (Master Data)</h3>
+    <div class="master-grid">
+      <div class="master-card">
+        <h4>หลักสูตร</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_program_input" placeholder="เช่น ครุศาสตรมหาบัณฑิต"><button class="btn btn-secondary btn-sm" data-add="programs">เพิ่ม</button></div>
+        <div class="chip-list" id="m_programs"></div>
+      </div>
+      <div class="master-card">
+        <h4>สาขาวิชา</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_department_input" placeholder="เช่น สาขาวิชาหลักสูตรและการสอน"><button class="btn btn-secondary btn-sm" data-add="departments">เพิ่ม</button></div>
+        <div class="chip-list" id="m_departments"></div>
+      </div>
+      <div class="master-card">
+        <h4>แผนการเรียน</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_plan_input" placeholder="เช่น แผน ก, แบบ 1.1"><button class="btn btn-secondary btn-sm" data-add="plans">เพิ่ม</button></div>
+        <div class="chip-list" id="m_plans"></div>
+      </div>
+      <div class="master-card" style="grid-column:1/-1;">
+        <h4>ตำแหน่งกรรมการ/อาจารย์</h4>
+        <div class="help" style="margin-bottom:8px;">กำหนดรายชื่อตำแหน่งเองได้ทั้งหมด แก้ไข/เพิ่ม/ลบได้ตามต้องการ แต่ละตำแหน่งต้องระบุว่าใช้กับช่องไหนในฟอร์ม</div>
+        <div class="field-row-with-btn">
+          <input type="text" id="m_position_input" placeholder="เช่น ประธานกรรมการ">
+          <select id="m_position_slot" style="max-width:260px;">
+            <option value="chair">ใช้ในช่อง: ประธานกรรมการ</option>
+            <option value="mainAdvisor">ใช้ในช่อง: อาจารย์ที่ปรึกษาหลัก</option>
+            <option value="coAdvisor">ใช้ในช่อง: อาจารย์ที่ปรึกษาร่วม</option>
+            <option value="committee">ใช้ในช่อง: กรรมการสอบ (เพิ่มได้หลายคน)</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" id="btnAddPosition">เพิ่ม</button>
+        </div>
+        <div class="chip-list" id="m_positions" style="margin-top:12px;"></div>
+      </div>
+      <div class="master-card" style="grid-column:1/-1;">
+        <h4>รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor">เพิ่ม</button></div>
+        <div class="help" style="margin:10px 0 4px;">เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):</div>
+        <div class="radio-group" id="m_advisor_roles"></div>
+        <div class="chip-list" id="m_advisors" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ================= UTIL ================= */
+function uuid(){
+  if(crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){
+    var r=Math.random()*16|0, v=c=='x'?r:(r&0x3|0x8); return v.toString(16);
+  });
+}
+function toast(msg, isError){
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError?' error':'');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(function(){ el.className='toast'; }, 3200);
+}
+function fmtBytes(n){
+  if(n<1024) return n+' B';
+  if(n<1024*1024) return (n/1024).toFixed(1)+' KB';
+  return (n/1024/1024).toFixed(1)+' MB';
+}
+function el(tag, attrs, children){
+  var e = document.createElement(tag);
+  attrs = attrs || {};
+  Object.keys(attrs).forEach(function(k){
+    if(k==='html') e.innerHTML = attrs[k];
+    else if(k==='text') e.textContent = attrs[k];
+    else if(k.indexOf('on')===0) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  });
+  (children||[]).forEach(function(c){ if(c) e.appendChild(c); });
+  return e;
+}
+
+/* ================= INDEXEDDB ================= */
+var DB_NAME='ThesisManagerDB', DB_VERSION=1, db;
+function openDB(){
+  return new Promise(function(resolve,reject){
+    var req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = function(e){
+      var d = e.target.result;
+      if(!d.objectStoreNames.contains('records')){
+        var rs = d.createObjectStore('records',{keyPath:'id'});
+        rs.createIndex('studentId','studentId',{unique:false});
+      }
+      if(!d.objectStoreNames.contains('files')){
+        var fs = d.createObjectStore('files',{keyPath:'id'});
+        fs.createIndex('recordId','recordId',{unique:false});
+      }
+      if(!d.objectStoreNames.contains('meta')){
+        d.createObjectStore('meta',{keyPath:'key'});
+      }
+    };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+function tx(store, mode){ return db.transaction(store, mode).objectStore(store); }
+function dbPut(store, value){
+  return new Promise(function(resolve,reject){
+    var r = tx(store,'readwrite').put(value);
+    r.onsuccess=function(){resolve(value);}; r.onerror=function(){reject(r.error);};
+  });
+}
+function dbGet(store, key){
+  return new Promise(function(resolve,reject){
+    var r = tx(store,'readonly').get(key);
+    r.onsuccess=function(){resolve(r.result);}; r.onerror=function(){reject(r.error);};
+  });
+}
+function dbGetAll(store){
+  return new Promise(function(resolve,reject){
+    var r = tx(store,'readonly').getAll();
+    r.onsuccess=function(){resolve(r.result||[]);}; r.onerror=function(){reject(r.error);};
+  });
+}
+function dbDelete(store, key){
+  return new Promise(function(resolve,reject){
+    var r = tx(store,'readwrite').delete(key);
+    r.onsuccess=function(){resolve();}; r.onerror=function(){reject(r.error);};
+  });
+}
+function dbGetByIndex(store, indexName, value){
+  return new Promise(function(resolve,reject){
+    var r = tx(store,'readonly').index(indexName).getAll(value);
+    r.onsuccess=function(){resolve(r.result||[]);}; r.onerror=function(){reject(r.error);};
+  });
+}
+
+/* ================= APP STATE ================= */
+var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[] };
+var googleClientId = '';
+var appPinHash = null;
+var autoBackupEnabled = false;
+var lastBackupAt = 0;
+var backupKeepCount = 5;
+var driveEverConnected = false;
+var cloudModeEnabled = false;
+var sheetId = '';
+var formOpenedAt = 0;
+var currentDraftId = null;
+var editingExisting = false;
+var currentExamType = null; // 'proposal' | 'defense'
+var coAdvisorCount = 0;
+var pCommitteeCount = 0, dCommitteeCount = 0;
+
+/* ================= INIT ================= */
+window.addEventListener('DOMContentLoaded', function(){
+  openDB().then(function(_db){
+    db = _db;
+    return loadMeta();
+  }).then(function(){
+    seedDefaultsIfEmpty();
+    renderAllSelects();
+    renderMasterLists();
+    bindNav();
+    bindFormEvents();
+    bindListEvents();
+    bindSettingsEvents();
+    bindLockEvents();
+    renderLockForm();
+    newDraft();
+    switchView('dashboard');
+    initAutoBackupTimer();
+    if(accessToken && Date.now() < tokenExpiresAt - 5000){
+      updateDriveStatusUI(true);
+      if(cloudModeEnabled) refreshCloudMasterData();
+    } else if(driveEverConnected && googleClientId){
+      attemptSilentReconnect();
+    }
+  }).catch(function(err){
+    console.error(err);
+    toast('เปิดฐานข้อมูลไม่สำเร็จ: '+err, true);
+  });
+});
+
+var DEFAULT_POSITIONS = [
+  {name:'ประธานกรรมการ', slot:'chair'},
+  {name:'กรรมการอาจารย์ที่ปรึกษาหลัก', slot:'mainAdvisor'},
+  {name:'กรรมการอาจารย์ที่ปรึกษาร่วม', slot:'coAdvisor'},
+  {name:'กรรมการผู้ทรงคุณวุฒิเฉพาะด้านระเบียบวิธีวิจัยและ/หรือสถิติ', slot:'committee'},
+  {name:'กรรมการผู้ทรงคุณวุฒิเฉพาะด้าน', slot:'committee'},
+  {name:'กรรมการและเลขานุการ', slot:'committee'},
+  {name:'กรรมการ', slot:'committee'}
+];
+var OLD_ROLE_KEY_TO_NAME = {
+  chair:'ประธานกรรมการ',
+  mainAdvisor:'กรรมการอาจารย์ที่ปรึกษาหลัก',
+  coAdvisor:'กรรมการอาจารย์ที่ปรึกษาร่วม',
+  expertMethod:'กรรมการผู้ทรงคุณวุฒิเฉพาะด้านระเบียบวิธีวิจัยและ/หรือสถิติ',
+  expertField:'กรรมการผู้ทรงคุณวุฒิเฉพาะด้าน',
+  secretary:'กรรมการและเลขานุการ',
+  committeeMember:'กรรมการ'
+};
+var SLOT_LABELS = {
+  chair:'ประธานกรรมการ', mainAdvisor:'อาจารย์ที่ปรึกษาหลัก', coAdvisor:'อาจารย์ที่ปรึกษาร่วม', committee:'กรรมการสอบ'
+};
+function loadMeta(){
+  return dbGetAll('meta').then(function(rows){
+    rows.forEach(function(row){
+      if(row.key==='masterData') masterData = Object.assign(masterData, row.value);
+      if(row.key==='googleClientId') googleClientId = row.value;
+      if(row.key==='appPinHash') appPinHash = row.value;
+      if(row.key==='autoBackupEnabled') autoBackupEnabled = row.value;
+      if(row.key==='lastBackupAt') lastBackupAt = row.value;
+      if(row.key==='backupKeepCount') backupKeepCount = row.value;
+      if(row.key==='accessToken') accessToken = row.value;
+      if(row.key==='tokenExpiresAt') tokenExpiresAt = row.value;
+      if(row.key==='driveEverConnected') driveEverConnected = row.value;
+      if(row.key==='cloudModeEnabled') cloudModeEnabled = row.value;
+      if(row.key==='sheetId') sheetId = row.value;
+    });
+    migrateAdvisorFormat();
+  });
+}
+function migrateAdvisorFormat(){
+  var changed = false;
+  if(!masterData.positions || masterData.positions.length===0){
+    masterData.positions = DEFAULT_POSITIONS.map(function(p){ return {name:p.name, slot:p.slot}; });
+    changed = true;
+  }
+  masterData.advisors = (masterData.advisors||[]).map(function(item){
+    if(typeof item==='string'){
+      changed = true;
+      return { name:item, roles: masterData.positions.map(function(p){ return p.name; }) };
+    }
+    return item;
+  });
+  var committeeSlotNames = masterData.positions.filter(function(p){ return p.slot==='committee'; }).map(function(p){ return p.name; });
+  masterData.advisors.forEach(function(a){
+    if(!a.roles) return;
+    var newRoles = [];
+    a.roles.forEach(function(r){
+      if(r==='committee'){
+        changed = true;
+        committeeSlotNames.forEach(function(n){ if(newRoles.indexOf(n)===-1) newRoles.push(n); });
+      } else if(OLD_ROLE_KEY_TO_NAME[r]){
+        changed = true;
+        var mapped = OLD_ROLE_KEY_TO_NAME[r];
+        if(newRoles.indexOf(mapped)===-1) newRoles.push(mapped);
+      } else if(newRoles.indexOf(r)===-1){
+        newRoles.push(r);
+      }
+    });
+    a.roles = newRoles;
+  });
+  if(changed) saveMasterData();
+}
+function positionsBySlot(slot){
+  return masterData.positions.filter(function(p){ return p.slot===slot; }).map(function(p){ return p.name; });
+}
+function advisorNamesByRole(roleOrRoles){
+  var roles = Array.isArray(roleOrRoles) ? roleOrRoles : [roleOrRoles];
+  return masterData.advisors.filter(function(a){
+    return a.roles && roles.some(function(r){ return a.roles.indexOf(r)>-1; });
+  }).map(function(a){ return a.name; });
+}
+function setSelectValueWithFallback(selectEl, value){
+  if(!value) return;
+  selectEl.value = value;
+  if(selectEl.value !== value){
+    selectEl.appendChild(el('option',{value:value, text:value+' (ไม่ได้ติดแท็กตำแหน่งนี้)'}));
+    selectEl.value = value;
+  }
+}
+
+/* ================= LOCK SCREEN ================= */
+function simpleHashFallback(str){
+  var h=0;
+  for(var i=0;i<str.length;i++){ h = (h<<5)-h+str.charCodeAt(i); h|=0; }
+  return 'fb_'+Math.abs(h).toString(16)+'_'+str.length;
+}
+function hashPin(pin){
+  if(window.crypto && crypto.subtle && crypto.subtle.digest && window.isSecureContext){
+    var enc = new TextEncoder().encode('thesis-pin-salt-v1:'+pin);
+    return crypto.subtle.digest('SHA-256', enc).then(function(buf){
+      return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+    });
+  }
+  return Promise.resolve(simpleHashFallback(pin));
+}
+function showLockOverlay(){
+  document.getElementById('lockScreen').style.display='flex';
+  document.getElementById('lockPinInput').value='';
+  document.getElementById('lockError').textContent='';
+}
+function hideLockOverlay(){
+  document.getElementById('lockScreen').style.display='none';
+}
+function renderLockForm(){
+  var loginForm = document.getElementById('lockLoginForm');
+  var setupForm = document.getElementById('lockSetupForm');
+  if(appPinHash){
+    loginForm.style.display=''; setupForm.style.display='none';
+    document.getElementById('lockTitle').textContent='เข้าสู่ระบบ';
+  } else {
+    loginForm.style.display='none'; setupForm.style.display='';
+    document.getElementById('lockTitle').textContent='ตั้งค่าเริ่มต้น';
+  }
+  showLockOverlay();
+}
+function bindLockEvents(){
+  document.getElementById('btnLockSubmit').addEventListener('click', function(){
+    var pin = document.getElementById('lockPinInput').value;
+    if(!pin){ document.getElementById('lockError').textContent='กรุณากรอกรหัสผ่าน'; return; }
+    hashPin(pin).then(function(h){
+      if(h===appPinHash){ hideLockOverlay(); }
+      else { document.getElementById('lockError').textContent='รหัสผ่านไม่ถูกต้อง'; }
+    });
+  });
+  document.getElementById('lockPinInput').addEventListener('keydown', function(e){
+    if(e.key==='Enter') document.getElementById('btnLockSubmit').click();
+  });
+  document.getElementById('btnLockSetupSubmit').addEventListener('click', function(){
+    var p1 = document.getElementById('lockSetupPin1').value;
+    var p2 = document.getElementById('lockSetupPin2').value;
+    var err = document.getElementById('lockSetupError');
+    if(p1.length<4){ err.textContent='รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
+    if(p1!==p2){ err.textContent='รหัสผ่านทั้งสองช่องไม่ตรงกัน'; return; }
+    err.textContent='';
+    hashPin(p1).then(function(h){
+      appPinHash = h;
+      return dbPut('meta',{key:'appPinHash', value:h});
+    }).then(function(){
+      hideLockOverlay();
+      toast('ตั้งรหัสผ่านเรียบร้อย ใช้รหัสนี้เข้าระบบครั้งต่อไป');
+    });
+  });
+  document.getElementById('btnLockNow').addEventListener('click', function(){
+    showLockOverlay();
+  });
+  document.getElementById('btnChangePin').addEventListener('click', changePin);
+}
+function changePin(){
+  var cur = document.getElementById('pin_current').value;
+  var n1 = document.getElementById('pin_new1').value;
+  var n2 = document.getElementById('pin_new2').value;
+  if(!appPinHash){ toast('ยังไม่มีการตั้งรหัสผ่านไว้', true); return; }
+  if(n1.length<4){ toast('รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
+  if(n1!==n2){ toast('รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน', true); return; }
+  hashPin(cur).then(function(h){
+    if(h!==appPinHash){ toast('รหัสผ่านปัจจุบันไม่ถูกต้อง', true); throw new Error('stop'); }
+    return hashPin(n1);
+  }).then(function(newHash){
+    appPinHash = newHash;
+    return dbPut('meta',{key:'appPinHash', value:newHash});
+  }).then(function(){
+    document.getElementById('pin_current').value='';
+    document.getElementById('pin_new1').value='';
+    document.getElementById('pin_new2').value='';
+    toast('เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
+  }).catch(function(e){ if(e.message!=='stop') console.error(e); });
+}
+function seedDefaultsIfEmpty(){
+  var changed=false;
+  if(masterData.programs.length===0){ masterData.programs=['ครุศาสตรมหาบัณฑิต','วิทยาศาสตรมหาบัณฑิต']; changed=true; }
+  if(masterData.departments.length===0){ masterData.departments=['สาขาวิชาหลักสูตรและการสอน']; changed=true; }
+  if(changed) saveMasterData();
+}
+function saveMasterData(){
+  var localSave = dbPut('meta',{key:'masterData', value:masterData});
+  if(cloudModeEnabled && sheetId){ return localSave.then(saveMasterDataToCloud); }
+  return localSave;
+}
+function refreshCloudMasterData(){
+  if(!cloudModeEnabled || !sheetId) return Promise.resolve();
+  return loadMasterDataFromCloud().then(function(cloudMd){
+    if(cloudMd){ masterData = Object.assign(masterData, cloudMd); renderAllSelects(); renderMasterLists(); }
+  }).catch(function(e){ console.warn('refresh masterData from cloud failed', e); });
+}
+function saveGoogleClientId(){ return dbPut('meta',{key:'googleClientId', value:googleClientId}); }
+
+/* ================= NAV ================= */
+function bindNav(){
+  document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
+    btn.addEventListener('click', function(){ switchView(btn.getAttribute('data-view')); });
+  });
+  document.getElementById('lookupSearch').addEventListener('input', renderLookupList);
+}
+function switchView(name){
+  ['dashboard','form','list','settings'].forEach(function(v){
+    document.getElementById('view-'+v).style.display = (v===name)?'':'none';
+  });
+  document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
+    btn.classList.toggle('active', btn.getAttribute('data-view')===name);
+  });
+  if(cloudModeEnabled && accessToken && (name==='form' || name==='settings')) refreshCloudMasterData();
+  if(name==='list') renderList();
+  if(name==='settings') renderMasterLists();
+  if(name==='dashboard') renderDashboard();
+}
+
+/* ================= DASHBOARD / STUDENT LOOKUP ================= */
+function renderDashboard(){
+  renderLookupList();
+}
+function getStudentSummaries(){
+  return recordsGetAll().then(function(rows){
+    var latestByStudent = {};
+    var counts = {};
+    rows.forEach(function(r){
+      if(!r.studentId) return;
+      counts[r.studentId] = (counts[r.studentId]||0)+1;
+      if(!latestByStudent[r.studentId] || (r.updatedAt||0) > (latestByStudent[r.studentId].updatedAt||0)){
+        latestByStudent[r.studentId] = r;
+      }
+    });
+    return Object.keys(latestByStudent).map(function(sid){
+      var r = latestByStudent[sid];
+      return { studentId:sid, studentName:r.studentName, program:r.program, department:r.department, count:counts[sid] };
+    }).sort(function(a,b){ return (a.studentName||'').localeCompare(b.studentName||'', 'th'); });
+  });
+}
+function renderLookupList(){
+  var q = (document.getElementById('lookupSearch').value||'').trim().toLowerCase();
+  getStudentSummaries().then(function(list){
+    if(q){
+      list = list.filter(function(s){
+        return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
+      });
+    }
+    var container = document.getElementById('lookupResultList');
+    container.innerHTML='';
+    document.getElementById('lookupEmpty').style.display = list.length===0 ? '' : 'none';
+    list.forEach(function(s){
+      var item = el('div',{class:'lookup-item'},[
+        el('div',{class:'li-main'},[
+          el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
+          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program||'-')+' / '+(s.department||'-')})
+        ]),
+        el('span',{class:'li-count', text:s.count+' รายการสอบ'})
+      ]);
+      item.addEventListener('click', function(){
+        document.querySelectorAll('.lookup-item').forEach(function(x){ x.classList.remove('active'); });
+        item.classList.add('active');
+        selectLookupStudent(s.studentId);
+      });
+      container.appendChild(item);
+    });
+  });
+}
+function selectLookupStudent(studentId){
+  recordsGetByStudentId(studentId).then(function(rows){
+    if(rows.length===0) return;
+    rows.sort(function(a,b){
+      var da = a.examDate||'', db = b.examDate||'';
+      if(da!==db) return da.localeCompare(db);
+      return (a.createdAt||0)-(b.createdAt||0);
+    });
+    var latest = rows.slice().sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); })[0];
+    return Promise.all(rows.map(function(r){ return filesGetByRecordId(r.id); }))
+      .then(function(filesByRecord){ renderStudentProfile(latest, rows, filesByRecord); });
+  });
+}
+function kv(label, value, full){
+  var empty = !value;
+  return el('div',{class:'kv-item'+(full?' full':'')},[
+    el('span',{class:'k', text:label}),
+    el('span',{class:'v'+(empty?' empty':''), text: empty ? '—' : value})
+  ]);
+}
+function kvLink(label, url){
+  var valEl = url
+    ? el('a',{href:url, target:'_blank', rel:'noopener noreferrer', class:'v doc-link', text:'🔗 เปิดเอกสาร'})
+    : el('span',{class:'v empty', text:'ไม่มีลิงก์แนบ'});
+  return el('div',{class:'kv-item'},[
+    el('span',{class:'k', text:label}),
+    valEl
+  ]);
+}
+function renderStudentProfile(latest, examRecords, filesByRecord){
+  var wrap = document.getElementById('lookupDetail');
+  wrap.innerHTML='';
+
+  var englishVal = latest.englishResult ? (latest.englishResult + (latest.englishScore ? ' ('+latest.englishScore+')' : '')) : '';
+
+  var header = el('div',{class:'card'},[
+    el('div',{class:'profile-header', style:'border-bottom:none;margin-bottom:0;padding-bottom:0;'},[
+      el('div',{},[
+        el('div',{class:'ph-name', text: latest.studentName||'(ไม่ระบุชื่อ)'}),
+        el('div',{class:'ph-id', text:'รหัสนักศึกษา '+latest.studentId})
+      ]),
+      el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){
+        newDraft();
+        switchView('form');
+        setTimeout(function(){
+          document.getElementById('f_studentId').value = latest.studentId;
+          searchExistingStudent();
+        }, 0);
+      }})
+    ])
+  ]);
+  wrap.appendChild(header);
+
+  var sec1 = el('div',{class:'card section-card sec-blue'},[
+    el('h3',{text:'หมวดที่ 1: ข้อมูลนักศึกษา'}),
+    el('div',{class:'kv-grid'},[
+      kv('รหัสนักศึกษา', latest.studentId),
+      kv('ชื่อ-นามสกุล', latest.studentName),
+      kv('ระดับการศึกษา', latest.degreeLevel),
+      kv('แผนการเรียน', latest.plan),
+      kv('หลักสูตร', latest.program),
+      kv('สาขาวิชา', latest.department)
+    ])
+  ]);
+  wrap.appendChild(sec1);
+
+  var sec1_1 = el('div',{class:'card section-card sec-amber'},[
+    el('h3',{text:'หมวดที่ 1.1: เกณฑ์สำเร็จการศึกษา'}),
+    el('div',{class:'kv-grid'},[
+      kv('ผลภาษาอังกฤษ', englishVal),
+      kv('ผลคอมพิวเตอร์', latest.computerResult),
+      kv('การสอบวัดความรู้', latest.qualifyingExam)
+    ]),
+    el('div',{class:'kv-grid', style:'margin-top:12px;'},[
+      kvLink('เอกสารผลภาษาอังกฤษ', latest.englishDocLink),
+      kvLink('เอกสารผลคอมพิวเตอร์', latest.computerDocLink),
+      kvLink('เอกสารการสอบวัดความรู้', latest.qualifyingDocLink)
+    ])
+  ]);
+  wrap.appendChild(sec1_1);
+
+  var sec2 = el('div',{class:'card section-card sec-green'},[
+    el('h3',{text:'หมวดที่ 2: อาจารย์ที่ปรึกษา & หัวข้อ'}),
+    el('div',{class:'kv-grid'},[
+      kv('อาจารย์ที่ปรึกษาหลัก', latest.mainAdvisor),
+      kv('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).join(', ')),
+      kv('หัวข้อวิทยานิพนธ์ (TH)', latest.titleTh, true),
+      kv('หัวข้อวิทยานิพนธ์ (EN)', latest.titleEn, true)
+    ])
+  ]);
+  wrap.appendChild(sec2);
+
+  var publications = latest.publications || [];
+  if(publications.length){
+    var sec5 = el('div',{class:'card section-card sec-purple'},[
+      el('h3',{text:'หมวดที่ 5: การเผยแพร่ผลงานวิจัย'}),
+      el('div',{class:'publication-rows'}, publications.map(function(p){
+        return el('div',{class:'publication-row'},[
+          el('div',{class:'pr-info'},[
+            el('span',{class:'pr-venue', text:p.venue||'(ไม่ระบุชื่อวารสาร/ที่ประชุม)'}),
+            el('span',{class:'pr-year', text:p.year?('ปีที่ตีพิมพ์ '+p.year):''})
+          ]),
+          p.link ? el('a',{href:p.link, target:'_blank', rel:'noopener noreferrer', class:'link-btn', text:'🔗 เปิดผลงาน'}) : null
+        ]);
+      }))
+    ]);
+    wrap.appendChild(sec5);
+  }
+
+  examRecords.forEach(function(r, idx){
+    var files = filesByRecord[idx] || [];
+    var typeTxt = r.examType==='proposal' ? 'สอบเค้าโครงวิทยานิพนธ์' : 'สอบป้องกันวิทยานิพนธ์ / IS';
+    var resultClass = r.result==='ผ่าน' ? 'pass' : (r.result==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail');
+    var committee = (r.committee||[]).map(function(c){
+      if(typeof c==='string') return {name:c, position:''};
+      return c;
+    });
+
+    var body = [
+      el('div',{class:'exam-profile-head'},[
+        el('div',{class:'title', text: 'การสอบครั้งที่ '+(idx+1)+' — '+typeTxt}),
+        el('div',{},[
+          el('span',{class:'exam-type-tag '+r.examType, style:'margin-right:8px;', text: r.examType==='proposal'?'สอบเค้าโครง':'สอบป้องกัน/IS'}),
+          el('span',{class:'result-tag '+resultClass, text: r.result||'ยังไม่ระบุผล'})
+        ])
+      ]),
+      el('div',{class:'kv-grid'},[
+        kv('วันที่สอบ', r.examDate),
+        kv('เวลาสอบ', r.examTime),
+        kv('สถานที่สอบ', r.location)
+      ])
+    ];
+
+    var committeeRows = [];
+    if(r.chair) committeeRows.push({name:r.chair, position:'ประธานกรรมการ', isChair:true});
+    committee.forEach(function(c){ if(c.name) committeeRows.push({name:c.name, position:c.position, isChair:false}); });
+    if(committeeRows.length){
+      body.push(el('div',{class:'committee-block'},[
+        el('div',{class:'cb-label', text:'👥 คณะกรรมการสอบ'}),
+        el('div',{class:'committee-rows'}, committeeRows.map(function(c){
+          return el('div',{class:'committee-row'+(c.isChair?' chair':'')},[
+            el('span',{class:'cr-name', text:c.name}),
+            c.position ? el('span',{class:'role-badge'+(c.isChair?' chair':''), text:c.position}) : null
+          ]);
+        }))
+      ]));
+    }
+
+    if(r.examType==='defense'){
+      body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
+        kv('คะแนนเต็ม', r.fullScore),
+        kv('คะแนนที่สอบได้', r.obtainedScore),
+        kv('กำหนดส่งเล่ม', r.dueDate)
+      ]));
+    }
+
+    if(files.length){
+      var fileList = el('div',{class:'attach-list', style:'margin-top:8px;'});
+      files.forEach(function(f){
+        fileList.appendChild(el('div',{class:'attach-item'},[
+          el('span',{class:'name', text:'📄 '+f.name}),
+          el('span',{class:'size', text:fmtBytes(f.size)}),
+          el('button',{type:'button', class:'link-btn', text:'⬇ ดาวน์โหลด', onclick:function(){ downloadFile(f.id); }})
+        ]));
+      });
+      body.push(el('div',{style:'margin-top:14px;'},[
+        el('span',{class:'k', style:'font-size:12px;color:var(--muted);', text:'ไฟล์แนบ'}),
+        fileList
+      ]));
+    }
+
+    body.push(el('div',{style:'margin-top:14px;text-align:right;'},[
+      el('button',{type:'button', class:'link-btn', text:'✏️ แก้ไขรายการนี้', onclick:function(){
+        recordsGet(r.id).then(loadRecordIntoForm);
+        switchView('form');
+      }})
+    ]));
+
+    wrap.appendChild(el('div',{class:'exam-profile-card '+r.examType}, body));
+  });
+}
+
+/* ================= SELECT RENDERING ================= */
+function fillSelect(selectEl, list, placeholder){
+  var current = selectEl.value;
+  selectEl.innerHTML='';
+  selectEl.appendChild(el('option',{value:'', text: placeholder||'-- เลือก --'}));
+  list.forEach(function(item){ selectEl.appendChild(el('option',{value:item, text:item})); });
+  if(list.indexOf(current)>-1) selectEl.value = current;
+}
+function renderAllSelects(){
+  fillSelect(document.getElementById('f_program'), masterData.programs, 'เลือกหลักสูตร');
+  fillSelect(document.getElementById('f_department'), masterData.departments, 'เลือกสาขาวิชา');
+  fillSelect(document.getElementById('f_plan'), masterData.plans, 'เลือกแผนการเรียน');
+  fillSelect(document.getElementById('f_mainAdvisor'), advisorNamesByRole(positionsBySlot('mainAdvisor')), 'ระบุชื่ออาจารย์ที่ปรึกษาหลัก');
+  fillSelect(document.getElementById('p_chair'), advisorNamesByRole(positionsBySlot('chair')), 'ระบุชื่อประธานกรรมการ');
+  fillSelect(document.getElementById('d_chair'), advisorNamesByRole(positionsBySlot('chair')), 'ระบุชื่อประธานกรรมการ');
+  document.querySelectorAll('#coAdvisorList select').forEach(function(sel){
+    fillSelect(sel, advisorNamesByRole(positionsBySlot('coAdvisor')), 'ระบุชื่ออาจารย์ร่วม');
+  });
+  document.querySelectorAll('#p_committeeList .multi-row, #d_committeeList .multi-row').forEach(function(row){
+    var sels = row.querySelectorAll('select');
+    if(sels[0]) fillSelect(sels[0], allAdvisorNames(), 'ระบุชื่อกรรมการ');
+    if(sels[1]) fillSelect(sels[1], allPositionNames(), 'ระบุตำแหน่ง');
+  });
+}
+
+/* ================= DYNAMIC ROWS (co-advisor / committee) ================= */
+function addDynamicRow(containerId, placeholder, slot){
+  var container = document.getElementById(containerId);
+  var row = el('div',{class:'multi-row'});
+  var sel = el('select',{});
+  fillSelect(sel, advisorNamesByRole(positionsBySlot(slot)), placeholder);
+  var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
+  row.appendChild(sel); row.appendChild(rm);
+  container.appendChild(row);
+  return row;
+}
+function getDynamicValues(containerId){
+  var vals=[];
+  document.querySelectorAll('#'+containerId+' select').forEach(function(s){ if(s.value) vals.push(s.value); });
+  return vals;
+}
+function clearDynamicRows(containerId){ document.getElementById(containerId).innerHTML=''; }
+
+/* ================= COMMITTEE ROWS (name + position) ================= */
+function allAdvisorNames(){ return masterData.advisors.map(function(a){ return a.name; }); }
+function allPositionNames(){ return masterData.positions.map(function(p){ return p.name; }); }
+function addCommitteeRow(containerId, existingName, existingPosition){
+  var container = document.getElementById(containerId);
+  var row = el('div',{class:'multi-row'});
+  var nameSel = el('select',{});
+  fillSelect(nameSel, allAdvisorNames(), 'ระบุชื่อกรรมการ');
+  var posSel = el('select',{});
+  fillSelect(posSel, allPositionNames(), 'ระบุตำแหน่ง');
+  var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
+  row.appendChild(nameSel); row.appendChild(posSel); row.appendChild(rm);
+  container.appendChild(row);
+  if(existingName) setSelectValueWithFallback(nameSel, existingName);
+  if(existingPosition) setSelectValueWithFallback(posSel, existingPosition);
+  return row;
+}
+function getCommitteeValues(containerId){
+  var vals=[];
+  document.querySelectorAll('#'+containerId+' .multi-row').forEach(function(row){
+    var sels = row.querySelectorAll('select');
+    var name = sels[0] ? sels[0].value : '';
+    var position = sels[1] ? sels[1].value : '';
+    if(name) vals.push({name:name, position:position});
+  });
+  return vals;
+}
+
+/* ================= PUBLICATIONS (หมวดที่ 5) ================= */
+function addPublicationRow(existing){
+  var container = document.getElementById('publicationList');
+  var row = el('div',{class:'multi-row'});
+  var venue = el('input',{type:'text', placeholder:'ชื่อวารสาร/การประชุมวิชาการ', value:(existing&&existing.venue)||''});
+  var year = el('input',{type:'text', class:'pub-year', placeholder:'ปีที่ตีพิมพ์'});
+  if(existing && existing.year) year.value = existing.year;
+  var link = el('input',{type:'text', placeholder:'ลิงก์ผลงาน (URL)', value:(existing&&existing.link)||''});
+  var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
+  row.appendChild(venue); row.appendChild(year); row.appendChild(link); row.appendChild(rm);
+  container.appendChild(row);
+  return row;
+}
+function getPublicationValues(){
+  var vals=[];
+  document.querySelectorAll('#publicationList .multi-row').forEach(function(row){
+    var inputs = row.querySelectorAll('input[type=text]');
+    var venue = inputs[0] ? inputs[0].value.trim() : '';
+    var year = inputs[1] ? inputs[1].value.trim() : '';
+    var link = inputs[2] ? inputs[2].value.trim() : '';
+    if(venue || year || link) vals.push({venue:venue, year:year, link:link});
+  });
+  return vals;
+}
+
+/* ================= FORM: EXAM TYPE ================= */
+function bindFormEvents(){
+  document.getElementById('btnTypeProposal').addEventListener('click', function(){ setExamType('proposal'); });
+  document.getElementById('btnTypeDefense').addEventListener('click', function(){ setExamType('defense'); });
+  document.getElementById('btnAddCoAdvisor').addEventListener('click', function(){ addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); });
+  document.getElementById('p_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('p_committeeList'); });
+  document.getElementById('d_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('d_committeeList'); });
+  document.getElementById('btnAddPublication').addEventListener('click', function(){ addPublicationRow(); });
+  document.getElementById('btnFindStudent').addEventListener('click', searchExistingStudent);
+  document.getElementById('btnSaveForm').addEventListener('click', saveRecord);
+  document.getElementById('btnCancelForm').addEventListener('click', function(){ cancelForm(); });
+
+  document.querySelectorAll('input[name=englishResult]').forEach(function(r){
+    r.addEventListener('change', function(){
+      document.getElementById('f_englishScore').disabled = (r.value!=='ยกเว้น/เทียบเท่า') || !r.checked;
+    });
+  });
+
+  document.getElementById('p_fileInput').addEventListener('change', function(e){ handleFileInput('proposal', e.target.files); e.target.value=''; });
+  document.getElementById('d_fileInput').addEventListener('change', function(e){ handleFileInput('defense', e.target.files); e.target.value=''; });
+}
+function setExamType(type){
+  currentExamType = type;
+  document.getElementById('btnTypeProposal').classList.toggle('selected', type==='proposal');
+  document.getElementById('btnTypeDefense').classList.toggle('selected', type==='defense');
+  document.getElementById('sched-proposal').classList.toggle('visible', type==='proposal');
+  document.getElementById('sched-defense').classList.toggle('visible', type==='defense');
+  document.getElementById('result-proposal').classList.toggle('visible', type==='proposal');
+  document.getElementById('result-defense').classList.toggle('visible', type==='defense');
+}
+
+/* ================= NEW / LOAD / RESET ================= */
+function newDraft(){
+  currentDraftId = uuid();
+  editingExisting = false;
+  formOpenedAt = Date.now();
+  resetFormFields();
+  renderAttachmentList('proposal');
+  renderAttachmentList('defense');
+}
+function resetFormFields(){
+  setExamType(null);
+  document.getElementById('f_studentId').value='';
+  document.getElementById('f_studentName').value='';
+  document.querySelector('input[name=degreeLevel][value="ปริญญาโท"]').checked=true;
+  document.getElementById('f_plan').value='';
+  document.getElementById('f_program').value='';
+  document.getElementById('f_department').value='';
+  document.querySelector('input[name=englishResult][value="สอบผ่าน"]').checked=true;
+  document.getElementById('f_englishScore').value=''; document.getElementById('f_englishScore').disabled=true;
+  document.getElementById('f_englishDocLink').value='';
+  document.querySelector('input[name=computerResult][value="สอบผ่าน"]').checked=true;
+  document.getElementById('f_computerDocLink').value='';
+  document.querySelector('input[name=qualifyingExam][value="ผ่านสอบประมวลความรู้ (ป.โท)"]').checked=true;
+  document.getElementById('f_qualifyingDocLink').value='';
+  document.getElementById('f_mainAdvisor').value='';
+  clearDynamicRows('coAdvisorList');
+  document.getElementById('f_titleTh').value='';
+  document.getElementById('f_titleEn').value='';
+  clearDynamicRows('publicationList');
+
+  document.getElementById('p_date').value=''; document.getElementById('p_examTime').value=''; document.getElementById('p_location').value='';
+  document.getElementById('p_chair').value=''; clearDynamicRows('p_committeeList');
+  document.querySelector('input[name=proposalResult][value="ผ่าน"]').checked=true;
+
+  document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
+  document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
+  document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
+  document.querySelector('input[name=defenseResult][value="ผ่าน"]').checked=true;
+
+  document.getElementById('studentHistoryBox').style.display='none';
+  document.getElementById('studentHistoryList').innerHTML='';
+}
+function loadRecordIntoForm(rec){
+  currentDraftId = rec.id;
+  editingExisting = true;
+  formOpenedAt = Date.now();
+  setExamType(rec.examType);
+  document.getElementById('f_studentId').value = rec.studentId||'';
+  document.getElementById('f_studentName').value = rec.studentName||'';
+  var dl = document.querySelector('input[name=degreeLevel][value="'+rec.degreeLevel+'"]'); if(dl) dl.checked=true;
+  document.getElementById('f_plan').value = rec.plan||'';
+  document.getElementById('f_program').value = rec.program||'';
+  document.getElementById('f_department').value = rec.department||'';
+  var er = document.querySelector('input[name=englishResult][value="'+rec.englishResult+'"]'); if(er) er.checked=true;
+  document.getElementById('f_englishScore').disabled = rec.englishResult!=='ยกเว้น/เทียบเท่า';
+  document.getElementById('f_englishScore').value = rec.englishScore||'';
+  document.getElementById('f_englishDocLink').value = rec.englishDocLink||'';
+  var cr = document.querySelector('input[name=computerResult][value="'+rec.computerResult+'"]'); if(cr) cr.checked=true;
+  document.getElementById('f_computerDocLink').value = rec.computerDocLink||'';
+  var qe = document.querySelector('input[name=qualifyingExam][value="'+rec.qualifyingExam+'"]'); if(qe) qe.checked=true;
+  document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
+  setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
+  clearDynamicRows('coAdvisorList');
+  (rec.coAdvisors||[]).forEach(function(name){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); setSelectValueWithFallback(r.querySelector('select'), name); });
+  document.getElementById('f_titleTh').value = rec.titleTh||'';
+  document.getElementById('f_titleEn').value = rec.titleEn||'';
+  clearDynamicRows('publicationList');
+  (rec.publications||[]).forEach(function(p){ addPublicationRow(p); });
+
+  if(rec.examType==='proposal'){
+    document.getElementById('p_date').value = rec.examDate||'';
+    document.getElementById('p_examTime').value = rec.examTime||'';
+    document.getElementById('p_location').value = rec.location||'';
+    setSelectValueWithFallback(document.getElementById('p_chair'), rec.chair||'');
+    clearDynamicRows('p_committeeList');
+    (rec.committee||[]).forEach(function(c){
+      if(typeof c==='string') addCommitteeRow('p_committeeList', c, '');
+      else addCommitteeRow('p_committeeList', c.name, c.position);
+    });
+    var pr = document.querySelector('input[name=proposalResult][value="'+rec.result+'"]'); if(pr) pr.checked=true;
+  } else if(rec.examType==='defense'){
+    document.getElementById('d_date').value = rec.examDate||'';
+    document.getElementById('d_examTime').value = rec.examTime||'';
+    document.getElementById('d_location').value = rec.location||'';
+    setSelectValueWithFallback(document.getElementById('d_chair'), rec.chair||'');
+    clearDynamicRows('d_committeeList');
+    (rec.committee||[]).forEach(function(c){
+      if(typeof c==='string') addCommitteeRow('d_committeeList', c, '');
+      else addCommitteeRow('d_committeeList', c.name, c.position);
+    });
+    document.getElementById('d_fullScore').value = rec.fullScore||'';
+    document.getElementById('d_obtainedScore').value = rec.obtainedScore||'';
+    document.getElementById('d_dueDate').value = rec.dueDate||'';
+    var dr = document.querySelector('input[name=defenseResult][value="'+rec.result+'"]'); if(dr) dr.checked=true;
+  }
+  renderAttachmentList('proposal');
+  renderAttachmentList('defense');
+  renderExamHistory(rec.studentId);
+}
+function cancelForm(){
+  if(!editingExisting){
+    filesGetByRecordId(currentDraftId).then(function(files){
+      return Promise.all(files.map(function(f){ return filesDelete(f.id); }));
+    }).then(function(){ newDraft(); switchView('list'); });
+  } else {
+    newDraft(); switchView('list');
+  }
+}
+
+/* ================= SEARCH EXISTING STUDENT ================= */
+function searchExistingStudent(){
+  var sid = document.getElementById('f_studentId').value.trim();
+  if(!sid){ toast('กรุณากรอกรหัสนักศึกษาก่อนค้นหา', true); return; }
+  recordsGetByStudentId(sid).then(function(rows){
+    if(rows.length===0){
+      toast('ไม่พบข้อมูลเดิมของรหัสนักศึกษานี้', true);
+      document.getElementById('studentHistoryBox').style.display='none';
+      document.getElementById('studentHistoryList').innerHTML='';
+      return;
+    }
+    rows.sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
+    var rec = rows[0];
+    document.getElementById('f_studentName').value = rec.studentName||'';
+    var dl = document.querySelector('input[name=degreeLevel][value="'+rec.degreeLevel+'"]'); if(dl) dl.checked=true;
+    document.getElementById('f_plan').value = rec.plan||'';
+    document.getElementById('f_program').value = rec.program||'';
+    document.getElementById('f_department').value = rec.department||'';
+    var er = document.querySelector('input[name=englishResult][value="'+rec.englishResult+'"]'); if(er) er.checked=true;
+    document.getElementById('f_englishScore').disabled = rec.englishResult!=='ยกเว้น/เทียบเท่า';
+    document.getElementById('f_englishScore').value = rec.englishScore||'';
+    document.getElementById('f_englishDocLink').value = rec.englishDocLink||'';
+    var cr = document.querySelector('input[name=computerResult][value="'+rec.computerResult+'"]'); if(cr) cr.checked=true;
+    document.getElementById('f_computerDocLink').value = rec.computerDocLink||'';
+    var qe = document.querySelector('input[name=qualifyingExam][value="'+rec.qualifyingExam+'"]'); if(qe) qe.checked=true;
+    document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
+    setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
+    clearDynamicRows('coAdvisorList');
+    (rec.coAdvisors||[]).forEach(function(name){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); setSelectValueWithFallback(r.querySelector('select'), name); });
+    document.getElementById('f_titleTh').value = rec.titleTh||'';
+    document.getElementById('f_titleEn').value = rec.titleEn||'';
+  clearDynamicRows('publicationList');
+  (rec.publications||[]).forEach(function(p){ addPublicationRow(p); });
+    renderExamHistory(sid);
+    toast('พบข้อมูลเดิม — เติมข้อมูลหมวด 1, 1.1, 2 ให้แล้ว เลือกประเภทการสอบครั้งใหม่ในหมวดที่ 3 ได้เลย');
+  });
+}
+function renderExamHistory(studentId){
+  var box = document.getElementById('studentHistoryBox');
+  var list = document.getElementById('studentHistoryList');
+  if(!studentId){ box.style.display='none'; list.innerHTML=''; return; }
+  recordsGetByStudentId(studentId).then(function(rows){
+    if(rows.length===0){ box.style.display='none'; list.innerHTML=''; return; }
+    rows.sort(function(a,b){
+      var da = a.examDate||'', db = b.examDate||'';
+      if(da!==db) return db.localeCompare(da);
+      return (b.updatedAt||0)-(a.updatedAt||0);
+    });
+    list.innerHTML='';
+    rows.forEach(function(r){
+      var typeTxt = r.examType==='proposal' ? 'สอบเค้าโครง' : 'สอบป้องกัน/IS';
+      var resultClass = r.result==='ผ่าน' ? 'pass' : (r.result==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail');
+      var label = typeTxt+' — '+(r.examDate||'ยังไม่ระบุวันที่')+(r.id===currentDraftId && editingExisting?' (กำลังแก้ไขรายการนี้อยู่)':'');
+      var row = el('div',{class:'attach-item'},[
+        el('span',{class:'name', text:label}),
+        el('span',{class:'result-tag '+resultClass, text: r.result||'-'})
+      ]);
+      list.appendChild(row);
+    });
+    box.style.display='';
+  });
+}
+
+/* ================= VALIDATE / COLLECT / SAVE ================= */
+function validateForm(){
+  if(!currentExamType) return 'กรุณาเลือกประเภทการสอบก่อน';
+  if(!document.getElementById('f_studentId').value.trim()) return 'กรุณากรอกรหัสนักศึกษา';
+  if(!document.getElementById('f_studentName').value.trim()) return 'กรุณากรอกชื่อ-นามสกุล';
+  if(!document.getElementById('f_program').value) return 'กรุณาเลือกหลักสูตร';
+  if(!document.getElementById('f_department').value) return 'กรุณาเลือกสาขาวิชา';
+  if(!document.getElementById('f_mainAdvisor').value) return 'กรุณาเลือกอาจารย์ที่ปรึกษาหลัก';
+  if(!document.getElementById('f_titleTh').value.trim()) return 'กรุณากรอกหัวข้อวิทยานิพนธ์ (TH)';
+  if(currentExamType==='proposal'){
+    if(!document.getElementById('p_date').value) return 'กรุณาระบุวันที่สอบเค้าโครง';
+    if(!document.getElementById('p_chair').value) return 'กรุณาเลือกประธานกรรมการ';
+  } else {
+    if(!document.getElementById('d_date').value) return 'กรุณาระบุวันที่สอบป้องกัน';
+    if(!document.getElementById('d_chair').value) return 'กรุณาเลือกประธานกรรมการ';
+  }
+  return null;
+}
+function collectFormData(){
+  var rec = {
+    id: currentDraftId,
+    examType: currentExamType,
+    studentId: document.getElementById('f_studentId').value.trim(),
+    studentName: document.getElementById('f_studentName').value.trim(),
+    degreeLevel: document.querySelector('input[name=degreeLevel]:checked').value,
+    plan: document.getElementById('f_plan').value,
+    program: document.getElementById('f_program').value,
+    department: document.getElementById('f_department').value,
+    englishResult: document.querySelector('input[name=englishResult]:checked').value,
+    englishScore: document.getElementById('f_englishScore').value,
+    englishDocLink: document.getElementById('f_englishDocLink').value.trim(),
+    computerResult: document.querySelector('input[name=computerResult]:checked').value,
+    computerDocLink: document.getElementById('f_computerDocLink').value.trim(),
+    qualifyingExam: document.querySelector('input[name=qualifyingExam]:checked').value,
+    qualifyingDocLink: document.getElementById('f_qualifyingDocLink').value.trim(),
+    mainAdvisor: document.getElementById('f_mainAdvisor').value,
+    coAdvisors: getDynamicValues('coAdvisorList'),
+    titleTh: document.getElementById('f_titleTh').value.trim(),
+    titleEn: document.getElementById('f_titleEn').value.trim(),
+    publications: getPublicationValues(),
+    updatedAt: Date.now()
+  };
+  if(currentExamType==='proposal'){
+    rec.examDate = document.getElementById('p_date').value;
+    rec.examTime = document.getElementById('p_examTime').value;
+    rec.location = document.getElementById('p_location').value;
+    rec.chair = document.getElementById('p_chair').value;
+    rec.committee = getCommitteeValues('p_committeeList');
+    rec.result = document.querySelector('input[name=proposalResult]:checked').value;
+  } else {
+    rec.examDate = document.getElementById('d_date').value;
+    rec.examTime = document.getElementById('d_examTime').value;
+    rec.location = document.getElementById('d_location').value;
+    rec.chair = document.getElementById('d_chair').value;
+    rec.committee = getCommitteeValues('d_committeeList');
+    rec.fullScore = document.getElementById('d_fullScore').value;
+    rec.obtainedScore = document.getElementById('d_obtainedScore').value;
+    rec.dueDate = document.getElementById('d_dueDate').value;
+    rec.result = document.querySelector('input[name=defenseResult]:checked').value;
+  }
+  return rec;
+}
+function saveRecord(){
+  var err = validateForm();
+  if(err){ toast(err, true); return; }
+  var rec = collectFormData();
+  recordsGet(rec.id).then(function(existing){
+    rec.createdAt = existing ? existing.createdAt : Date.now();
+    if(cloudModeEnabled && existing && formOpenedAt && existing.updatedAt && existing.updatedAt > formOpenedAt){
+      var ok = confirm('ข้อมูลรายการนี้ถูกแก้ไขโดยผู้อื่นหลังจากที่คุณเปิดฟอร์มนี้ขึ้นมา หากบันทึกต่อ การแก้ไขของคุณจะบันทึกทับข้อมูลล่าสุด ต้องการบันทึกทับหรือไม่?');
+      if(!ok){ var e2=new Error('CANCELLED'); e2.silent=true; throw e2; }
+    }
+    return recordsPut(rec);
+  }).then(function(){
+    toast('บันทึกข้อมูลเรียบร้อย');
+    newDraft();
+    switchView('list');
+  }).catch(function(e){ if(e && e.silent) return; toast('บันทึกไม่สำเร็จ: '+e, true); });
+}
+
+/* ================= FILES / ATTACHMENTS ================= */
+function ensureAttachmentFolder(){
+  var sid = document.getElementById('f_studentId').value.trim() || 'unknown';
+  var sname = document.getElementById('f_studentName').value.trim() || 'unknown';
+  var studentFolderName = sid+'_'+sname;
+  return ensureDriveFolder('ThesisManagerAttachments').then(function(rootId){
+    return ensureDriveFolder(studentFolderName, rootId);
+  });
+}
+function handleFileInput(section, fileList){
+  var files = Array.prototype.slice.call(fileList);
+  if(cloudModeEnabled){
+    toast('กำลังอัปโหลดไฟล์ขึ้น Drive...');
+    ensureAuthed().then(function(){ return ensureAttachmentFolder(); }).then(function(folderId){
+      return Promise.all(files.map(function(f){
+        return driveUploadBlob(f, f.name, f.type, folderId).then(function(driveFile){
+          return filesPut({
+            id: uuid(), recordId: currentDraftId, section: section,
+            name: f.name, type: f.type, size: f.size,
+            driveFileId: driveFile.id, driveLink: driveFile.webViewLink||('https://drive.google.com/file/d/'+driveFile.id+'/view'),
+            addedAt: Date.now()
+          });
+        });
+      }));
+    }).then(function(){ renderAttachmentList(section); toast('แนบไฟล์และอัปโหลดขึ้น Drive สำเร็จ'); })
+      .catch(function(e){ toast('อัปโหลดไฟล์ไม่สำเร็จ: '+e, true); });
+    return;
+  }
+  Promise.all(files.map(function(f){
+    return dbPut('files', {
+      id: uuid(), recordId: currentDraftId, section: section,
+      name: f.name, type: f.type, size: f.size, blob: f,
+      driveFileId: null, driveLink: null, addedAt: Date.now()
+    });
+  })).then(function(){ renderAttachmentList(section); });
+}
+function renderAttachmentList(section){
+  var containerId = section==='proposal' ? 'p_attachList' : 'd_attachList';
+  var container = document.getElementById(containerId);
+  container.innerHTML='';
+  if(!currentDraftId) return;
+  filesGetByRecordId(currentDraftId).then(function(files){
+    files = files.filter(function(f){ return f.section===section; });
+    if(files.length===0){ container.appendChild(el('div',{class:'help',text:'ยังไม่มีไฟล์แนบ'})); return; }
+    files.forEach(function(f){
+      var driveBtn;
+      if(f.driveFileId){
+        driveBtn = el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'📂 เปิดใน Drive'});
+      } else {
+        driveBtn = el('button',{type:'button', class:'link-btn', onclick:function(){ uploadAttachmentToDrive(f.id, section); }, text:'☁️ ส่งไป Drive'});
+      }
+      var row = el('div',{class:'attach-item'},[
+        el('span',{class:'name', text:'📄 '+f.name}),
+        el('span',{class:'size', text:fmtBytes(f.size)}),
+        el('button',{type:'button', class:'link-btn', onclick:function(){ downloadFile(f.id); }, text:'⬇ ดาวน์โหลด'}),
+        driveBtn,
+        el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, text:'ลบ'})
+      ]);
+      container.appendChild(row);
+    });
+  });
+}
+function downloadFile(id){
+  filesGet(id).then(function(f){
+    if(!f) return;
+    if(f.blob){
+      var url = URL.createObjectURL(f.blob);
+      var a = el('a',{href:url, download:f.name}); document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    } else if(f.driveLink){
+      window.open(f.driveLink, '_blank');
+    } else {
+      toast('ไม่พบไฟล์นี้', true);
+    }
+  });
+}
+function deleteFile(id, section){
+  if(!confirm('ลบไฟล์นี้หรือไม่?')) return;
+  filesDelete(id).then(function(){ renderAttachmentList(section); });
+}
+
+/* ================= LIST VIEW ================= */
+function bindListEvents(){
+  document.getElementById('listSearch').addEventListener('input', function(){ renderList(); });
+  document.getElementById('listFilterType').addEventListener('change', function(){ renderList(); });
+  document.getElementById('listFilterResult').addEventListener('change', function(){ renderList(); });
+  document.getElementById('btnNewFromList').addEventListener('click', function(){ newDraft(); switchView('form'); });
+  document.getElementById('btnExportCsv').addEventListener('click', function(){ exportData('csv'); });
+  document.getElementById('btnExportXlsx').addEventListener('click', function(){ exportData('xlsx'); });
+}
+function getFilteredRecords(){
+  return recordsGetAll().then(function(rows){
+    var q = document.getElementById('listSearch').value.trim().toLowerCase();
+    var typeF = document.getElementById('listFilterType').value;
+    var resultF = document.getElementById('listFilterResult').value;
+    rows = rows.filter(function(r){
+      if(typeF && r.examType!==typeF) return false;
+      if(resultF && r.result!==resultF) return false;
+      if(q){
+        var hay = [r.studentId,r.studentName,r.titleTh,r.titleEn].join(' ').toLowerCase();
+        if(hay.indexOf(q)===-1) return false;
+      }
+      return true;
+    });
+    rows.sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
+    return rows;
+  });
+}
+function renderList(){
+  getFilteredRecords().then(function(rows){
+    var tbody = document.getElementById('listTbody');
+    tbody.innerHTML='';
+    document.getElementById('listEmpty').style.display = rows.length===0 ? '' : 'none';
+    Promise.all(rows.map(function(r){ return filesGetByRecordId(r.id).then(function(fs){ return fs.length; }); }))
+    .then(function(counts){
+      rows.forEach(function(r, i){
+        var typeTag = el('span',{class:'exam-type-tag '+r.examType, text: r.examType==='proposal'?'สอบเค้าโครง':'สอบป้องกัน/IS'});
+        var resultClass = r.result==='ผ่าน' ? 'pass' : (r.result==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail');
+        var resultTag = el('span',{class:'result-tag '+resultClass, text:r.result||'-'});
+        var tr = el('tr',{},[
+          el('td',{text:r.studentId}),
+          el('td',{text:r.studentName}),
+          el('td',{},[typeTag]),
+          el('td',{text:r.examDate||'-'}),
+          el('td',{},[resultTag]),
+          el('td',{text: counts[i] + ' ไฟล์'}),
+          el('td',{},[
+            el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ recordsGet(r.id).then(loadRecordIntoForm); switchView('form'); }, text:'แก้ไข'}),
+            el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteRecordConfirm(r.id); }, text:'ลบ'})
+          ])
+        ]);
+        tbody.appendChild(tr);
+      });
+    });
+  });
+}
+function deleteRecordConfirm(id){
+  if(!confirm('ยืนยันลบข้อมูลรายการนี้? (ไฟล์แนบที่เกี่ยวข้องจะถูกลบด้วย)')) return;
+  Promise.all([
+    recordsDelete(id),
+    filesGetByRecordId(id).then(function(files){ return Promise.all(files.map(function(f){ return filesDelete(f.id); })); })
+  ]).then(function(){ toast('ลบข้อมูลแล้ว'); renderList(); });
+}
+
+/* ================= EXPORT ================= */
+var EXPORT_COLUMNS = [
+  ['studentId','รหัสนักศึกษา'],['studentName','ชื่อ-นามสกุล'],['degreeLevel','ระดับการศึกษา'],
+  ['program','หลักสูตร'],['department','สาขาวิชา'],['plan','แผนการเรียน'],
+  ['englishResult','ผลภาษาอังกฤษ'],['englishScore','คะแนนภาษาอังกฤษ'],['englishDocLink','ลิงก์เอกสารผลภาษาอังกฤษ'],
+  ['computerResult','ผลคอมพิวเตอร์'],['computerDocLink','ลิงก์เอกสารผลคอมพิวเตอร์'],
+  ['qualifyingExam','การสอบวัดความรู้'],['qualifyingDocLink','ลิงก์เอกสารการสอบวัดความรู้'],
+  ['mainAdvisor','อาจารย์ที่ปรึกษาหลัก'],['coAdvisorsStr','อาจารย์ที่ปรึกษาร่วม'],
+  ['titleTh','หัวข้อวิทยานิพนธ์ (TH)'],['titleEn','หัวข้อวิทยานิพนธ์ (EN)'],
+  ['publicationsStr','การเผยแพร่ผลงานวิจัย'],
+  ['examTypeStr','ประเภทการสอบ'],['examDate','วันที่สอบ'],['examTime','เวลาสอบ'],['location','สถานที่สอบ'],
+  ['chair','ประธานกรรมการ'],['committeeStr','กรรมการสอบ'],
+  ['fullScore','คะแนนเต็ม'],['obtainedScore','คะแนนที่สอบได้'],['dueDate','กำหนดส่งเล่ม'],
+  ['result','ผลสอบ']
+];
+function toExportRow(r){
+  return {
+    studentId:r.studentId, studentName:r.studentName, degreeLevel:r.degreeLevel,
+    program:r.program, department:r.department, plan:r.plan,
+    englishResult:r.englishResult, englishScore:r.englishScore, englishDocLink:r.englishDocLink||'',
+    computerResult:r.computerResult, computerDocLink:r.computerDocLink||'',
+    qualifyingExam:r.qualifyingExam, qualifyingDocLink:r.qualifyingDocLink||'',
+    mainAdvisor:r.mainAdvisor, coAdvisorsStr:(r.coAdvisors||[]).join('; '),
+    titleTh:r.titleTh, titleEn:r.titleEn,
+    publicationsStr:(r.publications||[]).map(function(p){
+      var s = p.venue||'';
+      if(p.year) s += (s?' ':'')+'('+p.year+')';
+      if(p.link) s += (s?' — ':'')+p.link;
+      return s;
+    }).join('; '),
+    examTypeStr: r.examType==='proposal'?'สอบเค้าโครงวิทยานิพนธ์':'สอบป้องกันวิทยานิพนธ์/IS',
+    examDate:r.examDate, examTime:r.examTime, location:r.location,
+    chair:r.chair, committeeStr:(r.committee||[]).map(function(c){
+      if(typeof c==='string') return c;
+      return c.name + (c.position ? ' ('+c.position+')' : '');
+    }).join('; '),
+    fullScore:r.fullScore||'', obtainedScore:r.obtainedScore||'', dueDate:r.dueDate||'',
+    result:r.result
+  };
+}
+function exportData(format){
+  getFilteredRecords().then(function(rows){
+    if(rows.length===0){ toast('ไม่มีข้อมูลให้ส่งออก', true); return; }
+    var data = rows.map(toExportRow);
+    var headers = EXPORT_COLUMNS.map(function(c){ return c[1]; });
+    var keys = EXPORT_COLUMNS.map(function(c){ return c[0]; });
+    if(format==='xlsx'){
+      var wb = XLSX.utils.book_new();
+      var usedSheetNames = {};
+      function toRows(list){ return list.map(function(row){ return keys.map(function(k){ return row[k]!=null?row[k]:''; }); }); }
+
+      var wsAll = XLSX.utils.aoa_to_sheet([headers].concat(toRows(data)));
+      XLSX.utils.book_append_sheet(wb, wsAll, uniqueSheetName('ทั้งหมด', usedSheetNames));
+
+      var groups = {}; var groupOrder = [];
+      data.forEach(function(row){
+        var key = (row.program||'ไม่ระบุหลักสูตร')+' - '+(row.department||'ไม่ระบุสาขา');
+        if(!groups[key]){ groups[key]=[]; groupOrder.push(key); }
+        groups[key].push(row);
+      });
+      if(groupOrder.length>1){
+        groupOrder.forEach(function(key){
+          var wsGroup = XLSX.utils.aoa_to_sheet([headers].concat(toRows(groups[key])));
+          XLSX.utils.book_append_sheet(wb, wsGroup, uniqueSheetName(key, usedSheetNames));
+        });
+      }
+      XLSX.writeFile(wb, 'thesis-exam-records-'+dateStamp()+'.xlsx');
+    } else {
+      var lines = [headers.join(',')];
+      data.forEach(function(row){
+        lines.push(keys.map(function(k){
+          var v = row[k]!=null?String(row[k]):'';
+          v = v.replace(/"/g,'""');
+          return '"'+v+'"';
+        }).join(','));
+      });
+      var csv = '﻿' + lines.join('\r\n');
+      var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      var url = URL.createObjectURL(blob);
+      var a = el('a',{href:url, download:'thesis-exam-records-'+dateStamp()+'.csv'});
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    }
+    toast('ส่งออกข้อมูลแล้ว');
+  });
+}
+function dateStamp(){
+  var d = new Date();
+  function p(n){ return String(n).padStart(2,'0'); }
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes());
+}
+function sanitizeSheetName(name){
+  var s = String(name||'Sheet').replace(/[\\\/\?\*\[\]:]/g, '-').trim();
+  if(!s) s = 'Sheet';
+  if(s.length>31) s = s.slice(0,31);
+  return s;
+}
+function uniqueSheetName(base, usedNames){
+  var name = sanitizeSheetName(base);
+  if(!usedNames[name]){ usedNames[name]=1; return name; }
+  var i=2, finalName;
+  do{
+    var suffix = ' ('+i+')';
+    finalName = name.slice(0, 31-suffix.length)+suffix;
+    i++;
+  } while(usedNames[finalName]);
+  usedNames[finalName]=1;
+  return finalName;
+}
+
+/* ================= SETTINGS: MASTER DATA ================= */
+function bindSettingsEvents(){
+  document.querySelectorAll('#view-settings [data-add]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.getAttribute('data-add');
+      var inputId = key==='programs'?'m_program_input': key==='departments'?'m_department_input': key==='plans'?'m_plan_input':'m_advisor_input';
+      var input = document.getElementById(inputId);
+      var val = input.value.trim();
+      if(!val) return;
+      if(masterData[key].indexOf(val)===-1){ masterData[key].push(val); saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); }); }
+      input.value='';
+    });
+  });
+  document.getElementById('s_clientId').value = googleClientId;
+  document.getElementById('btnSaveClientId').addEventListener('click', function(){
+    googleClientId = document.getElementById('s_clientId').value.trim();
+    saveGoogleClientId().then(function(){ toast('บันทึก Client ID แล้ว'); initGsiClient(); });
+  });
+  document.getElementById('s_autoBackup').addEventListener('change', function(e){
+    autoBackupEnabled = e.target.checked;
+    dbPut('meta',{key:'autoBackupEnabled', value:autoBackupEnabled}).then(function(){
+      toast(autoBackupEnabled ? 'เปิดใช้งานสำรองข้อมูลอัตโนมัติแล้ว' : 'ปิดใช้งานสำรองข้อมูลอัตโนมัติแล้ว');
+      if(autoBackupEnabled) checkAutoBackup();
+    });
+  });
+  document.getElementById('s_backupKeepCount').addEventListener('change', function(e){
+    var n = parseInt(e.target.value, 10);
+    if(!n || n<1) n = 1;
+    if(n>100) n = 100;
+    backupKeepCount = n;
+    e.target.value = n;
+    dbPut('meta',{key:'backupKeepCount', value:backupKeepCount}).then(function(){
+      toast('ตั้งจำนวนไฟล์สำรองที่เก็บไว้เป็น '+n+' ไฟล์แล้ว');
+    });
+  });
+  document.getElementById('s_sheetId').value = sheetId;
+  document.getElementById('btnSaveSheetId').addEventListener('click', function(){
+    var raw = document.getElementById('s_sheetId').value.trim();
+    sheetId = extractSheetId(raw);
+    document.getElementById('s_sheetId').value = sheetId;
+    dbPut('meta',{key:'sheetId', value:sheetId}).then(function(){ toast('บันทึก Spreadsheet ID แล้ว'); });
+  });
+  document.getElementById('btnInitSheet').addEventListener('click', initSheetStructure);
+  document.getElementById('s_cloudMode').checked = !!cloudModeEnabled;
+  document.getElementById('s_cloudMode').addEventListener('change', function(e){
+    if(e.target.checked && !sheetId){ toast('กรุณากรอกและบันทึก Spreadsheet ID ก่อนเปิดใช้งาน', true); e.target.checked=false; return; }
+    cloudModeEnabled = e.target.checked;
+    dbPut('meta',{key:'cloudModeEnabled', value:cloudModeEnabled}).then(function(){
+      toast(cloudModeEnabled ? 'เปิดใช้งานระบบข้อมูลกลางแล้ว' : 'ปิดใช้งานระบบข้อมูลกลางแล้ว กลับไปใช้ข้อมูลในเครื่องนี้');
+      if(cloudModeEnabled) refreshCloudMasterData();
+      renderList(); renderMasterLists(); renderAllSelects();
+    });
+  });
+  document.getElementById('btnMigrateToCloud').addEventListener('click', migrateLocalDataToCloud);
+  document.getElementById('btnOpenSheetShare').addEventListener('click', function(){
+    if(!sheetId){ toast('กรุณากรอกและบันทึก Spreadsheet ID ก่อน', true); return; }
+    window.open('https://docs.google.com/spreadsheets/d/'+sheetId+'/edit', '_blank');
+  });
+  document.getElementById('btnOpenTestUsers').addEventListener('click', function(){
+    window.open('https://console.cloud.google.com/auth/audience', '_blank');
+  });
+  document.getElementById('btnAddAdvisor').addEventListener('click', function(){
+    var input = document.getElementById('m_advisor_input');
+    var name = input.value.trim();
+    if(!name) return;
+    var roles = Array.prototype.slice.call(document.querySelectorAll('#m_advisor_roles input:checked')).map(function(c){ return c.value; });
+    if(roles.length===0){ toast('กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
+    if(masterData.advisors.some(function(a){ return a.name===name; })){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
+    masterData.advisors.push({name:name, roles:roles});
+    saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); input.value=''; });
+  });
+  document.getElementById('btnAddPosition').addEventListener('click', function(){
+    var input = document.getElementById('m_position_input');
+    var name = input.value.trim();
+    var slot = document.getElementById('m_position_slot').value;
+    if(!name) return;
+    if(masterData.positions.some(function(p){ return p.name===name; })){ toast('มีตำแหน่งนี้อยู่แล้วในรายการ', true); return; }
+    masterData.positions.push({name:name, slot:slot});
+    saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); input.value=''; });
+  });
+}
+function renderMasterLists(){
+  document.getElementById('s_clientId').value = googleClientId;
+  renderChipList('m_programs','programs');
+  renderChipList('m_departments','departments');
+  renderChipList('m_plans','plans');
+  renderPositionList();
+  renderAdvisorRoleCheckboxes();
+  renderAdvisorList();
+  renderBackupStatus();
+}
+function renderAdvisorRoleCheckboxes(){
+  var container = document.getElementById('m_advisor_roles');
+  container.innerHTML='';
+  masterData.positions.forEach(function(p){
+    var label = el('label',{},[
+      el('input',{type:'checkbox', value:p.name, checked:'checked'}),
+      document.createTextNode(' '+p.name)
+    ]);
+    container.appendChild(label);
+  });
+}
+function renderPositionList(){
+  var container = document.getElementById('m_positions');
+  container.innerHTML='';
+  masterData.positions.forEach(function(pos){
+    var chip = el('span',{class:'chip'},[
+      el('span',{text:pos.name}),
+      el('span',{class:'role-badge', text:SLOT_LABELS[pos.slot]||pos.slot}),
+      el('button',{type:'button', text:'✎', title:'แก้ไขตำแหน่ง', onclick:function(){ openPositionEditModal(pos); }}),
+      el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){ removePosition(pos.name); }})
+    ]);
+    container.appendChild(chip);
+  });
+}
+function openPositionEditModal(pos){
+  var root = document.getElementById('modalRoot');
+  var backdrop = el('div',{class:'modal-backdrop'});
+  var modal = el('div',{class:'modal'});
+  modal.appendChild(el('h3',{text:'แก้ไขตำแหน่ง'}));
+  modal.appendChild(el('div',{class:'field'},[
+    el('label',{text:'ชื่อตำแหน่ง'}),
+    el('input',{type:'text', id:'editPositionName', value:pos.name})
+  ]));
+  var slotField = el('div',{class:'field'},[el('label',{text:'ใช้ในช่อง'})]);
+  var slotSelect = el('select',{id:'editPositionSlot'});
+  [['chair','ประธานกรรมการ'],['mainAdvisor','อาจารย์ที่ปรึกษาหลัก'],['coAdvisor','อาจารย์ที่ปรึกษาร่วม'],['committee','กรรมการสอบ (เพิ่มได้หลายคน)']].forEach(function(o){
+    var opt = el('option',{value:o[0], text:'ใช้ในช่อง: '+o[1]});
+    if(pos.slot===o[0]) opt.setAttribute('selected','selected');
+    slotSelect.appendChild(opt);
+  });
+  slotField.appendChild(slotSelect);
+  modal.appendChild(slotField);
+  modal.appendChild(el('div',{class:'form-footer'},[
+    el('button',{class:'btn btn-secondary', text:'ยกเลิก', onclick:function(){ backdrop.remove(); }}),
+    el('button',{class:'btn btn-primary', text:'บันทึก', onclick:function(){
+      var newName = document.getElementById('editPositionName').value.trim();
+      var newSlot = document.getElementById('editPositionSlot').value;
+      if(!newName){ toast('กรุณากรอกชื่อตำแหน่ง', true); return; }
+      if(newName!==pos.name && masterData.positions.some(function(p){ return p.name===newName; })){ toast('มีตำแหน่งนี้อยู่แล้วในรายการ', true); return; }
+      backdrop.remove();
+      updatePosition(pos.name, newName, newSlot);
+    }})
+  ]));
+  backdrop.appendChild(modal);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+  root.appendChild(backdrop);
+}
+function updatePosition(oldName, newName, newSlot){
+  var pos = masterData.positions.filter(function(p){ return p.name===oldName; })[0];
+  if(!pos) return;
+  pos.name = newName;
+  pos.slot = newSlot;
+  var nameChanged = newName!==oldName;
+  (nameChanged ? renamePositionCascade(oldName, newName) : Promise.resolve(0)).then(function(){
+    return saveMasterData();
+  }).then(function(){
+    return nameChanged ? cascadeCommitteePositionRename(oldName, newName) : 0;
+  }).then(function(updatedCount){
+    renderMasterLists();
+    renderAllSelects();
+    renderList();
+    toast('บันทึกตำแหน่งเรียบร้อย'+(updatedCount>0?' ปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
+  });
+}
+function renamePositionCascade(oldName, newName){
+  masterData.advisors.forEach(function(a){
+    if(a.roles){
+      var idx = a.roles.indexOf(oldName);
+      if(idx>-1) a.roles[idx]=newName;
+    }
+  });
+  return Promise.resolve();
+}
+function cascadeCommitteePositionRename(oldName, newName){
+  return recordsGetAll().then(function(rows){
+    var updates=[];
+    rows.forEach(function(r){
+      if(Array.isArray(r.committee) && r.committee.length>0){
+        var ch=false;
+        r.committee = r.committee.map(function(c){
+          if(typeof c==='object' && c.position===oldName){ ch=true; return Object.assign({}, c, {position:newName}); }
+          return c;
+        });
+        if(ch) updates.push(recordsPut(r));
+      }
+    });
+    return Promise.all(updates).then(function(){ return updates.length; });
+  });
+}
+function removePosition(name){
+  if(!confirm('ลบตำแหน่ง "'+name+'" หรือไม่? (จะเอาออกจากอาจารย์ทุกคนที่เคยติ๊กตำแหน่งนี้ด้วย แต่ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
+  masterData.positions = masterData.positions.filter(function(p){ return p.name!==name; });
+  masterData.advisors.forEach(function(a){
+    if(a.roles) a.roles = a.roles.filter(function(r){ return r!==name; });
+  });
+  saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); });
+}
+function renderBackupStatus(){
+  document.getElementById('s_autoBackup').checked = !!autoBackupEnabled;
+  document.getElementById('s_backupKeepCount').value = backupKeepCount;
+  var el2 = document.getElementById('s_lastBackupText');
+  if(lastBackupAt){
+    var d = new Date(lastBackupAt);
+    function p(n){ return String(n).padStart(2,'0'); }
+    el2.textContent = 'สำรองข้อมูลล่าสุด: '+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
+  } else {
+    el2.textContent = 'ยังไม่เคยสำรองข้อมูล';
+  }
+}
+function renderAdvisorList(){
+  var container = document.getElementById('m_advisors');
+  container.innerHTML='';
+  masterData.advisors.forEach(function(advisor){
+    var badges = (advisor.roles||[]).map(function(r){ return el('span',{class:'role-badge', text:r}); });
+    var chip = el('span',{class:'chip'}, [el('span',{text:advisor.name})].concat(badges).concat([
+      el('button',{type:'button', text:'✎', title:'แก้ไขชื่อ/ตำแหน่ง', onclick:function(){ openAdvisorEditModal(advisor); }}),
+      el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){ removeAdvisor(advisor.name); }})
+    ]));
+    container.appendChild(chip);
+  });
+}
+function openAdvisorEditModal(advisor){
+  var root = document.getElementById('modalRoot');
+  var backdrop = el('div',{class:'modal-backdrop'});
+  var modal = el('div',{class:'modal'});
+  modal.appendChild(el('h3',{text:'แก้ไขข้อมูลอาจารย์'}));
+  var nameField = el('div',{class:'field'},[
+    el('label',{text:'ชื่อ-ตำแหน่งทางวิชาการ'}),
+    el('input',{type:'text', id:'editAdvisorName', value:advisor.name})
+  ]);
+  modal.appendChild(nameField);
+  var roleWrap = el('div',{class:'field'},[el('label',{text:'ทำหน้าที่ได้ (เลือกได้มากกว่า 1)'})]);
+  var roleGroup = el('div',{class:'radio-group'});
+  masterData.positions.forEach(function(p){
+    var checked = (advisor.roles||[]).indexOf(p.name)>-1;
+    var label = el('label',{},[
+      el('input',{type:'checkbox', value:p.name, 'data-edit-role':'1', checked:checked?'checked':null}),
+      document.createTextNode(' '+p.name)
+    ]);
+    if(!checked) label.querySelector('input').removeAttribute('checked');
+    roleGroup.appendChild(label);
+  });
+  roleWrap.appendChild(roleGroup);
+  modal.appendChild(roleWrap);
+  modal.appendChild(el('div',{class:'form-footer'},[
+    el('button',{class:'btn btn-secondary', text:'ยกเลิก', onclick:function(){ backdrop.remove(); }}),
+    el('button',{class:'btn btn-primary', text:'บันทึก', onclick:function(){
+      var newName = document.getElementById('editAdvisorName').value.trim();
+      var newRoles = Array.prototype.slice.call(modal.querySelectorAll('[data-edit-role]:checked')).map(function(c){ return c.value; });
+      if(!newName){ toast('กรุณากรอกชื่อ', true); return; }
+      if(newRoles.length===0){ toast('กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
+      if(newName!==advisor.name && masterData.advisors.some(function(a){ return a.name===newName; })){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
+      backdrop.remove();
+      updateAdvisor(advisor.name, newName, newRoles);
+    }})
+  ]));
+  backdrop.appendChild(modal);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+  root.appendChild(backdrop);
+}
+function updateAdvisor(oldName, newName, newRoles){
+  var advisor = masterData.advisors.filter(function(a){ return a.name===oldName; })[0];
+  if(!advisor) return;
+  advisor.name = newName;
+  advisor.roles = newRoles;
+  saveMasterData().then(function(){
+    if(newName!==oldName) return cascadeRenameInRecords('advisors', oldName, newName);
+    return 0;
+  }).then(function(updatedCount){
+    renderMasterLists();
+    renderAllSelects();
+    renderList();
+    toast('บันทึกข้อมูลอาจารย์เรียบร้อย'+(updatedCount>0?' ปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
+  });
+}
+function removeAdvisor(name){
+  if(!confirm('ลบ "'+name+'" ออกจากรายชื่ออาจารย์หรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
+  masterData.advisors = masterData.advisors.filter(function(a){ return a.name!==name; });
+  saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); });
+}
+function renderChipList(containerId, key){
+  var container = document.getElementById(containerId);
+  container.innerHTML='';
+  masterData[key].forEach(function(val){
+    var chip = el('span',{class:'chip'},[
+      el('span',{text:val}),
+      el('button',{type:'button', text:'✎', title:'แก้ไขชื่อ (จะปรับปรุงข้อมูลที่เคยบันทึกไว้ให้อัตโนมัติ)', onclick:function(){
+        var newVal = prompt('แก้ไขชื่อ:', val);
+        if(newVal===null) return;
+        newVal = newVal.trim();
+        if(!newVal || newVal===val) return;
+        if(masterData[key].indexOf(newVal)>-1){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
+        renameMasterItem(key, val, newVal);
+      }}),
+      el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){
+        masterData[key] = masterData[key].filter(function(v){ return v!==val; });
+        saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); });
+      }})
+    ]);
+    container.appendChild(chip);
+  });
+}
+function renameMasterItem(key, oldVal, newVal){
+  var idx = masterData[key].indexOf(oldVal);
+  if(idx===-1) return;
+  masterData[key][idx] = newVal;
+  saveMasterData().then(function(){
+    return cascadeRenameInRecords(key, oldVal, newVal);
+  }).then(function(updatedCount){
+    renderMasterLists();
+    renderAllSelects();
+    renderList();
+    toast('แก้ไขชื่อเรียบร้อย'+(updatedCount>0?' และปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
+  });
+}
+function cascadeRenameInRecords(key, oldVal, newVal){
+  return recordsGetAll().then(function(rows){
+    var updates = [];
+    rows.forEach(function(r){
+      var changed = false;
+      if(key==='programs' && r.program===oldVal){ r.program=newVal; changed=true; }
+      if(key==='departments' && r.department===oldVal){ r.department=newVal; changed=true; }
+      if(key==='plans' && r.plan===oldVal){ r.plan=newVal; changed=true; }
+      if(key==='advisors'){
+        if(r.mainAdvisor===oldVal){ r.mainAdvisor=newVal; changed=true; }
+        if(r.chair===oldVal){ r.chair=newVal; changed=true; }
+        if(Array.isArray(r.coAdvisors) && r.coAdvisors.indexOf(oldVal)>-1){ r.coAdvisors=r.coAdvisors.map(function(v){return v===oldVal?newVal:v;}); changed=true; }
+        if(Array.isArray(r.committee) && r.committee.length>0){
+          var committeeChanged=false;
+          r.committee = r.committee.map(function(c){
+            var cname = typeof c==='string' ? c : c.name;
+            if(cname===oldVal){
+              committeeChanged=true;
+              return typeof c==='string' ? {name:newVal, position:''} : Object.assign({}, c, {name:newVal});
+            }
+            return c;
+          });
+          if(committeeChanged) changed=true;
+        }
+      }
+      if(changed) updates.push(recordsPut(r));
+    });
+    return Promise.all(updates).then(function(){ return updates.length; });
+  });
+}
+
+/* ================= GOOGLE DRIVE ================= */
+var tokenClient = null, accessToken = null, tokenExpiresAt = 0, driveFolderCache = {};
+var DRIVE_SHEETS_SCOPE = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
+function saveDriveToken(){
+  dbPut('meta',{key:'accessToken', value:accessToken});
+  dbPut('meta',{key:'tokenExpiresAt', value:tokenExpiresAt});
+  if(!driveEverConnected){ driveEverConnected = true; dbPut('meta',{key:'driveEverConnected', value:true}); }
+}
+function clearDriveToken(){
+  accessToken = null; tokenExpiresAt = 0; driveFolderCache = {}; driveEverConnected = false;
+  dbPut('meta',{key:'accessToken', value:null});
+  dbPut('meta',{key:'tokenExpiresAt', value:0});
+  dbPut('meta',{key:'driveEverConnected', value:false});
+}
+function initGsiClient(){
+  if(!googleClientId || typeof google==='undefined' || !google.accounts) return;
+  try{
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: googleClientId,
+      scope: DRIVE_SHEETS_SCOPE,
+      callback: function(resp){
+        if(resp.error){ toast('เชื่อมต่อ Google ไม่สำเร็จ: '+resp.error, true); return; }
+        accessToken = resp.access_token;
+        tokenExpiresAt = Date.now() + (resp.expires_in||3600)*1000;
+        saveDriveToken();
+        updateDriveStatusUI(true);
+        toast('เชื่อมต่อ Google Drive สำเร็จ');
+        if(cloudModeEnabled) refreshCloudMasterData();
+      }
+    });
+  }catch(e){ console.error(e); }
+}
+function updateDriveStatusUI(connected){
+  var statusEl = document.getElementById('driveStatus');
+  var textEl = document.getElementById('driveStatusText');
+  statusEl.classList.toggle('on', !!connected);
+  textEl.textContent = connected ? 'เชื่อมต่อ Google Drive แล้ว' : 'ยังไม่เชื่อมต่อ Google Drive';
+  document.getElementById('btnSignIn').style.display = connected ? 'none':'';
+  document.getElementById('btnSignOut').style.display = connected ? '':'none';
+}
+function bindGoogleButtons(){
+  document.getElementById('btnSignIn').addEventListener('click', function(){
+    if(!googleClientId){ toast('กรุณากรอกและบันทึก Google OAuth Client ID ก่อน', true); return; }
+    if(!tokenClient) initGsiClient();
+    if(!tokenClient){ toast('โหลด Google Identity Services ไม่สำเร็จ ลองรีเฟรชหน้า', true); return; }
+    tokenClient.requestAccessToken({prompt: accessToken ? '' : 'consent'});
+  });
+  document.getElementById('btnSignOut').addEventListener('click', function(){
+    if(accessToken && google.accounts && google.accounts.oauth2){ google.accounts.oauth2.revoke(accessToken, function(){}); }
+    clearDriveToken();
+    updateDriveStatusUI(false);
+    toast('ออกจากระบบ Google Drive แล้ว');
+  });
+  document.getElementById('btnBackupNow').addEventListener('click', function(){ backupNow(false); });
+  document.getElementById('btnRestore').addEventListener('click', openRestorePicker);
+}
+function ensureAuthed(){
+  return new Promise(function(resolve, reject){
+    if(accessToken && Date.now() < tokenExpiresAt - 5000){ resolve(); return; }
+    if(!googleClientId){ reject('ยังไม่ได้ตั้งค่า Google OAuth Client ID'); return; }
+    if(!tokenClient) initGsiClient();
+    if(!tokenClient){ reject('โหลด Google Identity Services ไม่สำเร็จ'); return; }
+    var origCb = tokenClient.callback;
+    google.accounts.oauth2.initTokenClient({
+      client_id: googleClientId,
+      scope: DRIVE_SHEETS_SCOPE,
+      callback: function(resp){
+        if(resp.error){ reject(resp.error); return; }
+        accessToken = resp.access_token;
+        tokenExpiresAt = Date.now() + (resp.expires_in||3600)*1000;
+        saveDriveToken();
+        updateDriveStatusUI(true);
+        resolve();
+      }
+    }).requestAccessToken({prompt: accessToken ? '' : 'consent'});
+  });
+}
+/* Best-effort silent reconnect: for a browser/profile that previously granted access,
+   Google can often re-issue an access token with no visible popup (prompt:''). This
+   cannot be guaranteed on every browser (third-party cookie / popup blocking varies),
+   so failures here are silent — the user can always fall back to the sign-in button. */
+function waitForGsi(cb, attemptsLeft){
+  attemptsLeft = attemptsLeft==null ? 15 : attemptsLeft;
+  if(typeof google!=='undefined' && google.accounts && google.accounts.oauth2){ cb(); return; }
+  if(attemptsLeft<=0) return;
+  setTimeout(function(){ waitForGsi(cb, attemptsLeft-1); }, 300);
+}
+function attemptSilentReconnect(){
+  if(!googleClientId) return;
+  waitForGsi(function(){
+    try{
+      google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: DRIVE_SHEETS_SCOPE,
+        callback: function(resp){
+          if(resp.error) return; // silent — no error toast, user can click "เชื่อมต่อ Google Drive" manually
+          accessToken = resp.access_token;
+          tokenExpiresAt = Date.now() + (resp.expires_in||3600)*1000;
+          saveDriveToken();
+          updateDriveStatusUI(true);
+          toast('เชื่อมต่อ Google Drive อัตโนมัติสำเร็จ');
+          if(cloudModeEnabled) refreshCloudMasterData();
+        }
+      }).requestAccessToken({prompt:''});
+    }catch(e){ console.warn('silent reconnect failed', e); }
+  });
+}
+function remindManualReconnect(){
+  toast('ถึงกำหนดสำรองข้อมูลอัตโนมัติ (ทุก 12 ชม.) กรุณากด "เชื่อมต่อ Google Drive" ในหน้าตั้งค่าเพื่อสำรองข้อมูลล่าสุด', true);
+}
+function attemptSilentReconnectThenBackup(){
+  if(!googleClientId){ remindManualReconnect(); return; }
+  waitForGsi(function(){
+    try{
+      google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: DRIVE_SHEETS_SCOPE,
+        callback: function(resp){
+          if(resp.error){ remindManualReconnect(); return; }
+          accessToken = resp.access_token;
+          tokenExpiresAt = Date.now() + (resp.expires_in||3600)*1000;
+          saveDriveToken();
+          updateDriveStatusUI(true);
+          backupNow(true);
+        }
+      }).requestAccessToken({prompt:''});
+    }catch(e){ remindManualReconnect(); }
+  }, 5);
+}
+function driveFetch(url, options){
+  options = options || {};
+  options.headers = Object.assign({}, options.headers, {Authorization: 'Bearer '+accessToken});
+  return fetch(url, options).then(function(res){
+    if(!res.ok) return res.text().then(function(t){ throw new Error('Drive API error '+res.status+': '+t); });
+    return res;
+  });
+}
+function ensureDriveFolder(name, parentId){
+  var cacheKey = name+'|'+(parentId||'');
+  if(driveFolderCache[cacheKey]) return Promise.resolve(driveFolderCache[cacheKey]);
+  var q = "name='"+name.replace(/'/g,"\\'")+"' and mimeType='application/vnd.google-apps.folder' and trashed=false"+(parentId?" and '"+parentId+"' in parents":"");
+  return driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)')
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(data.files && data.files.length>0){ driveFolderCache[cacheKey]=data.files[0].id; return data.files[0].id; }
+      var metadata = {name:name, mimeType:'application/vnd.google-apps.folder'};
+      if(parentId) metadata.parents=[parentId];
+      return driveFetch('https://www.googleapis.com/drive/v3/files', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(metadata)
+      }).then(function(res){ return res.json(); }).then(function(folder){ driveFolderCache[cacheKey]=folder.id; return folder.id; });
+    });
+}
+function driveUploadBlob(blob, filename, mimeType, parentId){
+  var metadata = {name: filename, parents: parentId?[parentId]:undefined};
+  var boundary = '-------thesismgr'+Date.now();
+  return blob.arrayBuffer().then(function(buf){
+    var base64Data = arrayBufferToBase64(buf);
+    var body =
+      '--'+boundary+'\r\n'+
+      'Content-Type: application/json; charset=UTF-8\r\n\r\n'+
+      JSON.stringify(metadata)+'\r\n'+
+      '--'+boundary+'\r\n'+
+      'Content-Type: '+(mimeType||'application/octet-stream')+'\r\n'+
+      'Content-Transfer-Encoding: base64\r\n\r\n'+
+      base64Data+'\r\n'+
+      '--'+boundary+'--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
+      method:'POST',
+      headers:{'Content-Type':'multipart/related; boundary='+boundary},
+      body: body
+    });
+  }).then(function(res){ return res.json(); });
+}
+function arrayBufferToBase64(buffer){
+  var bytes = new Uint8Array(buffer);
+  var binary = '';
+  var chunk = 0x8000;
+  for(var i=0;i<bytes.length;i+=chunk){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+  }
+  return btoa(binary);
+}
+
+/* ================= CLOUD DATA (Google Sheets central database) ================= */
+var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','plan','program','department',
+  'englishResult','englishScore','englishDocLink','computerResult','computerDocLink','qualifyingExam','qualifyingDocLink',
+  'mainAdvisor','coAdvisorsJson','titleTh','titleEn','examDate','examTime','location','chair','committeeJson',
+  'result','fullScore','obtainedScore','dueDate','createdAt','updatedAt','publicationsJson','deleted'];
+var FILE_COLUMNS = ['id','recordId','section','name','type','size','driveFileId','driveLink','addedAt','deleted'];
+function extractSheetId(input){
+  input = (input||'').trim();
+  var m = input.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return m ? m[1] : input;
+}
+function sheetsFetch(url, options){
+  options = options || {};
+  options.headers = Object.assign({}, options.headers, {Authorization: 'Bearer '+accessToken});
+  return fetch(url, options).then(function(res){
+    if(!res.ok) return res.text().then(function(t){ throw new Error('Sheets API error '+res.status+': '+t); });
+    return res;
+  });
+}
+function sheetsGetValues(range){
+  return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+encodeURIComponent(range))
+    .then(function(res){ return res.json(); }).then(function(data){ return data.values||[]; });
+}
+function sheetsAppendRow(tabName, rowArray){
+  var range = tabName+'!A1';
+  return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+encodeURIComponent(range)+':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({values:[rowArray]})
+  });
+}
+function sheetsUpdateRow(tabName, rowNumber, rowArray){
+  var range = tabName+'!A'+rowNumber;
+  return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+encodeURIComponent(range)+'?valueInputOption=RAW', {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({values:[rowArray]})
+  });
+}
+function rowToRecord(headers, row){
+  var rec = {};
+  headers.forEach(function(h, i){
+    var v = row[i]!==undefined ? row[i] : '';
+    if(h==='coAdvisorsJson'){ try{ rec.coAdvisors = v ? JSON.parse(v) : []; }catch(e){ rec.coAdvisors=[]; } return; }
+    if(h==='committeeJson'){ try{ rec.committee = v ? JSON.parse(v) : []; }catch(e){ rec.committee=[]; } return; }
+    if(h==='publicationsJson'){ try{ rec.publications = v ? JSON.parse(v) : []; }catch(e){ rec.publications=[]; } return; }
+    if(h==='createdAt' || h==='updatedAt'){ rec[h] = v ? Number(v) : 0; return; }
+    if(h==='deleted'){ rec.deleted = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
+    rec[h] = v;
+  });
+  return rec;
+}
+function recordToRow(rec){
+  return RECORD_COLUMNS.map(function(h){
+    if(h==='coAdvisorsJson') return JSON.stringify(rec.coAdvisors||[]);
+    if(h==='committeeJson') return JSON.stringify(rec.committee||[]);
+    if(h==='publicationsJson') return JSON.stringify(rec.publications||[]);
+    if(h==='deleted') return rec.deleted ? 'TRUE' : '';
+    var v = rec[h];
+    return v===undefined || v===null ? '' : v;
+  });
+}
+function rowToFile(headers, row){
+  var f = {};
+  headers.forEach(function(h, i){
+    var v = row[i]!==undefined ? row[i] : '';
+    if(h==='size'){ f.size = v ? Number(v) : 0; return; }
+    if(h==='addedAt'){ f.addedAt = v ? Number(v) : 0; return; }
+    if(h==='deleted'){ f.deleted = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
+    f[h] = v;
+  });
+  return f;
+}
+function fileToRow(f){
+  return FILE_COLUMNS.map(function(h){
+    if(h==='deleted') return f.deleted ? 'TRUE' : '';
+    var v = f[h];
+    return v===undefined || v===null ? '' : v;
+  });
+}
+var recordsSheetCache = null;
+function fetchRecordsSheet(){
+  return sheetsGetValues('Records!A1:AZ100000').then(function(values){
+    var headers = (values[0] && values[0].length) ? values[0] : RECORD_COLUMNS;
+    var entries = [];
+    for(var i=1;i<values.length;i++){
+      var row = values[i];
+      if(!row || !row[0]) continue;
+      entries.push({ rec: rowToRecord(headers, row), rowNumber: i+1 });
+    }
+    recordsSheetCache = {headers:headers, entries:entries};
+    return recordsSheetCache;
+  });
+}
+var filesSheetCache = null;
+function fetchFilesSheet(){
+  return sheetsGetValues('Files!A1:AZ100000').then(function(values){
+    var headers = (values[0] && values[0].length) ? values[0] : FILE_COLUMNS;
+    var entries = [];
+    for(var i=1;i<values.length;i++){
+      var row = values[i];
+      if(!row || !row[0]) continue;
+      entries.push({ rec: rowToFile(headers, row), rowNumber: i+1 });
+    }
+    filesSheetCache = {headers:headers, entries:entries};
+    return filesSheetCache;
+  });
+}
+/* ---- records adapter: routes to Sheets when cloud mode is on, else falls back to IndexedDB ---- */
+function recordsGetAll(){
+  if(!cloudModeEnabled) return dbGetAll('records');
+  return ensureAuthed().then(fetchRecordsSheet).then(function(cache){
+    return cache.entries.filter(function(e){ return !e.rec.deleted; }).map(function(e){ return e.rec; });
+  });
+}
+function recordsGet(id){
+  if(!cloudModeEnabled) return dbGet('records', id);
+  return ensureAuthed().then(fetchRecordsSheet).then(function(cache){
+    var found = cache.entries.filter(function(e){ return e.rec.id===id && !e.rec.deleted; })[0];
+    return found ? found.rec : undefined;
+  });
+}
+function recordsGetByStudentId(sid){
+  if(!cloudModeEnabled) return dbGetByIndex('records','studentId', sid);
+  return recordsGetAll().then(function(rows){ return rows.filter(function(r){ return r.studentId===sid; }); });
+}
+function recordsPut(rec){
+  if(!cloudModeEnabled) return dbPut('records', rec);
+  return ensureAuthed().then(fetchRecordsSheet).then(function(cache){
+    var existing = cache.entries.filter(function(e){ return e.rec.id===rec.id; })[0];
+    var row = recordToRow(rec);
+    if(existing){
+      return sheetsUpdateRow('Records', existing.rowNumber, row).then(function(){ return rec; });
+    } else {
+      return sheetsAppendRow('Records', row).then(function(){ return rec; });
+    }
+  });
+}
+function recordsDelete(id){
+  if(!cloudModeEnabled) return dbDelete('records', id);
+  return ensureAuthed().then(fetchRecordsSheet).then(function(cache){
+    var existing = cache.entries.filter(function(e){ return e.rec.id===id; })[0];
+    if(!existing) return;
+    var rec = Object.assign({}, existing.rec, {deleted:true, updatedAt:Date.now()});
+    return sheetsUpdateRow('Records', existing.rowNumber, recordToRow(rec));
+  });
+}
+/* ---- files adapter ---- */
+function filesGetByRecordId(recordId){
+  if(!cloudModeEnabled) return dbGetByIndex('files','recordId', recordId);
+  return ensureAuthed().then(fetchFilesSheet).then(function(cache){
+    return cache.entries.filter(function(e){ return e.rec.recordId===recordId && !e.rec.deleted; }).map(function(e){ return e.rec; });
+  });
+}
+function filesGetAllCloud(){
+  return ensureAuthed().then(fetchFilesSheet).then(function(cache){
+    return cache.entries.filter(function(e){ return !e.rec.deleted; }).map(function(e){ return e.rec; });
+  });
+}
+function filesGet(id){
+  if(!cloudModeEnabled) return dbGet('files', id);
+  return ensureAuthed().then(fetchFilesSheet).then(function(cache){
+    var found = cache.entries.filter(function(e){ return e.rec.id===id && !e.rec.deleted; })[0];
+    return found ? found.rec : undefined;
+  });
+}
+function filesPut(f){
+  if(!cloudModeEnabled) return dbPut('files', f);
+  return ensureAuthed().then(function(){ return sheetsAppendRow('Files', fileToRow(f)); }).then(function(){ return f; });
+}
+function filesDelete(id){
+  if(!cloudModeEnabled) return dbDelete('files', id);
+  return ensureAuthed().then(fetchFilesSheet).then(function(cache){
+    var existing = cache.entries.filter(function(e){ return e.rec.id===id; })[0];
+    if(!existing) return;
+    var f = Object.assign({}, existing.rec, {deleted:true});
+    return sheetsUpdateRow('Files', existing.rowNumber, fileToRow(f));
+  });
+}
+/* ---- sheet structure setup ---- */
+function initSheetStructure(){
+  var raw = document.getElementById('s_sheetId').value.trim();
+  sheetId = extractSheetId(raw);
+  if(!sheetId){ toast('กรุณากรอก Spreadsheet ID หรือลิงก์ก่อน', true); return; }
+  dbPut('meta',{key:'sheetId', value:sheetId});
+  toast('กำลังตรวจสอบโครงสร้างชีท...');
+  ensureAuthed().then(function(){
+    return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'?fields=sheets.properties.title');
+  }).then(function(res){ return res.json(); }).then(function(data){
+    var existingTitles = (data.sheets||[]).map(function(s){ return s.properties.title; });
+    var wanted = [
+      {title:'Records', headers:RECORD_COLUMNS},
+      {title:'Files', headers:FILE_COLUMNS},
+      {title:'MasterData', headers:['json']}
+    ];
+    var addRequests = wanted.filter(function(w){ return existingTitles.indexOf(w.title)===-1; })
+      .map(function(w){ return {addSheet:{properties:{title:w.title}}}; });
+    var createP = addRequests.length ? sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+':batchUpdate', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({requests:addRequests})
+    }) : Promise.resolve();
+    return createP.then(function(){
+      return Promise.all(wanted.map(function(w){
+        if(w.title==='MasterData'){
+          return sheetsGetValues('MasterData!A1:A1').then(function(vals){
+            if(vals.length>0 && vals[0].length>0) return; // already has data
+            return sheetsUpdateRow('MasterData', 1, [JSON.stringify(masterData)]);
+          });
+        }
+        // Records / Files: read the full header row and add any missing columns at the end
+        // (append-only, so existing columns/data never shift position) — this is what
+        // lets the button double as a "verify/upgrade structure" action on older sheets.
+        return sheetsGetValues(w.title+'!1:1').then(function(vals){
+          var existingHeaders = vals[0] || [];
+          if(existingHeaders.length===0) return sheetsUpdateRow(w.title, 1, w.headers);
+          var merged = existingHeaders.slice();
+          w.headers.forEach(function(h){ if(merged.indexOf(h)===-1) merged.push(h); });
+          if(merged.length===existingHeaders.length) return; // nothing missing
+          return sheetsUpdateRow(w.title, 1, merged);
+        });
+      }));
+    });
+  }).then(function(){
+    toast('สร้าง/ตรวจสอบโครงสร้างชีทกลางเรียบร้อยแล้ว พร้อมใช้งาน');
+  }).catch(function(e){ toast('ตั้งค่าโครงสร้างชีทไม่สำเร็จ: '+e, true); });
+}
+/* ---- master data on the shared sheet ---- */
+function loadMasterDataFromCloud(){
+  return ensureAuthed().then(function(){ return sheetsGetValues('MasterData!A1:A1'); }).then(function(vals){
+    if(vals.length===0 || !vals[0][0]) return null;
+    try{ return JSON.parse(vals[0][0]); }catch(e){ return null; }
+  });
+}
+function saveMasterDataToCloud(){
+  return ensureAuthed().then(function(){ return sheetsUpdateRow('MasterData', 1, [JSON.stringify(masterData)]); });
+}
+/* ---- migrate existing local data into the central sheet ---- */
+function migrateLocalDataToCloud(){
+  if(!sheetId){ toast('กรุณากรอกและบันทึก Spreadsheet ID ก่อน', true); return; }
+  if(!confirm('จะย้ายข้อมูลทั้งหมดในเครื่องนี้ (รายการสอบ + ไฟล์แนบ + ข้อมูลตั้งต้น) ขึ้นชีทกลางที่ตั้งค่าไว้ ควรทำจากเครื่องที่มีข้อมูลล่าสุด/มากที่สุดเพียงครั้งเดียว ดำเนินการต่อหรือไม่?')) return;
+  toast('กำลังเตรียมย้ายข้อมูล...');
+  ensureAuthed().then(function(){
+    return Promise.all([dbGetAll('records'), dbGetAll('files')]);
+  }).then(function(results){
+    var localRecords = results[0], localFiles = results[1];
+    toast('กำลังย้ายข้อมูลตั้งต้น...');
+    return saveMasterDataToCloud().then(function(){
+      toast('กำลังย้ายรายการสอบ ('+localRecords.length+' รายการ)...');
+      var wasCloud = cloudModeEnabled;
+      cloudModeEnabled = true; // force adapter to target the sheet during migration
+      return localRecords.reduce(function(p, rec){
+        return p.then(function(){ return recordsPut(rec); });
+      }, Promise.resolve()).then(function(){
+        toast('กำลังย้ายไฟล์แนบ ('+localFiles.length+' ไฟล์)...');
+        return localFiles.reduce(function(p, f){
+          return p.then(function(){
+            if(f.driveFileId){
+              return filesPut({id:f.id, recordId:f.recordId, section:f.section, name:f.name, type:f.type, size:f.size,
+                driveFileId:f.driveFileId, driveLink:f.driveLink, addedAt:f.addedAt});
+            }
+            // not yet uploaded to Drive locally — upload now so the central Files ledger has a real link
+            var rec = localRecords.filter(function(r){ return r.id===f.recordId; })[0];
+            var studentFolderName = rec ? (rec.studentId+'_'+rec.studentName) : 'unknown';
+            return ensureDriveFolder('ThesisManagerAttachments').then(function(rootId){
+              return ensureDriveFolder(studentFolderName, rootId);
+            }).then(function(folderId){
+              return driveUploadBlob(f.blob, f.name, f.type, folderId);
+            }).then(function(result){
+              return filesPut({id:f.id, recordId:f.recordId, section:f.section, name:f.name, type:f.type, size:f.size,
+                driveFileId:result.id, driveLink:result.webViewLink, addedAt:f.addedAt});
+            });
+          });
+        }, Promise.resolve());
+      }).then(function(){ cloudModeEnabled = wasCloud; });
+    });
+  }).then(function(){
+    toast('ย้ายข้อมูลเข้าระบบกลางเรียบร้อยแล้ว — ไปที่ช่อง "เปิดใช้งานระบบข้อมูลกลาง" เพื่อเริ่มใช้งาน');
+  }).catch(function(e){ toast('ย้ายข้อมูลไม่สำเร็จ: '+e, true); });
+}
+
+function uploadAttachmentToDrive(fileId, section){
+  ensureAuthed().then(function(){
+    return dbGet('files', fileId);
+  }).then(function(f){
+    if(!f) return;
+    return dbGet('records', f.recordId).then(function(rec){
+      var studentFolderName = (rec ? rec.studentId+'_'+rec.studentName : 'unknown');
+      return ensureDriveFolder('ThesisManagerAttachments').then(function(rootId){
+        return ensureDriveFolder(studentFolderName, rootId);
+      }).then(function(folderId){
+        toast('กำลังอัปโหลด '+f.name+' ...');
+        return driveUploadBlob(f.blob, f.name, f.type, folderId);
+      }).then(function(result){
+        f.driveFileId = result.id;
+        f.driveLink = result.webViewLink;
+        return dbPut('files', f);
+      });
+    });
+  }).then(function(){ renderAttachmentList(section); toast('อัปโหลดไฟล์แนบขึ้น Drive สำเร็จ'); })
+  .catch(function(e){ toast('อัปโหลดไม่สำเร็จ: '+e, true); });
+}
+
+function backupNow(isAuto){
+  ensureAuthed().then(function(){
+    toast('กำลังเตรียมข้อมูลสำรอง...');
+    if(cloudModeEnabled){
+      // In cloud mode, the sheet + Drive are already the source of truth and file bytes
+      // already live on Drive — the backup only needs to snapshot the metadata/records.
+      return Promise.all([recordsGetAll(), filesGetAllCloud()]).then(function(results){
+        return {records:results[0], files:results[1], masterData:masterData, exportedAt: Date.now(), source:'cloud'};
+      });
+    }
+    return Promise.all([dbGetAll('records'), dbGetAll('files')]).then(function(results){
+      var records = results[0], files = results[1];
+      return Promise.all(files.map(function(f){
+        return f.blob.arrayBuffer().then(function(buf){
+          return {id:f.id, recordId:f.recordId, section:f.section, name:f.name, type:f.type, size:f.size,
+                  driveFileId:f.driveFileId, driveLink:f.driveLink, addedAt:f.addedAt, dataBase64: arrayBufferToBase64(buf)};
+        });
+      })).then(function(filesData){
+        return {records:records, files:filesData, masterData:masterData, exportedAt: Date.now(), source:'local'};
+      });
+    });
+  }).then(function(backupObj){
+    var json = JSON.stringify(backupObj);
+    var blob = new Blob([json], {type:'application/json'});
+    var folderIdHolder = {id:null};
+    return ensureDriveFolder('ThesisManagerBackups').then(function(folderId){
+      folderIdHolder.id = folderId;
+      toast('กำลังอัปโหลดไฟล์สำรองขึ้น Drive...');
+      return driveUploadBlob(blob, 'thesis-backup-'+dateStamp()+'.json', 'application/json', folderId);
+    }).then(function(){
+      return cleanupOldBackups(folderIdHolder.id);
+    });
+  }).then(function(){
+    lastBackupAt = Date.now();
+    return dbPut('meta',{key:'lastBackupAt', value:lastBackupAt});
+  }).then(function(){
+    renderBackupStatus();
+    toast(isAuto ? 'สำรองข้อมูลอัตโนมัติขึ้น Google Drive สำเร็จ' : 'สำรองข้อมูลขึ้น Google Drive สำเร็จ');
+  }).catch(function(e){ toast((isAuto?'สำรองข้อมูลอัตโนมัติไม่สำเร็จ: ':'สำรองข้อมูลไม่สำเร็จ: ')+e, true); });
+}
+function cleanupOldBackups(folderId){
+  var q = "'"+folderId+"' in parents and trashed=false";
+  return driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&orderBy=createdTime desc&pageSize=100&fields=files(id,name,createdTime)')
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      var files = data.files||[];
+      var keep = backupKeepCount || 5;
+      var toDelete = files.slice(keep);
+      if(toDelete.length===0) return;
+      return Promise.all(toDelete.map(function(f){
+        return driveFetch('https://www.googleapis.com/drive/v3/files/'+f.id, {method:'DELETE'}).catch(function(){ /* ignore individual delete failures */ });
+      }));
+    }).catch(function(e){ console.error('cleanupOldBackups failed', e); });
+}
+var AUTO_BACKUP_INTERVAL_MS = 12*60*60*1000;
+var AUTO_BACKUP_CHECK_MS = 30*60*1000;
+function checkAutoBackup(){
+  if(!autoBackupEnabled) return;
+  var now = Date.now();
+  if(now - (lastBackupAt||0) < AUTO_BACKUP_INTERVAL_MS) return;
+  if(accessToken && now < tokenExpiresAt - 5000){
+    backupNow(true);
+  } else if(driveEverConnected && googleClientId){
+    attemptSilentReconnectThenBackup();
+  } else {
+    remindManualReconnect();
+  }
+}
+function initAutoBackupTimer(){
+  setTimeout(checkAutoBackup, 15000);
+  setInterval(checkAutoBackup, AUTO_BACKUP_CHECK_MS);
+}
+
+function openRestorePicker(){
+  ensureAuthed().then(function(){
+    return ensureDriveFolder('ThesisManagerBackups');
+  }).then(function(folderId){
+    var q = "'"+folderId+"' in parents and trashed=false";
+    return driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&orderBy=createdTime desc&fields=files(id,name,createdTime)');
+  }).then(function(res){ return res.json(); })
+  .then(function(data){
+    var files = data.files||[];
+    if(files.length===0){ toast('ไม่พบไฟล์สำรองข้อมูลบน Drive', true); return; }
+    showBackupListModal(files);
+  }).catch(function(e){ toast('โหลดรายการสำรองไม่สำเร็จ: '+e, true); });
+}
+function showBackupListModal(files){
+  var root = document.getElementById('modalRoot');
+  var backdrop = el('div',{class:'modal-backdrop'});
+  var modal = el('div',{class:'modal'});
+  modal.appendChild(el('h3',{text:'เลือกไฟล์สำรองข้อมูลเพื่อกู้คืน'}));
+  files.forEach(function(f){
+    var row = el('div',{class:'list-item'},[
+      el('span',{text:f.name}),
+      el('button',{class:'btn btn-primary btn-sm', text:'กู้คืน', onclick:function(){ backdrop.remove(); restoreFromDrive(f.id); }})
+    ]);
+    modal.appendChild(row);
+  });
+  modal.appendChild(el('div',{class:'form-footer'},[
+    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }})
+  ]));
+  backdrop.appendChild(modal);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+  root.appendChild(backdrop);
+}
+function restoreFromDrive(fileId){
+  var warnMsg = cloudModeEnabled
+    ? 'ขณะนี้เปิดใช้งานระบบข้อมูลกลางอยู่ การกู้คืนนี้จะแทนที่เฉพาะสำเนาข้อมูลสำรองในเครื่องนี้เท่านั้น ไม่กระทบชีทกลางที่ทุกคนใช้ร่วมกัน ยืนยันหรือไม่?'
+    : 'การกู้คืนจะแทนที่ข้อมูลทั้งหมดในเครื่องด้วยข้อมูลจากไฟล์สำรองนี้ ยืนยันหรือไม่?';
+  if(!confirm(warnMsg)) return;
+  ensureAuthed().then(function(){
+    return driveFetch('https://www.googleapis.com/drive/v3/files/'+fileId+'?alt=media');
+  }).then(function(res){ return res.json(); })
+  .then(function(backupObj){
+    return dbGetAll('records').then(function(rows){ return Promise.all(rows.map(function(r){ return dbDelete('records', r.id); })); })
+    .then(function(){ return dbGetAll('files'); }).then(function(rows){ return Promise.all(rows.map(function(r){ return dbDelete('files', r.id); })); })
+    .then(function(){
+      return Promise.all((backupObj.records||[]).map(function(r){ return dbPut('records', r); }));
+    }).then(function(){
+      return Promise.all((backupObj.files||[]).map(function(f){
+        if(!f.dataBase64){
+          // cloud-sourced backup: no embedded bytes, keep the Drive link only
+          var rec2 = Object.assign({}, f);
+          return dbPut('files', rec2);
+        }
+        var byteChars = atob(f.dataBase64);
+        var byteNumbers = new Array(byteChars.length);
+        for(var i=0;i<byteChars.length;i++) byteNumbers[i]=byteChars.charCodeAt(i);
+        var blob = new Blob([new Uint8Array(byteNumbers)], {type:f.type});
+        var rec = Object.assign({}, f, {blob:blob});
+        delete rec.dataBase64;
+        return dbPut('files', rec);
+      }));
+    }).then(function(){
+      if(backupObj.masterData){
+        masterData = Object.assign(masterData, backupObj.masterData);
+        return dbPut('meta',{key:'masterData', value:masterData}); // local-only; does not touch the shared cloud sheet
+      }
+    });
+  }).then(function(){
+    renderAllSelects(); renderMasterLists();
+    if(!cloudModeEnabled) renderList();
+    toast('กู้คืนข้อมูลสำเร็จ'+(cloudModeEnabled?' (เก็บไว้เป็นสำเนาในเครื่องนี้ ไม่กระทบชีทกลาง — ปิดโหมดข้อมูลกลางชั่วคราวหากต้องการดูข้อมูลที่กู้คืนมา)':''));
+  }).catch(function(e){ toast('กู้คืนข้อมูลไม่สำเร็จ: '+e, true); });
+}
+
+/* bind google buttons once DOM ready */
+window.addEventListener('DOMContentLoaded', function(){ bindGoogleButtons(); if(googleClientId) initGsiClient(); });
+window.addEventListener('load', function(){ if(googleClientId) initGsiClient(); });
+</script>
+</body>
+</html>

@@ -1122,14 +1122,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
         el('div',{class:'ph-name', text: latest.studentName||'(ไม่ระบุชื่อ)'}),
         el('div',{class:'ph-id', text:'รหัสนักศึกษา '+latest.studentId})
       ]),
-      el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){
-        newDraft();
-        switchView('form');
-        setTimeout(function(){
-          document.getElementById('f_studentId').value = latest.studentId;
-          searchExistingStudent();
-        }, 0);
-      }})
+      el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){ startNewExamForStudent(latest.studentId); }})
     ])
   ]);
   wrap.appendChild(header);
@@ -1424,6 +1417,14 @@ function newDraft(){
   resetFormFields();
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
+}
+function startNewExamForStudent(studentId){
+  newDraft();
+  switchView('form');
+  setTimeout(function(){
+    document.getElementById('f_studentId').value = studentId;
+    searchExistingStudent();
+  }, 0);
 }
 function clearExamSectionFields(){
   document.getElementById('p_date').value=''; document.getElementById('p_examTime').value=''; document.getElementById('p_location').value='';
@@ -1822,6 +1823,7 @@ function renderList(){
           el('td',{text: counts[i] + ' ไฟล์'}),
           el('td',{},[
             el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ recordsGet(r.id).then(loadRecordIntoForm); switchView('form'); }, text:'แก้ไข'}),
+            el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ startNewExamForStudent(r.studentId); }, text:'➕ เพิ่มการสอบใหม่'}),
             el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteRecordConfirm(r.id); }, text:'ลบ'})
           ])
         ]);

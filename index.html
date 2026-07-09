@@ -1388,8 +1388,8 @@ function getPublicationValues(){
 
 /* ================= FORM: EXAM TYPE ================= */
 function bindFormEvents(){
-  document.getElementById('btnTypeProposal').addEventListener('click', function(){ setExamType('proposal'); });
-  document.getElementById('btnTypeDefense').addEventListener('click', function(){ setExamType('defense'); });
+  document.getElementById('btnTypeProposal').addEventListener('click', function(){ tryChangeExamType('proposal'); });
+  document.getElementById('btnTypeDefense').addEventListener('click', function(){ tryChangeExamType('defense'); });
   document.getElementById('btnAddCoAdvisor').addEventListener('click', function(){ addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); });
   document.getElementById('p_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('p_committeeList'); });
   document.getElementById('d_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('d_committeeList'); });
@@ -1406,6 +1406,20 @@ function bindFormEvents(){
 
   document.getElementById('p_fileInput').addEventListener('change', function(e){ handleFileInput('proposal', e.target.files); e.target.value=''; });
   document.getElementById('d_fileInput').addEventListener('change', function(e){ handleFileInput('defense', e.target.files); e.target.value=''; });
+}
+function tryChangeExamType(type){
+  if(editingExisting && currentExamType && currentExamType!==type){
+    var fromTxt = currentExamType==='proposal' ? 'สอบเค้าโครง' : 'สอบป้องกัน/IS';
+    var toTxt = type==='proposal' ? 'สอบเค้าโครง' : 'สอบป้องกัน/IS';
+    var ok = confirm(
+      'ขณะนี้คุณกำลังแก้ไขรายการสอบเดิม (ประเภท '+fromTxt+') อยู่\n\n'+
+      'การเปลี่ยนประเภทเป็น "'+toTxt+'" ตรงนี้ จะเปลี่ยนประเภทของรายการเดิมนี้ไปเลย (บันทึกทับ) ไม่ใช่การเพิ่มรายการสอบครั้งใหม่แยกต่างหาก\n\n'+
+      'ถ้าต้องการบันทึกเป็นการสอบครั้งใหม่โดยยังเก็บรายการเดิมไว้ด้วย ให้กด "ยกเลิก" แล้วใช้ปุ่ม "＋ เพิ่มข้อมูลใหม่" หรือ "📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้" แทน\n\n'+
+      'ต้องการเปลี่ยนประเภทของรายการเดิมนี้จริงหรือไม่?'
+    );
+    if(!ok) return;
+  }
+  setExamType(type);
 }
 function setExamType(type){
   currentExamType = type;

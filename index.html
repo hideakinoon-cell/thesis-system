@@ -682,6 +682,7 @@ var editingExisting = false;
 var currentExamType = null; // 'proposal' | 'defense'
 var coAdvisorCount = 0;
 var pCommitteeCount = 0, dCommitteeCount = 0;
+var pendingMergeObsoleteIds = []; // แถวซ้ำของ นศ. คนเดียวกันที่จะถูกลบทิ้งหลังบันทึกรวมสำเร็จ
 
 /* ================= INIT ================= */
 window.addEventListener('DOMContentLoaded', function(){
@@ -1042,7 +1043,8 @@ function getStudentSummaries(){
     var counts = {};
     rows.forEach(function(r){
       if(!r.studentId) return;
-      counts[r.studentId] = (counts[r.studentId]||0)+1;
+      var sections = (recHasProposalData(r)?1:0) + (recHasDefenseData(r)?1:0);
+      counts[r.studentId] = (counts[r.studentId]||0) + (sections||1);
       if(!latestByStudent[r.studentId] || (r.updatedAt||0) > (latestByStudent[r.studentId].updatedAt||0)){
         latestByStudent[r.studentId] = r;
       }
@@ -1183,9 +1185,34 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     wrap.appendChild(sec5);
   }
 
+  /* หนึ่งแถวข้อมูล (record) อาจมีทั้ง 3.1 (proposal) และ 3.2 (defense) พร้อมกันได้ในตัวเดียว
+     จึงต้องแตกเป็น "บล็อกการสอบ" แยกตามส่วนที่มีข้อมูลจริง (สูงสุด 2 บล็อกต่อ 1 แถว) แล้วเรียงตามวันที่สอบ */
+  var examBlocks = [];
   examRecords.forEach(function(r, idx){
     var files = filesByRecord[idx] || [];
-    var typeTxt = r.examType==='proposal' ? 'สอบเค้าโครงวิทยานิพนธ์' : 'สอบป้องกันวิทยานิพนธ์ / IS';
+    if(recHasProposalData(r)){
+      examBlocks.push({
+        type:'proposal', typeTxt:'สอบเค้าโครงวิทยานิพนธ์', typeTagTxt:'สอบเค้าโครง',
+        date:r.proposalDate, examDate:r.proposalDate, examTime:r.proposalTime, location:r.proposalLocation,
+        chair:r.proposalChair, committee:r.proposalCommittee, result:r.proposalResult,
+        proposalRevisionStatus:r.proposalRevisionStatus, proposalRevisionDate:r.proposalRevisionDate,
+        recordId:r.id, files:files
+      });
+    }
+    if(recHasDefenseData(r)){
+      examBlocks.push({
+        type:'defense', typeTxt:'สอบป้องกันวิทยานิพนธ์ / IS', typeTagTxt:'สอบป้องกัน/IS',
+        date:r.defenseDate, examDate:r.defenseDate, examTime:r.defenseTime, location:r.defenseLocation,
+        chair:r.defenseChair, committee:r.defenseCommittee, result:r.defenseResult,
+        fullScore:r.defenseFullScore, obtainedScore:r.defenseObtainedScore, dueDate:r.defenseDueDate,
+        recordId:r.id, files:files
+      });
+    }
+  });
+  examBlocks.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+
+  examBlocks.forEach(function(r, idx){
+    var files = r.files;
     var resultClass = r.result==='ผ่าน' ? 'pass' : (r.result==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail');
     var committee = (r.committee||[]).map(function(c){
       if(typeof c==='string') return {name:c, position:''};
@@ -1194,9 +1221,9 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
 
     var body = [
       el('div',{class:'exam-profile-head'},[
-        el('div',{class:'title', text: 'การสอบครั้งที่ '+(idx+1)+' — '+typeTxt}),
+        el('div',{class:'title', text: 'การสอบครั้งที่ '+(idx+1)+' — '+r.typeTxt}),
         el('div',{},[
-          el('span',{class:'exam-type-tag '+r.examType, style:'margin-right:8px;', text: r.examType==='proposal'?'สอบเค้าโครง':'สอบป้องกัน/IS'}),
+          el('span',{class:'exam-type-tag '+r.type, style:'margin-right:8px;', text: r.typeTagTxt}),
           el('span',{class:'result-tag '+resultClass, text: r.result||'ยังไม่ระบุผล'})
         ])
       ]),
@@ -1222,14 +1249,14 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       ]));
     }
 
-    if(r.examType==='defense'){
+    if(r.type==='defense'){
       body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
         kv('คะแนนเต็ม', r.fullScore),
         kv('คะแนนที่สอบได้', r.obtainedScore),
         kv('กำหนดส่งเล่ม', r.dueDate)
       ]));
     }
-    if(r.examType==='proposal'){
+    if(r.type==='proposal'){
       body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
         kv('ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์', r.proposalRevisionStatus||'ยังไม่ส่ง'),
         kv('วันที่ส่งแก้ไข', r.proposalRevisionDate)
@@ -1253,12 +1280,12 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
 
     body.push(el('div',{style:'margin-top:14px;text-align:right;'},[
       el('button',{type:'button', class:'link-btn', text:'✏️ แก้ไขรายการนี้', onclick:function(){
-        recordsGet(r.id).then(loadRecordIntoForm);
+        recordsGet(r.recordId).then(loadRecordIntoForm);
         switchView('form');
       }})
     ]));
 
-    wrap.appendChild(el('div',{class:'exam-profile-card '+r.examType}, body));
+    wrap.appendChild(el('div',{class:'exam-profile-card '+r.type}, body));
   });
 }
 
@@ -1388,25 +1415,68 @@ function bindFormEvents(){
   document.getElementById('p_fileInput').addEventListener('change', function(e){ handleFileInput('proposal', e.target.files); e.target.value=''; });
   document.getElementById('d_fileInput').addEventListener('change', function(e){ handleFileInput('defense', e.target.files); e.target.value=''; });
 }
-/* ================= EXAM SUBSECTIONS (3.1 / 3.2 — always both visible) ================= */
+/* ================= EXAM SUBSECTIONS (3.1 / 3.2 — always both visible, both can hold data in the same record) ================= */
 function sectionHasData(prefix){
   return !!document.getElementById(prefix+'_date').value;
 }
-function setSectionLocked(prefix, locked, lockedByTypeTxt){
+function recHasProposalData(rec){ return !!(rec && rec.proposalDate); }
+function recHasDefenseData(rec){ return !!(rec && rec.defenseDate); }
+function setSectionLocked(prefix, locked, lockedMsgTxt){
   var wrap = document.getElementById('sub-'+(prefix==='p'?'proposal':'defense'));
   var msg = document.getElementById('sub-'+(prefix==='p'?'proposal':'defense')+'-lockMsg');
   wrap.classList.toggle('locked', locked);
   wrap.querySelectorAll('input, select, button, textarea').forEach(function(el2){ el2.disabled = locked; });
   if(locked){
     msg.style.display = '';
-    msg.textContent = '🔒 รายการนี้ถูกบันทึกเป็นประเภท "'+lockedByTypeTxt+'" ไว้แล้ว จึงล็อกส่วนนี้ไว้เพื่อป้องกันการเขียนทับ — หากต้องการบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนนี้ ให้กด "＋ เพิ่มข้อมูลใหม่" แล้วค้นหาข้อมูลเดิมแทน';
+    msg.innerHTML = '';
+    msg.appendChild(document.createTextNode('🔒 '+(lockedMsgTxt||'ส่วนนี้มีข้อมูลบันทึกไว้แล้ว จึงล็อกไว้ป้องกันการแก้ไขโดยไม่ตั้งใจ')+' '));
+    var unlockBtn = el('button',{type:'button', class:'link-btn', text:'🔓 ปลดล็อกเพื่อแก้ไข', onclick:function(){ setSectionLocked(prefix, false); }});
+    msg.appendChild(unlockBtn);
   } else {
     msg.style.display = 'none';
+    msg.innerHTML = '';
   }
 }
 function resetExamSections(){
   setSectionLocked('p', false);
   setSectionLocked('d', false);
+}
+/* รวมแถวข้อมูลซ้ำของ นศ. คนเดียวกัน (เช่น แถวเก่าที่แยก 3.1/3.2 คนละแถว) เป็นแถวเดียว
+   คืนค่า {primary: เรคคอร์ดที่รวมข้อมูลแล้ว, obsoleteIds: ไอดีแถวอื่นที่ควรลบทิ้งหลังบันทึกสำเร็จ} */
+function mergeStudentRows(rows){
+  if(!rows || rows.length===0) return {primary:null, obsoleteIds:[]};
+  var sorted = rows.slice().sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
+  var primary = Object.assign({}, sorted[0]);
+  var obsoleteIds = [];
+  var bioFields = ['studentName','degreeLevel','plan','program','department','englishResult','englishScore','englishDocLink',
+    'computerResult','computerDocLink','qualifyingExam','qualifyingDocLink','mainAdvisor','titleTh','titleEn'];
+  for(var i=1;i<sorted.length;i++){
+    var r = sorted[i];
+    obsoleteIds.push(r.id);
+    if(!recHasProposalData(primary) && recHasProposalData(r)){
+      primary.proposalDate=r.proposalDate; primary.proposalTime=r.proposalTime; primary.proposalLocation=r.proposalLocation;
+      primary.proposalChair=r.proposalChair; primary.proposalCommittee=r.proposalCommittee||[]; primary.proposalResult=r.proposalResult;
+      primary.proposalRevisionStatus=r.proposalRevisionStatus; primary.proposalRevisionDate=r.proposalRevisionDate;
+    }
+    if(!recHasDefenseData(primary) && recHasDefenseData(r)){
+      primary.defenseDate=r.defenseDate; primary.defenseTime=r.defenseTime; primary.defenseLocation=r.defenseLocation;
+      primary.defenseChair=r.defenseChair; primary.defenseCommittee=r.defenseCommittee||[]; primary.defenseResult=r.defenseResult;
+      primary.defenseFullScore=r.defenseFullScore; primary.defenseObtainedScore=r.defenseObtainedScore; primary.defenseDueDate=r.defenseDueDate;
+    }
+    bioFields.forEach(function(f){ if(!primary[f] && r[f]) primary[f]=r[f]; });
+    if((!primary.coAdvisors || !primary.coAdvisors.length) && r.coAdvisors && r.coAdvisors.length) primary.coAdvisors = r.coAdvisors;
+    if((!primary.publications || !primary.publications.length) && r.publications && r.publications.length) primary.publications = r.publications;
+  }
+  return {primary:primary, obsoleteIds:obsoleteIds};
+}
+/* ย้ายไฟล์แนบจากแถวเก่า (obsoleteId) ไปแขวนกับแถวหลัก (newRecordId) แล้วลบรายการไฟล์แถวเก่า (ตัวไฟล์จริงใน Drive ไม่ถูกลบ) */
+function reassignFilesToRecord(oldRecordId, newRecordId){
+  return filesGetByRecordId(oldRecordId).then(function(files){
+    return Promise.all(files.map(function(f){
+      var moved = Object.assign({}, f, {id: uuid(), recordId: newRecordId});
+      return filesPut(moved).then(function(){ return filesDelete(f.id); });
+    }));
+  });
 }
 
 /* ================= NEW / LOAD / RESET ================= */
@@ -1414,17 +1484,35 @@ function newDraft(){
   currentDraftId = uuid();
   editingExisting = false;
   formOpenedAt = Date.now();
+  pendingMergeObsoleteIds = [];
   resetFormFields();
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
 }
+/* กด "เพิ่มการสอบใหม่ / เพิ่มข้อมูล" ให้ นศ. คนหนึ่ง — ถ้ามีแถวเดิมอยู่แล้ว (1 แถวขึ้นไป) ให้เปิดแถวเดิมมาแก้ไข/เติมข้อมูลทันที
+   (รวมแถวซ้ำให้อัตโนมัติถ้าพบมากกว่า 1 แถว — จะลบแถวซ้ำจริงตอนกดบันทึกสำเร็จเท่านั้น) ถ้าไม่พบเลยจึงสร้างแถวใหม่ */
 function startNewExamForStudent(studentId){
-  newDraft();
-  switchView('form');
-  setTimeout(function(){
-    document.getElementById('f_studentId').value = studentId;
-    searchExistingStudent();
-  }, 0);
+  toast('กำลังค้นหาข้อมูลเดิมของนักศึกษา...');
+  recordsGetByStudentId(studentId).then(function(rows){
+    if(!rows || rows.length===0){
+      newDraft();
+      switchView('form');
+      setTimeout(function(){
+        document.getElementById('f_studentId').value = studentId;
+        searchExistingStudent();
+      }, 0);
+      return;
+    }
+    var merged = mergeStudentRows(rows);
+    pendingMergeObsoleteIds = merged.obsoleteIds;
+    loadRecordIntoForm(merged.primary);
+    switchView('form');
+    if(merged.obsoleteIds.length){
+      toast('พบข้อมูลเดิมของนักศึกษาคนนี้ '+rows.length+' แถว ระบบรวมให้เป็นแถวเดียวแล้ว — กด "บันทึก" เพื่อยืนยันการรวมข้อมูล');
+    } else {
+      toast('เปิดข้อมูลเดิมของนักศึกษาคนนี้ให้แล้ว — เติมข้อมูลส่วนที่ยังไม่ได้กรอกได้เลย');
+    }
+  }).catch(function(e){ toast('ค้นหาข้อมูลเดิมไม่สำเร็จ: '+e, true); });
 }
 function clearExamSectionFields(){
   document.getElementById('p_date').value=''; document.getElementById('p_examTime').value=''; document.getElementById('p_location').value='';
@@ -1493,37 +1581,37 @@ function loadRecordIntoForm(rec){
   clearDynamicRows('publicationList');
   (rec.publications||[]).forEach(function(p){ addPublicationRow(p); });
 
-  if(rec.examType==='proposal'){
-    document.getElementById('p_date').value = rec.examDate||'';
-    document.getElementById('p_examTime').value = rec.examTime||'';
-    document.getElementById('p_location').value = rec.location||'';
-    setSelectValueWithFallback(document.getElementById('p_chair'), rec.chair||'');
+  if(recHasProposalData(rec)){
+    document.getElementById('p_date').value = rec.proposalDate||'';
+    document.getElementById('p_examTime').value = rec.proposalTime||'';
+    document.getElementById('p_location').value = rec.proposalLocation||'';
+    setSelectValueWithFallback(document.getElementById('p_chair'), rec.proposalChair||'');
     clearDynamicRows('p_committeeList');
-    (rec.committee||[]).forEach(function(c){
+    (rec.proposalCommittee||[]).forEach(function(c){
       if(typeof c==='string') addCommitteeRow('p_committeeList', c, '');
       else addCommitteeRow('p_committeeList', c.name, c.position);
     });
-    var pr = document.querySelector('input[name=proposalResult][value="'+rec.result+'"]'); if(pr) pr.checked=true;
+    var pr = document.querySelector('input[name=proposalResult][value="'+rec.proposalResult+'"]'); if(pr) pr.checked=true;
     var prs = document.querySelector('input[name=proposalRevisionStatus][value="'+(rec.proposalRevisionStatus||'ยังไม่ส่ง')+'"]'); if(prs) prs.checked=true;
     document.getElementById('p_revisionDate').value = rec.proposalRevisionDate||'';
-  } else if(rec.examType==='defense'){
-    document.getElementById('d_date').value = rec.examDate||'';
-    document.getElementById('d_examTime').value = rec.examTime||'';
-    document.getElementById('d_location').value = rec.location||'';
-    setSelectValueWithFallback(document.getElementById('d_chair'), rec.chair||'');
+  }
+  if(recHasDefenseData(rec)){
+    document.getElementById('d_date').value = rec.defenseDate||'';
+    document.getElementById('d_examTime').value = rec.defenseTime||'';
+    document.getElementById('d_location').value = rec.defenseLocation||'';
+    setSelectValueWithFallback(document.getElementById('d_chair'), rec.defenseChair||'');
     clearDynamicRows('d_committeeList');
-    (rec.committee||[]).forEach(function(c){
+    (rec.defenseCommittee||[]).forEach(function(c){
       if(typeof c==='string') addCommitteeRow('d_committeeList', c, '');
       else addCommitteeRow('d_committeeList', c.name, c.position);
     });
-    document.getElementById('d_fullScore').value = rec.fullScore||'';
-    document.getElementById('d_obtainedScore').value = rec.obtainedScore||'';
-    document.getElementById('d_dueDate').value = rec.dueDate||'';
-    var dr = document.querySelector('input[name=defenseResult][value="'+rec.result+'"]'); if(dr) dr.checked=true;
+    document.getElementById('d_fullScore').value = rec.defenseFullScore||'';
+    document.getElementById('d_obtainedScore').value = rec.defenseObtainedScore||'';
+    document.getElementById('d_dueDate').value = rec.defenseDueDate||'';
+    var dr = document.querySelector('input[name=defenseResult][value="'+rec.defenseResult+'"]'); if(dr) dr.checked=true;
   }
-  var lockedTypeTxt = rec.examType==='proposal' ? 'สอบเค้าโครง' : 'สอบป้องกัน/IS';
-  setSectionLocked('p', rec.examType!=='proposal', lockedTypeTxt);
-  setSectionLocked('d', rec.examType!=='defense', lockedTypeTxt);
+  setSectionLocked('p', recHasProposalData(rec), 'ส่วน 3.1 (การสอบเค้าโครง) มีข้อมูลบันทึกไว้แล้ว');
+  setSectionLocked('d', recHasDefenseData(rec), 'ส่วน 3.2 (การสอบป้องกัน/IS) มีข้อมูลบันทึกไว้แล้ว');
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
   renderExamHistory(rec.studentId);
@@ -1581,16 +1669,16 @@ function renderExamHistory(studentId){
   if(!studentId){ box.style.display='none'; list.innerHTML=''; return; }
   recordsGetByStudentId(studentId).then(function(rows){
     if(rows.length===0){ box.style.display='none'; list.innerHTML=''; return; }
-    rows.sort(function(a,b){
-      var da = a.examDate||'', db = b.examDate||'';
-      if(da!==db) return db.localeCompare(da);
-      return (b.updatedAt||0)-(a.updatedAt||0);
-    });
-    list.innerHTML='';
+    var blocks = [];
     rows.forEach(function(r){
-      var typeTxt = r.examType==='proposal' ? 'สอบเค้าโครง' : 'สอบป้องกัน/IS';
+      if(recHasProposalData(r)) blocks.push({typeTxt:'สอบเค้าโครง', date:r.proposalDate, result:r.proposalResult, id:r.id});
+      if(recHasDefenseData(r)) blocks.push({typeTxt:'สอบป้องกัน/IS', date:r.defenseDate, result:r.defenseResult, id:r.id});
+    });
+    blocks.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    list.innerHTML='';
+    blocks.forEach(function(r){
       var resultClass = r.result==='ผ่าน' ? 'pass' : (r.result==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail');
-      var label = typeTxt+' — '+(r.examDate||'ยังไม่ระบุวันที่')+(r.id===currentDraftId && editingExisting?' (กำลังแก้ไขรายการนี้อยู่)':'');
+      var label = r.typeTxt+' — '+(r.date||'ยังไม่ระบุวันที่')+(r.id===currentDraftId && editingExisting?' (กำลังแก้ไขรายการนี้อยู่)':'');
       var row = el('div',{class:'attach-item'},[
         el('span',{class:'name', text:label}),
         el('span',{class:'result-tag '+resultClass, text: r.result||'-'})
@@ -1612,18 +1700,20 @@ function validateForm(){
   var pFilled = sectionHasData('p');
   var dFilled = sectionHasData('d');
   if(!pFilled && !dFilled) return 'กรุณากรอกข้อมูลการสอบอย่างน้อย 1 ส่วน (3.1 การสอบเค้าโครง หรือ 3.2 การสอบป้องกัน/IS)';
-  if(pFilled && dFilled) return 'กรุณากรอกข้อมูลเพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (3.1 หรือ 3.2) — ถ้ามีการสอบทั้งสองแบบ กรุณาบันทึกแยกกันคนละครั้ง';
   if(pFilled){
     if(!document.getElementById('p_examTime').value) return 'กรุณาระบุเวลาสอบเค้าโครง (3.1)';
     if(!document.getElementById('p_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.1)';
-  } else {
+  }
+  if(dFilled){
     if(!document.getElementById('d_examTime').value) return 'กรุณาระบุเวลาสอบป้องกัน (3.2)';
     if(!document.getElementById('d_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.2)';
   }
   return null;
 }
 function collectFormData(){
-  var type = sectionHasData('p') ? 'proposal' : 'defense';
+  var pFilled = sectionHasData('p');
+  var dFilled = sectionHasData('d');
+  var type = pFilled && dFilled ? 'both' : (pFilled ? 'proposal' : 'defense');
   currentExamType = type;
   var rec = {
     id: currentDraftId,
@@ -1648,25 +1738,26 @@ function collectFormData(){
     publications: getPublicationValues(),
     updatedAt: Date.now()
   };
-  if(type==='proposal'){
-    rec.examDate = document.getElementById('p_date').value;
-    rec.examTime = document.getElementById('p_examTime').value;
-    rec.location = document.getElementById('p_location').value;
-    rec.chair = document.getElementById('p_chair').value;
-    rec.committee = getCommitteeValues('p_committeeList');
-    rec.result = document.querySelector('input[name=proposalResult]:checked').value;
+  if(pFilled){
+    rec.proposalDate = document.getElementById('p_date').value;
+    rec.proposalTime = document.getElementById('p_examTime').value;
+    rec.proposalLocation = document.getElementById('p_location').value;
+    rec.proposalChair = document.getElementById('p_chair').value;
+    rec.proposalCommittee = getCommitteeValues('p_committeeList');
+    rec.proposalResult = document.querySelector('input[name=proposalResult]:checked').value;
     rec.proposalRevisionStatus = document.querySelector('input[name=proposalRevisionStatus]:checked').value;
     rec.proposalRevisionDate = document.getElementById('p_revisionDate').value;
-  } else {
-    rec.examDate = document.getElementById('d_date').value;
-    rec.examTime = document.getElementById('d_examTime').value;
-    rec.location = document.getElementById('d_location').value;
-    rec.chair = document.getElementById('d_chair').value;
-    rec.committee = getCommitteeValues('d_committeeList');
-    rec.fullScore = document.getElementById('d_fullScore').value;
-    rec.obtainedScore = document.getElementById('d_obtainedScore').value;
-    rec.dueDate = document.getElementById('d_dueDate').value;
-    rec.result = document.querySelector('input[name=defenseResult]:checked').value;
+  }
+  if(dFilled){
+    rec.defenseDate = document.getElementById('d_date').value;
+    rec.defenseTime = document.getElementById('d_examTime').value;
+    rec.defenseLocation = document.getElementById('d_location').value;
+    rec.defenseChair = document.getElementById('d_chair').value;
+    rec.defenseCommittee = getCommitteeValues('d_committeeList');
+    rec.defenseFullScore = document.getElementById('d_fullScore').value;
+    rec.defenseObtainedScore = document.getElementById('d_obtainedScore').value;
+    rec.defenseDueDate = document.getElementById('d_dueDate').value;
+    rec.defenseResult = document.querySelector('input[name=defenseResult]:checked').value;
   }
   return rec;
 }
@@ -1681,7 +1772,20 @@ function saveRecord(){
     console.error('saveRecord/collectFormData error', ex);
     return;
   }
-  recordsGet(rec.id).then(function(existing){
+  var dupCheck = Promise.resolve(null);
+  if(!editingExisting){
+    /* บังคับ นศ. 1 คน 1 แถว: ถ้ากำลังสร้างแถวใหม่จากฟอร์มเปล่า แต่รหัส นศ. นี้มีแถวอยู่แล้วในระบบ ให้บล็อกและแนะนำให้ไปแก้ไขแถวเดิมแทน */
+    dupCheck = recordsGetByStudentId(rec.studentId).then(function(rows){
+      if(rows && rows.length>0){
+        var e = new Error('DUPLICATE_STUDENT'); e.silent = true; e.duplicate = true;
+        throw e;
+      }
+      return null;
+    });
+  }
+  dupCheck.then(function(){
+    return recordsGet(rec.id);
+  }).then(function(existing){
     rec.createdAt = existing ? existing.createdAt : Date.now();
     if(cloudModeEnabled && existing && formOpenedAt && existing.updatedAt && existing.updatedAt > formOpenedAt){
       var ok = confirm('ข้อมูลรายการนี้ถูกแก้ไขโดยผู้อื่นหลังจากที่คุณเปิดฟอร์มนี้ขึ้นมา หากบันทึกต่อ การแก้ไขของคุณจะบันทึกทับข้อมูลล่าสุด ต้องการบันทึกทับหรือไม่?');
@@ -1689,10 +1793,24 @@ function saveRecord(){
     }
     return recordsPut(rec);
   }).then(function(){
+    var obsoleteIds = pendingMergeObsoleteIds.slice();
+    pendingMergeObsoleteIds = [];
+    if(obsoleteIds.length===0) return;
+    return Promise.all(obsoleteIds.map(function(oldId){
+      return reassignFilesToRecord(oldId, rec.id).then(function(){ return recordsDelete(oldId); });
+    }));
+  }).then(function(){
     toast('บันทึกข้อมูลเรียบร้อย');
     newDraft();
     switchView('list');
-  }).catch(function(e){ if(e && e.silent) return; toast('บันทึกไม่สำเร็จ: '+e, true); });
+  }).catch(function(e){
+    if(e && e.duplicate){
+      toast('รหัสนักศึกษานี้มีข้อมูลอยู่แล้วในระบบ — กรุณากลับไปหน้ารายการ แล้วกด "➕ เพิ่มการสอบใหม่" ที่แถวของนักศึกษาคนนี้แทน เพื่อเติมข้อมูลในแถวเดิม', true);
+      return;
+    }
+    if(e && e.silent) return;
+    toast('บันทึกไม่สำเร็จ: '+e, true);
+  });
 }
 
 /* ================= FILES / ATTACHMENTS ================= */
@@ -1791,8 +1909,13 @@ function getFilteredRecords(){
     var typeF = document.getElementById('listFilterType').value;
     var resultF = document.getElementById('listFilterResult').value;
     rows = rows.filter(function(r){
-      if(typeF && r.examType!==typeF) return false;
-      if(resultF && r.result!==resultF) return false;
+      var hasP = recHasProposalData(r), hasD = recHasDefenseData(r);
+      if(typeF==='proposal' && !hasP) return false;
+      if(typeF==='defense' && !hasD) return false;
+      if(resultF){
+        var matchesResult = (hasP && r.proposalResult===resultF) || (hasD && r.defenseResult===resultF);
+        if(!matchesResult) return false;
+      }
       if(q){
         var hay = [r.studentId,r.studentName,r.titleTh,r.titleEn].join(' ').toLowerCase();
         if(hay.indexOf(q)===-1) return false;
@@ -1811,15 +1934,25 @@ function renderList(){
     Promise.all(rows.map(function(r){ return filesGetByRecordId(r.id).then(function(fs){ return fs.length; }); }))
     .then(function(counts){
       rows.forEach(function(r, i){
-        var typeTag = el('span',{class:'exam-type-tag '+r.examType, text: r.examType==='proposal'?'สอบเค้าโครง':'สอบป้องกัน/IS'});
-        var resultClass = r.result==='ผ่าน' ? 'pass' : (r.result==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail');
-        var resultTag = el('span',{class:'result-tag '+resultClass, text:r.result||'-'});
+        var hasP = recHasProposalData(r), hasD = recHasDefenseData(r);
+        function resultClassOf(res){ return res==='ผ่าน' ? 'pass' : (res==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail'); }
+        var typeTagEls = [];
+        if(hasP) typeTagEls.push(el('span',{class:'exam-type-tag proposal', style:'margin-right:4px;display:inline-block;margin-bottom:4px;', text:'สอบเค้าโครง'}));
+        if(hasD) typeTagEls.push(el('span',{class:'exam-type-tag defense', style:'display:inline-block;', text:'สอบป้องกัน/IS'}));
+        if(!typeTagEls.length) typeTagEls.push(el('span',{text:'-'}));
+        var resultTagEls = [];
+        if(hasP) resultTagEls.push(el('div',{style:'margin-bottom:4px;'},[el('span',{class:'result-tag '+resultClassOf(r.proposalResult), text:'3.1: '+(r.proposalResult||'-')})]));
+        if(hasD) resultTagEls.push(el('div',{},[el('span',{class:'result-tag '+resultClassOf(r.defenseResult), text:'3.2: '+(r.defenseResult||'-')})]));
+        if(!resultTagEls.length) resultTagEls.push(el('span',{text:'-'}));
+        var dateParts = [];
+        if(hasP) dateParts.push('3.1: '+(r.proposalDate||'-'));
+        if(hasD) dateParts.push('3.2: '+(r.defenseDate||'-'));
         var tr = el('tr',{},[
           el('td',{text:r.studentId}),
           el('td',{text:r.studentName}),
-          el('td',{},[typeTag]),
-          el('td',{text:r.examDate||'-'}),
-          el('td',{},[resultTag]),
+          el('td',{}, typeTagEls),
+          el('td',{text: dateParts.length ? dateParts.join(' / ') : '-'}),
+          el('td',{}, resultTagEls),
           el('td',{text: counts[i] + ' ไฟล์'}),
           el('td',{},[
             el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ recordsGet(r.id).then(loadRecordIntoForm); switchView('form'); }, text:'แก้ไข'}),
@@ -1856,8 +1989,10 @@ var EXPORT_COLUMNS = [
   ['proposalRevisionStatus','ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์'],['proposalRevisionDate','วันที่ส่งแก้ไข'],
   ['result','ผลสอบ']
 ];
-function toExportRow(r){
-  return {
+/* 1 แถวข้อมูลในระบบอาจมีทั้ง 3.1 และ 3.2 พร้อมกัน — ตอน export ให้แตกเป็นสูงสุด 2 แถวต่อ 1 record
+   (เหมือนเดิม 1 แถว = 1 การสอบ) เพื่อให้รายงาน Excel/CSV อ่านง่ายเหมือนที่ผ่านมา */
+function toExportRows(r){
+  var bio = {
     studentId:r.studentId, studentName:r.studentName, degreeLevel:r.degreeLevel,
     program:r.program, department:r.department, plan:r.plan,
     englishResult:r.englishResult, englishScore:r.englishScore, englishDocLink:r.englishDocLink||'',
@@ -1870,22 +2005,44 @@ function toExportRow(r){
       if(p.year) s += (s?' ':'')+'('+p.year+')';
       if(p.link) s += (s?' — ':'')+p.link;
       return s;
-    }).join('; '),
-    examTypeStr: r.examType==='proposal'?'สอบเค้าโครงวิทยานิพนธ์':'สอบป้องกันวิทยานิพนธ์/IS',
-    examDate:r.examDate, examTime:r.examTime, location:r.location,
-    chair:r.chair, committeeStr:(r.committee||[]).map(function(c){
+    }).join('; ')
+  };
+  function committeeStrOf(list){
+    return (list||[]).map(function(c){
       if(typeof c==='string') return c;
       return c.name + (c.position ? ' ('+c.position+')' : '');
-    }).join('; '),
-    fullScore:r.fullScore||'', obtainedScore:r.obtainedScore||'', dueDate:r.dueDate||'',
-    proposalRevisionStatus:r.proposalRevisionStatus||'', proposalRevisionDate:r.proposalRevisionDate||'',
-    result:r.result
-  };
+    }).join('; ');
+  }
+  var out = [];
+  if(recHasProposalData(r)){
+    out.push(Object.assign({}, bio, {
+      examTypeStr:'สอบเค้าโครงวิทยานิพนธ์',
+      examDate:r.proposalDate||'', examTime:r.proposalTime||'', location:r.proposalLocation||'',
+      chair:r.proposalChair||'', committeeStr:committeeStrOf(r.proposalCommittee),
+      fullScore:'', obtainedScore:'', dueDate:'',
+      proposalRevisionStatus:r.proposalRevisionStatus||'', proposalRevisionDate:r.proposalRevisionDate||'',
+      result:r.proposalResult||''
+    }));
+  }
+  if(recHasDefenseData(r)){
+    out.push(Object.assign({}, bio, {
+      examTypeStr:'สอบป้องกันวิทยานิพนธ์/IS',
+      examDate:r.defenseDate||'', examTime:r.defenseTime||'', location:r.defenseLocation||'',
+      chair:r.defenseChair||'', committeeStr:committeeStrOf(r.defenseCommittee),
+      fullScore:r.defenseFullScore||'', obtainedScore:r.defenseObtainedScore||'', dueDate:r.defenseDueDate||'',
+      proposalRevisionStatus:'', proposalRevisionDate:'',
+      result:r.defenseResult||''
+    }));
+  }
+  if(out.length===0){
+    out.push(Object.assign({}, bio, {examTypeStr:'-', examDate:'', examTime:'', location:'', chair:'', committeeStr:'', fullScore:'', obtainedScore:'', dueDate:'', proposalRevisionStatus:'', proposalRevisionDate:'', result:''}));
+  }
+  return out;
 }
 function exportData(format){
   getFilteredRecords().then(function(rows){
     if(rows.length===0){ toast('ไม่มีข้อมูลให้ส่งออก', true); return; }
-    var data = rows.map(toExportRow);
+    var data = [].concat.apply([], rows.map(toExportRows));
     var headers = EXPORT_COLUMNS.map(function(c){ return c[1]; });
     var keys = EXPORT_COLUMNS.map(function(c){ return c[0]; });
     if(format==='xlsx'){
@@ -2131,14 +2288,16 @@ function cascadeCommitteePositionRename(oldName, newName){
   return recordsGetAll().then(function(rows){
     var updates=[];
     rows.forEach(function(r){
-      if(Array.isArray(r.committee) && r.committee.length>0){
-        var ch=false;
-        r.committee = r.committee.map(function(c){
-          if(typeof c==='object' && c.position===oldName){ ch=true; return Object.assign({}, c, {position:newName}); }
-          return c;
-        });
-        if(ch) updates.push(recordsPut(r));
-      }
+      var ch=false;
+      ['committee','proposalCommittee','defenseCommittee'].forEach(function(field){
+        if(Array.isArray(r[field]) && r[field].length>0){
+          r[field] = r[field].map(function(c){
+            if(typeof c==='object' && c.position===oldName){ ch=true; return Object.assign({}, c, {position:newName}); }
+            return c;
+          });
+        }
+      });
+      if(ch) updates.push(recordsPut(r));
     });
     return Promise.all(updates).then(function(){ return updates.length; });
   });
@@ -2298,19 +2457,23 @@ function cascadeRenameInRecords(key, oldVal, newVal){
       if(key==='advisors'){
         if(r.mainAdvisor===oldVal){ r.mainAdvisor=newVal; changed=true; }
         if(r.chair===oldVal){ r.chair=newVal; changed=true; }
+        if(r.proposalChair===oldVal){ r.proposalChair=newVal; changed=true; }
+        if(r.defenseChair===oldVal){ r.defenseChair=newVal; changed=true; }
         if(Array.isArray(r.coAdvisors) && r.coAdvisors.indexOf(oldVal)>-1){ r.coAdvisors=r.coAdvisors.map(function(v){return v===oldVal?newVal:v;}); changed=true; }
-        if(Array.isArray(r.committee) && r.committee.length>0){
-          var committeeChanged=false;
-          r.committee = r.committee.map(function(c){
-            var cname = typeof c==='string' ? c : c.name;
-            if(cname===oldVal){
-              committeeChanged=true;
-              return typeof c==='string' ? {name:newVal, position:''} : Object.assign({}, c, {name:newVal});
-            }
-            return c;
-          });
-          if(committeeChanged) changed=true;
-        }
+        ['committee','proposalCommittee','defenseCommittee'].forEach(function(field){
+          if(Array.isArray(r[field]) && r[field].length>0){
+            var committeeChanged=false;
+            r[field] = r[field].map(function(c){
+              var cname = typeof c==='string' ? c : c.name;
+              if(cname===oldVal){
+                committeeChanged=true;
+                return typeof c==='string' ? {name:newVal, position:''} : Object.assign({}, c, {name:newVal});
+              }
+              return c;
+            });
+            if(committeeChanged) changed=true;
+          }
+        });
       }
       if(changed) updates.push(recordsPut(r));
     });
@@ -2505,7 +2668,10 @@ function arrayBufferToBase64(buffer){
 var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','plan','program','department',
   'englishResult','englishScore','englishDocLink','computerResult','computerDocLink','qualifyingExam','qualifyingDocLink',
   'mainAdvisor','coAdvisorsJson','titleTh','titleEn','examDate','examTime','location','chair','committeeJson',
-  'result','fullScore','obtainedScore','dueDate','createdAt','updatedAt','publicationsJson','proposalRevisionStatus','proposalRevisionDate','deleted'];
+  'result','fullScore','obtainedScore','dueDate','createdAt','updatedAt','publicationsJson','proposalRevisionStatus','proposalRevisionDate',
+  'proposalDate','proposalTime','proposalLocation','proposalChair','proposalCommitteeJson','proposalResult',
+  'defenseDate','defenseTime','defenseLocation','defenseChair','defenseCommitteeJson','defenseResult','defenseFullScore','defenseObtainedScore','defenseDueDate',
+  'deleted'];
 var FILE_COLUMNS = ['id','recordId','section','name','type','size','driveFileId','driveLink','addedAt','deleted'];
 function extractSheetId(input){
   input = (input||'').trim();
@@ -2544,17 +2710,34 @@ function rowToRecord(headers, row){
     var v = row[i]!==undefined ? row[i] : '';
     if(h==='coAdvisorsJson'){ try{ rec.coAdvisors = v ? JSON.parse(v) : []; }catch(e){ rec.coAdvisors=[]; } return; }
     if(h==='committeeJson'){ try{ rec.committee = v ? JSON.parse(v) : []; }catch(e){ rec.committee=[]; } return; }
+    if(h==='proposalCommitteeJson'){ try{ rec.proposalCommittee = v ? JSON.parse(v) : []; }catch(e){ rec.proposalCommittee=[]; } return; }
+    if(h==='defenseCommitteeJson'){ try{ rec.defenseCommittee = v ? JSON.parse(v) : []; }catch(e){ rec.defenseCommittee=[]; } return; }
     if(h==='publicationsJson'){ try{ rec.publications = v ? JSON.parse(v) : []; }catch(e){ rec.publications=[]; } return; }
     if(h==='createdAt' || h==='updatedAt'){ rec[h] = v ? Number(v) : 0; return; }
     if(h==='deleted'){ rec.deleted = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
     rec[h] = v;
   });
+  /* backward-compat: แถวเก่า (ก่อนรวม 3.1/3.2 ในแถวเดียว) เก็บข้อมูลไว้ในฟิลด์ generic (examType/examDate/...)
+     ถ้ายังไม่มีข้อมูลในฟิลด์ใหม่ (proposalDate/defenseDate) ให้ย้ายค่าจากฟิลด์เก่ามาให้อัตโนมัติตอนอ่าน */
+  if(rec.examType==='proposal' && !rec.proposalDate && rec.examDate){
+    rec.proposalDate = rec.examDate; rec.proposalTime = rec.examTime; rec.proposalLocation = rec.location;
+    rec.proposalChair = rec.chair; rec.proposalCommittee = rec.committee||[]; rec.proposalResult = rec.result;
+  }
+  if(rec.examType==='defense' && !rec.defenseDate && rec.examDate){
+    rec.defenseDate = rec.examDate; rec.defenseTime = rec.examTime; rec.defenseLocation = rec.location;
+    rec.defenseChair = rec.chair; rec.defenseCommittee = rec.committee||[]; rec.defenseResult = rec.result;
+    rec.defenseFullScore = rec.fullScore; rec.defenseObtainedScore = rec.obtainedScore; rec.defenseDueDate = rec.dueDate;
+  }
+  if(!rec.proposalCommittee) rec.proposalCommittee = [];
+  if(!rec.defenseCommittee) rec.defenseCommittee = [];
   return rec;
 }
 function recordToRow(rec){
   return RECORD_COLUMNS.map(function(h){
     if(h==='coAdvisorsJson') return JSON.stringify(rec.coAdvisors||[]);
     if(h==='committeeJson') return JSON.stringify(rec.committee||[]);
+    if(h==='proposalCommitteeJson') return JSON.stringify(rec.proposalCommittee||[]);
+    if(h==='defenseCommitteeJson') return JSON.stringify(rec.defenseCommittee||[]);
     if(h==='publicationsJson') return JSON.stringify(rec.publications||[]);
     if(h==='deleted') return rec.deleted ? 'TRUE' : '';
     var v = rec[h];

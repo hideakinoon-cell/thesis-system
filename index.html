@@ -83,9 +83,12 @@
   .committee-row .cr-name{font-weight:600;font-size:14.5px;color:var(--text);}
   .committee-row.chair .cr-name{color:var(--primary-dark);font-weight:700;}
   .role-badge.chair{background:var(--primary);border-color:var(--primary);color:#fff;}
-  .exam-type-picker{display:flex;gap:12px;flex-wrap:wrap;}
-  .exam-type-picker button{flex:1;min-width:220px;padding:16px;border:2px solid var(--border);border-radius:var(--radius);background:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;color:var(--text);}
-  .exam-type-picker button.selected{border-color:var(--primary);background:var(--primary-light);color:var(--primary-dark);}
+  .exam-subsection{border-top:2px solid var(--border);margin-top:20px;padding-top:16px;}
+  #sub-proposal{margin-top:16px;}
+  .exam-subsection-title{font-size:16px;font-weight:700;color:var(--primary-dark);margin:0 0 12px;}
+  .exam-subsection.locked{opacity:.55;}
+  .exam-subsection.locked .combo-input,.exam-subsection.locked input,.exam-subsection.locked select,.exam-subsection.locked textarea{background:#f2f4f7;cursor:not-allowed;}
+  .locked-note{background:#fdf0e0;color:var(--warn);border:1px solid #f5dcb0;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:14px;}
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;}
   .grid.cols-3{grid-template-columns:repeat(3,1fr);}
   .field{display:flex;flex-direction:column;gap:5px;}
@@ -124,8 +127,6 @@
   .btn-accent{background:var(--accent);color:#fff;}
   .btn-sm{padding:6px 12px;font-size:13px;border-radius:6px;}
   .form-footer{display:flex;gap:10px;justify-content:flex-end;padding:16px 0 4px;}
-  .exam-section{display:none;}
-  .exam-section.visible{display:block;}
   .exam-type-tag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12.5px;font-weight:600;}
   .exam-type-tag.proposal{background:#fdf0e0;color:var(--warn);}
   .exam-type-tag.defense{background:#e5f4ec;color:var(--accent);}
@@ -321,53 +322,29 @@
   </div>
 
   <div class="card">
-    <h3>หมวดที่ 3: เลือกประเภทและกำหนดการสอบ</h3>
-    <div class="exam-type-picker">
-      <button type="button" id="btnTypeProposal" data-type="proposal">📑 สอบเค้าโครงวิทยานิพนธ์</button>
-      <button type="button" id="btnTypeDefense" data-type="defense">🎓 สอบป้องกันวิทยานิพนธ์ / การค้นคว้าอิสระ (IS)</button>
-    </div>
-    <div class="help" style="margin-top:10px;">เลือกประเภทของ "การสอบครั้งนี้" ที่จะบันทึก — หมวดที่ 4 จะแสดงผลสอบให้ตรงกับประเภทที่เลือกไว้นี้โดยอัตโนมัติ ถ้านักศึกษาเคยสอบมาก่อน (เช่น สอบไม่ผ่านและต้องสอบใหม่) ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 ก่อน แล้วค่อยเลือกประเภทและกรอกกำหนดการของครั้งใหม่ที่นี่ ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม</div>
+    <h3>หมวดที่ 3: กำหนดการสอบและผลสอบ</h3>
+    <div class="help">กรอกข้อมูลใน "3.1" หรือ "3.2" เพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (1 รายการ = การสอบ 1 ครั้ง) ถ้านักศึกษาเคยสอบมาก่อน หรือจะบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนเดิม ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 แล้วกด "＋ เพิ่มข้อมูลใหม่" เพื่อเริ่มรายการใหม่ — ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม เมื่อกด "แก้ไข" รายการที่เคยบันทึกไว้ ส่วนที่ไม่ตรงกับประเภทเดิมจะถูกล็อกไว้เพื่อป้องกันการเขียนทับ</div>
     <div id="studentHistoryBox" style="display:none;margin-top:14px;">
       <h4>ประวัติการสอบของนักศึกษาคนนี้</h4>
       <div id="studentHistoryList"></div>
     </div>
 
-    <div class="exam-section" id="sched-proposal" style="margin-top:16px;">
+    <div class="exam-subsection" id="sub-proposal">
+      <h4 class="exam-subsection-title">3.1 การสอบเค้าโครงวิทยานิพนธ์</h4>
+      <div class="locked-note" id="sub-proposal-lockMsg" style="display:none;"></div>
       <div class="grid cols-3">
-        <div class="field"><label>วันที่สอบเค้าโครง <span class="req">*</span></label><input type="date" id="p_date"></div>
-        <div class="field"><label>เวลาสอบ <span class="req">*</span></label><input type="text" id="p_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
+        <div class="field"><label>วันที่สอบเค้าโครง</label><input type="date" id="p_date"></div>
+        <div class="field"><label>เวลาสอบ</label><input type="text" id="p_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
         <div class="field"><label>สถานที่สอบ</label><input type="text" id="p_location" placeholder="เช่น ห้องประชุม 301"></div>
-        <div class="field"><label>ประธานกรรมการ <span class="req">*</span></label><div id="p_chair" class="combo"></div></div>
+        <div class="field"><label>ประธานกรรมการ</label><div id="p_chair" class="combo"></div></div>
         <div class="field full">
           <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
           <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
           <div class="multi-row-list" id="p_committeeList"></div>
           <button type="button" class="link-btn" id="p_btnAddCommittee" style="margin-top:8px;text-align:left;">＋ เพิ่มกรรมการ</button>
         </div>
-      </div>
-    </div>
-    <div class="exam-section" id="sched-defense" style="margin-top:16px;">
-      <div class="grid cols-3">
-        <div class="field"><label>วันที่สอบป้องกัน <span class="req">*</span></label><input type="date" id="d_date"></div>
-        <div class="field"><label>เวลาสอบ <span class="req">*</span></label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
-        <div class="field"><label>สถานที่สอบ</label><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div>
-        <div class="field"><label>ประธานกรรมการ <span class="req">*</span></label><div id="d_chair" class="combo"></div></div>
         <div class="field full">
-          <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
-          <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
-          <div class="multi-row-list" id="d_committeeList"></div>
-          <button type="button" class="link-btn" id="d_btnAddCommittee" style="margin-top:8px;text-align:left;">＋ เพิ่มกรรมการ</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>หมวดที่ 4: ผลสอบ</h3>
-    <div class="exam-section" id="result-proposal">
-      <div class="grid">
-        <div class="field full">
-          <label>ผลประเมิน <span class="req">*</span></label>
+          <label>ผลประเมิน</label>
           <div class="radio-group">
             <label><input type="radio" name="proposalResult" value="ผ่าน" checked> ผ่าน</label>
             <label><input type="radio" name="proposalResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
@@ -388,13 +365,26 @@
         <div class="attach-list" id="p_attachList"></div>
       </div>
     </div>
-    <div class="exam-section" id="result-defense">
+
+    <div class="exam-subsection" id="sub-defense">
+      <h4 class="exam-subsection-title">3.2 การสอบป้องกันวิทยานิพนธ์ / การค้นคว้าอิสระ (IS)</h4>
+      <div class="locked-note" id="sub-defense-lockMsg" style="display:none;"></div>
       <div class="grid cols-3">
+        <div class="field"><label>วันที่สอบป้องกัน</label><input type="date" id="d_date"></div>
+        <div class="field"><label>เวลาสอบ</label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
+        <div class="field"><label>สถานที่สอบ</label><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div>
+        <div class="field"><label>ประธานกรรมการ</label><div id="d_chair" class="combo"></div></div>
+        <div class="field full">
+          <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
+          <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
+          <div class="multi-row-list" id="d_committeeList"></div>
+          <button type="button" class="link-btn" id="d_btnAddCommittee" style="margin-top:8px;text-align:left;">＋ เพิ่มกรรมการ</button>
+        </div>
         <div class="field"><label>คะแนนเต็ม</label><input type="number" id="d_fullScore" min="0"></div>
         <div class="field"><label>คะแนนที่สอบได้</label><input type="number" id="d_obtainedScore" min="0"></div>
         <div class="field"><label>กำหนดส่งเล่ม</label><input type="date" id="d_dueDate"></div>
         <div class="field full">
-          <label>ผลการประเมิน <span class="req">*</span></label>
+          <label>ผลการประเมิน</label>
           <div class="radio-group">
             <label><input type="radio" name="defenseResult" value="ผ่าน" checked> ผ่าน</label>
             <label><input type="radio" name="defenseResult" value="ผ่านแบบมีเงื่อนไข"> ผ่านแบบมีเงื่อนไข</label>
@@ -1388,8 +1378,6 @@ function getPublicationValues(){
 
 /* ================= FORM: EXAM TYPE ================= */
 function bindFormEvents(){
-  document.getElementById('btnTypeProposal').addEventListener('click', function(){ tryChangeExamType('proposal'); });
-  document.getElementById('btnTypeDefense').addEventListener('click', function(){ tryChangeExamType('defense'); });
   document.getElementById('btnAddCoAdvisor').addEventListener('click', function(){ addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); });
   document.getElementById('p_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('p_committeeList'); });
   document.getElementById('d_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('d_committeeList'); });
@@ -1407,28 +1395,25 @@ function bindFormEvents(){
   document.getElementById('p_fileInput').addEventListener('change', function(e){ handleFileInput('proposal', e.target.files); e.target.value=''; });
   document.getElementById('d_fileInput').addEventListener('change', function(e){ handleFileInput('defense', e.target.files); e.target.value=''; });
 }
-function tryChangeExamType(type){
-  if(editingExisting && currentExamType && currentExamType!==type){
-    var fromTxt = currentExamType==='proposal' ? 'สอบเค้าโครง' : 'สอบป้องกัน/IS';
-    var toTxt = type==='proposal' ? 'สอบเค้าโครง' : 'สอบป้องกัน/IS';
-    var ok = confirm(
-      'ขณะนี้คุณกำลังแก้ไขรายการสอบเดิม (ประเภท '+fromTxt+') อยู่\n\n'+
-      'การเปลี่ยนประเภทเป็น "'+toTxt+'" ตรงนี้ จะเปลี่ยนประเภทของรายการเดิมนี้ไปเลย (บันทึกทับ) ไม่ใช่การเพิ่มรายการสอบครั้งใหม่แยกต่างหาก\n\n'+
-      'ถ้าต้องการบันทึกเป็นการสอบครั้งใหม่โดยยังเก็บรายการเดิมไว้ด้วย ให้กด "ยกเลิก" แล้วใช้ปุ่ม "＋ เพิ่มข้อมูลใหม่" หรือ "📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้" แทน\n\n'+
-      'ต้องการเปลี่ยนประเภทของรายการเดิมนี้จริงหรือไม่?'
-    );
-    if(!ok) return;
-  }
-  setExamType(type);
+/* ================= EXAM SUBSECTIONS (3.1 / 3.2 — always both visible) ================= */
+function sectionHasData(prefix){
+  return !!document.getElementById(prefix+'_date').value;
 }
-function setExamType(type){
-  currentExamType = type;
-  document.getElementById('btnTypeProposal').classList.toggle('selected', type==='proposal');
-  document.getElementById('btnTypeDefense').classList.toggle('selected', type==='defense');
-  document.getElementById('sched-proposal').classList.toggle('visible', type==='proposal');
-  document.getElementById('sched-defense').classList.toggle('visible', type==='defense');
-  document.getElementById('result-proposal').classList.toggle('visible', type==='proposal');
-  document.getElementById('result-defense').classList.toggle('visible', type==='defense');
+function setSectionLocked(prefix, locked, lockedByTypeTxt){
+  var wrap = document.getElementById('sub-'+(prefix==='p'?'proposal':'defense'));
+  var msg = document.getElementById('sub-'+(prefix==='p'?'proposal':'defense')+'-lockMsg');
+  wrap.classList.toggle('locked', locked);
+  wrap.querySelectorAll('input, select, button, textarea').forEach(function(el2){ el2.disabled = locked; });
+  if(locked){
+    msg.style.display = '';
+    msg.textContent = '🔒 รายการนี้ถูกบันทึกเป็นประเภท "'+lockedByTypeTxt+'" ไว้แล้ว จึงล็อกส่วนนี้ไว้เพื่อป้องกันการเขียนทับ — หากต้องการบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนนี้ ให้กด "＋ เพิ่มข้อมูลใหม่" แล้วค้นหาข้อมูลเดิมแทน';
+  } else {
+    msg.style.display = 'none';
+  }
+}
+function resetExamSections(){
+  setSectionLocked('p', false);
+  setSectionLocked('d', false);
 }
 
 /* ================= NEW / LOAD / RESET ================= */
@@ -1440,8 +1425,21 @@ function newDraft(){
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
 }
+function clearExamSectionFields(){
+  document.getElementById('p_date').value=''; document.getElementById('p_examTime').value=''; document.getElementById('p_location').value='';
+  document.getElementById('p_chair').value=''; clearDynamicRows('p_committeeList');
+  document.querySelector('input[name=proposalResult][value="ผ่าน"]').checked=true;
+  document.querySelector('input[name=proposalRevisionStatus][value="ยังไม่ส่ง"]').checked=true;
+  document.getElementById('p_revisionDate').value='';
+
+  document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
+  document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
+  document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
+  document.querySelector('input[name=defenseResult][value="ผ่าน"]').checked=true;
+}
 function resetFormFields(){
-  setExamType(null);
+  currentExamType = null;
+  resetExamSections();
   document.getElementById('f_studentId').value='';
   document.getElementById('f_studentName').value='';
   document.querySelector('input[name=degreeLevel][value="ปริญญาโท"]').checked=true;
@@ -1461,16 +1459,7 @@ function resetFormFields(){
   document.getElementById('f_titleEn').value='';
   clearDynamicRows('publicationList');
 
-  document.getElementById('p_date').value=''; document.getElementById('p_examTime').value=''; document.getElementById('p_location').value='';
-  document.getElementById('p_chair').value=''; clearDynamicRows('p_committeeList');
-  document.querySelector('input[name=proposalResult][value="ผ่าน"]').checked=true;
-  document.querySelector('input[name=proposalRevisionStatus][value="ยังไม่ส่ง"]').checked=true;
-  document.getElementById('p_revisionDate').value='';
-
-  document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
-  document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
-  document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
-  document.querySelector('input[name=defenseResult][value="ผ่าน"]').checked=true;
+  clearExamSectionFields();
 
   document.getElementById('studentHistoryBox').style.display='none';
   document.getElementById('studentHistoryList').innerHTML='';
@@ -1479,7 +1468,8 @@ function loadRecordIntoForm(rec){
   currentDraftId = rec.id;
   editingExisting = true;
   formOpenedAt = Date.now();
-  setExamType(rec.examType);
+  clearExamSectionFields();
+  currentExamType = rec.examType;
   document.getElementById('f_studentId').value = rec.studentId||'';
   document.getElementById('f_studentName').value = rec.studentName||'';
   var dl = document.querySelector('input[name=degreeLevel][value="'+rec.degreeLevel+'"]'); if(dl) dl.checked=true;
@@ -1530,6 +1520,9 @@ function loadRecordIntoForm(rec){
     document.getElementById('d_dueDate').value = rec.dueDate||'';
     var dr = document.querySelector('input[name=defenseResult][value="'+rec.result+'"]'); if(dr) dr.checked=true;
   }
+  var lockedTypeTxt = rec.examType==='proposal' ? 'สอบเค้าโครง' : 'สอบป้องกัน/IS';
+  setSectionLocked('p', rec.examType!=='proposal', lockedTypeTxt);
+  setSectionLocked('d', rec.examType!=='defense', lockedTypeTxt);
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
   renderExamHistory(rec.studentId);
@@ -1609,26 +1602,31 @@ function renderExamHistory(studentId){
 
 /* ================= VALIDATE / COLLECT / SAVE ================= */
 function validateForm(){
-  if(!currentExamType) return 'กรุณาเลือกประเภทการสอบก่อน';
   if(!document.getElementById('f_studentId').value.trim()) return 'กรุณากรอกรหัสนักศึกษา';
   if(!document.getElementById('f_studentName').value.trim()) return 'กรุณากรอกชื่อ-นามสกุล';
   if(!document.getElementById('f_program').value) return 'กรุณาเลือกหลักสูตร';
   if(!document.getElementById('f_department').value) return 'กรุณาเลือกสาขาวิชา';
   if(!document.getElementById('f_mainAdvisor').value) return 'กรุณาเลือกอาจารย์ที่ปรึกษาหลัก';
   if(!document.getElementById('f_titleTh').value.trim()) return 'กรุณากรอกหัวข้อวิทยานิพนธ์ (TH)';
-  if(currentExamType==='proposal'){
-    if(!document.getElementById('p_date').value) return 'กรุณาระบุวันที่สอบเค้าโครง';
-    if(!document.getElementById('p_chair').value) return 'กรุณาเลือกประธานกรรมการ';
+  var pFilled = sectionHasData('p');
+  var dFilled = sectionHasData('d');
+  if(!pFilled && !dFilled) return 'กรุณากรอกข้อมูลการสอบอย่างน้อย 1 ส่วน (3.1 การสอบเค้าโครง หรือ 3.2 การสอบป้องกัน/IS)';
+  if(pFilled && dFilled) return 'กรุณากรอกข้อมูลเพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (3.1 หรือ 3.2) — ถ้ามีการสอบทั้งสองแบบ กรุณาบันทึกแยกกันคนละครั้ง';
+  if(pFilled){
+    if(!document.getElementById('p_examTime').value) return 'กรุณาระบุเวลาสอบเค้าโครง (3.1)';
+    if(!document.getElementById('p_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.1)';
   } else {
-    if(!document.getElementById('d_date').value) return 'กรุณาระบุวันที่สอบป้องกัน';
-    if(!document.getElementById('d_chair').value) return 'กรุณาเลือกประธานกรรมการ';
+    if(!document.getElementById('d_examTime').value) return 'กรุณาระบุเวลาสอบป้องกัน (3.2)';
+    if(!document.getElementById('d_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.2)';
   }
   return null;
 }
 function collectFormData(){
+  var type = sectionHasData('p') ? 'proposal' : 'defense';
+  currentExamType = type;
   var rec = {
     id: currentDraftId,
-    examType: currentExamType,
+    examType: type,
     studentId: document.getElementById('f_studentId').value.trim(),
     studentName: document.getElementById('f_studentName').value.trim(),
     degreeLevel: document.querySelector('input[name=degreeLevel]:checked').value,
@@ -1649,7 +1647,7 @@ function collectFormData(){
     publications: getPublicationValues(),
     updatedAt: Date.now()
   };
-  if(currentExamType==='proposal'){
+  if(type==='proposal'){
     rec.examDate = document.getElementById('p_date').value;
     rec.examTime = document.getElementById('p_examTime').value;
     rec.location = document.getElementById('p_location').value;

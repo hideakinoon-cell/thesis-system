@@ -712,6 +712,15 @@ function dbGetByIndex(store, indexName, value){
 }
 
 /* ================= APP STATE ================= */
+/* ค่าเริ่มต้นสำหรับ "เครื่องใหม่" ที่ยังไม่เคยเปิดแอปนี้มาก่อน (เช่น เครื่องของเจ้าหน้าที่ดูอย่างเดียว)
+   เนื่องจากแอปนี้ไม่มีฐานข้อมูลกลางสำหรับเก็บ "การตั้งค่าแอป" (ต่างจากข้อมูลนักศึกษาที่อยู่บน Sheet กลาง)
+   ค่าพวกนี้จึงถูกเก็บแยกกันในแต่ละเบราว์เซอร์ — ฝัง Client ID / Sheet ID / โหมดกลาง ไว้เป็นค่าเริ่มต้นให้ทุกเครื่อง
+   (ปลอดภัย ไม่ใช่ข้อมูลลับ) ส่วนรหัสผ่าน "ดูอย่างเดียว" เก็บเป็น hash (ไม่ใช่รหัสจริง) เพื่อให้เครื่องใหม่เห็นหน้าล็อกอิน
+   ทันทีแทนหน้า "ตั้งค่าเริ่มต้น" — รหัสผ่าน admin จริงยังคงไม่ถูกฝังไว้ในนี้เพื่อความปลอดภัย */
+var DEFAULT_GOOGLE_CLIENT_ID = '735808286134-4c4itsvdhe1v7po7bl71cnnq6k5imgve.apps.googleusercontent.com';
+var DEFAULT_SHEET_ID = '1Rymd5QMIXL1j2f4fLujmDXgK0sKy_umKEYI5z2iP8sQ';
+var DEFAULT_CLOUD_MODE_ENABLED = true;
+var DEFAULT_VIEWER_PIN_HASH = 'c14790e7cc3a3f91f788260ef1d1fdf2d81108d063d5eca211ea3528a05a1229';
 var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[] };
 var googleClientId = '';
 var appPinHash = null;
@@ -802,7 +811,9 @@ var SLOT_LABELS = {
 };
 function loadMeta(){
   return dbGetAll('meta').then(function(rows){
+    var seen = {};
     rows.forEach(function(row){
+      seen[row.key] = true;
       if(row.key==='masterData') masterData = Object.assign(masterData, row.value);
       if(row.key==='googleClientId') googleClientId = row.value;
       if(row.key==='appPinHash') appPinHash = row.value;
@@ -817,6 +828,12 @@ function loadMeta(){
       if(row.key==='cloudModeEnabled') cloudModeEnabled = row.value;
       if(row.key==='sheetId') sheetId = row.value;
     });
+    /* เครื่องใหม่ที่ไม่เคยตั้งค่าอะไรมาก่อนเลย (เช่น เครื่องของเจ้าหน้าที่ดูอย่างเดียว) ให้ใช้ค่าเริ่มต้นที่ฝังไว้ในโค้ดแทน
+       เช็คจาก "ไม่เคยมีแถวนี้ใน DB เลย" (seen) เพื่อไม่ไปทับค่าที่แอดมินตั้งไว้เอง (เช่น ปิดโหมดกลางไว้ตั้งใจ) */
+    if(!seen.googleClientId && !googleClientId) googleClientId = DEFAULT_GOOGLE_CLIENT_ID;
+    if(!seen.sheetId && !sheetId) sheetId = DEFAULT_SHEET_ID;
+    if(!seen.cloudModeEnabled) cloudModeEnabled = DEFAULT_CLOUD_MODE_ENABLED;
+    if(!seen.viewerPinHash && !viewerPinHash) viewerPinHash = DEFAULT_VIEWER_PIN_HASH;
     migrateAdvisorFormat();
   });
 }
@@ -988,7 +1005,9 @@ function hideLockOverlay(){
 function renderLockForm(){
   var loginForm = document.getElementById('lockLoginForm');
   var setupForm = document.getElementById('lockSetupForm');
-  if(appPinHash){
+  /* ถ้ามี appPinHash (แอดมินเคยตั้งไว้บนเครื่องนี้) หรือ viewerPinHash (ไม่ว่าเครื่องนี้ตั้งเองหรือใช้ค่าเริ่มต้นที่ฝังไว้)
+     ให้แสดงหน้า "เข้าสู่ระบบ" เสมอ — จะแสดงหน้า "ตั้งค่าเริ่มต้น" (สร้างรหัส admin ใหม่) ก็ต่อเมื่อไม่มีรหัสผ่านใดๆ เลยจริงๆ */
+  if(appPinHash || viewerPinHash){
     loginForm.style.display=''; setupForm.style.display='none';
     document.getElementById('lockTitle').textContent='เข้าสู่ระบบ';
   } else {

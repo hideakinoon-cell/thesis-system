@@ -3227,19 +3227,24 @@ function alignSheetHeader(tabName, columns, existingHeaders){
 }
 function ensureRecordsHeaderAligned(){
   if(recordsHeaderAligned) return Promise.resolve();
+  recordsHeaderAligned = true;
+  /* เจ้าหน้าที่ "ดูอย่างเดียว" มีสิทธิ์ Viewer (อ่านอย่างเดียว) บนชีทจริงเท่านั้น เขียนแก้ header ไม่ได้
+     ข้ามการซ่อมแซม header อัตโนมัติไปเลยสำหรับ role นี้ (อ่านข้อมูลด้วย header เดิมได้ตามปกติ
+     เพียงแต่คอลัมน์ที่เพิ่งเพิ่มใหม่ล่าสุดอาจยังไม่ถูก map จนกว่า admin จะเข้าเปิดแอปสักครั้งเพื่อซ่อม header ให้) */
+  if(currentRole==='viewer') return Promise.resolve();
   return fetchRecordsSheet().then(function(cache){
     return alignSheetHeader('Records', RECORD_COLUMNS, cache.headers);
   }).then(function(changed){
-    recordsHeaderAligned = true;
     return changed ? fetchRecordsSheet() : null;
   });
 }
 function ensureFilesHeaderAligned(){
   if(filesHeaderAligned) return Promise.resolve();
+  filesHeaderAligned = true;
+  if(currentRole==='viewer') return Promise.resolve();
   return fetchFilesSheet().then(function(cache){
     return alignSheetHeader('Files', FILE_COLUMNS, cache.headers);
   }).then(function(changed){
-    filesHeaderAligned = true;
     return changed ? fetchFilesSheet() : null;
   });
 }

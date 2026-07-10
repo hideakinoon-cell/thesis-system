@@ -200,7 +200,7 @@
 
 <header class="topbar">
   <div class="brand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
-  <div class="badge">เจ้าหน้าที่ (Admin)</div>
+  <div class="badge" id="roleBadge">เจ้าหน้าที่ (Admin)</div>
 </header>
 <nav class="tabs">
   <button data-view="dashboard" class="active">🔍 ตรวจสอบข้อมูล</button>
@@ -481,6 +481,21 @@
   </div>
 
   <div class="card">
+    <h3>👁️ รหัสผ่านสำหรับเจ้าหน้าที่ "ดูข้อมูลอย่างเดียว"</h3>
+    <div class="help" style="margin-bottom:10px;">ตั้งรหัสผ่านแยกให้เจ้าหน้าที่ที่เกี่ยวข้อง เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารแนบได้เท่านั้น — ดูได้ แต่บันทึก/แก้ไข/ลบ/ตั้งค่าไม่ได้ ใช้รหัสเดียวกันได้กับหลายคน</div>
+    <div class="grid cols-2">
+      <div class="field"><label>ตั้งรหัสผ่านดูอย่างเดียว</label><input type="password" id="viewerPin1" autocomplete="new-password"></div>
+      <div class="field"><label>ยืนยันรหัสผ่าน</label><input type="password" id="viewerPin2" autocomplete="new-password"></div>
+    </div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnSetViewerPin">บันทึกรหัสผ่านดูอย่างเดียว</button>
+      <button class="btn btn-secondary" id="btnRemoveViewerPin" style="display:none;color:#c0392b;">ปิดใช้งานรหัสผ่านดูอย่างเดียว</button>
+    </div>
+    <div class="help" id="viewerPinStatus"></div>
+    <div class="help">หมายเหตุ: ถ้าเปิดใช้ "ระบบข้อมูลกลาง" (Google Sheets) ไว้ เจ้าหน้าที่ดูอย่างเดียวยังต้อง Sign in ด้วยบัญชี Google ของตัวเองเพื่ออ่านข้อมูลจากชีทกลางเช่นกัน — แนะนำให้แชร์ชีทกลางและโฟลเดอร์ไฟล์แนบใน Drive ให้บัญชีของเจ้าหน้าที่กลุ่มนี้ในสิทธิ์ "Viewer" (ดูอย่างเดียว) เท่านั้น เพื่อป้องกันการแก้ไขข้อมูลจริงอีกชั้นหนึ่ง และอย่าลืมเพิ่มอีเมลเป็น Test user ในหน้า Google Cloud Console ด้วย (ดูปุ่มลัดด้านล่างในหัวข้อ "ตรวจสอบสิทธิ์การเข้าถึง")</div>
+  </div>
+
+  <div class="card">
     <h3>เชื่อมต่อ Google Drive (สำรอง/กู้คืนข้อมูล และอัปโหลดไฟล์แนบ)</h3>
     <div class="grid">
       <div class="field full">
@@ -689,6 +704,8 @@ function dbGetByIndex(store, indexName, value){
 var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[] };
 var googleClientId = '';
 var appPinHash = null;
+var viewerPinHash = null;
+var currentRole = null; // 'admin' | 'viewer'
 var autoBackupEnabled = false;
 var lastBackupAt = 0;
 var backupKeepCount = 5;
@@ -730,6 +747,7 @@ window.addEventListener('DOMContentLoaded', function(){
     bindSettingsEvents();
     bindLockEvents();
     renderLockForm();
+    renderViewerPinStatus();
     newDraft();
     switchView('dashboard');
     initAutoBackupTimer();
@@ -772,6 +790,7 @@ function loadMeta(){
       if(row.key==='masterData') masterData = Object.assign(masterData, row.value);
       if(row.key==='googleClientId') googleClientId = row.value;
       if(row.key==='appPinHash') appPinHash = row.value;
+      if(row.key==='viewerPinHash') viewerPinHash = row.value;
       if(row.key==='autoBackupEnabled') autoBackupEnabled = row.value;
       if(row.key==='lastBackupAt') lastBackupAt = row.value;
       if(row.key==='backupKeepCount') backupKeepCount = row.value;
@@ -966,7 +985,8 @@ function bindLockEvents(){
     var pin = document.getElementById('lockPinInput').value;
     if(!pin){ document.getElementById('lockError').textContent='กรุณากรอกรหัสผ่าน'; return; }
     hashPin(pin).then(function(h){
-      if(h===appPinHash){ hideLockOverlay(); }
+      if(h===appPinHash){ currentRole='admin'; hideLockOverlay(); applyRoleUI(); }
+      else if(viewerPinHash && h===viewerPinHash){ currentRole='viewer'; hideLockOverlay(); applyRoleUI(); }
       else { document.getElementById('lockError').textContent='รหัสผ่านไม่ถูกต้อง'; }
     });
   });
@@ -984,7 +1004,9 @@ function bindLockEvents(){
       appPinHash = h;
       return dbPut('meta',{key:'appPinHash', value:h});
     }).then(function(){
+      currentRole = 'admin';
       hideLockOverlay();
+      applyRoleUI();
       toast('ตั้งรหัสผ่านเรียบร้อย ใช้รหัสนี้เข้าระบบครั้งต่อไป');
     });
   });
@@ -992,6 +1014,54 @@ function bindLockEvents(){
     showLockOverlay();
   });
   document.getElementById('btnChangePin').addEventListener('click', changePin);
+  document.getElementById('btnSetViewerPin').addEventListener('click', setViewerPin);
+  document.getElementById('btnRemoveViewerPin').addEventListener('click', removeViewerPin);
+}
+function applyRoleUI(){
+  var isViewer = currentRole==='viewer';
+  document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
+    var v = btn.getAttribute('data-view');
+    btn.style.display = (isViewer && v!=='dashboard') ? 'none' : '';
+  });
+  var badge = document.getElementById('roleBadge');
+  if(badge) badge.textContent = isViewer ? 'เจ้าหน้าที่ (ดูอย่างเดียว)' : 'เจ้าหน้าที่ (Admin)';
+  if(isViewer) switchView('dashboard');
+}
+function setViewerPin(){
+  var p1 = document.getElementById('viewerPin1').value;
+  var p2 = document.getElementById('viewerPin2').value;
+  if(p1.length<4){ toast('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
+  if(p1!==p2){ toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', true); return; }
+  hashPin(p1).then(function(h){
+    if(h===appPinHash){ toast('ห้ามตั้งซ้ำกับรหัสผ่านของ Admin', true); throw new Error('stop'); }
+    viewerPinHash = h;
+    return dbPut('meta',{key:'viewerPinHash', value:h});
+  }).then(function(){
+    document.getElementById('viewerPin1').value='';
+    document.getElementById('viewerPin2').value='';
+    renderViewerPinStatus();
+    toast('ตั้งรหัสผ่านดูอย่างเดียวเรียบร้อยแล้ว');
+  }).catch(function(e){ if(e.message!=='stop') console.error(e); });
+}
+function removeViewerPin(){
+  if(!confirm('ปิดใช้งานรหัสผ่านดูอย่างเดียว? เจ้าหน้าที่ที่ใช้รหัสนี้จะเข้าระบบไม่ได้อีก')) return;
+  viewerPinHash = null;
+  dbPut('meta',{key:'viewerPinHash', value:null}).then(function(){
+    renderViewerPinStatus();
+    toast('ปิดใช้งานแล้ว');
+  });
+}
+function renderViewerPinStatus(){
+  var el2 = document.getElementById('viewerPinStatus');
+  var btnRemove = document.getElementById('btnRemoveViewerPin');
+  if(!el2 || !btnRemove) return;
+  if(viewerPinHash){
+    el2.textContent = '✅ เปิดใช้งานอยู่ — เจ้าหน้าที่ที่มีรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารได้เท่านั้น';
+    btnRemove.style.display='';
+  } else {
+    el2.textContent = 'ยังไม่ได้ตั้งรหัสผ่านดูอย่างเดียว';
+    btnRemove.style.display='none';
+  }
 }
 function changePin(){
   var cur = document.getElementById('pin_current').value;
@@ -1040,6 +1110,7 @@ function bindNav(){
   document.getElementById('lookupSearch').addEventListener('input', renderLookupList);
 }
 function switchView(name){
+  if(currentRole==='viewer' && name!=='dashboard') name='dashboard';
   ['dashboard','form','list','settings'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
@@ -1143,7 +1214,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
         el('div',{class:'ph-name', text: latest.studentName||'(ไม่ระบุชื่อ)'}),
         el('div',{class:'ph-id', text:'รหัสนักศึกษา '+latest.studentId})
       ]),
-      el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){ startNewExamForStudent(latest.studentId); }})
+      currentRole==='viewer' ? null : el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){ startNewExamForStudent(latest.studentId); }})
     ])
   ]);
   wrap.appendChild(header);
@@ -1326,12 +1397,14 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       ]));
     }
 
-    body.push(el('div',{style:'margin-top:14px;text-align:right;'},[
-      el('button',{type:'button', class:'link-btn', text:'✏️ แก้ไขรายการนี้', onclick:function(){
-        recordsGet(r.recordId).then(loadRecordIntoForm);
-        switchView('form');
-      }})
-    ]));
+    if(currentRole!=='viewer'){
+      body.push(el('div',{style:'margin-top:14px;text-align:right;'},[
+        el('button',{type:'button', class:'link-btn', text:'✏️ แก้ไขรายการนี้', onclick:function(){
+          recordsGet(r.recordId).then(loadRecordIntoForm);
+          switchView('form');
+        }})
+      ]));
+    }
 
     wrap.appendChild(el('div',{class:'exam-profile-card '+r.type}, body));
   });

@@ -2790,16 +2790,48 @@ function fetchFilesSheet(){
     return filesSheetCache;
   });
 }
+/* ---- header self-heal: ป้องกันปัญหา header/ข้อมูลเหลื่อมคอลัมน์เวลามีการเพิ่มฟิลด์ใหม่ในอนาคต
+   (ต้องเช็คก่อนเขียนทุกครั้ง มิฉะนั้น recordToRow/fileToRow ที่เขียนตำแหน่งตาม RECORD_COLUMNS/FILE_COLUMNS
+   ปัจจุบัน จะไม่ตรงกับ header แถวจริงในชีทที่ยังเป็นเวอร์ชันเก่า ทำให้ค่า (โดยเฉพาะ 'deleted') ไปตกคอลัมน์ผิด) */
+var recordsHeaderAligned = false;
+var filesHeaderAligned = false;
+function alignSheetHeader(tabName, columns, existingHeaders){
+  var merged = existingHeaders.filter(function(h){ return h!=='deleted'; });
+  var changed = merged.length !== existingHeaders.length; // แปลว่ามี 'deleted' อยู่ไม่ท้ายสุด หรือไม่มีเลย
+  columns.forEach(function(h){ if(h!=='deleted' && merged.indexOf(h)===-1){ merged.push(h); changed=true; } });
+  merged.push('deleted');
+  var same = merged.length===existingHeaders.length && merged.every(function(h,i){ return h===existingHeaders[i]; });
+  if(same) return Promise.resolve(false);
+  return sheetsUpdateRow(tabName, 1, merged).then(function(){ return true; });
+}
+function ensureRecordsHeaderAligned(){
+  if(recordsHeaderAligned) return Promise.resolve();
+  return fetchRecordsSheet().then(function(cache){
+    return alignSheetHeader('Records', RECORD_COLUMNS, cache.headers);
+  }).then(function(changed){
+    recordsHeaderAligned = true;
+    return changed ? fetchRecordsSheet() : null;
+  });
+}
+function ensureFilesHeaderAligned(){
+  if(filesHeaderAligned) return Promise.resolve();
+  return fetchFilesSheet().then(function(cache){
+    return alignSheetHeader('Files', FILE_COLUMNS, cache.headers);
+  }).then(function(changed){
+    filesHeaderAligned = true;
+    return changed ? fetchFilesSheet() : null;
+  });
+}
 /* ---- records adapter: routes to Sheets when cloud mode is on, else falls back to IndexedDB ---- */
 function recordsGetAll(){
   if(!cloudModeEnabled) return dbGetAll('records');
-  return ensureAuthed().then(fetchRecordsSheet).then(function(cache){
+  return ensureAuthed().then(ensureRecordsHeaderAligned).then(fetchRecordsSheet).then(function(cache){
     return cache.entries.filter(function(e){ return !e.rec.deleted; }).map(function(e){ return e.rec; });
   });
 }
 function recordsGet(id){
   if(!cloudModeEnabled) return dbGet('records', id);
-  return ensureAuthed().then(fetchRecordsSheet).then(function(cache){
+  return ensureAuthed().then(ensureRecordsHeaderAligned).then(fetchRecordsSheet).then(function(cache){
     var found = cache.entries.filter(function(e){ return e.rec.id===id && !e.rec.deleted; })[0];
     return found ? found.rec : undefined;
   });
@@ -2810,7 +2842,7 @@ function recordsGetByStudentId(sid){
 }
 function recordsPut(rec){
   if(!cloudModeEnabled) return dbPut('records', rec);
-  return ensureAuthed().then(fetchRecordsSheet).then(function(cache){
+  return ensureAuthed().then(ensureRecordsHeaderAligned).then(fetchRecordsSheet).then(function(cache){
     var existing = cache.entries.filter(function(e){ return e.rec.id===rec.id; })[0];
     var row = recordToRow(rec);
     if(existing){
@@ -2822,7 +2854,7 @@ function recordsPut(rec){
 }
 function recordsDelete(id){
   if(!cloudModeEnabled) return dbDelete('records', id);
-  return ensureAuthed().then(fetchRecordsSheet).then(function(cache){
+  return ensureAuthed().then(ensureRecordsHeaderAligned).then(fetchRecordsSheet).then(function(cache){
     var existing = cache.entries.filter(function(e){ return e.rec.id===id; })[0];
     if(!existing) return;
     var rec = Object.assign({}, existing.rec, {deleted:true, updatedAt:Date.now()});
@@ -2832,29 +2864,29 @@ function recordsDelete(id){
 /* ---- files adapter ---- */
 function filesGetByRecordId(recordId){
   if(!cloudModeEnabled) return dbGetByIndex('files','recordId', recordId);
-  return ensureAuthed().then(fetchFilesSheet).then(function(cache){
+  return ensureAuthed().then(ensureFilesHeaderAligned).then(fetchFilesSheet).then(function(cache){
     return cache.entries.filter(function(e){ return e.rec.recordId===recordId && !e.rec.deleted; }).map(function(e){ return e.rec; });
   });
 }
 function filesGetAllCloud(){
-  return ensureAuthed().then(fetchFilesSheet).then(function(cache){
+  return ensureAuthed().then(ensureFilesHeaderAligned).then(fetchFilesSheet).then(function(cache){
     return cache.entries.filter(function(e){ return !e.rec.deleted; }).map(function(e){ return e.rec; });
   });
 }
 function filesGet(id){
   if(!cloudModeEnabled) return dbGet('files', id);
-  return ensureAuthed().then(fetchFilesSheet).then(function(cache){
+  return ensureAuthed().then(ensureFilesHeaderAligned).then(fetchFilesSheet).then(function(cache){
     var found = cache.entries.filter(function(e){ return e.rec.id===id && !e.rec.deleted; })[0];
     return found ? found.rec : undefined;
   });
 }
 function filesPut(f){
   if(!cloudModeEnabled) return dbPut('files', f);
-  return ensureAuthed().then(function(){ return sheetsAppendRow('Files', fileToRow(f)); }).then(function(){ return f; });
+  return ensureAuthed().then(ensureFilesHeaderAligned).then(function(){ return sheetsAppendRow('Files', fileToRow(f)); }).then(function(){ return f; });
 }
 function filesDelete(id){
   if(!cloudModeEnabled) return dbDelete('files', id);
-  return ensureAuthed().then(fetchFilesSheet).then(function(cache){
+  return ensureAuthed().then(ensureFilesHeaderAligned).then(fetchFilesSheet).then(function(cache){
     var existing = cache.entries.filter(function(e){ return e.rec.id===id; })[0];
     if(!existing) return;
     var f = Object.assign({}, existing.rec, {deleted:true});

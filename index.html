@@ -409,6 +409,25 @@
     </div>
   </div>
 
+  <div class="card">
+    <h3>หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</h3>
+    <div class="grid">
+      <div class="field">
+        <label>สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ</label>
+        <div class="radio-group">
+          <label><input type="radio" name="bookSubmitStatus" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
+          <label><input type="radio" name="bookSubmitStatus" value="ส่งแล้ว"> ส่งแล้ว</label>
+        </div>
+      </div>
+      <div class="field"><label>วันที่ส่งเล่ม</label><input type="date" id="f_bookSubmitDate"></div>
+    </div>
+    <h4>แนบไฟล์เล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</h4>
+    <div class="attach-box">
+      <input type="file" id="book_fileInput" multiple>
+      <div class="attach-list" id="book_attachList"></div>
+    </div>
+  </div>
+
   <div class="form-footer">
     <button type="button" class="btn btn-secondary" id="btnCancelForm">❌ ยกเลิก</button>
     <button type="button" class="btn btn-primary" id="btnSaveForm">💾 บันทึกข้อมูล</button>
@@ -1135,7 +1154,9 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       kv('รหัสนักศึกษา', latest.studentId),
       kv('ชื่อ-นามสกุล', latest.studentName),
       kv('ระดับการศึกษา', latest.degreeLevel),
-      kv('แผนการเรียน', latest.plan),
+      kv('แผนการเรียน', latest.plan)
+    ]),
+    el('div',{class:'kv-grid', style:'margin-top:12px;'},[
       kv('หลักสูตร', latest.program),
       kv('สาขาวิชา', latest.department)
     ])
@@ -1184,6 +1205,33 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     ]);
     wrap.appendChild(sec5);
   }
+
+  var latestIdx = examRecords.findIndex(function(r){ return r.id===latest.id; });
+  var bookFiles = (latestIdx>-1 ? (filesByRecord[latestIdx]||[]) : []).filter(function(f){ return f.section==='book'; });
+  var sec6Body = [
+    el('div',{class:'kv-grid'},[
+      kv('สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ', latest.bookSubmitStatus||'ยังไม่ส่ง'),
+      kv('วันที่ส่งเล่ม', latest.bookSubmitDate)
+    ])
+  ];
+  if(bookFiles.length){
+    var bookFileList = el('div',{class:'attach-list', style:'margin-top:10px;'});
+    bookFiles.forEach(function(f){
+      bookFileList.appendChild(el('div',{class:'attach-item'},[
+        el('span',{class:'name', text:'📄 '+f.name}),
+        el('span',{class:'size', text:fmtBytes(f.size)}),
+        el('button',{type:'button', class:'link-btn', text:'⬇ ดาวน์โหลด', onclick:function(){ downloadFile(f.id); }})
+      ]));
+    });
+    sec6Body.push(el('div',{style:'margin-top:6px;'},[
+      el('span',{class:'k', style:'font-size:12px;color:var(--muted);', text:'ไฟล์แนบ'}),
+      bookFileList
+    ]));
+  }
+  var sec6 = el('div',{class:'card section-card sec-blue'},[
+    el('h3',{text:'หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์'})
+  ].concat(sec6Body));
+  wrap.appendChild(sec6);
 
   /* หนึ่งแถวข้อมูล (record) อาจมีทั้ง 3.1 (proposal) และ 3.2 (defense) พร้อมกันได้ในตัวเดียว
      จึงต้องแตกเป็น "บล็อกการสอบ" แยกตามส่วนที่มีข้อมูลจริง (สูงสุด 2 บล็อกต่อ 1 แถว) แล้วเรียงตามวันที่สอบ */
@@ -1414,6 +1462,7 @@ function bindFormEvents(){
 
   document.getElementById('p_fileInput').addEventListener('change', function(e){ handleFileInput('proposal', e.target.files); e.target.value=''; });
   document.getElementById('d_fileInput').addEventListener('change', function(e){ handleFileInput('defense', e.target.files); e.target.value=''; });
+  document.getElementById('book_fileInput').addEventListener('change', function(e){ handleFileInput('book', e.target.files); e.target.value=''; });
 }
 /* ================= EXAM SUBSECTIONS (3.1 / 3.2 — always both visible, both can hold data in the same record) ================= */
 function sectionHasData(prefix){
@@ -1449,7 +1498,8 @@ function mergeStudentRows(rows){
   var primary = Object.assign({}, sorted[0]);
   var obsoleteIds = [];
   var bioFields = ['studentName','degreeLevel','plan','program','department','englishResult','englishScore','englishDocLink',
-    'computerResult','computerDocLink','qualifyingExam','qualifyingDocLink','mainAdvisor','titleTh','titleEn'];
+    'computerResult','computerDocLink','qualifyingExam','qualifyingDocLink','mainAdvisor','titleTh','titleEn',
+    'bookSubmitStatus','bookSubmitDate'];
   for(var i=1;i<sorted.length;i++){
     var r = sorted[i];
     obsoleteIds.push(r.id);
@@ -1488,6 +1538,7 @@ function newDraft(){
   resetFormFields();
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
+  renderAttachmentList('book');
 }
 /* กด "เพิ่มการสอบใหม่ / เพิ่มข้อมูล" ให้ นศ. คนหนึ่ง — ถ้ามีแถวเดิมอยู่แล้ว (1 แถวขึ้นไป) ให้เปิดแถวเดิมมาแก้ไข/เติมข้อมูลทันที
    (รวมแถวซ้ำให้อัตโนมัติถ้าพบมากกว่า 1 แถว — จะลบแถวซ้ำจริงตอนกดบันทึกสำเร็จเท่านั้น) ถ้าไม่พบเลยจึงสร้างแถวใหม่ */
@@ -1548,6 +1599,9 @@ function resetFormFields(){
   document.getElementById('f_titleEn').value='';
   clearDynamicRows('publicationList');
 
+  document.querySelector('input[name=bookSubmitStatus][value="ยังไม่ส่ง"]').checked=true;
+  document.getElementById('f_bookSubmitDate').value='';
+
   clearExamSectionFields();
 
   document.getElementById('studentHistoryBox').style.display='none';
@@ -1580,6 +1634,9 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');
   (rec.publications||[]).forEach(function(p){ addPublicationRow(p); });
+
+  var bs = document.querySelector('input[name=bookSubmitStatus][value="'+(rec.bookSubmitStatus||'ยังไม่ส่ง')+'"]'); if(bs) bs.checked=true;
+  document.getElementById('f_bookSubmitDate').value = rec.bookSubmitDate||'';
 
   if(recHasProposalData(rec)){
     document.getElementById('p_date').value = rec.proposalDate||'';
@@ -1614,6 +1671,7 @@ function loadRecordIntoForm(rec){
   setSectionLocked('d', recHasDefenseData(rec), 'ส่วน 3.2 (การสอบป้องกัน/IS) มีข้อมูลบันทึกไว้แล้ว');
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
+  renderAttachmentList('book');
   renderExamHistory(rec.studentId);
 }
 function cancelForm(){
@@ -1736,6 +1794,8 @@ function collectFormData(){
     titleTh: document.getElementById('f_titleTh').value.trim(),
     titleEn: document.getElementById('f_titleEn').value.trim(),
     publications: getPublicationValues(),
+    bookSubmitStatus: document.querySelector('input[name=bookSubmitStatus]:checked').value,
+    bookSubmitDate: document.getElementById('f_bookSubmitDate').value,
     updatedAt: Date.now()
   };
   if(pFilled){
@@ -1850,7 +1910,7 @@ function handleFileInput(section, fileList){
   })).then(function(){ renderAttachmentList(section); });
 }
 function renderAttachmentList(section){
-  var containerId = section==='proposal' ? 'p_attachList' : 'd_attachList';
+  var containerId = section==='proposal' ? 'p_attachList' : (section==='defense' ? 'd_attachList' : 'book_attachList');
   var container = document.getElementById(containerId);
   container.innerHTML='';
   if(!currentDraftId) return;
@@ -1987,7 +2047,8 @@ var EXPORT_COLUMNS = [
   ['chair','ประธานกรรมการ'],['committeeStr','กรรมการสอบ'],
   ['fullScore','คะแนนเต็ม'],['obtainedScore','คะแนนที่สอบได้'],['dueDate','กำหนดส่งเล่ม'],
   ['proposalRevisionStatus','ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์'],['proposalRevisionDate','วันที่ส่งแก้ไข'],
-  ['result','ผลสอบ']
+  ['result','ผลสอบ'],
+  ['bookSubmitStatus','สถานะการส่งเล่มฉบับสมบูรณ์'],['bookSubmitDate','วันที่ส่งเล่ม']
 ];
 /* 1 แถวข้อมูลในระบบอาจมีทั้ง 3.1 และ 3.2 พร้อมกัน — ตอน export ให้แตกเป็นสูงสุด 2 แถวต่อ 1 record
    (เหมือนเดิม 1 แถว = 1 การสอบ) เพื่อให้รายงาน Excel/CSV อ่านง่ายเหมือนที่ผ่านมา */
@@ -2005,7 +2066,8 @@ function toExportRows(r){
       if(p.year) s += (s?' ':'')+'('+p.year+')';
       if(p.link) s += (s?' — ':'')+p.link;
       return s;
-    }).join('; ')
+    }).join('; '),
+    bookSubmitStatus: r.bookSubmitStatus||'ยังไม่ส่ง', bookSubmitDate: r.bookSubmitDate||''
   };
   function committeeStrOf(list){
     return (list||[]).map(function(c){
@@ -2671,6 +2733,7 @@ var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','p
   'result','fullScore','obtainedScore','dueDate','createdAt','updatedAt','publicationsJson','proposalRevisionStatus','proposalRevisionDate',
   'proposalDate','proposalTime','proposalLocation','proposalChair','proposalCommitteeJson','proposalResult',
   'defenseDate','defenseTime','defenseLocation','defenseChair','defenseCommitteeJson','defenseResult','defenseFullScore','defenseObtainedScore','defenseDueDate',
+  'bookSubmitStatus','bookSubmitDate',
   'deleted'];
 var FILE_COLUMNS = ['id','recordId','section','name','type','size','driveFileId','driveLink','addedAt','deleted'];
 function extractSheetId(input){

@@ -1211,6 +1211,18 @@ function kvLink(label, url){
     valEl
   ]);
 }
+function kvFileLink(label, file){
+  var valEl;
+  if(file.driveLink){
+    valEl = el('a',{href:file.driveLink, target:'_blank', rel:'noopener noreferrer', class:'v doc-link', text:'🔗 เปิดเอกสาร'});
+  } else {
+    valEl = el('button',{type:'button', class:'v doc-link', style:'background:none;border:none;padding:0;cursor:pointer;text-align:left;font:inherit;', text:'🔗 เปิดเอกสาร', onclick:function(){ downloadFile(file.id); }});
+  }
+  return el('div',{class:'kv-item'},[
+    el('span',{class:'k', text:label}),
+    valEl
+  ]);
+}
 function renderStudentProfile(latest, examRecords, filesByRecord){
   var wrap = document.getElementById('lookupDetail');
   wrap.innerHTML='';
@@ -1269,52 +1281,9 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
   ]);
   wrap.appendChild(sec2);
 
-  var publications = latest.publications || [];
-  if(publications.length){
-    var sec5 = el('div',{class:'card section-card sec-purple'},[
-      el('h3',{text:'หมวดที่ 5: การเผยแพร่ผลงานวิจัย'}),
-      el('div',{class:'publication-rows'}, publications.map(function(p){
-        return el('div',{class:'publication-row'},[
-          el('div',{class:'pr-info'},[
-            el('span',{class:'pr-venue', text:p.venue||'(ไม่ระบุชื่อวารสาร/ที่ประชุม)'}),
-            el('span',{class:'pr-year', text:p.year?('ปีที่ตีพิมพ์ '+p.year):''})
-          ]),
-          p.link ? el('a',{href:p.link, target:'_blank', rel:'noopener noreferrer', class:'link-btn', text:'🔗 เปิดผลงาน'}) : null
-        ]);
-      }))
-    ]);
-    wrap.appendChild(sec5);
-  }
-
-  var latestIdx = examRecords.findIndex(function(r){ return r.id===latest.id; });
-  var bookFiles = (latestIdx>-1 ? (filesByRecord[latestIdx]||[]) : []).filter(function(f){ return f.section==='book'; });
-  var sec6Body = [
-    el('div',{class:'kv-grid'},[
-      kv('สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ', latest.bookSubmitStatus||'ยังไม่ส่ง'),
-      kv('วันที่ส่งเล่ม', latest.bookSubmitDate)
-    ])
-  ];
-  if(bookFiles.length){
-    var bookFileList = el('div',{class:'attach-list', style:'margin-top:10px;'});
-    bookFiles.forEach(function(f){
-      bookFileList.appendChild(el('div',{class:'attach-item'},[
-        el('span',{class:'name', text:'📄 '+f.name}),
-        el('span',{class:'size', text:fmtBytes(f.size)}),
-        el('button',{type:'button', class:'link-btn', text:'⬇ ดาวน์โหลด', onclick:function(){ downloadFile(f.id); }})
-      ]));
-    });
-    sec6Body.push(el('div',{style:'margin-top:6px;'},[
-      el('span',{class:'k', style:'font-size:12px;color:var(--muted);', text:'ไฟล์แนบ'}),
-      bookFileList
-    ]));
-  }
-  var sec6 = el('div',{class:'card section-card sec-blue'},[
-    el('h3',{text:'หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์'})
-  ].concat(sec6Body));
-  wrap.appendChild(sec6);
-
   /* หนึ่งแถวข้อมูล (record) อาจมีทั้ง 3.1 (proposal) และ 3.2 (defense) พร้อมกันได้ในตัวเดียว
-     จึงต้องแตกเป็น "บล็อกการสอบ" แยกตามส่วนที่มีข้อมูลจริง (สูงสุด 2 บล็อกต่อ 1 แถว) แล้วเรียงตามวันที่สอบ */
+     จึงต้องแตกเป็น "บล็อกการสอบ" แยกตามส่วนที่มีข้อมูลจริง (สูงสุด 2 บล็อกต่อ 1 แถว) แล้วเรียงตามวันที่สอบ
+     — วางส่วนนี้ (หมวดที่ 3) ไว้ต่อจากหมวดที่ 2 ทันที เพื่อให้เรียงลำดับหมวดถูกต้อง (1, 1.1, 2, 3, 5, 6) */
   var examBlocks = [];
   examRecords.forEach(function(r, idx){
     var files = filesByRecord[idx] || [];
@@ -1417,6 +1386,38 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
 
     wrap.appendChild(el('div',{class:'exam-profile-card '+r.type}, body));
   });
+
+  var publications = latest.publications || [];
+  if(publications.length){
+    var sec5 = el('div',{class:'card section-card sec-purple'},[
+      el('h3',{text:'หมวดที่ 5: การเผยแพร่ผลงานวิจัย'}),
+      el('div',{class:'publication-rows'}, publications.map(function(p){
+        return el('div',{class:'publication-row'},[
+          el('div',{class:'pr-info'},[
+            el('span',{class:'pr-venue', text:p.venue||'(ไม่ระบุชื่อวารสาร/ที่ประชุม)'}),
+            el('span',{class:'pr-year', text:p.year?('ปีที่ตีพิมพ์ '+p.year):''})
+          ]),
+          p.link ? el('a',{href:p.link, target:'_blank', rel:'noopener noreferrer', class:'link-btn', text:'🔗 เปิดผลงาน'}) : null
+        ]);
+      }))
+    ]);
+    wrap.appendChild(sec5);
+  }
+
+  var latestIdx = examRecords.findIndex(function(r){ return r.id===latest.id; });
+  var bookFiles = (latestIdx>-1 ? (filesByRecord[latestIdx]||[]) : []).filter(function(f){ return f.section==='book'; });
+  var bookFileRows = bookFiles.length
+    ? bookFiles.map(function(f){ return kvFileLink(f.name, f); })
+    : [kvLink('ไฟล์เล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์', null)];
+  var sec6 = el('div',{class:'card section-card sec-blue'},[
+    el('h3',{text:'หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์'}),
+    el('div',{class:'kv-grid'},[
+      kv('สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ', latest.bookSubmitStatus||'ยังไม่ส่ง'),
+      kv('วันที่ส่งเล่ม', latest.bookSubmitDate)
+    ]),
+    el('div',{class:'kv-grid', style:'margin-top:12px;'}, bookFileRows)
+  ]);
+  wrap.appendChild(sec6);
 }
 
 /* ================= SELECT RENDERING ================= */

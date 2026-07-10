@@ -603,6 +603,7 @@
       <div class="master-card" style="grid-column:1/-1;">
         <h4>รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h4>
         <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor">เพิ่ม</button></div>
+        <div id="m_advisor_dupWarning" style="display:none;color:#dc2626;font-size:13px;margin-top:4px;">⚠️ มีชื่อนี้อยู่แล้วในรายการ</div>
         <div class="help" style="margin:10px 0 4px;">เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):</div>
         <div class="radio-group" id="m_advisor_roles"></div>
         <div class="field" style="max-width:340px;margin-top:14px;">
@@ -1497,6 +1498,24 @@ function getCommitteeValues(containerId){
   });
   return vals;
 }
+/* ตรวจสอบชื่อกรรมการซ้ำในกรรมการชุดเดียวกัน (นับรวมประธานกรรมการด้วย) — prefix คือ 'p' (3.1) หรือ 'd' (3.2) */
+function findDuplicateCommitteeName(prefix){
+  var chairEl = document.getElementById(prefix+'_chair');
+  var chairVal = chairEl ? (chairEl.value||'').trim() : '';
+  var names = [];
+  if(chairVal) names.push(chairVal);
+  getCommitteeValues(prefix+'_committeeList').forEach(function(c){ if(c.name) names.push(c.name.trim()); });
+  var seen = {};
+  for(var i=0;i<names.length;i++){
+    if(seen[names[i]]) return names[i];
+    seen[names[i]] = true;
+  }
+  return null;
+}
+function warnDuplicateCommitteeIfAny(prefix){
+  var dup = findDuplicateCommitteeName(prefix);
+  if(dup) toast('⚠️ ชื่อ "'+dup+'" ถูกเลือกซ้ำในคณะกรรมการสอบ'+(prefix==='p'?'เค้าโครง (3.1)':'ป้องกัน/IS (3.2)'), true);
+}
 
 /* ================= PUBLICATIONS (หมวดที่ 5) ================= */
 function addPublicationRow(existing){
@@ -1528,6 +1547,12 @@ function bindFormEvents(){
   document.getElementById('btnAddCoAdvisor').addEventListener('click', function(){ addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); });
   document.getElementById('p_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('p_committeeList'); });
   document.getElementById('d_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('d_committeeList'); });
+  document.getElementById('sub-proposal').addEventListener('change', function(e){
+    if(e.target && e.target.classList.contains('combo-input')) warnDuplicateCommitteeIfAny('p');
+  });
+  document.getElementById('sub-defense').addEventListener('change', function(e){
+    if(e.target && e.target.classList.contains('combo-input')) warnDuplicateCommitteeIfAny('d');
+  });
   document.getElementById('btnAddPublication').addEventListener('click', function(){ addPublicationRow(); });
   document.getElementById('btnFindStudent').addEventListener('click', searchExistingStudent);
   document.getElementById('btnSaveForm').addEventListener('click', saveRecord);
@@ -1839,10 +1864,14 @@ function validateForm(){
   if(pFilled){
     if(!document.getElementById('p_examTime').value) return 'กรุณาระบุเวลาสอบเค้าโครง (3.1)';
     if(!document.getElementById('p_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.1)';
+    var pDup = findDuplicateCommitteeName('p');
+    if(pDup) return 'พบชื่อ "'+pDup+'" ซ้ำในคณะกรรมการสอบเค้าโครง (3.1) กรุณาตรวจสอบ';
   }
   if(dFilled){
     if(!document.getElementById('d_examTime').value) return 'กรุณาระบุเวลาสอบป้องกัน (3.2)';
     if(!document.getElementById('d_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.2)';
+    var dDup = findDuplicateCommitteeName('d');
+    if(dDup) return 'พบชื่อ "'+dDup+'" ซ้ำในคณะกรรมการสอบป้องกัน/IS (3.2) กรุณาตรวจสอบ';
   }
   return null;
 }
@@ -2312,6 +2341,12 @@ function bindSettingsEvents(){
   document.getElementById('btnOpenTestUsers').addEventListener('click', function(){
     window.open('https://console.cloud.google.com/auth/audience', '_blank');
   });
+  document.getElementById('m_advisor_input').addEventListener('input', function(e){
+    var name = e.target.value.trim();
+    var dup = !!name && masterData.advisors.some(function(a){ return a.name===name; });
+    document.getElementById('m_advisor_dupWarning').style.display = dup ? 'block' : 'none';
+    document.getElementById('btnAddAdvisor').disabled = dup;
+  });
   document.getElementById('btnAddAdvisor').addEventListener('click', function(){
     var input = document.getElementById('m_advisor_input');
     var name = input.value.trim();
@@ -2320,7 +2355,11 @@ function bindSettingsEvents(){
     if(roles.length===0){ toast('กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
     if(masterData.advisors.some(function(a){ return a.name===name; })){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
     masterData.advisors.push({name:name, roles:roles});
-    saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); input.value=''; });
+    saveMasterData().then(function(){
+      renderMasterLists(); renderAllSelects(); input.value='';
+      document.getElementById('m_advisor_dupWarning').style.display='none';
+      document.getElementById('btnAddAdvisor').disabled=false;
+    });
   });
   document.getElementById('m_advisor_search').addEventListener('input', function(){ renderAdvisorList(); });
   document.getElementById('btnAddPosition').addEventListener('click', function(){

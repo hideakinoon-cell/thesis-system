@@ -528,6 +528,15 @@
   </div>
 
   <div class="card">
+    <h3>🔍 ตรวจสอบไฟล์แนบที่ลิงก์เสีย</h3>
+    <div class="help" style="margin-bottom:10px;">สแกนไฟล์แนบทั้งหมดที่เคยอัปโหลดขึ้น Google Drive ในระบบ เช็คว่าแต่ละไฟล์ยังเปิดได้จริงหรือไม่ (เช่น ถูกลบ/ย้ายไปถังขยะ/ไม่มีสิทธิ์เข้าถึงแล้ว) มีประโยชน์เวลาสงสัยว่ามีการย้าย/ลบไฟล์ในบัญชี Drive โดยไม่ได้ตั้งใจ</div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnCheckBrokenFiles">🔍 เริ่มตรวจสอบ</button>
+    </div>
+    <div id="brokenFilesResult" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
     <h3>🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)</h3>
     <div class="help" style="margin-bottom:14px;">เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md</div>
     <div class="grid">
@@ -2671,6 +2680,7 @@ function bindGoogleButtons(){
   });
   document.getElementById('btnBackupNow').addEventListener('click', function(){ backupNow(false); });
   document.getElementById('btnRestore').addEventListener('click', openRestorePicker);
+  document.getElementById('btnCheckBrokenFiles').addEventListener('click', checkBrokenDriveFiles);
 }
 function ensureAuthed(){
   return new Promise(function(resolve, reject){
@@ -2751,6 +2761,73 @@ function driveFetch(url, options){
   return fetch(url, options).then(function(res){
     if(!res.ok) return res.text().then(function(t){ throw new Error('Drive API error '+res.status+': '+t); });
     return res;
+  });
+}
+/* ================= ตรวจสอบไฟล์แนบที่ลิงก์เสีย ================= */
+function getAllFilesAnyMode(){
+  if(cloudModeEnabled) return filesGetAllCloud();
+  return dbGetAll('files');
+}
+function checkBrokenDriveFiles(){
+  var btn = document.getElementById('btnCheckBrokenFiles');
+  var resultBox = document.getElementById('brokenFilesResult');
+  resultBox.innerHTML = '';
+  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  var origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'กำลังตรวจสอบ...';
+  ensureAuthed().then(function(){
+    return Promise.all([getAllFilesAnyMode(), recordsGetAll()]);
+  }).then(function(results){
+    var allFiles = results[0], allRecords = results[1];
+    var driveFiles = allFiles.filter(function(f){ return f.driveFileId; });
+    resultBox.innerHTML = '';
+    if(driveFiles.length===0){
+      resultBox.appendChild(el('div',{class:'help', text:'ยังไม่มีไฟล์ที่อัปโหลดขึ้น Drive ในระบบให้ตรวจสอบ'}));
+      return;
+    }
+    var recordById = {};
+    allRecords.forEach(function(r){ recordById[r.id]=r; });
+    var checkedCount = 0;
+    var broken = [];
+    return Promise.all(driveFiles.map(function(f){
+      return driveFetch('https://www.googleapis.com/drive/v3/files/'+f.driveFileId+'?fields=id,trashed')
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          checkedCount++;
+          if(data.trashed){ broken.push(Object.assign({reason:'ถูกย้ายไปถังขยะใน Drive'}, f)); }
+        })
+        .catch(function(){
+          checkedCount++;
+          broken.push(Object.assign({reason:'ไม่พบไฟล์ (ถูกลบ/ย้าย/ไม่มีสิทธิ์เข้าถึงแล้ว)'}, f));
+        });
+    })).then(function(){
+      resultBox.innerHTML='';
+      resultBox.appendChild(el('div',{class:'help', text:'ตรวจสอบแล้ว '+checkedCount+' ไฟล์ พบปัญหา '+broken.length+' ไฟล์'}));
+      if(broken.length===0){
+        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบไฟล์ที่มีปัญหา ทุกลิงก์ใช้งานได้ปกติ'}));
+        return;
+      }
+      broken.forEach(function(f){
+        var rec = recordById[f.recordId];
+        var studentTxt = rec ? (rec.studentId+' — '+rec.studentName) : ('(ไม่พบข้อมูลนักศึกษาที่เชื่อมกับไฟล์นี้ — เรคคอร์ด '+f.recordId+')');
+        var sectionTxt = f.section==='proposal' ? '3.1 เค้าโครง' : (f.section==='defense' ? '3.2 ป้องกัน/IS' : 'หมวดที่ 6 เล่มฉบับสมบูรณ์');
+        var row = el('div',{class:'attach-item'},[
+          el('span',{class:'name', text:'⚠️ '+f.name+' — '+studentTxt+' ('+sectionTxt+') — '+f.reason}),
+          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', text:'ลบรายการนี้ออกจากระบบ', onclick:function(){
+            if(!confirm('ลบรายการไฟล์นี้ออกจากระบบ? (ไม่กระทบไฟล์ต้นฉบับใน Drive เพราะหาไม่เจออยู่แล้ว) หลังลบสามารถแนบไฟล์ใหม่ทดแทนได้ที่หน้าบันทึกข้อมูลของนักศึกษาคนนี้')) return;
+            filesDelete(f.id).then(function(){ row.remove(); toast('ลบรายการแล้ว'); });
+          }})
+        ]);
+        resultBox.appendChild(row);
+      });
+    });
+  }).catch(function(e){
+    resultBox.innerHTML='';
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+e}));
+  }).then(function(){
+    btn.disabled = false;
+    btn.textContent = origText;
   });
 }
 function ensureDriveFolder(name, parentId){

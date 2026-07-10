@@ -56,6 +56,7 @@
   .exam-profile-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-top:16px;box-shadow:0 1px 3px rgba(15,23,42,.04);}
   .exam-profile-card.proposal{border-left:5px solid var(--warn);}
   .exam-profile-card.defense{border-left:5px solid var(--accent);}
+  .exam-profile-card.exam-attempt-history{opacity:.72;background:#f8fafc;}
   .exam-profile-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
   .exam-profile-head .title{font-weight:700;font-size:16.5px;color:var(--primary-dark);}
   .section-card{border-top:4px solid transparent;}
@@ -728,6 +729,8 @@ var currentExamType = null; // 'proposal' | 'defense'
 var coAdvisorCount = 0;
 var pCommitteeCount = 0, dCommitteeCount = 0;
 var pendingMergeObsoleteIds = []; // แถวซ้ำของ นศ. คนเดียวกันที่จะถูกลบทิ้งหลังบันทึกรวมสำเร็จ
+var pendingProposalAttempts = []; // ประวัติการสอบเค้าโครง (3.1) ครั้งก่อนๆ ที่ไม่ใช่ครั้งล่าสุด (แต่ละอัน = {date,time,location,chair,committee,result,revisionStatus,revisionDate})
+var pendingDefenseAttempts = []; // ประวัติการสอบป้องกัน/IS (3.2) ครั้งก่อนๆ ที่ไม่ใช่ครั้งล่าสุด (แต่ละอัน = {date,time,location,chair,committee,result,fullScore,obtainedScore,dueDate})
 
 /* ================= INIT ================= */
 window.addEventListener('DOMContentLoaded', function(){
@@ -1287,24 +1290,44 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
   var examBlocks = [];
   examRecords.forEach(function(r, idx){
     var files = filesByRecord[idx] || [];
+    /* ต่อประวัติการสอบครั้งก่อนๆ (proposalAttempts) เข้ากับข้อมูลครั้งล่าสุด (ฟิลด์ปกติ) ตามลำดับเวลา
+       เพื่อแสดงทุกครั้งที่เคยสอบ (เช่น สอบไม่ผ่านครั้งที่ 1 แล้วสอบใหม่ครั้งที่ 2) */
+    var proposalAll = (r.proposalAttempts||[]).map(function(a){
+      return {date:a.date, time:a.time, location:a.location, chair:a.chair, committee:a.committee||[], result:a.result,
+        proposalRevisionStatus:a.revisionStatus, proposalRevisionDate:a.revisionDate};
+    });
     if(recHasProposalData(r)){
-      examBlocks.push({
-        type:'proposal', typeTxt:'สอบเค้าโครงวิทยานิพนธ์', typeTagTxt:'สอบเค้าโครง',
-        date:r.proposalDate, examDate:r.proposalDate, examTime:r.proposalTime, location:r.proposalLocation,
-        chair:r.proposalChair, committee:r.proposalCommittee, result:r.proposalResult,
-        proposalRevisionStatus:r.proposalRevisionStatus, proposalRevisionDate:r.proposalRevisionDate,
-        recordId:r.id, files:files
-      });
+      proposalAll.push({date:r.proposalDate, time:r.proposalTime, location:r.proposalLocation, chair:r.proposalChair,
+        committee:r.proposalCommittee||[], result:r.proposalResult, proposalRevisionStatus:r.proposalRevisionStatus, proposalRevisionDate:r.proposalRevisionDate});
     }
+    proposalAll.forEach(function(att, i){
+      var isLatest = i===proposalAll.length-1;
+      examBlocks.push({
+        type:'proposal', typeTxt:'สอบเค้าโครงวิทยานิพนธ์', typeTagTxt:'สอบเค้าโครง', attemptNo:i+1, isLatest:isLatest,
+        date:att.date, examDate:att.date, examTime:att.time, location:att.location,
+        chair:att.chair, committee:att.committee, result:att.result,
+        proposalRevisionStatus:att.proposalRevisionStatus, proposalRevisionDate:att.proposalRevisionDate,
+        recordId:r.id, files: isLatest ? files : []
+      });
+    });
+    var defenseAll = (r.defenseAttempts||[]).map(function(a){
+      return {date:a.date, time:a.time, location:a.location, chair:a.chair, committee:a.committee||[], result:a.result,
+        fullScore:a.fullScore, obtainedScore:a.obtainedScore, dueDate:a.dueDate};
+    });
     if(recHasDefenseData(r)){
-      examBlocks.push({
-        type:'defense', typeTxt:'สอบป้องกันวิทยานิพนธ์ / IS', typeTagTxt:'สอบป้องกัน/IS',
-        date:r.defenseDate, examDate:r.defenseDate, examTime:r.defenseTime, location:r.defenseLocation,
-        chair:r.defenseChair, committee:r.defenseCommittee, result:r.defenseResult,
-        fullScore:r.defenseFullScore, obtainedScore:r.defenseObtainedScore, dueDate:r.defenseDueDate,
-        recordId:r.id, files:files
-      });
+      defenseAll.push({date:r.defenseDate, time:r.defenseTime, location:r.defenseLocation, chair:r.defenseChair,
+        committee:r.defenseCommittee||[], result:r.defenseResult, fullScore:r.defenseFullScore, obtainedScore:r.defenseObtainedScore, dueDate:r.defenseDueDate});
     }
+    defenseAll.forEach(function(att, i){
+      var isLatest = i===defenseAll.length-1;
+      examBlocks.push({
+        type:'defense', typeTxt:'สอบป้องกันวิทยานิพนธ์ / IS', typeTagTxt:'สอบป้องกัน/IS', attemptNo:i+1, isLatest:isLatest,
+        date:att.date, examDate:att.date, examTime:att.time, location:att.location,
+        chair:att.chair, committee:att.committee, result:att.result,
+        fullScore:att.fullScore, obtainedScore:att.obtainedScore, dueDate:att.dueDate,
+        recordId:r.id, files: isLatest ? files : []
+      });
+    });
   });
   examBlocks.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
 
@@ -1318,7 +1341,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
 
     var body = [
       el('div',{class:'exam-profile-head'},[
-        el('div',{class:'title', text: 'การสอบครั้งที่ '+(idx+1)+' — '+r.typeTxt}),
+        el('div',{class:'title', text: r.typeTxt+' ครั้งที่ '+r.attemptNo}),
         el('div',{},[
           el('span',{class:'exam-type-tag '+r.type, style:'margin-right:8px;', text: r.typeTagTxt}),
           el('span',{class:'result-tag '+resultClass, text: r.result||'ยังไม่ระบุผล'})
@@ -1375,7 +1398,10 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       ]));
     }
 
-    if(currentRole!=='viewer'){
+    if(!r.isLatest){
+      body.push(el('div',{class:'help', style:'margin-top:10px;', text:'📜 ประวัติการสอบครั้งก่อนหน้า (ไม่ใช่ครั้งล่าสุด)'}));
+    }
+    if(currentRole!=='viewer' && r.isLatest){
       body.push(el('div',{style:'margin-top:14px;text-align:right;'},[
         el('button',{type:'button', class:'link-btn', text:'✏️ แก้ไขรายการนี้', onclick:function(){
           recordsGet(r.recordId).then(loadRecordIntoForm);
@@ -1384,7 +1410,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       ]));
     }
 
-    wrap.appendChild(el('div',{class:'exam-profile-card '+r.type}, body));
+    wrap.appendChild(el('div',{class:'exam-profile-card '+r.type+(r.isLatest?'':' exam-attempt-history')}, body));
   });
 
   var publications = latest.publications || [];
@@ -1582,12 +1608,55 @@ function setSectionLocked(prefix, locked, lockedMsgTxt){
     msg.style.display = '';
     msg.innerHTML = '';
     msg.appendChild(document.createTextNode('🔒 '+(lockedMsgTxt||'ส่วนนี้มีข้อมูลบันทึกไว้แล้ว จึงล็อกไว้ป้องกันการแก้ไขโดยไม่ตั้งใจ')+' '));
-    var unlockBtn = el('button',{type:'button', class:'link-btn', text:'🔓 ปลดล็อกเพื่อแก้ไข', onclick:function(){ setSectionLocked(prefix, false); }});
+    var unlockBtn = el('button',{type:'button', class:'link-btn', text:'🔓 ปลดล็อกเพื่อแก้ไขข้อมูลเดิม', onclick:function(){ setSectionLocked(prefix, false); }});
     msg.appendChild(unlockBtn);
+    var retakeBtn = el('button',{type:'button', class:'link-btn', style:'margin-left:10px;', text:'➕ บันทึกการสอบซ้ำครั้งใหม่', onclick:function(){ startNewAttempt(prefix); }});
+    msg.appendChild(retakeBtn);
   } else {
     msg.style.display = 'none';
     msg.innerHTML = '';
   }
+}
+/* ครั้งก่อนสอบไม่ผ่าน (หรือด้วยเหตุผลใดก็ตาม) อยากบันทึกการสอบซ้ำเป็นครั้งใหม่โดยไม่เขียนทับครั้งเดิม
+   → เก็บ snapshot ของข้อมูลครั้งปัจจุบัน (ที่แสดงอยู่ในฟอร์ม) ไว้ใน pending*Attempts แล้วเคลียร์ช่องกรอกให้กรอกครั้งใหม่ */
+function startNewAttempt(prefix){
+  if(prefix==='p'){
+    pendingProposalAttempts.push({
+      date: document.getElementById('p_date').value,
+      time: document.getElementById('p_examTime').value,
+      location: document.getElementById('p_location').value,
+      chair: document.getElementById('p_chair').value,
+      committee: getCommitteeValues('p_committeeList'),
+      result: (document.querySelector('input[name=proposalResult]:checked')||{}).value||'',
+      revisionStatus: (document.querySelector('input[name=proposalRevisionStatus]:checked')||{}).value||'',
+      revisionDate: document.getElementById('p_revisionDate').value
+    });
+    document.getElementById('p_date').value=''; document.getElementById('p_examTime').value=''; document.getElementById('p_location').value='';
+    document.getElementById('p_chair').value=''; clearDynamicRows('p_committeeList');
+    document.querySelector('input[name=proposalResult][value="ผ่าน"]').checked=true;
+    document.querySelector('input[name=proposalRevisionStatus][value="ยังไม่ส่ง"]').checked=true;
+    document.getElementById('p_revisionDate').value='';
+    renderAttachmentList('proposal');
+  } else {
+    pendingDefenseAttempts.push({
+      date: document.getElementById('d_date').value,
+      time: document.getElementById('d_examTime').value,
+      location: document.getElementById('d_location').value,
+      chair: document.getElementById('d_chair').value,
+      committee: getCommitteeValues('d_committeeList'),
+      result: (document.querySelector('input[name=defenseResult]:checked')||{}).value||'',
+      fullScore: document.getElementById('d_fullScore').value,
+      obtainedScore: document.getElementById('d_obtainedScore').value,
+      dueDate: document.getElementById('d_dueDate').value
+    });
+    document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
+    document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
+    document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
+    document.querySelector('input[name=defenseResult][value="ผ่าน"]').checked=true;
+    renderAttachmentList('defense');
+  }
+  setSectionLocked(prefix, false);
+  toast('เก็บประวัติการสอบครั้งก่อนไว้แล้ว กรอกข้อมูลการสอบครั้งใหม่ได้เลย (บันทึกเมื่อกรอกเสร็จ)');
 }
 function resetExamSections(){
   setSectionLocked('p', false);
@@ -1600,26 +1669,45 @@ function mergeStudentRows(rows){
   var sorted = rows.slice().sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
   var primary = Object.assign({}, sorted[0]);
   var obsoleteIds = [];
+  var proposalHistory = (primary.proposalAttempts||[]).slice();
+  var defenseHistory = (primary.defenseAttempts||[]).slice();
   var bioFields = ['studentName','degreeLevel','plan','program','department','englishResult','englishScore','englishDocLink',
     'computerResult','computerDocLink','qualifyingExam','qualifyingDocLink','mainAdvisor','titleTh','titleEn',
     'bookSubmitStatus','bookSubmitDate','bookDocLink'];
   for(var i=1;i<sorted.length;i++){
     var r = sorted[i];
     obsoleteIds.push(r.id);
-    if(!recHasProposalData(primary) && recHasProposalData(r)){
-      primary.proposalDate=r.proposalDate; primary.proposalTime=r.proposalTime; primary.proposalLocation=r.proposalLocation;
-      primary.proposalChair=r.proposalChair; primary.proposalCommittee=r.proposalCommittee||[]; primary.proposalResult=r.proposalResult;
-      primary.proposalRevisionStatus=r.proposalRevisionStatus; primary.proposalRevisionDate=r.proposalRevisionDate;
+    if(recHasProposalData(r)){
+      if(!recHasProposalData(primary)){
+        primary.proposalDate=r.proposalDate; primary.proposalTime=r.proposalTime; primary.proposalLocation=r.proposalLocation;
+        primary.proposalChair=r.proposalChair; primary.proposalCommittee=r.proposalCommittee||[]; primary.proposalResult=r.proposalResult;
+        primary.proposalRevisionStatus=r.proposalRevisionStatus; primary.proposalRevisionDate=r.proposalRevisionDate;
+      } else {
+        /* primary มีข้อมูล 3.1 ของตัวเองอยู่แล้ว — แถวซ้ำนี้ถือเป็นการสอบ 3.1 อีกครั้งหนึ่ง (คนละครั้งกัน) เก็บไว้เป็นประวัติแทนที่จะทิ้ง */
+        proposalHistory.push({date:r.proposalDate, time:r.proposalTime, location:r.proposalLocation, chair:r.proposalChair,
+          committee:r.proposalCommittee||[], result:r.proposalResult, revisionStatus:r.proposalRevisionStatus, revisionDate:r.proposalRevisionDate});
+      }
     }
-    if(!recHasDefenseData(primary) && recHasDefenseData(r)){
-      primary.defenseDate=r.defenseDate; primary.defenseTime=r.defenseTime; primary.defenseLocation=r.defenseLocation;
-      primary.defenseChair=r.defenseChair; primary.defenseCommittee=r.defenseCommittee||[]; primary.defenseResult=r.defenseResult;
-      primary.defenseFullScore=r.defenseFullScore; primary.defenseObtainedScore=r.defenseObtainedScore; primary.defenseDueDate=r.defenseDueDate;
+    if((r.proposalAttempts||[]).length) proposalHistory = proposalHistory.concat(r.proposalAttempts);
+    if(recHasDefenseData(r)){
+      if(!recHasDefenseData(primary)){
+        primary.defenseDate=r.defenseDate; primary.defenseTime=r.defenseTime; primary.defenseLocation=r.defenseLocation;
+        primary.defenseChair=r.defenseChair; primary.defenseCommittee=r.defenseCommittee||[]; primary.defenseResult=r.defenseResult;
+        primary.defenseFullScore=r.defenseFullScore; primary.defenseObtainedScore=r.defenseObtainedScore; primary.defenseDueDate=r.defenseDueDate;
+      } else {
+        defenseHistory.push({date:r.defenseDate, time:r.defenseTime, location:r.defenseLocation, chair:r.defenseChair,
+          committee:r.defenseCommittee||[], result:r.defenseResult, fullScore:r.defenseFullScore, obtainedScore:r.defenseObtainedScore, dueDate:r.defenseDueDate});
+      }
     }
+    if((r.defenseAttempts||[]).length) defenseHistory = defenseHistory.concat(r.defenseAttempts);
     bioFields.forEach(function(f){ if(!primary[f] && r[f]) primary[f]=r[f]; });
     if((!primary.coAdvisors || !primary.coAdvisors.length) && r.coAdvisors && r.coAdvisors.length) primary.coAdvisors = r.coAdvisors;
     if((!primary.publications || !primary.publications.length) && r.publications && r.publications.length) primary.publications = r.publications;
   }
+  proposalHistory.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  defenseHistory.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  primary.proposalAttempts = proposalHistory;
+  primary.defenseAttempts = defenseHistory;
   return {primary:primary, obsoleteIds:obsoleteIds};
 }
 /* ย้ายไฟล์แนบจากแถวเก่า (obsoleteId) ไปแขวนกับแถวหลัก (newRecordId) แล้วลบรายการไฟล์แถวเก่า (ตัวไฟล์จริงใน Drive ไม่ถูกลบ) */
@@ -1638,6 +1726,8 @@ function newDraft(){
   editingExisting = false;
   formOpenedAt = Date.now();
   pendingMergeObsoleteIds = [];
+  pendingProposalAttempts = [];
+  pendingDefenseAttempts = [];
   resetFormFields();
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
@@ -1716,6 +1806,8 @@ function loadRecordIntoForm(rec){
   formOpenedAt = Date.now();
   clearExamSectionFields();
   currentExamType = rec.examType;
+  pendingProposalAttempts = (rec.proposalAttempts||[]).slice();
+  pendingDefenseAttempts = (rec.defenseAttempts||[]).slice();
   document.getElementById('f_studentId').value = rec.studentId||'';
   document.getElementById('f_studentName').value = rec.studentName||'';
   var dl = document.querySelector('input[name=degreeLevel][value="'+rec.degreeLevel+'"]'); if(dl) dl.checked=true;
@@ -1904,6 +1996,8 @@ function collectFormData(){
     bookSubmitStatus: document.querySelector('input[name=bookSubmitStatus]:checked').value,
     bookSubmitDate: document.getElementById('f_bookSubmitDate').value,
     bookDocLink: document.getElementById('f_bookDocLink').value.trim(),
+    proposalAttempts: pendingProposalAttempts,
+    defenseAttempts: pendingDefenseAttempts,
     updatedAt: Date.now()
   };
   if(pFilled){
@@ -2152,7 +2246,7 @@ var EXPORT_COLUMNS = [
   ['mainAdvisor','อาจารย์ที่ปรึกษาหลัก'],['coAdvisorsStr','อาจารย์ที่ปรึกษาร่วม'],
   ['titleTh','หัวข้อวิทยานิพนธ์ (TH)'],['titleEn','หัวข้อวิทยานิพนธ์ (EN)'],
   ['publicationsStr','การเผยแพร่ผลงานวิจัย'],
-  ['examTypeStr','ประเภทการสอบ'],['examDate','วันที่สอบ'],['examTime','เวลาสอบ'],['location','สถานที่สอบ'],
+  ['examTypeStr','ประเภทการสอบ'],['attemptNo','ครั้งที่'],['examDate','วันที่สอบ'],['examTime','เวลาสอบ'],['location','สถานที่สอบ'],
   ['chair','ประธานกรรมการ'],['committeeStr','กรรมการสอบ'],
   ['fullScore','คะแนนเต็ม'],['obtainedScore','คะแนนที่สอบได้'],['dueDate','กำหนดส่งเล่ม'],
   ['proposalRevisionStatus','ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์'],['proposalRevisionDate','วันที่ส่งแก้ไข'],
@@ -2185,28 +2279,44 @@ function toExportRows(r){
     }).join('; ');
   }
   var out = [];
+  var proposalAll = (r.proposalAttempts||[]).map(function(a){
+    return {date:a.date, time:a.time, location:a.location, chair:a.chair, committee:a.committee||[], result:a.result,
+      revisionStatus:a.revisionStatus, revisionDate:a.revisionDate};
+  });
   if(recHasProposalData(r)){
+    proposalAll.push({date:r.proposalDate, time:r.proposalTime, location:r.proposalLocation, chair:r.proposalChair,
+      committee:r.proposalCommittee||[], result:r.proposalResult, revisionStatus:r.proposalRevisionStatus, revisionDate:r.proposalRevisionDate});
+  }
+  proposalAll.forEach(function(att, i){
     out.push(Object.assign({}, bio, {
-      examTypeStr:'สอบเค้าโครงวิทยานิพนธ์',
-      examDate:r.proposalDate||'', examTime:r.proposalTime||'', location:r.proposalLocation||'',
-      chair:r.proposalChair||'', committeeStr:committeeStrOf(r.proposalCommittee),
+      examTypeStr:'สอบเค้าโครงวิทยานิพนธ์', attemptNo: i+1,
+      examDate:att.date||'', examTime:att.time||'', location:att.location||'',
+      chair:att.chair||'', committeeStr:committeeStrOf(att.committee),
       fullScore:'', obtainedScore:'', dueDate:'',
-      proposalRevisionStatus:r.proposalRevisionStatus||'', proposalRevisionDate:r.proposalRevisionDate||'',
-      result:r.proposalResult||''
+      proposalRevisionStatus:att.revisionStatus||'', proposalRevisionDate:att.revisionDate||'',
+      result:att.result||''
     }));
-  }
+  });
+  var defenseAll = (r.defenseAttempts||[]).map(function(a){
+    return {date:a.date, time:a.time, location:a.location, chair:a.chair, committee:a.committee||[], result:a.result,
+      fullScore:a.fullScore, obtainedScore:a.obtainedScore, dueDate:a.dueDate};
+  });
   if(recHasDefenseData(r)){
-    out.push(Object.assign({}, bio, {
-      examTypeStr:'สอบป้องกันวิทยานิพนธ์/IS',
-      examDate:r.defenseDate||'', examTime:r.defenseTime||'', location:r.defenseLocation||'',
-      chair:r.defenseChair||'', committeeStr:committeeStrOf(r.defenseCommittee),
-      fullScore:r.defenseFullScore||'', obtainedScore:r.defenseObtainedScore||'', dueDate:r.defenseDueDate||'',
-      proposalRevisionStatus:'', proposalRevisionDate:'',
-      result:r.defenseResult||''
-    }));
+    defenseAll.push({date:r.defenseDate, time:r.defenseTime, location:r.defenseLocation, chair:r.defenseChair,
+      committee:r.defenseCommittee||[], result:r.defenseResult, fullScore:r.defenseFullScore, obtainedScore:r.defenseObtainedScore, dueDate:r.defenseDueDate});
   }
+  defenseAll.forEach(function(att, i){
+    out.push(Object.assign({}, bio, {
+      examTypeStr:'สอบป้องกันวิทยานิพนธ์/IS', attemptNo: i+1,
+      examDate:att.date||'', examTime:att.time||'', location:att.location||'',
+      chair:att.chair||'', committeeStr:committeeStrOf(att.committee),
+      fullScore:att.fullScore||'', obtainedScore:att.obtainedScore||'', dueDate:att.dueDate||'',
+      proposalRevisionStatus:'', proposalRevisionDate:'',
+      result:att.result||''
+    }));
+  });
   if(out.length===0){
-    out.push(Object.assign({}, bio, {examTypeStr:'-', examDate:'', examTime:'', location:'', chair:'', committeeStr:'', fullScore:'', obtainedScore:'', dueDate:'', proposalRevisionStatus:'', proposalRevisionDate:'', result:''}));
+    out.push(Object.assign({}, bio, {examTypeStr:'-', attemptNo:'', examDate:'', examTime:'', location:'', chair:'', committeeStr:'', fullScore:'', obtainedScore:'', dueDate:'', proposalRevisionStatus:'', proposalRevisionDate:'', result:''}));
   }
   return out;
 }
@@ -2921,6 +3031,7 @@ var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','p
   'proposalDate','proposalTime','proposalLocation','proposalChair','proposalCommitteeJson','proposalResult',
   'defenseDate','defenseTime','defenseLocation','defenseChair','defenseCommitteeJson','defenseResult','defenseFullScore','defenseObtainedScore','defenseDueDate',
   'bookSubmitStatus','bookSubmitDate','bookDocLink',
+  'proposalAttemptsJson','defenseAttemptsJson',
   'deleted'];
 var FILE_COLUMNS = ['id','recordId','section','name','type','size','driveFileId','driveLink','addedAt','deleted'];
 function extractSheetId(input){
@@ -2963,6 +3074,8 @@ function rowToRecord(headers, row){
     if(h==='proposalCommitteeJson'){ try{ rec.proposalCommittee = v ? JSON.parse(v) : []; }catch(e){ rec.proposalCommittee=[]; } return; }
     if(h==='defenseCommitteeJson'){ try{ rec.defenseCommittee = v ? JSON.parse(v) : []; }catch(e){ rec.defenseCommittee=[]; } return; }
     if(h==='publicationsJson'){ try{ rec.publications = v ? JSON.parse(v) : []; }catch(e){ rec.publications=[]; } return; }
+    if(h==='proposalAttemptsJson'){ try{ rec.proposalAttempts = v ? JSON.parse(v) : []; }catch(e){ rec.proposalAttempts=[]; } return; }
+    if(h==='defenseAttemptsJson'){ try{ rec.defenseAttempts = v ? JSON.parse(v) : []; }catch(e){ rec.defenseAttempts=[]; } return; }
     if(h==='createdAt' || h==='updatedAt'){ rec[h] = v ? Number(v) : 0; return; }
     if(h==='deleted'){ rec.deleted = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
     rec[h] = v;
@@ -2980,6 +3093,8 @@ function rowToRecord(headers, row){
   }
   if(!rec.proposalCommittee) rec.proposalCommittee = [];
   if(!rec.defenseCommittee) rec.defenseCommittee = [];
+  if(!rec.proposalAttempts) rec.proposalAttempts = [];
+  if(!rec.defenseAttempts) rec.defenseAttempts = [];
   return rec;
 }
 function recordToRow(rec){
@@ -2989,6 +3104,8 @@ function recordToRow(rec){
     if(h==='proposalCommitteeJson') return JSON.stringify(rec.proposalCommittee||[]);
     if(h==='defenseCommitteeJson') return JSON.stringify(rec.defenseCommittee||[]);
     if(h==='publicationsJson') return JSON.stringify(rec.publications||[]);
+    if(h==='proposalAttemptsJson') return JSON.stringify(rec.proposalAttempts||[]);
+    if(h==='defenseAttemptsJson') return JSON.stringify(rec.defenseAttempts||[]);
     if(h==='deleted') return rec.deleted ? 'TRUE' : '';
     var v = rec[h];
     return v===undefined || v===null ? '' : v;

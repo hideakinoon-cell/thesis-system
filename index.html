@@ -509,6 +509,7 @@
       <button class="btn btn-primary" id="btnSignIn">🔐 เชื่อมต่อ Google Drive</button>
       <button class="btn btn-secondary" id="btnSignOut" style="display:none;">ออกจากระบบ Drive</button>
     </div>
+    <div class="help" id="authExpiryStatus"></div>
     <div class="form-footer" style="justify-content:flex-start;border-top:1px solid var(--border);margin-top:6px;padding-top:16px;">
       <button class="btn btn-accent" id="btnBackupNow">☁️ สำรองข้อมูลขึ้น Drive ตอนนี้</button>
       <button class="btn btn-secondary" id="btnRestore">⬇️ กู้คืนจาก Drive</button>
@@ -720,6 +721,8 @@ var autoBackupEnabled = false;
 var lastBackupAt = 0;
 var backupKeepCount = 5;
 var driveEverConnected = false;
+var lastGoogleAuthAt = 0; // เวลาที่เข้าสู่ระบบ Google สำเร็จครั้งล่าสุด (ใช้เตือนก่อนสิทธิ์ test user หมดอายุทุก 7 วัน)
+var lastAuthWarnedAt = 0; // กันเตือนถี่เกินไป (session นี้)
 var cloudModeEnabled = false;
 var sheetId = '';
 var formOpenedAt = 0;
@@ -760,6 +763,7 @@ window.addEventListener('DOMContentLoaded', function(){
     bindLockEvents();
     renderLockForm();
     renderViewerPinStatus();
+    renderAuthExpiryStatus();
     newDraft();
     switchView('dashboard');
     initAutoBackupTimer();
@@ -809,6 +813,7 @@ function loadMeta(){
       if(row.key==='accessToken') accessToken = row.value;
       if(row.key==='tokenExpiresAt') tokenExpiresAt = row.value;
       if(row.key==='driveEverConnected') driveEverConnected = row.value;
+      if(row.key==='lastGoogleAuthAt') lastGoogleAuthAt = row.value;
       if(row.key==='cloudModeEnabled') cloudModeEnabled = row.value;
       if(row.key==='sheetId') sheetId = row.value;
     });
@@ -2779,6 +2784,11 @@ function saveDriveToken(){
   dbPut('meta',{key:'accessToken', value:accessToken});
   dbPut('meta',{key:'tokenExpiresAt', value:tokenExpiresAt});
   if(!driveEverConnected){ driveEverConnected = true; dbPut('meta',{key:'driveEverConnected', value:true}); }
+  /* บันทึกเวลาที่ล็อกอิน Google สำเร็จล่าสุด ใช้เตือนก่อนสิทธิ์ test user หมดอายุ (Google จำกัด 7 วัน ตอนแอปยังไม่ publish) */
+  lastGoogleAuthAt = Date.now();
+  lastAuthWarnedAt = 0;
+  dbPut('meta',{key:'lastGoogleAuthAt', value:lastGoogleAuthAt});
+  renderAuthExpiryStatus();
 }
 function clearDriveToken(){
   accessToken = null; tokenExpiresAt = 0; driveFolderCache = {}; driveEverConnected = false;
@@ -2882,6 +2892,31 @@ function attemptSilentReconnect(){
 }
 function remindManualReconnect(){
   toast('ถึงกำหนดสำรองข้อมูลอัตโนมัติ (ทุก 12 ชม.) กรุณากด "เชื่อมต่อ Google Drive" ในหน้าตั้งค่าเพื่อสำรองข้อมูลล่าสุด', true);
+}
+/* Google จำกัดสิทธิ์ของ "test user" (ตอนแอปยังไม่ publish จริง) ไว้ 7 วันต่อการล็อกอิน 1 ครั้ง
+   ฟังก์ชันนี้เตือนล่วงหน้าตั้งแต่วันที่ 6 เพื่อไม่ให้เจ้าหน้าที่ถูกตัดสิทธิ์แบบไม่ทันตั้งตัว */
+var AUTH_EXPIRY_WARNING_DAYS = 6;
+function daysSinceLastGoogleAuth(){
+  if(!lastGoogleAuthAt) return null;
+  return Math.floor((Date.now()-lastGoogleAuthAt)/(24*60*60*1000));
+}
+function checkGoogleAuthExpiry(){
+  if(!driveEverConnected) return;
+  var days = daysSinceLastGoogleAuth();
+  if(days===null || days<AUTH_EXPIRY_WARNING_DAYS) return;
+  if(Date.now()-lastAuthWarnedAt < 12*60*60*1000) return; // เตือนซ้ำห่างกันอย่างน้อย 12 ชม. กันสแปม
+  lastAuthWarnedAt = Date.now();
+  toast('⚠️ ไม่ได้เข้าสู่ระบบ Google มา '+days+' วันแล้ว สิทธิ์การเข้าถึงอาจหมดอายุเร็วๆ นี้ (แอปยังอยู่ในสถานะทดสอบ จำกัด 7 วัน) กรุณากด "เชื่อมต่อ Google Drive" ในหน้าตั้งค่าเพื่อต่ออายุ', true);
+}
+function renderAuthExpiryStatus(){
+  var box = document.getElementById('authExpiryStatus');
+  if(!box) return;
+  var days = daysSinceLastGoogleAuth();
+  if(days===null){ box.textContent=''; return; }
+  var warn = days>=AUTH_EXPIRY_WARNING_DAYS;
+  box.innerHTML='';
+  box.style.color = warn ? '#dc2626' : '';
+  box.textContent = (warn?'⚠️ ':'')+'เชื่อมต่อ Google ล่าสุดเมื่อ '+days+' วันที่แล้ว'+(warn?' — ควรกดเชื่อมต่อใหม่เพื่อต่ออายุ (แอปยังอยู่ในสถานะทดสอบ จำกัด 7 วัน)':'');
 }
 function attemptSilentReconnectThenBackup(){
   if(!googleClientId){ remindManualReconnect(); return; }
@@ -3455,8 +3490,8 @@ function checkAutoBackup(){
   }
 }
 function initAutoBackupTimer(){
-  setTimeout(checkAutoBackup, 15000);
-  setInterval(checkAutoBackup, AUTO_BACKUP_CHECK_MS);
+  setTimeout(function(){ checkAutoBackup(); checkGoogleAuthExpiry(); }, 15000);
+  setInterval(function(){ checkAutoBackup(); checkGoogleAuthExpiry(); }, AUTO_BACKUP_CHECK_MS);
 }
 
 function openRestorePicker(){

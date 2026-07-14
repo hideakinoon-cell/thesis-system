@@ -212,6 +212,11 @@
   <div class="drive-status" id="driveStatus"><span class="dot"></span><span id="driveStatusText">ยังไม่เชื่อมต่อ Google Drive</span></div>
   <button type="button" class="btn-lock-nav" id="btnLockNow">🔒 ล็อกระบบ</button>
 </nav>
+<div id="offlineSyncBanner" style="display:none;background:#fef3c7;border-bottom:1px solid #f59e0b;padding:10px 20px;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;">
+  <span id="offlineSyncBannerText" style="color:#92400e;font-size:14px;"></span>
+  <button type="button" class="btn btn-primary btn-sm" id="btnSyncOfflineNow">🔄 ซิงค์ข้อมูลตอนนี้</button>
+  <button type="button" class="link-btn" id="btnDismissOfflineBanner">ปิด</button>
+</div>
 <main>
 
 <!-- ============ DASHBOARD / LOOKUP VIEW ============ -->
@@ -733,6 +738,7 @@ var driveEverConnected = false;
 var lastGoogleAuthAt = 0; // เวลาที่เข้าสู่ระบบ Google สำเร็จครั้งล่าสุด (ใช้เตือนก่อนสิทธิ์ test user หมดอายุทุก 7 วัน)
 var lastAuthWarnedAt = 0; // กันเตือนถี่เกินไป (session นี้)
 var cloudModeEnabled = false;
+var autoSwitchedOfflineMode = false; // true เมื่อระบบสลับออกจากโหมดกลางเองเพราะขาดเน็ต (ไม่ใช่แอดมินตั้งใจปิดเอง)
 var sheetId = '';
 var formOpenedAt = 0;
 var currentDraftId = null;
@@ -776,6 +782,8 @@ window.addEventListener('DOMContentLoaded', function(){
     newDraft();
     switchView('dashboard');
     initAutoBackupTimer();
+    initOfflineDetection();
+    checkPendingOfflineSync();
     if(accessToken && Date.now() < tokenExpiresAt - 5000){
       updateDriveStatusUI(true);
       if(cloudModeEnabled) refreshCloudMasterData();
@@ -826,6 +834,7 @@ function loadMeta(){
       if(row.key==='driveEverConnected') driveEverConnected = row.value;
       if(row.key==='lastGoogleAuthAt') lastGoogleAuthAt = row.value;
       if(row.key==='cloudModeEnabled') cloudModeEnabled = row.value;
+      if(row.key==='autoSwitchedOfflineMode') autoSwitchedOfflineMode = row.value;
       if(row.key==='sheetId') sheetId = row.value;
     });
     /* เครื่องใหม่ที่ไม่เคยตั้งค่าอะไรมาก่อนเลย (เช่น เครื่องของเจ้าหน้าที่ดูอย่างเดียว) ให้ใช้ค่าเริ่มต้นที่ฝังไว้ในโค้ดแทน
@@ -2962,6 +2971,9 @@ function driveFetch(url, options){
   return fetch(url, options).then(function(res){
     if(!res.ok) return res.text().then(function(t){ throw new Error('Drive API error '+res.status+': '+t); });
     return res;
+  }).catch(function(e){
+    if(e instanceof TypeError) reportNetworkFailureIfOffline(); // network-level failure จริง (ไม่ใช่ HTTP error) — เข้าเน็ตไม่ได้
+    throw e;
   });
 }
 /* ================= ตรวจสอบไฟล์แนบที่ลิงก์เสีย ================= */
@@ -3099,6 +3111,9 @@ function sheetsFetch(url, options){
   return fetch(url, options).then(function(res){
     if(!res.ok) return res.text().then(function(t){ throw new Error('Sheets API error '+res.status+': '+t); });
     return res;
+  }).catch(function(e){
+    if(e instanceof TypeError) reportNetworkFailureIfOffline(); // network-level failure จริง (ไม่ใช่ HTTP error) — เข้าเน็ตไม่ได้
+    throw e;
   });
 }
 function sheetsGetValues(range){
@@ -3380,6 +3395,67 @@ function saveMasterDataToCloud(){
   return ensureAuthed().then(function(){ return sheetsUpdateRow('MasterData', 1, [JSON.stringify(masterData)]); });
 }
 /* ---- migrate existing local data into the central sheet ---- */
+/* ================= ตรวจจับออฟไลน์อัตโนมัติ ================= */
+/* สลับไปโหมดในเครื่องเองเมื่อขาดเน็ต (ถ้าตอนนั้นเปิดโหมดกลางอยู่) แล้วสลับกลับ + เตือนให้ซิงค์เมื่อเน็ตกลับมา
+   ตรวจจับ 2 ทาง: (1) window online/offline event ของเบราว์เซอร์ (2) fetch ล้มเหลวแบบ network error จริง (เผื่อ event ไม่ทำงานในบางเบราว์เซอร์) */
+function showOfflineSyncBanner(count){
+  var box = document.getElementById('offlineSyncBanner');
+  var text = document.getElementById('offlineSyncBannerText');
+  if(!box || !text) return;
+  text.textContent = '📶 อินเทอร์เน็ตกลับมาแล้ว มีข้อมูล '+count+' รายการที่บันทึกไว้ตอนออฟไลน์ในเครื่องนี้ ยังไม่ถูกซิงค์เข้าชีทกลาง';
+  box.style.display = 'flex';
+}
+function hideOfflineSyncBanner(){
+  var box = document.getElementById('offlineSyncBanner');
+  if(box) box.style.display = 'none';
+}
+function checkPendingOfflineSync(){
+  if(!cloudModeEnabled || !sheetId) return;
+  dbGetAll('records').then(function(localRecords){
+    if(localRecords.length>0) showOfflineSyncBanner(localRecords.length);
+    else hideOfflineSyncBanner();
+  }).catch(function(){});
+}
+function handleGoneOffline(){
+  if(cloudModeEnabled){
+    autoSwitchedOfflineMode = true;
+    cloudModeEnabled = false;
+    dbPut('meta',{key:'cloudModeEnabled', value:false});
+    dbPut('meta',{key:'autoSwitchedOfflineMode', value:true});
+    toast('⚠️ ขาดการเชื่อมต่ออินเทอร์เน็ต ระบบสลับไปบันทึกข้อมูลในเครื่องนี้ชั่วคราวโดยอัตโนมัติ ข้อมูลจะไม่หายไปไหน — เมื่อเน็ตกลับมาระบบจะสลับกลับและแจ้งให้ซิงค์ข้อมูลอัตโนมัติ', true);
+    hideOfflineSyncBanner();
+    var s_cm = document.getElementById('s_cloudMode'); if(s_cm) s_cm.checked = false;
+  }
+}
+function handleBackOnline(){
+  if(autoSwitchedOfflineMode){
+    autoSwitchedOfflineMode = false;
+    cloudModeEnabled = true;
+    dbPut('meta',{key:'cloudModeEnabled', value:true});
+    dbPut('meta',{key:'autoSwitchedOfflineMode', value:false});
+    var s_cm = document.getElementById('s_cloudMode'); if(s_cm) s_cm.checked = true;
+    toast('✅ อินเทอร์เน็ตกลับมาแล้ว สลับกลับไปใช้ระบบข้อมูลกลางอัตโนมัติ');
+    renderList(); renderAllSelects();
+  }
+  checkPendingOfflineSync();
+}
+var lastOfflineDetectAt = 0;
+/* เรียกจากจุดที่ fetch() ล้มเหลวแบบ network-level จริง (เช่น TypeError: Failed to fetch) ไม่ใช่แค่ HTTP error status
+   เผื่อกรณี window 'offline' event ไม่ทำงาน (เช่น เน็ตต่ออยู่แต่ปลายทาง Google เข้าไม่ถึง) */
+function reportNetworkFailureIfOffline(){
+  if(Date.now()-lastOfflineDetectAt < 3000) return; // กันเรียกถี่เกินไปถ้ามีหลาย fetch ล้มเหลวพร้อมกัน
+  lastOfflineDetectAt = Date.now();
+  handleGoneOffline();
+}
+function initOfflineDetection(){
+  window.addEventListener('offline', handleGoneOffline);
+  window.addEventListener('online', handleBackOnline);
+  if(navigator.onLine===false) handleGoneOffline();
+  document.getElementById('btnSyncOfflineNow').addEventListener('click', function(){
+    migrateLocalDataToCloud();
+  });
+  document.getElementById('btnDismissOfflineBanner').addEventListener('click', hideOfflineSyncBanner);
+}
 function migrateLocalDataToCloud(){
   if(!sheetId){ toast('กรุณากรอกและบันทึก Spreadsheet ID ก่อน', true); return; }
   if(!confirm('จะย้ายข้อมูลทั้งหมดในเครื่องนี้ (รายการสอบ + ไฟล์แนบ + ข้อมูลตั้งต้น) ขึ้นชีทกลางที่ตั้งค่าไว้ ควรทำจากเครื่องที่มีข้อมูลล่าสุด/มากที่สุดเพียงครั้งเดียว ดำเนินการต่อหรือไม่?')) return;

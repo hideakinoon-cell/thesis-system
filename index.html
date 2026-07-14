@@ -365,13 +365,13 @@
         </div>
         <div class="field"><label>วันที่ส่งแก้ไข</label><input type="date" id="p_revisionDate"></div>
         <div class="field">
-          <label>ส่งแบบฟอร์ม บว.25 (อนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข)</label>
+          <label>ส่งแบบฟอร์ม บว.25 (แบบเสนอเค้าโครงการค้นคว้าอิสระ และขออนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข)</label>
           <div class="radio-group">
             <label><input type="radio" name="proposalBw25Status" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
             <label><input type="radio" name="proposalBw25Status" value="ส่งแล้ว"> ส่งแล้ว</label>
           </div>
         </div>
-        <div class="field"><label>วันที่ส่ง บว.25</label><input type="date" id="p_bw25Date"></div>
+        <div class="field"><label>วันที่อนุมัติหัวข้อ</label><input type="date" id="p_bw25Date"></div>
       </div>
       <h4>แนบเอกสาร (เช่น ใบเซ็นชื่อเค้าโครง)</h4>
       <div class="attach-box">
@@ -1425,7 +1425,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
         kv('ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์', r.proposalRevisionStatus||'ยังไม่ส่ง'),
         kv('วันที่ส่งแก้ไข', r.proposalRevisionDate),
         kv('ส่งแบบฟอร์ม บว.25', r.proposalBw25Status||'ยังไม่ส่ง'),
-        kv('วันที่ส่ง บว.25', r.proposalBw25Date)
+        kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date)
       ]));
     }
 
@@ -2308,7 +2308,7 @@ var EXPORT_COLUMNS = [
   ['chair','ประธานกรรมการ'],['committeeStr','กรรมการสอบ'],
   ['fullScore','คะแนนเต็ม'],['obtainedScore','คะแนนที่สอบได้'],['dueDate','กำหนดส่งเล่ม'],
   ['proposalRevisionStatus','ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์'],['proposalRevisionDate','วันที่ส่งแก้ไข'],
-  ['proposalBw25Status','ส่งแบบฟอร์ม บว.25'],['proposalBw25Date','วันที่ส่ง บว.25'],
+  ['proposalBw25Status','ส่งแบบฟอร์ม บว.25'],['proposalBw25Date','วันที่อนุมัติหัวข้อ'],
   ['result','ผลสอบ'],
   ['bookSubmitStatus','สถานะการส่งเล่มฉบับสมบูรณ์'],['bookSubmitDate','วันที่ส่งเล่ม'],['bookDocLink','ลิงก์เล่มฉบับสมบูรณ์']
 ];

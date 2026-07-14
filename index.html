@@ -364,14 +364,20 @@
           </div>
         </div>
         <div class="field"><label>วันที่ส่งแก้ไข</label><input type="date" id="p_revisionDate"></div>
-        <div class="field">
-          <label>ส่งแบบฟอร์ม บว.25<br><span style="font-weight:normal;color:#6b7280;font-size:12px;">(แบบเสนอเค้าโครงการค้นคว้าอิสระ และขออนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข)</span></label>
-          <div class="radio-group">
-            <label><input type="radio" name="proposalBw25Status" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
-            <label><input type="radio" name="proposalBw25Status" value="ส่งแล้ว"> ส่งแล้ว</label>
+        <div class="field full">
+          <label>ส่งแบบฟอร์ม บว.25</label>
+          <div class="help" style="margin:0 0 6px;">(แบบเสนอเค้าโครงการค้นคว้าอิสระ และขออนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข)</div>
+          <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+            <div class="radio-group">
+              <label><input type="radio" name="proposalBw25Status" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
+              <label><input type="radio" name="proposalBw25Status" value="ส่งแล้ว"> ส่งแล้ว</label>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label style="font-size:13.5px;font-weight:600;color:#374151;">วันที่อนุมัติหัวข้อ</label>
+              <input type="date" id="p_bw25Date">
+            </div>
           </div>
         </div>
-        <div class="field"><label>วันที่อนุมัติหัวข้อ</label><input type="date" id="p_bw25Date"></div>
       </div>
       <h4>แนบเอกสาร (เช่น ใบเซ็นชื่อเค้าโครง)</h4>
       <div class="attach-box">

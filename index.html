@@ -1228,9 +1228,31 @@ function renderLookupList(){
         return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
       });
     }
+    var advisorMatches = q ? (masterData.advisors||[]).filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : [];
     var container = document.getElementById('lookupResultList');
     container.innerHTML='';
-    document.getElementById('lookupEmpty').style.display = list.length===0 ? '' : 'none';
+    document.getElementById('lookupEmpty').style.display = (list.length===0 && advisorMatches.length===0) ? '' : 'none';
+
+    if(advisorMatches.length){
+      container.appendChild(el('div',{style:'font-size:12px;font-weight:600;color:#64748b;margin:2px 4px 4px;', text:'👨‍🏫 อาจารย์ที่ปรึกษา'}));
+      advisorMatches.forEach(function(advisor){
+        var item = el('div',{class:'lookup-item'},[
+          el('div',{class:'li-main'},[
+            el('span',{class:'li-name', text:advisor.name}),
+            el('span',{class:'li-sub', text:(advisor.rank?advisor.rank+' • ':'')+'ดูรายงานที่ปรึกษา'})
+          ]),
+          el('span',{class:'li-count', text:'📋 รายงาน'})
+        ]);
+        item.addEventListener('click', function(){
+          document.querySelectorAll('.lookup-item').forEach(function(x){ x.classList.remove('active'); });
+          item.classList.add('active');
+          selectLookupAdvisor(advisor);
+        });
+        container.appendChild(item);
+      });
+      if(list.length) container.appendChild(el('div',{style:'font-size:12px;font-weight:600;color:#64748b;margin:12px 4px 4px;', text:'🎓 นักศึกษา'}));
+    }
+
     list.forEach(function(s){
       var item = el('div',{class:'lookup-item'},[
         el('div',{class:'li-main'},[
@@ -1247,6 +1269,52 @@ function renderLookupList(){
       container.appendChild(item);
     });
   });
+}
+function selectLookupAdvisor(advisor){
+  getAdvisorReport(advisor.name).then(function(rep){ renderAdvisorProfile(advisor, rep); });
+}
+function renderAdvisorProfile(advisor, rep){
+  var wrap = document.getElementById('lookupDetail');
+  wrap.innerHTML='';
+  var total = rep.graduated.length + rep.active.length;
+  var header = el('div',{class:'card section-card'},[
+    el('h3',{text:'👨‍🏫 '+advisor.name}),
+    el('div',{class:'help', style:'margin-bottom:6px;', text:(advisor.rank?'ตำแหน่งทางวิชาการ: '+advisor.rank+' • ':'ยังไม่ระบุตำแหน่งทางวิชาการ • ')+'เป็นที่ปรึกษาหลักทั้งหมด '+total+' คน'}),
+    el('div',{class:'kv-grid'},[
+      kv('ยังเป็นที่ปรึกษาอยู่', rep.active.length+' คน'),
+      kv('จบการศึกษาแล้ว', rep.graduated.length+' คน')
+    ])
+  ]);
+  wrap.appendChild(header);
+
+  function studentSection(title, list){
+    var card = el('div',{class:'card section-card'});
+    card.appendChild(el('h3',{text:title+' ('+list.length+' คน)'}));
+    if(!list.length){
+      card.appendChild(el('div',{class:'empty-state', text:'ไม่มีข้อมูล'}));
+    } else {
+      var listEl = el('div',{class:'lookup-result-list'});
+      list.forEach(function(s){
+        var item = el('div',{class:'lookup-item'},[
+          el('div',{class:'li-main'},[
+            el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
+            el('span',{class:'li-sub', text:s.studentId+(s.plan?' • '+s.plan:'')})
+          ]),
+          el('span',{class:'li-count', text:'ดูข้อมูล →'})
+        ]);
+        item.addEventListener('click', function(){
+          document.getElementById('lookupSearch').value = s.studentId;
+          renderLookupList();
+          selectLookupStudent(s.studentId);
+        });
+        listEl.appendChild(item);
+      });
+      card.appendChild(listEl);
+    }
+    wrap.appendChild(card);
+  }
+  studentSection('ยังเป็นที่ปรึกษาอยู่', rep.active);
+  studentSection('จบการศึกษาแล้ว', rep.graduated);
 }
 function selectLookupStudent(studentId){
   recordsGetByStudentId(studentId).then(function(rows){

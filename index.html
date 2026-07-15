@@ -317,6 +317,10 @@
         <button type="button" class="link-btn" id="btnAddCoAdvisor" style="margin-top:8px;text-align:left;">＋ เพิ่มอาจารย์ร่วม</button>
       </div>
       <div class="field full">
+        <label>หมายเหตุการเปลี่ยนแปลงที่ปรึกษา (ถ้ามี)</label>
+        <input type="text" id="f_advisorChangeNote" placeholder="เช่น อาจารย์เดิมลาศึกษาต่อ, เปลี่ยนหัวข้อวิจัย — กรอกเฉพาะกรณีที่กำลังเปลี่ยน/ถอนที่ปรึกษาในการบันทึกครั้งนี้">
+      </div>
+      <div class="field full">
         <label>หัวข้อวิทยานิพนธ์ (TH) <span class="req">*</span></label>
         <textarea id="f_titleTh" placeholder="การพัฒนาแอปพลิเคชันระบบจัดการข้อมูล..."></textarea>
       </div>
@@ -1408,11 +1412,34 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     el('h3',{text:'หมวดที่ 2: อาจารย์ที่ปรึกษา & หัวข้อ'}),
     el('div',{class:'kv-grid'},[
       kv('อาจารย์ที่ปรึกษาหลัก', latest.mainAdvisor),
-      kv('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).join(', ')),
+      kv('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).map(coAdvisorDisplayOf).join(', ')),
       kv('หัวข้อวิทยานิพนธ์ (TH)', latest.titleTh, true),
       kv('หัวข้อวิทยานิพนธ์ (EN)', latest.titleEn, true)
     ])
   ]);
+  if((latest.advisorHistory||[]).length){
+    var histBox = el('div',{style:'margin-top:12px;border-top:1px solid #e5e7eb;padding-top:10px;'});
+    histBox.appendChild(el('div',{style:'font-weight:600;font-size:13.5px;margin-bottom:6px;color:#374151;', text:'📜 ประวัติการเปลี่ยนแปลงที่ปรึกษา'}));
+    latest.advisorHistory.slice().sort(function(a,b){ return (b.changedAt||0)-(a.changedAt||0); }).forEach(function(h){
+      var lines = [];
+      if((h.mainAdvisorFrom||'')!==(h.mainAdvisorTo||'')){
+        lines.push('ที่ปรึกษาหลัก: '+(h.mainAdvisorFrom||'—')+' → '+(h.mainAdvisorTo||'—'));
+      }
+      var coFrom = (h.coAdvisorsFrom||[]).map(coAdvisorDisplayOf).join(', '), coTo = (h.coAdvisorsTo||[]).map(coAdvisorDisplayOf).join(', ');
+      if(coFrom!==coTo){
+        lines.push('ที่ปรึกษาร่วม: '+(coFrom||'—')+' → '+(coTo||'—'));
+      }
+      var d = h.changedAt ? new Date(h.changedAt) : null;
+      function p2(n){ return String(n).padStart(2,'0'); }
+      var dateTxt = d ? (p2(d.getDate())+'/'+p2(d.getMonth()+1)+'/'+d.getFullYear()+' '+p2(d.getHours())+':'+p2(d.getMinutes())) : '';
+      histBox.appendChild(el('div',{style:'font-size:13.5px;padding:6px 0;border-bottom:1px dashed #e5e7eb;'},[
+        el('div',{text:dateTxt, style:'color:#94a3b8;font-size:12px;'}),
+        el('div',{text:lines.join(' • ')||'(ไม่มีการเปลี่ยนแปลงที่ปรึกษา)'}),
+        h.note ? el('div',{text:'หมายเหตุ: '+h.note, style:'color:#64748b;font-style:italic;'}) : null
+      ]));
+    });
+    sec2.appendChild(histBox);
+  }
   wrap.appendChild(sec2);
 
   /* หนึ่งแถวข้อมูล (record) อาจมีทั้ง 3.1 (proposal) และ 3.2 (defense) พร้อมกันได้ในตัวเดียว
@@ -1618,19 +1645,59 @@ function renderAllSelects(){
 }
 
 /* ================= DYNAMIC ROWS (co-advisor / committee) ================= */
-function addDynamicRow(containerId, placeholder, slot){
+function addDynamicRow(containerId, placeholder, slot, initial){
   var container = document.getElementById(containerId);
   var row = el('div',{class:'multi-row'});
   var combo = buildSearchSelect(el('div',{}), advisorNamesByRole(positionsBySlot(slot)), placeholder);
+  row.appendChild(combo);
+  if(slot==='coAdvisor'){
+    /* อาจารย์ที่ปรึกษาร่วมจากภายนอก ต้องผ่านการกลั่นกรองก่อนเสมอ — ระบุเป็นรายบุคคลต่อการมอบหมายแต่ละครั้ง (ไม่ผูกกับชื่ออาจารย์ถาวร) */
+    var extCheck = el('input',{type:'checkbox', class:'co-external-check'});
+    var extLabel = el('label',{style:'white-space:nowrap;font-size:13px;display:flex;align-items:center;gap:4px;margin:0 6px;'},[
+      extCheck, document.createTextNode('ภายนอก')
+    ]);
+    var dateInput = el('input',{type:'date', class:'co-external-date', style:'display:none;max-width:150px;', title:'วันที่กลั่นกรองผ่าน'});
+    extCheck.addEventListener('change', function(e){
+      dateInput.style.display = e.target.checked ? '' : 'none';
+      if(!e.target.checked) dateInput.value='';
+    });
+    if(initial && initial.isExternal){
+      extCheck.checked = true;
+      dateInput.style.display = '';
+      dateInput.value = initial.externalApprovedDate||'';
+    }
+    row.appendChild(extLabel);
+    row.appendChild(dateInput);
+  }
   var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
-  row.appendChild(combo); row.appendChild(rm);
+  row.appendChild(rm);
   container.appendChild(row);
   return row;
 }
 function getDynamicValues(containerId){
   var vals=[];
-  document.querySelectorAll('#'+containerId+' .combo').forEach(function(s){ if(s.value) vals.push(s.value); });
+  document.querySelectorAll('#'+containerId+' .multi-row').forEach(function(row){
+    var combo = row.querySelector('.combo');
+    var name = combo ? combo.value : '';
+    if(!name) return;
+    var extCheck = row.querySelector('.co-external-check');
+    if(extCheck){
+      var dateInput = row.querySelector('.co-external-date');
+      vals.push({name:name, isExternal:!!extCheck.checked, externalApprovedDate: extCheck.checked ? (dateInput?dateInput.value:'')||'' : ''});
+    } else {
+      vals.push(name);
+    }
+  });
   return vals;
+}
+/* coAdvisors อาจเป็น array ของ string ล้วน (ข้อมูลเก่า) หรือ object {name,isExternal,externalApprovedDate} (ข้อมูลใหม่) — ฟังก์ชันนี้ดึงชื่อออกมาให้เสมอ */
+function coAdvisorNameOf(c){ return typeof c==='string' ? c : (c&&c.name)||''; }
+function coAdvisorDisplayOf(c){
+  if(typeof c==='string') return c;
+  if(!c) return '';
+  var s = c.name||'';
+  if(c.isExternal) s += ' (ภายนอก'+(c.externalApprovedDate?' • กลั่นกรองผ่าน '+c.externalApprovedDate:' • ยังไม่ระบุวันที่กลั่นกรอง')+')';
+  return s;
 }
 function clearDynamicRows(containerId){ document.getElementById(containerId).innerHTML=''; }
 
@@ -1812,6 +1879,7 @@ function mergeStudentRows(rows){
   var obsoleteIds = [];
   var proposalHistory = (primary.proposalAttempts||[]).slice();
   var defenseHistory = (primary.defenseAttempts||[]).slice();
+  var advisorHistory = (primary.advisorHistory||[]).slice();
   var bioFields = ['studentName','degreeLevel','plan','program','department','englishResult','englishScore','englishDocLink',
     'computerResult','computerDocLink','qualifyingExam','qualifyingDocLink','mainAdvisor','titleTh','titleEn',
     'bookSubmitStatus','bookSubmitDate','bookDocLink','graduated'];
@@ -1843,14 +1911,17 @@ function mergeStudentRows(rows){
       }
     }
     if((r.defenseAttempts||[]).length) defenseHistory = defenseHistory.concat(r.defenseAttempts);
+    if((r.advisorHistory||[]).length) advisorHistory = advisorHistory.concat(r.advisorHistory);
     bioFields.forEach(function(f){ if(!primary[f] && r[f]) primary[f]=r[f]; });
     if((!primary.coAdvisors || !primary.coAdvisors.length) && r.coAdvisors && r.coAdvisors.length) primary.coAdvisors = r.coAdvisors;
     if((!primary.publications || !primary.publications.length) && r.publications && r.publications.length) primary.publications = r.publications;
   }
   proposalHistory.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
   defenseHistory.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  advisorHistory.sort(function(a,b){ return (a.changedAt||0)-(b.changedAt||0); });
   primary.proposalAttempts = proposalHistory;
   primary.defenseAttempts = defenseHistory;
+  primary.advisorHistory = advisorHistory;
   return {primary:primary, obsoleteIds:obsoleteIds};
 }
 /* ย้ายไฟล์แนบจากแถวเก่า (obsoleteId) ไปแขวนกับแถวหลัก (newRecordId) แล้วลบรายการไฟล์แถวเก่า (ตัวไฟล์จริงใน Drive ไม่ถูกลบ) */
@@ -1932,6 +2003,7 @@ function resetFormFields(){
   document.getElementById('f_qualifyingDocLink').value='';
   document.getElementById('f_mainAdvisor').value='';
   clearDynamicRows('coAdvisorList');
+  document.getElementById('f_advisorChangeNote').value='';
   document.getElementById('f_titleTh').value='';
   document.getElementById('f_titleEn').value='';
   clearDynamicRows('publicationList');
@@ -1970,7 +2042,7 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
   setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
   clearDynamicRows('coAdvisorList');
-  (rec.coAdvisors||[]).forEach(function(name){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); setSelectValueWithFallback(r.querySelector('.combo'), name); });
+  (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c)); });
   document.getElementById('f_titleTh').value = rec.titleTh||'';
   document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');
@@ -2056,7 +2128,7 @@ function searchExistingStudent(){
     document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
     setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
     clearDynamicRows('coAdvisorList');
-    (rec.coAdvisors||[]).forEach(function(name){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); setSelectValueWithFallback(r.querySelector('.combo'), name); });
+    (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c)); });
     document.getElementById('f_titleTh').value = rec.titleTh||'';
     document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');
@@ -2175,6 +2247,31 @@ function collectFormData(){
   }
   return rec;
 }
+/* เปรียบเทียบที่ปรึกษาหลัก/ร่วมของแถวเดิม (existing) กับที่กำลังจะบันทึก (rec) — ถ้าต่างกันให้คืนรายการประวัติ 1 รายการ, ถ้าเหมือนเดิมคืนค่า null */
+/* เรียง + แปลงเป็น JSON เพื่อเทียบว่ารายชื่อที่ปรึกษาร่วม (รวมสถานะภายนอก/วันที่กลั่นกรอง) เหมือนเดิมหรือไม่
+   เรียงตามชื่อ (ไม่ใช้ default sort ตรงๆ เพราะ object จะถูกแปลงเป็น "[object Object]" ทำให้เรียงไม่ได้ตามจริง) */
+function coAdvisorsSortedJson(list){
+  var sorted = (list||[]).slice().sort(function(a,b){ return coAdvisorNameOf(a).localeCompare(coAdvisorNameOf(b)); });
+  return JSON.stringify(sorted.map(function(c){
+    return typeof c==='string' ? {name:c, isExternal:false, externalApprovedDate:''} :
+      {name:c.name||'', isExternal:!!c.isExternal, externalApprovedDate:c.externalApprovedDate||''};
+  }));
+}
+function buildAdvisorHistoryEntry(existing, rec, note){
+  var prevMain = existing.mainAdvisor||'';
+  var newMain = rec.mainAdvisor||'';
+  var prevCo = (existing.coAdvisors||[]).slice();
+  var newCo = (rec.coAdvisors||[]).slice();
+  var mainChanged = prevMain !== newMain;
+  var coChanged = coAdvisorsSortedJson(prevCo) !== coAdvisorsSortedJson(newCo);
+  if(!mainChanged && !coChanged) return null;
+  return {
+    changedAt: Date.now(),
+    mainAdvisorFrom: prevMain, mainAdvisorTo: newMain,
+    coAdvisorsFrom: prevCo, coAdvisorsTo: newCo,
+    note: note||''
+  };
+}
 function saveRecord(){
   var err, rec;
   try{
@@ -2204,6 +2301,15 @@ function saveRecord(){
     if(cloudModeEnabled && existing && formOpenedAt && existing.updatedAt && existing.updatedAt > formOpenedAt){
       var ok = confirm('ข้อมูลรายการนี้ถูกแก้ไขโดยผู้อื่นหลังจากที่คุณเปิดฟอร์มนี้ขึ้นมา หากบันทึกต่อ การแก้ไขของคุณจะบันทึกทับข้อมูลล่าสุด ต้องการบันทึกทับหรือไม่?');
       if(!ok){ var e2=new Error('CANCELLED'); e2.silent=true; throw e2; }
+    }
+    if(existing){
+      rec.advisorHistory = (existing.advisorHistory||[]).slice();
+      var noteEl = document.getElementById('f_advisorChangeNote');
+      var note = noteEl ? noteEl.value.trim() : '';
+      var histEntry = buildAdvisorHistoryEntry(existing, rec, note);
+      if(histEntry) rec.advisorHistory.push(histEntry);
+    } else {
+      rec.advisorHistory = [];
     }
     return recordsPut(rec);
   }).then(function(){
@@ -2416,7 +2522,7 @@ function toExportRows(r){
     englishResult:r.englishResult, englishScore:r.englishScore, englishDocLink:r.englishDocLink||'',
     computerResult:r.computerResult, computerDocLink:r.computerDocLink||'',
     qualifyingExam:r.qualifyingExam, qualifyingDocLink:r.qualifyingDocLink||'',
-    mainAdvisor:r.mainAdvisor, coAdvisorsStr:(r.coAdvisors||[]).join('; '),
+    mainAdvisor:r.mainAdvisor, coAdvisorsStr:(r.coAdvisors||[]).map(coAdvisorDisplayOf).join('; '),
     titleTh:r.titleTh, titleEn:r.titleEn,
     publicationsStr:(r.publications||[]).map(function(p){
       var s = p.venue||'';
@@ -3031,7 +3137,13 @@ function cascadeRenameInRecords(key, oldVal, newVal){
         if(r.chair===oldVal){ r.chair=newVal; changed=true; }
         if(r.proposalChair===oldVal){ r.proposalChair=newVal; changed=true; }
         if(r.defenseChair===oldVal){ r.defenseChair=newVal; changed=true; }
-        if(Array.isArray(r.coAdvisors) && r.coAdvisors.indexOf(oldVal)>-1){ r.coAdvisors=r.coAdvisors.map(function(v){return v===oldVal?newVal:v;}); changed=true; }
+        if(Array.isArray(r.coAdvisors) && r.coAdvisors.some(function(c){ return coAdvisorNameOf(c)===oldVal; })){
+          r.coAdvisors = r.coAdvisors.map(function(c){
+            if(coAdvisorNameOf(c)!==oldVal) return c;
+            return typeof c==='string' ? newVal : Object.assign({}, c, {name:newVal});
+          });
+          changed=true;
+        }
         ['committee','proposalCommittee','defenseCommittee'].forEach(function(field){
           if(Array.isArray(r[field]) && r[field].length>0){
             var committeeChanged=false;
@@ -3348,6 +3460,7 @@ var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','p
   'proposalAttemptsJson','defenseAttemptsJson',
   'proposalBw25Status','proposalBw25Date',
   'graduated',
+  'advisorHistoryJson',
   'deleted'];
 var FILE_COLUMNS = ['id','recordId','section','name','type','size','driveFileId','driveLink','addedAt','deleted'];
 function extractSheetId(input){
@@ -3395,6 +3508,7 @@ function rowToRecord(headers, row){
     if(h==='publicationsJson'){ try{ rec.publications = v ? JSON.parse(v) : []; }catch(e){ rec.publications=[]; } return; }
     if(h==='proposalAttemptsJson'){ try{ rec.proposalAttempts = v ? JSON.parse(v) : []; }catch(e){ rec.proposalAttempts=[]; } return; }
     if(h==='defenseAttemptsJson'){ try{ rec.defenseAttempts = v ? JSON.parse(v) : []; }catch(e){ rec.defenseAttempts=[]; } return; }
+    if(h==='advisorHistoryJson'){ try{ rec.advisorHistory = v ? JSON.parse(v) : []; }catch(e){ rec.advisorHistory=[]; } return; }
     if(h==='createdAt' || h==='updatedAt'){ rec[h] = v ? Number(v) : 0; return; }
     if(h==='deleted'){ rec.deleted = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
     if(h==='graduated'){ rec.graduated = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
@@ -3415,6 +3529,7 @@ function rowToRecord(headers, row){
   if(!rec.defenseCommittee) rec.defenseCommittee = [];
   if(!rec.proposalAttempts) rec.proposalAttempts = [];
   if(!rec.defenseAttempts) rec.defenseAttempts = [];
+  if(!rec.advisorHistory) rec.advisorHistory = [];
   return rec;
 }
 function recordToRow(rec){
@@ -3426,6 +3541,7 @@ function recordToRow(rec){
     if(h==='publicationsJson') return JSON.stringify(rec.publications||[]);
     if(h==='proposalAttemptsJson') return JSON.stringify(rec.proposalAttempts||[]);
     if(h==='defenseAttemptsJson') return JSON.stringify(rec.defenseAttempts||[]);
+    if(h==='advisorHistoryJson') return JSON.stringify(rec.advisorHistory||[]);
     if(h==='deleted') return rec.deleted ? 'TRUE' : '';
     if(h==='graduated') return rec.graduated ? 'TRUE' : '';
     var v = rec[h];

@@ -1340,6 +1340,22 @@ function kv(label, value, full){
     el('span',{class:'v'+(empty?' empty':''), text: empty ? '—' : value})
   ]);
 }
+/* เหมือน kv() แต่แสดงหลายรายการ แยกคนละบรรทัด (เช่น อาจารย์ที่ปรึกษาร่วมหลายคน) แทนที่จะรวมเป็นข้อความยาวคั่นด้วยจุลภาค */
+function kvMultiLine(label, items, full){
+  items = (items||[]).filter(function(x){ return x; });
+  var valWrap = el('div',{class:'v'+(items.length?'':' empty')});
+  if(!items.length){
+    valWrap.textContent = '—';
+  } else {
+    items.forEach(function(txt){
+      valWrap.appendChild(el('div',{text:txt, style:'margin-bottom:3px;'}));
+    });
+  }
+  return el('div',{class:'kv-item'+(full?' full':'')},[
+    el('span',{class:'k', text:label}),
+    valWrap
+  ]);
+}
 function kvLink(label, url){
   var valEl = url
     ? el('a',{href:url, target:'_blank', rel:'noopener noreferrer', class:'v doc-link', text:'🔗 เปิดเอกสาร'})
@@ -1412,7 +1428,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     el('h3',{text:'หมวดที่ 2: อาจารย์ที่ปรึกษา & หัวข้อ'}),
     el('div',{class:'kv-grid'},[
       kv('อาจารย์ที่ปรึกษาหลัก', latest.mainAdvisor),
-      kv('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).map(coAdvisorDisplayOf).join(', ')),
+      kvMultiLine('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).map(coAdvisorDisplayOf)),
       kv('หัวข้อวิทยานิพนธ์ (TH)', latest.titleTh, true),
       kv('หัวข้อวิทยานิพนธ์ (EN)', latest.titleEn, true)
     ])

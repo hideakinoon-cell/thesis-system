@@ -2435,6 +2435,25 @@ function exportData(format){
           XLSX.utils.book_append_sheet(wb, wsGroup, uniqueSheetName(key, usedSheetNames));
         });
       }
+
+      /* ชีทรายงานที่ปรึกษา: สรุปจำนวน + รายชื่อ นศ. ต่ออาจารย์แต่ละคน (นับเฉพาะที่ปรึกษาหลัก) */
+      var byAdvisor = buildAdvisorReport(rows);
+      var advisorSummaryAoa = [['อาจารย์ที่ปรึกษา','ตำแหน่งทางวิชาการ','รวมทั้งหมด (คน)','จบการศึกษาแล้ว (คน)','ยังเป็นที่ปรึกษาอยู่ (คน)']];
+      var advisorDetailAoa = [['อาจารย์ที่ปรึกษา','สถานะ','รหัสนักศึกษา','ชื่อ-นามสกุล','แผนการเรียน']];
+      Object.keys(byAdvisor).sort().forEach(function(name){
+        var rep = byAdvisor[name];
+        var masterEntry = masterData.advisors.filter(function(a){ return a.name===name; })[0];
+        advisorSummaryAoa.push([name, (masterEntry&&masterEntry.rank)||'', rep.graduated.length+rep.active.length, rep.graduated.length, rep.active.length]);
+        rep.active.forEach(function(s){ advisorDetailAoa.push([name, 'ยังเป็นที่ปรึกษาอยู่', s.studentId||'', s.studentName||'', s.plan||'']); });
+        rep.graduated.forEach(function(s){ advisorDetailAoa.push([name, 'จบการศึกษาแล้ว', s.studentId||'', s.studentName||'', s.plan||'']); });
+      });
+      if(advisorSummaryAoa.length>1){
+        var wsAdvisorSummary = XLSX.utils.aoa_to_sheet(advisorSummaryAoa);
+        XLSX.utils.book_append_sheet(wb, wsAdvisorSummary, uniqueSheetName('สรุปที่ปรึกษา', usedSheetNames));
+        var wsAdvisorDetail = XLSX.utils.aoa_to_sheet(advisorDetailAoa);
+        XLSX.utils.book_append_sheet(wb, wsAdvisorDetail, uniqueSheetName('รายชื่อ นศ.ตามที่ปรึกษา', usedSheetNames));
+      }
+
       XLSX.writeFile(wb, 'thesis-exam-records-'+dateStamp()+'.xlsx');
     } else {
       var lines = [headers.join(',')];
@@ -2733,6 +2752,61 @@ function advisorQuotaBadgeText(advisor){
   var usedTxt = (Math.round(used*100)/100).toString().replace(/\.0+$/,'');
   return 'ที่ปรึกษา: '+usedTxt+'/'+max+' คน';
 }
+/* รายงานสรุปที่ปรึกษา: รายชื่อ นศ. ทั้งหมดที่อาจารย์ท่านนี้เป็น "ที่ปรึกษาหลัก" แบ่งเป็นจบการศึกษาแล้ว/ยังเป็นที่ปรึกษาอยู่
+   ใช้ช่องติ๊ก "สำเร็จการศึกษาแล้ว" (rec.graduated) เป็นตัวแบ่งกลุ่ม */
+function buildAdvisorReport(rows){
+  var byAdvisor = {};
+  (rows||[]).forEach(function(r){
+    if(r.deleted) return;
+    if(!r.mainAdvisor) return;
+    if(!byAdvisor[r.mainAdvisor]) byAdvisor[r.mainAdvisor] = {graduated:[], active:[]};
+    var entry = {studentId:r.studentId, studentName:r.studentName, plan:r.plan||''};
+    (r.graduated ? byAdvisor[r.mainAdvisor].graduated : byAdvisor[r.mainAdvisor].active).push(entry);
+  });
+  return byAdvisor;
+}
+function getAdvisorReport(advisorName){
+  return recordsGetAll().then(function(rows){
+    var byAdvisor = buildAdvisorReport(rows);
+    return byAdvisor[advisorName] || {graduated:[], active:[]};
+  });
+}
+function openAdvisorReportModal(advisor){
+  getAdvisorReport(advisor.name).then(function(rep){
+    var total = rep.graduated.length + rep.active.length;
+    var root = document.getElementById('modalRoot');
+    var backdrop = el('div',{class:'modal-backdrop'});
+    var modal = el('div',{class:'modal'});
+    modal.appendChild(el('h3',{text:'รายงานที่ปรึกษา: '+advisor.name}));
+    modal.appendChild(el('div',{class:'help', style:'margin-bottom:10px;'}, [
+      document.createTextNode('เป็นที่ปรึกษาหลักทั้งหมด '+total+' คน — จบการศึกษาแล้ว '+rep.graduated.length+' คน, ยังเป็นที่ปรึกษาอยู่ '+rep.active.length+' คน')
+    ]));
+    function studentListEl(title, list){
+      var box = el('div',{style:'margin-bottom:14px;'});
+      box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:title+' ('+list.length+' คน)'}));
+      if(!list.length){
+        box.appendChild(el('div',{class:'help', text:'— ไม่มี —'}));
+      } else {
+        var ul = el('div');
+        list.forEach(function(s){
+          ul.appendChild(el('div',{style:'padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:14px;'},[
+            document.createTextNode((s.studentId||'-')+' — '+(s.studentName||'-')+(s.plan?' ('+s.plan+')':''))
+          ]));
+        });
+        box.appendChild(ul);
+      }
+      return box;
+    }
+    modal.appendChild(studentListEl('ยังเป็นที่ปรึกษาอยู่', rep.active));
+    modal.appendChild(studentListEl('จบการศึกษาแล้ว', rep.graduated));
+    modal.appendChild(el('div',{class:'form-footer'},[
+      el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }})
+    ]));
+    backdrop.appendChild(modal);
+    backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+    root.appendChild(backdrop);
+  });
+}
 var ADVISOR_LIST_DEFAULT_CAP = 10;
 function renderAdvisorList(){
   var container = document.getElementById('m_advisors');
@@ -2764,6 +2838,7 @@ function renderAdvisorList(){
       badges.push(el('span',{class:'role-badge', style:'background:'+(over?'#fee2e2':'#eef2ff')+';color:'+(over?'#dc2626':'#4338ca')+';', text:(over?'⚠️ ':'')+quotaTxt}));
     }
     var chip = el('span',{class:'chip'}, [el('span',{text:advisor.name})].concat(badges).concat([
+      el('button',{type:'button', text:'📋', title:'ดูรายงานที่ปรึกษา', onclick:function(){ openAdvisorReportModal(advisor); }}),
       el('button',{type:'button', text:'✎', title:'แก้ไขชื่อ/ตำแหน่ง', onclick:function(){ openAdvisorEditModal(advisor); }}),
       el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){ removeAdvisor(advisor.name); }})
     ]));

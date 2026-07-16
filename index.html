@@ -136,6 +136,8 @@
   .result-tag.cond{background:#fdf0e0;color:var(--warn);}
   .result-tag.fail{background:#fdeceb;color:var(--danger);}
   .attach-box{border:1px dashed var(--border);border-radius:8px;padding:12px;}
+  .attach-link-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .attach-link-row input{flex:1;min-width:160px;}
   .attach-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
   .attach-item{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13.5px;}
   .attach-item .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -383,9 +385,14 @@
           </div>
         </div>
       </div>
-      <h4>แนบเอกสาร (เช่น ใบเซ็นชื่อเค้าโครง)</h4>
+      <h4>แนบเอกสาร (เช่น คำสั่งสอบเค้าโครง)</h4>
       <div class="attach-box">
         <input type="file" id="p_fileInput" multiple>
+        <div class="attach-link-row">
+          <input type="url" id="p_linkInput" placeholder="วางลิงก์เอกสาร (เช่น Google Drive)">
+          <input type="text" id="p_linkName" placeholder="ชื่อเอกสาร (ไม่บังคับ)">
+          <button type="button" class="link-btn" id="p_btnAddLink">🔗 แนบลิงก์</button>
+        </div>
         <div class="attach-list" id="p_attachList"></div>
       </div>
     </div>
@@ -416,9 +423,14 @@
           </div>
         </div>
       </div>
-      <h4>แนบเอกสาร (เช่น ใบรวมคะแนน/เซ็นชื่อ)</h4>
+      <h4>แนบเอกสาร (เช่น คำสั่งสอบป้องกัน)</h4>
       <div class="attach-box">
         <input type="file" id="d_fileInput" multiple>
+        <div class="attach-link-row">
+          <input type="url" id="d_linkInput" placeholder="วางลิงก์เอกสาร (เช่น Google Drive)">
+          <input type="text" id="d_linkName" placeholder="ชื่อเอกสาร (ไม่บังคับ)">
+          <button type="button" class="link-btn" id="d_btnAddLink">🔗 แนบลิงก์</button>
+        </div>
         <div class="attach-list" id="d_attachList"></div>
       </div>
     </div>
@@ -1843,6 +1855,8 @@ function bindFormEvents(){
 
   document.getElementById('p_fileInput').addEventListener('change', function(e){ handleFileInput('proposal', e.target.files); e.target.value=''; });
   document.getElementById('d_fileInput').addEventListener('change', function(e){ handleFileInput('defense', e.target.files); e.target.value=''; });
+  document.getElementById('p_btnAddLink').addEventListener('click', function(){ handleLinkAdd('proposal'); });
+  document.getElementById('d_btnAddLink').addEventListener('click', function(){ handleLinkAdd('defense'); });
 }
 /* ================= EXAM SUBSECTIONS (3.1 / 3.2 — always both visible, both can hold data in the same record) ================= */
 function sectionHasData(prefix){
@@ -2416,6 +2430,24 @@ function handleFileInput(section, fileList){
     });
   })).then(function(){ renderAttachmentList(section); });
 }
+function handleLinkAdd(section){
+  var prefix = section==='proposal' ? 'p_' : 'd_';
+  var urlInput = document.getElementById(prefix+'linkInput');
+  var nameInput = document.getElementById(prefix+'linkName');
+  var url = urlInput.value.trim();
+  if(!url){ toast('กรุณาวางลิงก์ก่อน', true); return; }
+  if(!/^https?:\/\//i.test(url)){ toast('ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', true); return; }
+  var name = nameInput.value.trim() || url;
+  filesPut({
+    id: uuid(), recordId: currentDraftId, section: section,
+    name: name, type: 'link', size: 0,
+    driveFileId: null, driveLink: url, isLink: true, addedAt: Date.now()
+  }).then(function(){
+    urlInput.value=''; nameInput.value='';
+    renderAttachmentList(section);
+    toast('แนบลิงก์เรียบร้อย');
+  }).catch(function(e){ toast('แนบลิงก์ไม่สำเร็จ: '+e, true); });
+}
 function renderAttachmentList(section){
   var containerId = section==='proposal' ? 'p_attachList' : 'd_attachList';
   var container = document.getElementById(containerId);
@@ -2426,19 +2458,28 @@ function renderAttachmentList(section){
     files = files.filter(function(f){ return f.section===section; });
     if(files.length===0){ container.appendChild(el('div',{class:'help',text:'ยังไม่มีไฟล์แนบ'})); return; }
     files.forEach(function(f){
-      var driveBtn;
-      if(f.driveFileId){
-        driveBtn = el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'📂 เปิดใน Drive'});
+      var row;
+      if(f.isLink){
+        row = el('div',{class:'attach-item'},[
+          el('span',{class:'name', text:'🔗 '+f.name}),
+          el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'🔗 เปิดลิงก์'}),
+          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, text:'ลบ'})
+        ]);
       } else {
-        driveBtn = el('button',{type:'button', class:'link-btn', onclick:function(){ uploadAttachmentToDrive(f.id, section); }, text:'☁️ ส่งไป Drive'});
+        var driveBtn;
+        if(f.driveFileId){
+          driveBtn = el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'📂 เปิดใน Drive'});
+        } else {
+          driveBtn = el('button',{type:'button', class:'link-btn', onclick:function(){ uploadAttachmentToDrive(f.id, section); }, text:'☁️ ส่งไป Drive'});
+        }
+        row = el('div',{class:'attach-item'},[
+          el('span',{class:'name', text:'📄 '+f.name}),
+          el('span',{class:'size', text:fmtBytes(f.size)}),
+          el('button',{type:'button', class:'link-btn', onclick:function(){ downloadFile(f.id); }, text:'⬇ ดาวน์โหลด'}),
+          driveBtn,
+          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, text:'ลบ'})
+        ]);
       }
-      var row = el('div',{class:'attach-item'},[
-        el('span',{class:'name', text:'📄 '+f.name}),
-        el('span',{class:'size', text:fmtBytes(f.size)}),
-        el('button',{type:'button', class:'link-btn', onclick:function(){ downloadFile(f.id); }, text:'⬇ ดาวน์โหลด'}),
-        driveBtn,
-        el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, text:'ลบ'})
-      ]);
       container.appendChild(row);
     });
   });
@@ -3577,7 +3618,7 @@ var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','p
   'graduated',
   'advisorHistoryJson',
   'deleted'];
-var FILE_COLUMNS = ['id','recordId','section','name','type','size','driveFileId','driveLink','addedAt','deleted'];
+var FILE_COLUMNS = ['id','recordId','section','name','type','size','driveFileId','driveLink','addedAt','isLink','deleted'];
 function extractSheetId(input){
   input = (input||'').trim();
   var m = input.match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -3670,6 +3711,7 @@ function rowToFile(headers, row){
     if(h==='size'){ f.size = v ? Number(v) : 0; return; }
     if(h==='addedAt'){ f.addedAt = v ? Number(v) : 0; return; }
     if(h==='deleted'){ f.deleted = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
+    if(h==='isLink'){ f.isLink = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
     f[h] = v;
   });
   return f;
@@ -3677,6 +3719,7 @@ function rowToFile(headers, row){
 function fileToRow(f){
   return FILE_COLUMNS.map(function(h){
     if(h==='deleted') return f.deleted ? 'TRUE' : '';
+    if(h==='isLink') return f.isLink ? 'TRUE' : '';
     var v = f[h];
     return v===undefined || v===null ? '' : v;
   });
@@ -3958,9 +4001,9 @@ function migrateLocalDataToCloud(){
         toast('กำลังย้ายไฟล์แนบ ('+localFiles.length+' ไฟล์)...');
         return localFiles.reduce(function(p, f){
           return p.then(function(){
-            if(f.driveFileId){
+            if(f.driveFileId || f.isLink){
               return filesPut({id:f.id, recordId:f.recordId, section:f.section, name:f.name, type:f.type, size:f.size,
-                driveFileId:f.driveFileId, driveLink:f.driveLink, addedAt:f.addedAt});
+                driveFileId:f.driveFileId, driveLink:f.driveLink, isLink:f.isLink||false, addedAt:f.addedAt});
             }
             // not yet uploaded to Drive locally — upload now so the central Files ledger has a real link
             var rec = localRecords.filter(function(r){ return r.id===f.recordId; })[0];
@@ -3986,7 +4029,7 @@ function uploadAttachmentToDrive(fileId, section){
   ensureAuthed().then(function(){
     return dbGet('files', fileId);
   }).then(function(f){
-    if(!f) return;
+    if(!f || f.isLink) return;
     return dbGet('records', f.recordId).then(function(rec){
       var studentFolderName = (rec ? rec.studentId+'_'+rec.studentName : 'unknown');
       return ensureDriveFolder('ThesisManagerAttachments').then(function(rootId){
@@ -4017,6 +4060,10 @@ function backupNow(isAuto){
     return Promise.all([dbGetAll('records'), dbGetAll('files')]).then(function(results){
       var records = results[0], files = results[1];
       return Promise.all(files.map(function(f){
+        if(f.isLink || !f.blob){
+          return {id:f.id, recordId:f.recordId, section:f.section, name:f.name, type:f.type, size:f.size,
+                  driveFileId:f.driveFileId, driveLink:f.driveLink, isLink:f.isLink||false, addedAt:f.addedAt};
+        }
         return f.blob.arrayBuffer().then(function(buf){
           return {id:f.id, recordId:f.recordId, section:f.section, name:f.name, type:f.type, size:f.size,
                   driveFileId:f.driveFileId, driveLink:f.driveLink, addedAt:f.addedAt, dataBase64: arrayBufferToBase64(buf)};

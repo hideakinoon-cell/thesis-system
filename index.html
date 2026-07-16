@@ -263,11 +263,11 @@
       </div>
       <div class="field">
         <label>หลักสูตร <span class="req">*</span></label>
-        <select id="f_program"></select>
+        <div id="f_program" class="combo"></div>
       </div>
       <div class="field">
         <label>สาขาวิชา <span class="req">*</span></label>
-        <select id="f_department"></select>
+        <div id="f_department" class="combo"></div>
       </div>
     </div>
 
@@ -358,7 +358,7 @@
         <div class="field full">
           <label>ผลประเมิน</label>
           <div class="radio-group">
-            <label><input type="radio" name="proposalResult" value="ผ่าน" checked> ผ่าน</label>
+            <label><input type="radio" name="proposalResult" value="ผ่าน"> ผ่าน</label>
             <label><input type="radio" name="proposalResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
           </div>
         </div>
@@ -417,7 +417,7 @@
         <div class="field full">
           <label>ผลการประเมิน</label>
           <div class="radio-group">
-            <label><input type="radio" name="defenseResult" value="ผ่าน" checked> ผ่าน</label>
+            <label><input type="radio" name="defenseResult" value="ผ่าน"> ผ่าน</label>
             <label><input type="radio" name="defenseResult" value="ผ่านแบบมีเงื่อนไข"> ผ่านแบบมีเงื่อนไข</label>
             <label><input type="radio" name="defenseResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
           </div>
@@ -1530,6 +1530,17 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
         recordId:r.id, files: isLatest ? files : []
       });
     });
+    /* บว.25 (อนุมัติหัวข้อ) มักถูกกรอกไว้ก่อนที่จะกำหนดวันสอบเค้าโครงจริง — ถ้ายังไม่มีวันที่สอบเลย (recHasProposalData เป็นเท็จ)
+       แต่มีข้อมูล บว.25 บันทึกไว้แล้ว ให้สร้างการ์ดแสดงผลแบบย่อขึ้นมาต่างหาก ไม่เช่นนั้นข้อมูล บว.25 จะไม่ถูกแสดงที่หน้านี้เลย */
+    if(!recHasProposalData(r) && (r.proposalBw25Status==='ส่งแล้ว' || r.proposalBw25Date)){
+      examBlocks.push({
+        type:'proposal', typeTxt:'บว.25 — แบบเสนอหัวข้อ', typeTagTxt:'บว.25', attemptNo:0, isLatest:true, preBw25Only:true,
+        date:r.proposalBw25Date||'', examDate:null, examTime:null, location:null, chair:null, committee:[], result:null,
+        proposalRevisionStatus:null, proposalRevisionDate:null,
+        proposalBw25Status:r.proposalBw25Status, proposalBw25Date:r.proposalBw25Date,
+        recordId:r.id, files:[]
+      });
+    }
     var defenseAll = (r.defenseAttempts||[]).map(function(a){
       return {date:a.date, time:a.time, location:a.location, chair:a.chair, committee:a.committee||[], result:a.result,
         fullScore:a.fullScore, obtainedScore:a.obtainedScore, dueDate:a.dueDate};
@@ -1561,18 +1572,22 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
 
     var body = [
       el('div',{class:'exam-profile-head'},[
-        el('div',{class:'title', text: r.typeTxt+' ครั้งที่ '+r.attemptNo}),
-        el('div',{},[
+        el('div',{class:'title', text: r.preBw25Only ? r.typeTxt : (r.typeTxt+' ครั้งที่ '+r.attemptNo)}),
+        el('div',{}, r.preBw25Only ? [
+          el('span',{class:'exam-type-tag '+r.type, text: r.typeTagTxt})
+        ] : [
           el('span',{class:'exam-type-tag '+r.type, style:'margin-right:8px;', text: r.typeTagTxt}),
           el('span',{class:'result-tag '+resultClass, text: r.result||'ยังไม่ระบุผล'})
         ])
-      ]),
-      el('div',{class:'kv-grid'},[
+      ])
+    ];
+    if(!r.preBw25Only){
+      body.push(el('div',{class:'kv-grid'},[
         kv('วันที่สอบ', r.examDate),
         kv('เวลาสอบ', r.examTime),
         kv('สถานที่สอบ', r.location)
-      ])
-    ];
+      ]));
+    }
 
     var committeeRows = [];
     if(r.chair) committeeRows.push({name:r.chair, position:'ประธานกรรมการ', isChair:true});
@@ -1597,22 +1612,36 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       ]));
     }
     if(r.type==='proposal'){
-      body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
-        kv('ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์', r.proposalRevisionStatus||'ยังไม่ส่ง'),
-        kv('วันที่ส่งแก้ไข', r.proposalRevisionDate),
-        kv('ส่งแบบฟอร์ม บว.25', r.proposalBw25Status||'ยังไม่ส่ง'),
-        kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date)
-      ]));
+      if(r.preBw25Only){
+        body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
+          kv('ส่งแบบฟอร์ม บว.25', r.proposalBw25Status||'ยังไม่ส่ง'),
+          kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date)
+        ]));
+      } else {
+        body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
+          kv('ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์', r.proposalRevisionStatus||'ยังไม่ส่ง'),
+          kv('วันที่ส่งแก้ไข', r.proposalRevisionDate),
+          kv('ส่งแบบฟอร์ม บว.25', r.proposalBw25Status||'ยังไม่ส่ง'),
+          kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date)
+        ]));
+      }
     }
 
     if(files.length){
       var fileList = el('div',{class:'attach-list', style:'margin-top:8px;'});
       files.forEach(function(f){
-        fileList.appendChild(el('div',{class:'attach-item'},[
-          el('span',{class:'name', text:'📄 '+f.name}),
-          el('span',{class:'size', text:fmtBytes(f.size)}),
-          el('button',{type:'button', class:'link-btn', text:'⬇ ดาวน์โหลด', onclick:function(){ downloadFile(f.id); }})
-        ]));
+        if(f.isLink){
+          fileList.appendChild(el('div',{class:'attach-item'},[
+            el('span',{class:'name', text:'🔗 '+f.name}),
+            el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'🔗 เปิดลิงก์'})
+          ]));
+        } else {
+          fileList.appendChild(el('div',{class:'attach-item'},[
+            el('span',{class:'name', text:'📄 '+f.name}),
+            el('span',{class:'size', text:fmtBytes(f.size)}),
+            el('button',{type:'button', class:'link-btn', text:'⬇ ดาวน์โหลด', onclick:function(){ downloadFile(f.id); }})
+          ]));
+        }
       });
       body.push(el('div',{style:'margin-top:14px;'},[
         el('span',{class:'k', style:'font-size:12px;color:var(--muted);', text:'ไฟล์แนบ'}),
@@ -1686,8 +1715,8 @@ function ensureSearchSelect(id, list, placeholder){
   return hostEl;
 }
 function renderAllSelects(){
-  fillSelect(document.getElementById('f_program'), masterData.programs, 'เลือกหลักสูตร');
-  fillSelect(document.getElementById('f_department'), masterData.departments, 'เลือกสาขาวิชา');
+  ensureSearchSelect('f_program', masterData.programs, 'พิมพ์เพื่อค้นหาหลักสูตร...');
+  ensureSearchSelect('f_department', masterData.departments, 'พิมพ์เพื่อค้นหาสาขาวิชา...');
   fillSelect(document.getElementById('f_plan'), masterData.plans, 'เลือกแผนการเรียน');
   ensureSearchSelect('f_mainAdvisor', advisorNamesByRole(positionsBySlot('mainAdvisor')), 'พิมพ์ชื่ออาจารย์ที่ปรึกษาหลัก...');
   ensureSearchSelect('p_chair', advisorNamesByRole(positionsBySlot('chair')), 'พิมพ์ชื่อประธานกรรมการ...');
@@ -1862,6 +1891,16 @@ function bindFormEvents(){
 function sectionHasData(prefix){
   return !!document.getElementById(prefix+'_date').value;
 }
+/* บว.25 (อนุมัติหัวข้อ) มักถูกกรอกไว้ก่อนกำหนดวันสอบเค้าโครงจริง จึงนับแยกจาก sectionHasData('p')
+   (ซึ่งผูกกับวันที่สอบเท่านั้น) — ใช้เช็คว่ามีข้อมูล บว.25 กรอกไว้หรือไม่ แม้ยังไม่มีวันที่สอบเค้าโครง */
+function bw25SectionHasData(){
+  var status = (document.querySelector('input[name=proposalBw25Status]:checked')||{}).value;
+  return status==='ส่งแล้ว' || !!document.getElementById('p_bw25Date').value;
+}
+/* เคลียร์ตัวเลือกผลสอบ (ผ่าน/ผ่านแบบมีเงื่อนไข/ไม่ผ่าน) ไม่ให้มีค่าเริ่มต้นถูกติ๊กไว้ล่วงหน้า — บังคับให้เจ้าหน้าที่เลือกเอง */
+function uncheckRadioGroup(name){
+  document.querySelectorAll('input[name='+name+']').forEach(function(r){ r.checked=false; });
+}
 function recHasProposalData(rec){ return !!(rec && rec.proposalDate); }
 function recHasDefenseData(rec){ return !!(rec && rec.defenseDate); }
 function setSectionLocked(prefix, locked, lockedMsgTxt){
@@ -1900,7 +1939,7 @@ function startNewAttempt(prefix){
     });
     document.getElementById('p_date').value=''; document.getElementById('p_examTime').value=''; document.getElementById('p_location').value='';
     document.getElementById('p_chair').value=''; clearDynamicRows('p_committeeList');
-    document.querySelector('input[name=proposalResult][value="ผ่าน"]').checked=true;
+    uncheckRadioGroup('proposalResult');
     document.querySelector('input[name=proposalRevisionStatus][value="ยังไม่ส่ง"]').checked=true;
     document.getElementById('p_revisionDate').value='';
     document.querySelector('input[name=proposalBw25Status][value="ยังไม่ส่ง"]').checked=true;
@@ -1921,7 +1960,7 @@ function startNewAttempt(prefix){
     document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
     document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
     document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
-    document.querySelector('input[name=defenseResult][value="ผ่าน"]').checked=true;
+    uncheckRadioGroup('defenseResult');
     renderAttachmentList('defense');
   }
   setSectionLocked(prefix, false);
@@ -1959,6 +1998,12 @@ function mergeStudentRows(rows){
           committee:r.proposalCommittee||[], result:r.proposalResult, revisionStatus:r.proposalRevisionStatus, revisionDate:r.proposalRevisionDate,
           bw25Status:r.proposalBw25Status, bw25Date:r.proposalBw25Date});
       }
+    }
+    /* บว.25 อาจถูกกรอกไว้ในแถว r ที่ยังไม่มีวันที่สอบเค้าโครง (recHasProposalData เป็นเท็จ) — สำรองไว้เผื่อ primary ยังไม่มีข้อมูล บว.25
+       ของตัวเอง เพื่อไม่ให้ข้อมูล บว.25 หายไปตอนรวมแถวซ้ำ (แถว r จะถูกลบทิ้งหลังรวมเสร็จ) */
+    if((r.proposalBw25Status==='ส่งแล้ว' || r.proposalBw25Date) && !(primary.proposalBw25Status==='ส่งแล้ว' || primary.proposalBw25Date)){
+      primary.proposalBw25Status = r.proposalBw25Status;
+      primary.proposalBw25Date = r.proposalBw25Date;
     }
     if((r.proposalAttempts||[]).length) proposalHistory = proposalHistory.concat(r.proposalAttempts);
     if(recHasDefenseData(r)){
@@ -2035,7 +2080,7 @@ function startNewExamForStudent(studentId){
 function clearExamSectionFields(){
   document.getElementById('p_date').value=''; document.getElementById('p_examTime').value=''; document.getElementById('p_location').value='';
   document.getElementById('p_chair').value=''; clearDynamicRows('p_committeeList');
-  document.querySelector('input[name=proposalResult][value="ผ่าน"]').checked=true;
+  uncheckRadioGroup('proposalResult');
   document.querySelector('input[name=proposalRevisionStatus][value="ยังไม่ส่ง"]').checked=true;
   document.getElementById('p_revisionDate').value='';
   document.querySelector('input[name=proposalBw25Status][value="ยังไม่ส่ง"]').checked=true;
@@ -2044,7 +2089,7 @@ function clearExamSectionFields(){
   document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
   document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
   document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
-  document.querySelector('input[name=defenseResult][value="ผ่าน"]').checked=true;
+  uncheckRadioGroup('defenseResult');
 }
 function resetFormFields(){
   currentExamType = null;
@@ -2091,8 +2136,8 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_studentName').value = rec.studentName||'';
   var dl = document.querySelector('input[name=degreeLevel][value="'+rec.degreeLevel+'"]'); if(dl) dl.checked=true;
   document.getElementById('f_plan').value = rec.plan||'';
-  document.getElementById('f_program').value = rec.program||'';
-  document.getElementById('f_department').value = rec.department||'';
+  setSelectValueWithFallback(document.getElementById('f_program'), rec.program||'');
+  setSelectValueWithFallback(document.getElementById('f_department'), rec.department||'');
   var er = document.querySelector('input[name=englishResult][value="'+rec.englishResult+'"]'); if(er) er.checked=true;
   document.getElementById('f_englishScore').disabled = rec.englishResult!=='ยกเว้น/เทียบเท่า';
   document.getElementById('f_englishScore').value = rec.englishScore||'';
@@ -2127,9 +2172,11 @@ function loadRecordIntoForm(rec){
     var pr = document.querySelector('input[name=proposalResult][value="'+rec.proposalResult+'"]'); if(pr) pr.checked=true;
     var prs = document.querySelector('input[name=proposalRevisionStatus][value="'+(rec.proposalRevisionStatus||'ยังไม่ส่ง')+'"]'); if(prs) prs.checked=true;
     document.getElementById('p_revisionDate').value = rec.proposalRevisionDate||'';
-    var pbw = document.querySelector('input[name=proposalBw25Status][value="'+(rec.proposalBw25Status||'ยังไม่ส่ง')+'"]'); if(pbw) pbw.checked=true;
-    document.getElementById('p_bw25Date').value = rec.proposalBw25Date||'';
   }
+  /* บว.25 (อนุมัติหัวข้อ) มักถูกกรอกไว้ก่อนกำหนดวันสอบเค้าโครงจริง จึงต้องโหลดค่ากลับมาเสมอ
+     ไม่ผูกไว้กับ recHasProposalData(rec) (ซึ่งเช็คจาก proposalDate เท่านั้น) มิฉะนั้นข้อมูล บว.25 ที่กรอกไว้ก่อนหน้าจะหายไปจากหน้าจอตอนเปิดฟอร์มกลับมาแก้ไข */
+  var pbw = document.querySelector('input[name=proposalBw25Status][value="'+(rec.proposalBw25Status||'ยังไม่ส่ง')+'"]'); if(pbw) pbw.checked=true;
+  document.getElementById('p_bw25Date').value = rec.proposalBw25Date||'';
   if(recHasDefenseData(rec)){
     document.getElementById('d_date').value = rec.defenseDate||'';
     document.getElementById('d_examTime').value = rec.defenseTime||'';
@@ -2177,8 +2224,8 @@ function searchExistingStudent(){
     document.getElementById('f_studentName').value = rec.studentName||'';
     var dl = document.querySelector('input[name=degreeLevel][value="'+rec.degreeLevel+'"]'); if(dl) dl.checked=true;
     document.getElementById('f_plan').value = rec.plan||'';
-    document.getElementById('f_program').value = rec.program||'';
-    document.getElementById('f_department').value = rec.department||'';
+    setSelectValueWithFallback(document.getElementById('f_program'), rec.program||'');
+    setSelectValueWithFallback(document.getElementById('f_department'), rec.department||'');
     var er = document.querySelector('input[name=englishResult][value="'+rec.englishResult+'"]'); if(er) er.checked=true;
     document.getElementById('f_englishScore').disabled = rec.englishResult!=='ยกเว้น/เทียบเท่า';
     document.getElementById('f_englishScore').value = rec.englishScore||'';
@@ -2234,25 +2281,29 @@ function validateForm(){
   if(!document.getElementById('f_titleTh').value.trim()) return 'กรุณากรอกหัวข้อวิทยานิพนธ์ (TH)';
   var pFilled = sectionHasData('p');
   var dFilled = sectionHasData('d');
-  if(!pFilled && !dFilled) return 'กรุณากรอกข้อมูลการสอบอย่างน้อย 1 ส่วน (3.1 การสอบเค้าโครง หรือ 3.2 การสอบป้องกัน/IS)';
+  var bw25Filled = bw25SectionHasData();
+  if(!pFilled && !dFilled && !bw25Filled) return 'กรุณากรอกข้อมูลการสอบอย่างน้อย 1 ส่วน (3.1 การสอบเค้าโครง หรือ 3.2 การสอบป้องกัน/IS) หรือส่งแบบฟอร์ม บว.25';
   if(pFilled){
     if(!document.getElementById('p_examTime').value) return 'กรุณาระบุเวลาสอบเค้าโครง (3.1)';
     if(!document.getElementById('p_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.1)';
     var pDup = findDuplicateCommitteeName('p');
     if(pDup) return 'พบชื่อ "'+pDup+'" ซ้ำในคณะกรรมการสอบเค้าโครง (3.1) กรุณาตรวจสอบ';
+    if(!document.querySelector('input[name=proposalResult]:checked')) return 'กรุณาเลือกผลประเมินการสอบเค้าโครง (3.1)';
   }
   if(dFilled){
     if(!document.getElementById('d_examTime').value) return 'กรุณาระบุเวลาสอบป้องกัน (3.2)';
     if(!document.getElementById('d_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.2)';
     var dDup = findDuplicateCommitteeName('d');
     if(dDup) return 'พบชื่อ "'+dDup+'" ซ้ำในคณะกรรมการสอบป้องกัน/IS (3.2) กรุณาตรวจสอบ';
+    if(!document.querySelector('input[name=defenseResult]:checked')) return 'กรุณาเลือกผลการสอบป้องกัน/IS (3.2)';
   }
   return null;
 }
 function collectFormData(){
   var pFilled = sectionHasData('p');
   var dFilled = sectionHasData('d');
-  var type = pFilled && dFilled ? 'both' : (pFilled ? 'proposal' : 'defense');
+  var pHasAnyData = pFilled || bw25SectionHasData();
+  var type = pHasAnyData && dFilled ? 'both' : (pHasAnyData ? 'proposal' : 'defense');
   currentExamType = type;
   var rec = {
     id: currentDraftId,
@@ -2289,12 +2340,13 @@ function collectFormData(){
     rec.proposalLocation = document.getElementById('p_location').value;
     rec.proposalChair = document.getElementById('p_chair').value;
     rec.proposalCommittee = getCommitteeValues('p_committeeList');
-    rec.proposalResult = document.querySelector('input[name=proposalResult]:checked').value;
+    rec.proposalResult = (document.querySelector('input[name=proposalResult]:checked')||{}).value||'';
     rec.proposalRevisionStatus = document.querySelector('input[name=proposalRevisionStatus]:checked').value;
     rec.proposalRevisionDate = document.getElementById('p_revisionDate').value;
-    rec.proposalBw25Status = document.querySelector('input[name=proposalBw25Status]:checked').value;
-    rec.proposalBw25Date = document.getElementById('p_bw25Date').value;
   }
+  /* บว.25 ต้องบันทึกเสมอไม่ว่าจะมีวันที่สอบเค้าโครงแล้วหรือยัง (ดูหมายเหตุที่ bw25SectionHasData) */
+  rec.proposalBw25Status = document.querySelector('input[name=proposalBw25Status]:checked').value;
+  rec.proposalBw25Date = document.getElementById('p_bw25Date').value;
   if(dFilled){
     rec.defenseDate = document.getElementById('d_date').value;
     rec.defenseTime = document.getElementById('d_examTime').value;
@@ -2304,7 +2356,7 @@ function collectFormData(){
     rec.defenseFullScore = document.getElementById('d_fullScore').value;
     rec.defenseObtainedScore = document.getElementById('d_obtainedScore').value;
     rec.defenseDueDate = document.getElementById('d_dueDate').value;
-    rec.defenseResult = document.querySelector('input[name=defenseResult]:checked').value;
+    rec.defenseResult = (document.querySelector('input[name=defenseResult]:checked')||{}).value||'';
   }
   return rec;
 }

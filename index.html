@@ -522,6 +522,25 @@
   </div>
 
   <div class="card">
+    <h3>🏫 รหัสผ่านเจ้าหน้าที่สาขา (ดูได้เฉพาะสาขาของตัวเอง)</h3>
+    <div class="help" style="margin-bottom:10px;">ตั้งรหัสผ่านแยกให้แต่ละสาขา เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะข้อมูลนักศึกษาของสาขานั้น ๆ ในหน้า "ตรวจสอบข้อมูล" เท่านั้น (ดูอย่างเดียว บันทึก/แก้ไขไม่ได้) — <strong>ข้อควรทราบ:</strong> เป็นการกรองในหน้าจอแอปเท่านั้น ถ้าเปิดโหมดข้อมูลกลาง เจ้าหน้าที่ที่มีบัญชี Google ถูกแชร์สิทธิ์อ่านไว้จะยังเปิด Google Sheet ดูข้อมูลทุกสาขาได้โดยตรงอยู่ดี ไม่ใช่การปิดกั้นข้อมูลแบบเข้มงวด</div>
+    <div class="grid cols-2">
+      <div class="field">
+        <label>สาขา</label>
+        <select id="deptPin_department"></select>
+      </div>
+      <div class="field"></div>
+      <div class="field"><label>ตั้งรหัสผ่าน</label><input type="password" id="deptPin_pin1" autocomplete="new-password"></div>
+      <div class="field"><label>ยืนยันรหัสผ่าน</label><input type="password" id="deptPin_pin2" autocomplete="new-password"></div>
+    </div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnSetDeptPin">บันทึกรหัสผ่านสาขานี้</button>
+    </div>
+    <div class="help" style="margin:10px 0 4px;">สาขาที่ตั้งรหัสผ่านไว้แล้ว:</div>
+    <div id="deptPinList"></div>
+  </div>
+
+  <div class="card">
     <h3>เชื่อมต่อ Google Drive (สำรอง/กู้คืนข้อมูล และอัปโหลดไฟล์แนบ)</h3>
     <div class="grid">
       <div class="field full">
@@ -761,7 +780,9 @@ var masterData = { programs:[], departments:[], plans:['แผน ก','แผ�
 var googleClientId = '';
 var appPinHash = null;
 var viewerPinHash = null;
-var currentRole = null; // 'admin' | 'viewer'
+var deptPins = []; // [{department, pinHash}] — รหัสผ่านดูอย่างเดียว เฉพาะสาขา
+var currentDeptRestriction = null; // ชื่อสาขาที่ถูกจำกัดให้เห็นเฉพาะสาขานี้ (เมื่อ login ด้วย deptPin) หรือ null ถ้าไม่ถูกจำกัด
+var currentRole = null; // 'admin' | 'viewer' | 'dept-viewer'
 var autoBackupEnabled = false;
 var lastBackupAt = 0;
 var backupKeepCount = 5;
@@ -857,6 +878,7 @@ function loadMeta(){
       if(row.key==='googleClientId') googleClientId = row.value;
       if(row.key==='appPinHash') appPinHash = row.value;
       if(row.key==='viewerPinHash') viewerPinHash = row.value;
+      if(row.key==='deptPins') deptPins = row.value||[];
       if(row.key==='autoBackupEnabled') autoBackupEnabled = row.value;
       if(row.key==='lastBackupAt') lastBackupAt = row.value;
       if(row.key==='backupKeepCount') backupKeepCount = row.value;
@@ -1047,7 +1069,7 @@ function renderLockForm(){
   var setupForm = document.getElementById('lockSetupForm');
   /* ถ้ามี appPinHash (แอดมินเคยตั้งไว้บนเครื่องนี้) หรือ viewerPinHash (ไม่ว่าเครื่องนี้ตั้งเองหรือใช้ค่าเริ่มต้นที่ฝังไว้)
      ให้แสดงหน้า "เข้าสู่ระบบ" เสมอ — จะแสดงหน้า "ตั้งค่าเริ่มต้น" (สร้างรหัส admin ใหม่) ก็ต่อเมื่อไม่มีรหัสผ่านใดๆ เลยจริงๆ */
-  if(appPinHash || viewerPinHash){
+  if(appPinHash || viewerPinHash || (deptPins&&deptPins.length)){
     loginForm.style.display=''; setupForm.style.display='none';
     document.getElementById('lockTitle').textContent='เข้าสู่ระบบ';
   } else {
@@ -1061,8 +1083,10 @@ function bindLockEvents(){
     var pin = document.getElementById('lockPinInput').value;
     if(!pin){ document.getElementById('lockError').textContent='กรุณากรอกรหัสผ่าน'; return; }
     hashPin(pin).then(function(h){
-      if(h===appPinHash){ currentRole='admin'; hideLockOverlay(); applyRoleUI(); }
-      else if(viewerPinHash && h===viewerPinHash){ currentRole='viewer'; hideLockOverlay(); applyRoleUI(); }
+      var deptMatch = (deptPins||[]).filter(function(d){ return d.pinHash===h; })[0];
+      if(h===appPinHash){ currentRole='admin'; currentDeptRestriction=null; hideLockOverlay(); applyRoleUI(); }
+      else if(viewerPinHash && h===viewerPinHash){ currentRole='viewer'; currentDeptRestriction=null; hideLockOverlay(); applyRoleUI(); }
+      else if(deptMatch){ currentRole='dept-viewer'; currentDeptRestriction=deptMatch.department; hideLockOverlay(); applyRoleUI(); }
       else { document.getElementById('lockError').textContent='รหัสผ่านไม่ถูกต้อง'; }
     });
   });
@@ -1092,15 +1116,20 @@ function bindLockEvents(){
   document.getElementById('btnChangePin').addEventListener('click', changePin);
   document.getElementById('btnSetViewerPin').addEventListener('click', setViewerPin);
   document.getElementById('btnRemoveViewerPin').addEventListener('click', removeViewerPin);
+  var btnSetDeptPin = document.getElementById('btnSetDeptPin');
+  if(btnSetDeptPin) btnSetDeptPin.addEventListener('click', setDeptPin);
 }
 function applyRoleUI(){
-  var isViewer = currentRole==='viewer';
+  var isViewer = currentRole==='viewer' || currentRole==='dept-viewer';
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
     var v = btn.getAttribute('data-view');
     btn.style.display = (isViewer && v!=='dashboard') ? 'none' : '';
   });
   var badge = document.getElementById('roleBadge');
-  if(badge) badge.textContent = isViewer ? 'เจ้าหน้าที่ (ดูอย่างเดียว)' : 'เจ้าหน้าที่ (Admin)';
+  if(badge){
+    badge.textContent = currentRole==='dept-viewer' ? 'เจ้าหน้าที่สาขา (ดูอย่างเดียว) — '+currentDeptRestriction
+      : isViewer ? 'เจ้าหน้าที่ (ดูอย่างเดียว)' : 'เจ้าหน้าที่ (Admin)';
+  }
   if(isViewer) switchView('dashboard');
 }
 function setViewerPin(){
@@ -1186,7 +1215,7 @@ function bindNav(){
   document.getElementById('lookupSearch').addEventListener('input', renderLookupList);
 }
 function switchView(name){
-  if(currentRole==='viewer' && name!=='dashboard') name='dashboard';
+  if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard') name='dashboard';
   ['dashboard','form','list','settings'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
@@ -1212,6 +1241,7 @@ function getStudentSummaries(){
     var counts = {};
     rows.forEach(function(r){
       if(!r.studentId) return;
+      if(currentDeptRestriction && r.department!==currentDeptRestriction) return; /* จำกัดให้เห็นเฉพาะสาขาของตัวเอง (เจ้าหน้าที่สาขา) */
       var sections = (recHasProposalData(r)?1:0) + (recHasDefenseData(r)?1:0);
       counts[r.studentId] = (counts[r.studentId]||0) + (sections||1);
       if(!latestByStudent[r.studentId] || (r.updatedAt||0) > (latestByStudent[r.studentId].updatedAt||0)){
@@ -1232,7 +1262,8 @@ function renderLookupList(){
         return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
       });
     }
-    var advisorMatches = q ? (masterData.advisors||[]).filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : [];
+    /* ซ่อนผลค้นหาอาจารย์สำหรับเจ้าหน้าที่สาขา เพราะรายงานที่ปรึกษาจะรวมนักศึกษาข้ามสาขาได้ (อาจารย์คนหนึ่งดูแลได้หลายสาขา) ซึ่งขัดกับเจตนาการจำกัดสิทธิ์ */
+    var advisorMatches = (q && !currentDeptRestriction) ? (masterData.advisors||[]).filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : [];
     var container = document.getElementById('lookupResultList');
     container.innerHTML='';
     document.getElementById('lookupEmpty').style.display = (list.length===0 && advisorMatches.length===0) ? '' : 'none';
@@ -1389,7 +1420,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
         el('div',{class:'ph-name', text: latest.studentName||'(ไม่ระบุชื่อ)'}),
         el('div',{class:'ph-id', text:'รหัสนักศึกษา '+latest.studentId})
       ]),
-      currentRole==='viewer' ? null : el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){ startNewExamForStudent(latest.studentId); }})
+      (currentRole==='viewer' || currentRole==='dept-viewer') ? null : el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){ startNewExamForStudent(latest.studentId); }})
     ])
   ]);
   wrap.appendChild(header);
@@ -1580,7 +1611,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     if(!r.isLatest){
       body.push(el('div',{class:'help', style:'margin-top:10px;', text:'📜 ประวัติการสอบครั้งก่อนหน้า (ไม่ใช่ครั้งล่าสุด)'}));
     }
-    if(currentRole!=='viewer' && r.isLatest){
+    if(currentRole!=='viewer' && currentRole!=='dept-viewer' && r.isLatest){
       body.push(el('div',{style:'margin-top:14px;text-align:right;'},[
         el('button',{type:'button', class:'link-btn', text:'✏️ แก้ไขรายการนี้', onclick:function(){
           recordsGet(r.recordId).then(loadRecordIntoForm);
@@ -2791,6 +2822,59 @@ function renderMasterLists(){
   renderAdvisorRoleCheckboxes();
   renderAdvisorList();
   renderBackupStatus();
+  renderDeptPinSection();
+}
+function renderDeptPinSection(){
+  var sel = document.getElementById('deptPin_department');
+  if(!sel) return;
+  var prevVal = sel.value;
+  sel.innerHTML='';
+  (masterData.departments||[]).forEach(function(d){
+    sel.appendChild(el('option',{value:d, text:d}));
+  });
+  if(prevVal && masterData.departments.indexOf(prevVal)>-1) sel.value = prevVal;
+  var listEl = document.getElementById('deptPinList');
+  if(!listEl) return;
+  listEl.innerHTML='';
+  if(!deptPins || deptPins.length===0){
+    listEl.appendChild(el('div',{class:'help', text:'ยังไม่มีสาขาไหนตั้งรหัสผ่านไว้'}));
+    return;
+  }
+  deptPins.forEach(function(d){
+    var chip = el('span',{class:'chip'},[
+      el('span',{text:'✅ '+d.department}),
+      el('button',{type:'button', text:'✕', title:'ปิดใช้งานรหัสผ่านของสาขานี้', onclick:function(){ removeDeptPin(d.department); }})
+    ]);
+    listEl.appendChild(chip);
+  });
+}
+function setDeptPin(){
+  var dept = document.getElementById('deptPin_department').value;
+  var p1 = document.getElementById('deptPin_pin1').value;
+  var p2 = document.getElementById('deptPin_pin2').value;
+  if(!dept){ toast('กรุณาเพิ่มรายชื่อสาขาในระบบก่อน', true); return; }
+  if(p1.length<4){ toast('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
+  if(p1!==p2){ toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', true); return; }
+  hashPin(p1).then(function(h){
+    if(h===appPinHash || h===viewerPinHash){ toast('ห้ามตั้งซ้ำกับรหัสผ่าน Admin หรือรหัสดูอย่างเดียวรวม', true); throw new Error('stop'); }
+    if((deptPins||[]).some(function(d){ return d.pinHash===h && d.department!==dept; })){ toast('รหัสผ่านนี้ถูกใช้กับสาขาอื่นอยู่แล้ว กรุณาตั้งรหัสอื่น', true); throw new Error('stop'); }
+    deptPins = (deptPins||[]).filter(function(d){ return d.department!==dept; });
+    deptPins.push({department:dept, pinHash:h});
+    return dbPut('meta',{key:'deptPins', value:deptPins});
+  }).then(function(){
+    document.getElementById('deptPin_pin1').value='';
+    document.getElementById('deptPin_pin2').value='';
+    renderDeptPinSection();
+    toast('ตั้งรหัสผ่านสาขา "'+dept+'" เรียบร้อยแล้ว');
+  }).catch(function(e){ if(e.message!=='stop') console.error(e); });
+}
+function removeDeptPin(dept){
+  if(!confirm('ปิดใช้งานรหัสผ่านของสาขา "'+dept+'"? เจ้าหน้าที่ที่ใช้รหัสนี้จะเข้าระบบไม่ได้อีก')) return;
+  deptPins = (deptPins||[]).filter(function(d){ return d.department!==dept; });
+  dbPut('meta',{key:'deptPins', value:deptPins}).then(function(){
+    renderDeptPinSection();
+    toast('ปิดใช้งานแล้ว');
+  });
 }
 function renderAdvisorRoleCheckboxes(){
   var container = document.getElementById('m_advisor_roles');
@@ -3121,7 +3205,12 @@ function renderChipList(containerId, key){
       }}),
       el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){
         masterData[key] = masterData[key].filter(function(v){ return v!==val; });
-        saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); });
+        var deptPinCleanupP = Promise.resolve();
+        if(key==='departments' && (deptPins||[]).some(function(d){ return d.department===val; })){
+          deptPins = deptPins.filter(function(d){ return d.department!==val; });
+          deptPinCleanupP = dbPut('meta',{key:'deptPins', value:deptPins});
+        }
+        saveMasterData().then(function(){ return deptPinCleanupP; }).then(function(){ renderMasterLists(); renderAllSelects(); });
       }})
     ]);
     container.appendChild(chip);
@@ -3131,7 +3220,17 @@ function renameMasterItem(key, oldVal, newVal){
   var idx = masterData[key].indexOf(oldVal);
   if(idx===-1) return;
   masterData[key][idx] = newVal;
+  var deptPinRenameP = Promise.resolve();
+  if(key==='departments'){
+    var deptPinEntry = (deptPins||[]).filter(function(d){ return d.department===oldVal; })[0];
+    if(deptPinEntry){
+      deptPinEntry.department = newVal;
+      deptPinRenameP = dbPut('meta',{key:'deptPins', value:deptPins});
+    }
+  }
   saveMasterData().then(function(){
+    return deptPinRenameP;
+  }).then(function(){
     return cascadeRenameInRecords(key, oldVal, newVal);
   }).then(function(updatedCount){
     renderMasterLists();
@@ -3630,7 +3729,7 @@ function ensureRecordsHeaderAligned(){
   /* เจ้าหน้าที่ "ดูอย่างเดียว" มีสิทธิ์ Viewer (อ่านอย่างเดียว) บนชีทจริงเท่านั้น เขียนแก้ header ไม่ได้
      ข้ามการซ่อมแซม header อัตโนมัติไปเลยสำหรับ role นี้ (อ่านข้อมูลด้วย header เดิมได้ตามปกติ
      เพียงแต่คอลัมน์ที่เพิ่งเพิ่มใหม่ล่าสุดอาจยังไม่ถูก map จนกว่า admin จะเข้าเปิดแอปสักครั้งเพื่อซ่อม header ให้) */
-  if(currentRole==='viewer') return Promise.resolve();
+  if(currentRole==='viewer' || currentRole==='dept-viewer') return Promise.resolve();
   return fetchRecordsSheet().then(function(cache){
     return alignSheetHeader('Records', RECORD_COLUMNS, cache.headers);
   }).then(function(changed){
@@ -3640,7 +3739,7 @@ function ensureRecordsHeaderAligned(){
 function ensureFilesHeaderAligned(){
   if(filesHeaderAligned) return Promise.resolve();
   filesHeaderAligned = true;
-  if(currentRole==='viewer') return Promise.resolve();
+  if(currentRole==='viewer' || currentRole==='dept-viewer') return Promise.resolve();
   return fetchFilesSheet().then(function(cache){
     return alignSheetHeader('Files', FILE_COLUMNS, cache.headers);
   }).then(function(changed){

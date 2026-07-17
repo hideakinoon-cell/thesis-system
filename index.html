@@ -3898,14 +3898,23 @@ function fileToRow(f){
     return v===undefined || v===null ? '' : v;
   });
 }
+/* บันทึกข้อมูล 1 ครั้งในโหมดกลาง เดิมต้องอ่านทั้งชีท Records ซ้ำหลายรอบติดกัน (เช็คซ้ำ นศ. → เช็คแถวเดิม → หาแถวตอนเขียน
+   → รีเฟรชลิงก์แนะนำหลังบันทึก) ทั้งที่ข้อมูลยังไม่เปลี่ยนระหว่างขั้นตอนเหล่านี้เลย ทำให้บันทึกช้ามาก
+   จึงเพิ่มแคชอายุสั้น (RECORDS_CACHE_TTL_MS) ให้ใช้ผลลัพธ์เดิมซ้ำได้ในช่วงเวลาสั้นๆ ระหว่างขั้นตอนบันทึกเดียวกัน
+   และ "ล้างแคชทันที" ทุกครั้งที่เขียนสำเร็จ (recordsPut/recordsDelete/filesPut/filesDelete) เพื่อไม่ให้อ่านข้อมูลเก่าซ้ำ
+   หลังบันทึกเสร็จแล้ว — อายุแคชสั้นมากจนไม่กระทบการตรวจจับข้อมูลชนกันระหว่างผู้ใช้หลายคนที่มีอยู่เดิม (ซึ่งเทียบเวลาเป็นนาทีอยู่แล้ว) */
+var RECORDS_CACHE_TTL_MS = 4000;
 var recordsSheetCache = null;
+var recordsSheetCacheAt = 0;
 var recordsSheetFetchPromise = null; /* กันการยิง request ซ้ำซ้อนพร้อมกัน (เช่น renderList/selectLookupStudent ที่เรียกหลาย record พร้อมกันด้วย Promise.all) — ถ้ามี fetch ที่กำลังทำงานอยู่แล้ว ให้ใช้ผลลัพธ์เดียวกันแทนการยิงใหม่ทุกครั้ง */
+function invalidateRecordsSheetCache(){ recordsSheetCache = null; recordsSheetCacheAt = 0; }
 function fetchRecordsSheet(){
   /* ช่วงคอลัมน์ต้องกว้างพอเสมอ — RECORD_COLUMNS เพิ่มคอลัมน์ใหม่เรื่อยๆ ตามฟีเจอร์ (ปัจจุบันยาวเกินคอลัมน์ AZ ไปแล้ว)
      ถ้าช่วงที่อ่านแคบกว่าจำนวนคอลัมน์จริง ค่าที่อยู่คอลัมน์ท้ายๆ (เช่น proposalBw25Status/Date, graduated,
      advisorHistoryJson และที่สำคัญที่สุดคือ 'deleted') จะถูกตัดทิ้งไปเงียบๆ ตอนอ่าน ทั้งที่บันทึกไว้ถูกต้องแล้ว
      ใช้ ZZ (คอลัมน์ที่ 702) กันไว้ล่วงหน้าให้เผื่อเหลือเผื่อขาดมาก ๆ */
   if(recordsSheetFetchPromise) return recordsSheetFetchPromise;
+  if(recordsSheetCache && (Date.now()-recordsSheetCacheAt) < RECORDS_CACHE_TTL_MS) return Promise.resolve(recordsSheetCache);
   recordsSheetFetchPromise = sheetsGetValues('Records!A1:ZZ100000').then(function(values){
     var headers = (values[0] && values[0].length) ? values[0] : RECORD_COLUMNS;
     var entries = [];
@@ -3915,6 +3924,7 @@ function fetchRecordsSheet(){
       entries.push({ rec: rowToRecord(headers, row), rowNumber: i+1 });
     }
     recordsSheetCache = {headers:headers, entries:entries};
+    recordsSheetCacheAt = Date.now();
     return recordsSheetCache;
   }).then(function(result){
     recordsSheetFetchPromise = null;
@@ -3926,9 +3936,12 @@ function fetchRecordsSheet(){
   return recordsSheetFetchPromise;
 }
 var filesSheetCache = null;
+var filesSheetCacheAt = 0;
 var filesSheetFetchPromise = null; /* เช่นเดียวกับ recordsSheetFetchPromise — กันการยิง request ซ้ำซ้อนพร้อมกัน */
+function invalidateFilesSheetCache(){ filesSheetCache = null; filesSheetCacheAt = 0; }
 function fetchFilesSheet(){
   if(filesSheetFetchPromise) return filesSheetFetchPromise;
+  if(filesSheetCache && (Date.now()-filesSheetCacheAt) < RECORDS_CACHE_TTL_MS) return Promise.resolve(filesSheetCache);
   filesSheetFetchPromise = sheetsGetValues('Files!A1:ZZ100000').then(function(values){
     var headers = (values[0] && values[0].length) ? values[0] : FILE_COLUMNS;
     var entries = [];
@@ -3938,6 +3951,7 @@ function fetchFilesSheet(){
       entries.push({ rec: rowToFile(headers, row), rowNumber: i+1 });
     }
     filesSheetCache = {headers:headers, entries:entries};
+    filesSheetCacheAt = Date.now();
     return filesSheetCache;
   }).then(function(result){
     filesSheetFetchPromise = null;
@@ -3960,7 +3974,10 @@ function alignSheetHeader(tabName, columns, existingHeaders){
   merged.push('deleted');
   var same = merged.length===existingHeaders.length && merged.every(function(h,i){ return h===existingHeaders[i]; });
   if(same) return Promise.resolve(false);
-  return sheetsUpdateRow(tabName, 1, merged).then(function(){ return true; });
+  return sheetsUpdateRow(tabName, 1, merged).then(function(){
+    if(tabName==='Records') invalidateRecordsSheetCache(); else if(tabName==='Files') invalidateFilesSheetCache();
+    return true;
+  });
 }
 function ensureRecordsHeaderAligned(){
   if(recordsHeaderAligned) return Promise.resolve();
@@ -4013,7 +4030,7 @@ function recordsPut(rec){
     } else {
       return sheetsAppendRow('Records', row).then(function(){ return rec; });
     }
-  });
+  }).then(function(result){ invalidateRecordsSheetCache(); return result; });
 }
 function recordsDelete(id){
   if(!cloudModeEnabled) return dbDelete('records', id);
@@ -4022,7 +4039,7 @@ function recordsDelete(id){
     if(!existing) return;
     var rec = Object.assign({}, existing.rec, {deleted:true, updatedAt:Date.now()});
     return sheetsUpdateRow('Records', existing.rowNumber, recordToRow(rec));
-  });
+  }).then(function(result){ invalidateRecordsSheetCache(); return result; });
 }
 /* ---- files adapter ---- */
 function filesGetByRecordId(recordId){
@@ -4045,7 +4062,8 @@ function filesGet(id){
 }
 function filesPut(f){
   if(!cloudModeEnabled) return dbPut('files', f);
-  return ensureAuthed().then(ensureFilesHeaderAligned).then(function(){ return sheetsAppendRow('Files', fileToRow(f)); }).then(function(){ return f; });
+  return ensureAuthed().then(ensureFilesHeaderAligned).then(function(){ return sheetsAppendRow('Files', fileToRow(f)); })
+    .then(function(){ invalidateFilesSheetCache(); return f; });
 }
 function filesDelete(id){
   if(!cloudModeEnabled) return dbDelete('files', id);
@@ -4054,7 +4072,7 @@ function filesDelete(id){
     if(!existing) return;
     var f = Object.assign({}, existing.rec, {deleted:true});
     return sheetsUpdateRow('Files', existing.rowNumber, fileToRow(f));
-  });
+  }).then(function(result){ invalidateFilesSheetCache(); return result; });
 }
 /* ---- sheet structure setup ---- */
 function initSheetStructure(){

@@ -3785,12 +3785,14 @@ function fileToRow(f){
   });
 }
 var recordsSheetCache = null;
+var recordsSheetFetchPromise = null; /* กันการยิง request ซ้ำซ้อนพร้อมกัน (เช่น renderList/selectLookupStudent ที่เรียกหลาย record พร้อมกันด้วย Promise.all) — ถ้ามี fetch ที่กำลังทำงานอยู่แล้ว ให้ใช้ผลลัพธ์เดียวกันแทนการยิงใหม่ทุกครั้ง */
 function fetchRecordsSheet(){
   /* ช่วงคอลัมน์ต้องกว้างพอเสมอ — RECORD_COLUMNS เพิ่มคอลัมน์ใหม่เรื่อยๆ ตามฟีเจอร์ (ปัจจุบันยาวเกินคอลัมน์ AZ ไปแล้ว)
      ถ้าช่วงที่อ่านแคบกว่าจำนวนคอลัมน์จริง ค่าที่อยู่คอลัมน์ท้ายๆ (เช่น proposalBw25Status/Date, graduated,
      advisorHistoryJson และที่สำคัญที่สุดคือ 'deleted') จะถูกตัดทิ้งไปเงียบๆ ตอนอ่าน ทั้งที่บันทึกไว้ถูกต้องแล้ว
      ใช้ ZZ (คอลัมน์ที่ 702) กันไว้ล่วงหน้าให้เผื่อเหลือเผื่อขาดมาก ๆ */
-  return sheetsGetValues('Records!A1:ZZ100000').then(function(values){
+  if(recordsSheetFetchPromise) return recordsSheetFetchPromise;
+  recordsSheetFetchPromise = sheetsGetValues('Records!A1:ZZ100000').then(function(values){
     var headers = (values[0] && values[0].length) ? values[0] : RECORD_COLUMNS;
     var entries = [];
     for(var i=1;i<values.length;i++){
@@ -3800,11 +3802,20 @@ function fetchRecordsSheet(){
     }
     recordsSheetCache = {headers:headers, entries:entries};
     return recordsSheetCache;
+  }).then(function(result){
+    recordsSheetFetchPromise = null;
+    return result;
+  }, function(err){
+    recordsSheetFetchPromise = null;
+    throw err;
   });
+  return recordsSheetFetchPromise;
 }
 var filesSheetCache = null;
+var filesSheetFetchPromise = null; /* เช่นเดียวกับ recordsSheetFetchPromise — กันการยิง request ซ้ำซ้อนพร้อมกัน */
 function fetchFilesSheet(){
-  return sheetsGetValues('Files!A1:ZZ100000').then(function(values){
+  if(filesSheetFetchPromise) return filesSheetFetchPromise;
+  filesSheetFetchPromise = sheetsGetValues('Files!A1:ZZ100000').then(function(values){
     var headers = (values[0] && values[0].length) ? values[0] : FILE_COLUMNS;
     var entries = [];
     for(var i=1;i<values.length;i++){
@@ -3814,7 +3825,14 @@ function fetchFilesSheet(){
     }
     filesSheetCache = {headers:headers, entries:entries};
     return filesSheetCache;
+  }).then(function(result){
+    filesSheetFetchPromise = null;
+    return result;
+  }, function(err){
+    filesSheetFetchPromise = null;
+    throw err;
   });
+  return filesSheetFetchPromise;
 }
 /* ---- header self-heal: ป้องกันปัญหา header/ข้อมูลเหลื่อมคอลัมน์เวลามีการเพิ่มฟิลด์ใหม่ในอนาคต
    (ต้องเช็คก่อนเขียนทุกครั้ง มิฉะนั้น recordToRow/fileToRow ที่เขียนตำแหน่งตาม RECORD_COLUMNS/FILE_COLUMNS

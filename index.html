@@ -115,6 +115,8 @@
   .combo-option{padding:9px 12px;font-size:14px;cursor:pointer;}
   .combo-option:hover,.combo-option.active{background:#f2f4f7;}
   .combo-empty{padding:9px 12px;font-size:13.5px;color:var(--muted);}
+  .link-suggest-link{font-size:13.5px;color:#1f2937;word-break:break-all;}
+  .link-suggest-meta{font-size:12px;color:var(--muted);margin-top:2px;}
   .multi-row input[type=text]{flex:1;min-width:140px;padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:14.5px;background:#fff;color:var(--text);}
   .multi-row input.pub-year{flex:0 0 90px;min-width:90px;}
   .icon-btn{border:1px solid var(--border);background:#fff;border-radius:6px;width:34px;height:34px;cursor:pointer;font-size:15px;color:var(--muted);flex-shrink:0;}
@@ -283,7 +285,7 @@
             <input type="text" id="f_englishScore" placeholder="คะแนน" disabled>
           </label>
         </div>
-        <input type="text" id="f_englishDocLink" placeholder="ลิงก์เอกสารแนบผลภาษาอังกฤษ (เช่น ลิงก์ Google Drive) — ถ้ามี" style="margin-top:8px;">
+        <div class="combo" style="margin-top:8px;"><input type="text" id="f_englishDocLink" placeholder="ลิงก์เอกสารแนบผลภาษาอังกฤษ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
       </div>
       <div class="field full">
         <label>ผลคอมพิวเตอร์ <span class="req">*</span></label>
@@ -292,7 +294,7 @@
           <label><input type="radio" name="computerResult" value="เรียนผ่าน"> เรียนผ่าน</label>
           <label><input type="radio" name="computerResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
         </div>
-        <input type="text" id="f_computerDocLink" placeholder="ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี" style="margin-top:8px;">
+        <div class="combo" style="margin-top:8px;"><input type="text" id="f_computerDocLink" placeholder="ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
       </div>
       <div class="field full">
         <label>การสอบวัดความรู้ <span class="req">*</span></label>
@@ -301,7 +303,7 @@
           <label><input type="radio" name="qualifyingExam" value="ผ่านสอบวัดคุณสมบัติ (ป.เอก)"> ผ่านสอบวัดคุณสมบัติ (ป.เอก)</label>
           <label><input type="radio" name="qualifyingExam" value="ยังไม่ผ่าน/อยู่ระหว่างรอผล"> ยังไม่ผ่าน / อยู่ระหว่างรอผล</label>
         </div>
-        <input type="text" id="f_qualifyingDocLink" placeholder="ลิงก์เอกสารแนบการสอบวัดความรู้ (เช่น ลิงก์ Google Drive) — ถ้ามี" style="margin-top:8px;">
+        <div class="combo" style="margin-top:8px;"><input type="text" id="f_qualifyingDocLink" placeholder="ลิงก์เอกสารแนบการสอบวัดความรู้ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
       </div>
     </div>
   </div>
@@ -1053,6 +1055,72 @@ function buildSearchSelect(hostEl, list, placeholder){
   return hostEl;
 }
 
+/* ================= ลิงก์ประกาศผลสอบ (อังกฤษ/คอมพิวเตอร์/ประมวลความรู้): แนะนำลิงก์ที่เคยแนบไว้แล้ว
+   เพราะประกาศแต่ละฉบับมักมี นศ. หลายคนอยู่ในฉบับเดียวกัน — พิมพ์/คลิกหาลิงก์ที่เคยใช้ซ้ำได้ ไม่ต้องไปหาไฟล์ใหม่ทุกครั้ง
+   ยังพิมพ์/วางลิงก์ใหม่ที่ไม่เคยมีได้ตามปกติ ไม่มีการบังคับให้เลือกจากรายการ */
+var docLinkUsage = { englishDocLink:{}, computerDocLink:{}, qualifyingDocLink:{} };
+var DOC_LINK_FIELDS = ['englishDocLink','computerDocLink','qualifyingDocLink'];
+function refreshDocLinkSuggestions(){
+  return recordsGetAll().then(function(rows){
+    var usage = { englishDocLink:{}, computerDocLink:{}, qualifyingDocLink:{} };
+    (rows||[]).forEach(function(r){
+      if(r.deleted) return;
+      DOC_LINK_FIELDS.forEach(function(f){
+        var v = (r[f]||'').trim();
+        if(!v) return;
+        if(!usage[f][v]) usage[f][v] = {link:v, count:0, names:[]};
+        usage[f][v].count++;
+        if(r.studentName && usage[f][v].names.indexOf(r.studentName)===-1) usage[f][v].names.push(r.studentName);
+      });
+    });
+    docLinkUsage = usage;
+    return usage;
+  }).catch(function(){ return docLinkUsage; });
+}
+function attachDocLinkAutocomplete(inputId, field){
+  var input = document.getElementById(inputId);
+  if(!input || input._linkAutoInit) return;
+  input._linkAutoInit = true;
+  input.classList.add('combo-input');
+  input.setAttribute('autocomplete','off');
+  var wrap = input.parentNode; /* ต้องเป็น <div class="combo"> ที่ครอบ input ไว้อยู่แล้วในหน้า HTML */
+  var dropdown = el('div',{class:'combo-dropdown'});
+  wrap.appendChild(dropdown);
+
+  function entries(){
+    var map = docLinkUsage[field] || {};
+    return Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){ return b.count-a.count; });
+  }
+  function closeDropdown(){ dropdown.innerHTML=''; dropdown.style.display='none'; }
+  function openDropdown(){
+    var q = (input.value||'').trim().toLowerCase();
+    var list = entries();
+    var matches = q ? list.filter(function(en){ return en.link.toLowerCase().indexOf(q)>-1; }) : list;
+    dropdown.innerHTML = '';
+    if(!matches.length){ closeDropdown(); return; }
+    matches.slice(0,20).forEach(function(en){
+      var namesTxt = en.names.slice(0,4).join(', ') + (en.names.length>4 ? ' และอื่นๆ' : '');
+      dropdown.appendChild(el('div',{
+        class:'combo-option',
+        onmousedown:function(ev){ ev.preventDefault(); },
+        onclick:function(){ input.value = en.link; closeDropdown(); input.dispatchEvent(new Event('change',{bubbles:true})); }
+      },[
+        el('div',{class:'link-suggest-link', text:en.link}),
+        el('div',{class:'link-suggest-meta', text:'🔁 ใช้แล้ว '+en.count+' คน: '+namesTxt})
+      ]));
+    });
+    dropdown.style.display='block';
+  }
+  input.addEventListener('focus', openDropdown);
+  input.addEventListener('input', openDropdown);
+  input.addEventListener('blur', function(){ setTimeout(closeDropdown, 180); });
+}
+function initDocLinkAutocompletes(){
+  attachDocLinkAutocomplete('f_englishDocLink', 'englishDocLink');
+  attachDocLinkAutocomplete('f_computerDocLink', 'computerDocLink');
+  attachDocLinkAutocomplete('f_qualifyingDocLink', 'qualifyingDocLink');
+}
+
 /* ================= LOCK SCREEN ================= */
 function simpleHashFallback(str){
   var h=0;
@@ -1235,6 +1303,7 @@ function switchView(name){
     btn.classList.toggle('active', btn.getAttribute('data-view')===name);
   });
   if(cloudModeEnabled && accessToken && (name==='form' || name==='settings')) refreshCloudMasterData();
+  if(name==='form') refreshDocLinkSuggestions();
   if(name==='list') renderList();
   if(name==='settings'){
     renderMasterLists();
@@ -1715,6 +1784,7 @@ function ensureSearchSelect(id, list, placeholder){
   return hostEl;
 }
 function renderAllSelects(){
+  initDocLinkAutocompletes();
   ensureSearchSelect('f_program', masterData.programs, 'พิมพ์เพื่อค้นหาหลักสูตร...');
   ensureSearchSelect('f_department', masterData.departments, 'พิมพ์เพื่อค้นหาสาขาวิชา...');
   fillSelect(document.getElementById('f_plan'), masterData.plans, 'เลือกแผนการเรียน');
@@ -2442,6 +2512,7 @@ function saveRecord(){
     }));
   }).then(function(){
     toast('บันทึกข้อมูลเรียบร้อย');
+    refreshDocLinkSuggestions(); /* ให้ลิงก์ที่เพิ่งบันทึกโผล่เป็นตัวเลือกแนะนำทันทีสำหรับ นศ. คนถัดไปในประกาศเดียวกัน */
     newDraft();
     switchView('list');
   }).catch(function(e){

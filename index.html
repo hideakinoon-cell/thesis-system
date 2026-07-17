@@ -1060,6 +1060,7 @@ function buildSearchSelect(hostEl, list, placeholder){
    ยังพิมพ์/วางลิงก์ใหม่ที่ไม่เคยมีได้ตามปกติ ไม่มีการบังคับให้เลือกจากรายการ */
 var docLinkUsage = { englishDocLink:{}, computerDocLink:{}, qualifyingDocLink:{} };
 var DOC_LINK_FIELDS = ['englishDocLink','computerDocLink','qualifyingDocLink'];
+var DOC_LINK_FIELD_LABELS = { englishDocLink:'ผลภาษาอังกฤษ', computerDocLink:'ผลคอมพิวเตอร์', qualifyingDocLink:'การสอบวัดความรู้' };
 function refreshDocLinkSuggestions(){
   return recordsGetAll().then(function(rows){
     var usage = { englishDocLink:{}, computerDocLink:{}, qualifyingDocLink:{} };
@@ -1068,14 +1069,45 @@ function refreshDocLinkSuggestions(){
       DOC_LINK_FIELDS.forEach(function(f){
         var v = (r[f]||'').trim();
         if(!v) return;
-        if(!usage[f][v]) usage[f][v] = {link:v, count:0, names:[]};
+        if(!usage[f][v]) usage[f][v] = {link:v, count:0, names:[], students:[]};
         usage[f][v].count++;
         if(r.studentName && usage[f][v].names.indexOf(r.studentName)===-1) usage[f][v].names.push(r.studentName);
+        usage[f][v].students.push({studentId:r.studentId, studentName:r.studentName, program:r.program, department:r.department});
       });
     });
     docLinkUsage = usage;
     return usage;
   }).catch(function(){ return docLinkUsage; });
+}
+/* กรณีประกาศฉบับเดียวกันมี นศ. หลายสาขา/หลายคนมาก — เปิดดูรายชื่อทั้งหมดที่ติดลิงก์นี้อยู่แล้ว
+   เพื่อเทียบกับประกาศตัวจริงว่าตรงกันครบหรือไม่ (เรียงตามสาขาแล้วชื่อ ให้ตรวจง่ายขึ้น) */
+function openDocLinkStudentsModal(en, field){
+  var root = document.getElementById('modalRoot');
+  var backdrop = el('div',{class:'modal-backdrop'});
+  var modal = el('div',{class:'modal'});
+  modal.appendChild(el('h3',{text:'รายชื่อ นศ. ที่ใช้ลิงก์นี้ — '+(DOC_LINK_FIELD_LABELS[field]||'')}));
+  modal.appendChild(el('div',{class:'help', style:'margin-bottom:10px;word-break:break-all;', text:en.link}));
+  var sorted = (en.students||[]).slice().sort(function(a,b){
+    return (a.department||'').localeCompare(b.department||'','th') || (a.studentName||'').localeCompare(b.studentName||'','th');
+  });
+  var box = el('div');
+  box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:'ทั้งหมด '+sorted.length+' คน'}));
+  if(!sorted.length){
+    box.appendChild(el('div',{class:'help', text:'— ไม่มี —'}));
+  } else {
+    sorted.forEach(function(s){
+      box.appendChild(el('div',{style:'padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:14px;'},[
+        document.createTextNode((s.studentId||'-')+' — '+(s.studentName||'-')+' ('+(s.program||'-')+' / '+(s.department||'-')+')')
+      ]));
+    });
+  }
+  modal.appendChild(box);
+  modal.appendChild(el('div',{class:'form-footer'},[
+    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }})
+  ]));
+  backdrop.appendChild(modal);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+  root.appendChild(backdrop);
 }
 function attachDocLinkAutocomplete(inputId, field){
   var input = document.getElementById(inputId);
@@ -1100,13 +1132,24 @@ function attachDocLinkAutocomplete(inputId, field){
     if(!matches.length){ closeDropdown(); return; }
     matches.slice(0,20).forEach(function(en){
       var namesTxt = en.names.slice(0,4).join(', ') + (en.names.length>4 ? ' และอื่นๆ' : '');
+      var metaEl = el('div',{class:'link-suggest-meta'});
+      metaEl.appendChild(document.createTextNode('🔁 ใช้แล้ว '+en.count+' คน: '+namesTxt));
+      if(en.names.length>4){
+        metaEl.appendChild(document.createTextNode(' '));
+        metaEl.appendChild(el('span',{
+          style:'color:var(--primary);text-decoration:underline;cursor:pointer;',
+          text:'ดูรายชื่อทั้งหมด',
+          onmousedown:function(ev){ ev.preventDefault(); ev.stopPropagation(); },
+          onclick:function(ev){ ev.stopPropagation(); openDocLinkStudentsModal(en, field); closeDropdown(); }
+        }));
+      }
       dropdown.appendChild(el('div',{
         class:'combo-option',
         onmousedown:function(ev){ ev.preventDefault(); },
         onclick:function(){ input.value = en.link; closeDropdown(); input.dispatchEvent(new Event('change',{bubbles:true})); }
       },[
         el('div',{class:'link-suggest-link', text:en.link}),
-        el('div',{class:'link-suggest-meta', text:'🔁 ใช้แล้ว '+en.count+' คน: '+namesTxt})
+        metaEl
       ]));
     });
     dropdown.style.display='block';

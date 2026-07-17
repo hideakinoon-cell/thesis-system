@@ -1886,6 +1886,15 @@ function bindFormEvents(){
   document.getElementById('d_fileInput').addEventListener('change', function(e){ handleFileInput('defense', e.target.files); e.target.value=''; });
   document.getElementById('p_btnAddLink').addEventListener('click', function(){ handleLinkAdd('proposal'); });
   document.getElementById('d_btnAddLink').addEventListener('click', function(){ handleLinkAdd('defense'); });
+
+  /* กรอกวันที่อนุมัติหัวข้อ บว.25 แล้วมักลืมกดปุ่ม "ส่งแล้ว" แยกต่างหาก ทำให้บันทึกวันที่ไว้แต่สถานะยังค้างเป็น "ยังไม่ส่ง"
+     — ให้ติ๊ก "ส่งแล้ว" ให้อัตโนมัติทันทีที่มีการกรอกวันที่ (มีวันที่อนุมัติ = ส่งแล้วโดยนัย) */
+  document.getElementById('p_bw25Date').addEventListener('input', function(){
+    if(this.value){
+      var sentRadio = document.querySelector('input[name=proposalBw25Status][value="ส่งแล้ว"]');
+      if(sentRadio) sentRadio.checked = true;
+    }
+  });
 }
 /* ================= EXAM SUBSECTIONS (3.1 / 3.2 — always both visible, both can hold data in the same record) ================= */
 function sectionHasData(prefix){

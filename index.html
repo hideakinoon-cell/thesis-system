@@ -3787,7 +3787,11 @@ function fileToRow(f){
 }
 var recordsSheetCache = null;
 function fetchRecordsSheet(){
-  return sheetsGetValues('Records!A1:AZ100000').then(function(values){
+  /* ช่วงคอลัมน์ต้องกว้างพอเสมอ — RECORD_COLUMNS เพิ่มคอลัมน์ใหม่เรื่อยๆ ตามฟีเจอร์ (ปัจจุบันยาวเกินคอลัมน์ AZ ไปแล้ว)
+     ถ้าช่วงที่อ่านแคบกว่าจำนวนคอลัมน์จริง ค่าที่อยู่คอลัมน์ท้ายๆ (เช่น proposalBw25Status/Date, graduated,
+     advisorHistoryJson และที่สำคัญที่สุดคือ 'deleted') จะถูกตัดทิ้งไปเงียบๆ ตอนอ่าน ทั้งที่บันทึกไว้ถูกต้องแล้ว
+     ใช้ ZZ (คอลัมน์ที่ 702) กันไว้ล่วงหน้าให้เผื่อเหลือเผื่อขาดมาก ๆ */
+  return sheetsGetValues('Records!A1:ZZ100000').then(function(values){
     var headers = (values[0] && values[0].length) ? values[0] : RECORD_COLUMNS;
     var entries = [];
     for(var i=1;i<values.length;i++){
@@ -3801,7 +3805,7 @@ function fetchRecordsSheet(){
 }
 var filesSheetCache = null;
 function fetchFilesSheet(){
-  return sheetsGetValues('Files!A1:AZ100000').then(function(values){
+  return sheetsGetValues('Files!A1:ZZ100000').then(function(values){
     var headers = (values[0] && values[0].length) ? values[0] : FILE_COLUMNS;
     var entries = [];
     for(var i=1;i<values.length;i++){

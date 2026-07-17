@@ -1380,17 +1380,25 @@ function getStudentSummaries(){
 }
 function renderLookupList(){
   var q = (document.getElementById('lookupSearch').value||'').trim().toLowerCase();
-  getStudentSummaries().then(function(list){
-    if(q){
-      list = list.filter(function(s){
-        return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
-      });
-    }
-    /* ซ่อนผลค้นหาอาจารย์สำหรับเจ้าหน้าที่สาขา เพราะรายงานที่ปรึกษาจะรวมนักศึกษาข้ามสาขาได้ (อาจารย์คนหนึ่งดูแลได้หลายสาขา) ซึ่งขัดกับเจตนาการจำกัดสิทธิ์ */
-    var advisorMatches = (q && !currentDeptRestriction) ? (masterData.advisors||[]).filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : [];
-    var container = document.getElementById('lookupResultList');
+  var container = document.getElementById('lookupResultList');
+  var emptyEl = document.getElementById('lookupEmpty');
+  /* ไม่แสดงรายชื่อ นศ. ทั้งหมดตั้งแต่แรก — ให้พิมพ์ค้นหาก่อนถึงจะขึ้นผลลัพธ์ (กันหน้ายาวเกินไปเวลามี นศ. เยอะ
+     และยังช่วยลดการอ่านข้อมูลทั้งชีทโดยไม่จำเป็นทุกครั้งที่เปิดหน้านี้ด้วย) */
+  if(!q){
     container.innerHTML='';
-    document.getElementById('lookupEmpty').style.display = (list.length===0 && advisorMatches.length===0) ? '' : 'none';
+    emptyEl.textContent = 'พิมพ์รหัสนักศึกษา ชื่อ-นามสกุล หรือชื่ออาจารย์ที่ปรึกษา เพื่อค้นหา';
+    emptyEl.style.display='';
+    return;
+  }
+  getStudentSummaries().then(function(list){
+    list = list.filter(function(s){
+      return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
+    });
+    /* ซ่อนผลค้นหาอาจารย์สำหรับเจ้าหน้าที่สาขา เพราะรายงานที่ปรึกษาจะรวมนักศึกษาข้ามสาขาได้ (อาจารย์คนหนึ่งดูแลได้หลายสาขา) ซึ่งขัดกับเจตนาการจำกัดสิทธิ์ */
+    var advisorMatches = (!currentDeptRestriction) ? (masterData.advisors||[]).filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : [];
+    container.innerHTML='';
+    emptyEl.textContent = 'ไม่พบนักศึกษาที่ตรงกับคำค้นหา';
+    emptyEl.style.display = (list.length===0 && advisorMatches.length===0) ? '' : 'none';
 
     if(advisorMatches.length){
       container.appendChild(el('div',{style:'font-size:12px;font-weight:600;color:#64748b;margin:2px 4px 4px;', text:'👨‍🏫 อาจารย์ที่ปรึกษา'}));

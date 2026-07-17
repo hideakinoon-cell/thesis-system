@@ -2292,19 +2292,19 @@ function validateForm(){
   var dFilled = sectionHasData('d');
   var bw25Filled = bw25SectionHasData();
   if(!pFilled && !dFilled && !bw25Filled) return 'กรุณากรอกข้อมูลการสอบอย่างน้อย 1 ส่วน (3.1 การสอบเค้าโครง หรือ 3.2 การสอบป้องกัน/IS) หรือส่งแบบฟอร์ม บว.25';
+  /* ผลการประเมิน (3.1/3.2) ไม่บังคับติ๊กตอนบันทึก — สาขามักส่งผลการประเมินตามมาทีหลังจากวันสอบจริง
+     จึงต้องกรอกวันที่/กรรมการไว้ก่อนได้ แล้วค่อยกลับมาติ๊กผลทีหลังเมื่อทราบผลแล้ว */
   if(pFilled){
     if(!document.getElementById('p_examTime').value) return 'กรุณาระบุเวลาสอบเค้าโครง (3.1)';
     if(!document.getElementById('p_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.1)';
     var pDup = findDuplicateCommitteeName('p');
     if(pDup) return 'พบชื่อ "'+pDup+'" ซ้ำในคณะกรรมการสอบเค้าโครง (3.1) กรุณาตรวจสอบ';
-    if(!document.querySelector('input[name=proposalResult]:checked')) return 'กรุณาเลือกผลประเมินการสอบเค้าโครง (3.1)';
   }
   if(dFilled){
     if(!document.getElementById('d_examTime').value) return 'กรุณาระบุเวลาสอบป้องกัน (3.2)';
     if(!document.getElementById('d_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.2)';
     var dDup = findDuplicateCommitteeName('d');
     if(dDup) return 'พบชื่อ "'+dDup+'" ซ้ำในคณะกรรมการสอบป้องกัน/IS (3.2) กรุณาตรวจสอบ';
-    if(!document.querySelector('input[name=defenseResult]:checked')) return 'กรุณาเลือกผลการสอบป้องกัน/IS (3.2)';
   }
   return null;
 }

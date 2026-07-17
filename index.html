@@ -3902,12 +3902,18 @@ function fileToRow(f){
    → รีเฟรชลิงก์แนะนำหลังบันทึก) ทั้งที่ข้อมูลยังไม่เปลี่ยนระหว่างขั้นตอนเหล่านี้เลย ทำให้บันทึกช้ามาก
    จึงเพิ่มแคชอายุสั้น (RECORDS_CACHE_TTL_MS) ให้ใช้ผลลัพธ์เดิมซ้ำได้ในช่วงเวลาสั้นๆ ระหว่างขั้นตอนบันทึกเดียวกัน
    และ "ล้างแคชทันที" ทุกครั้งที่เขียนสำเร็จ (recordsPut/recordsDelete/filesPut/filesDelete) เพื่อไม่ให้อ่านข้อมูลเก่าซ้ำ
-   หลังบันทึกเสร็จแล้ว — อายุแคชสั้นมากจนไม่กระทบการตรวจจับข้อมูลชนกันระหว่างผู้ใช้หลายคนที่มีอยู่เดิม (ซึ่งเทียบเวลาเป็นนาทีอยู่แล้ว) */
+   หลังบันทึกเสร็จแล้ว — อายุแคชสั้นมากจนไม่กระทบการตรวจจับข้อมูลชนกันระหว่างผู้ใช้หลายคนที่มีอยู่เดิม (ซึ่งเทียบเวลาเป็นนาทีอยู่แล้ว)
+
+   ระวัง (บั๊กที่เคยเกิดจริง แก้ด้วย epoch ด้านล่างนี้): ถ้ามีการ fetch ค้างอยู่ (เช่น renderAttachmentList ตอนเปิดฟอร์ม
+   ที่ยังโหลดไม่เสร็จ) แล้วระหว่างนั้นมีการเขียนข้อมูลใหม่ (เช่น แนบลิงก์ 3.1/3.2) ตามด้วยอ่านซ้ำทันที — ถ้าไม่มี epoch กัน
+   การอ่านครั้งใหม่จะไปเจอ fetch เก่าที่ยังค้างอยู่ (ซึ่งขอข้อมูลไปตั้งแต่ก่อนเขียน) แล้วเอาผลลัพธ์เก่านั้นมาใช้/มาทับแคชที่เพิ่งล้างไป
+   ทำให้สิ่งที่เพิ่งบันทึกไม่โผล่ขึ้นมาทันที ทั้งที่บันทึกลงชีทจริงสำเร็จแล้ว */
 var RECORDS_CACHE_TTL_MS = 4000;
 var recordsSheetCache = null;
 var recordsSheetCacheAt = 0;
 var recordsSheetFetchPromise = null; /* กันการยิง request ซ้ำซ้อนพร้อมกัน (เช่น renderList/selectLookupStudent ที่เรียกหลาย record พร้อมกันด้วย Promise.all) — ถ้ามี fetch ที่กำลังทำงานอยู่แล้ว ให้ใช้ผลลัพธ์เดียวกันแทนการยิงใหม่ทุกครั้ง */
-function invalidateRecordsSheetCache(){ recordsSheetCache = null; recordsSheetCacheAt = 0; }
+var recordsSheetEpoch = 0; /* เพิ่มขึ้นทุกครั้งที่ invalidate — fetch เก่าที่เริ่มไว้ก่อนหน้าจะรู้ตัวว่า "ล้าสมัยแล้ว" และจะไม่เอาผลไปเขียนทับแคช/ให้ผู้เรียกคนอื่น reuse ต่อ */
+function invalidateRecordsSheetCache(){ recordsSheetCache = null; recordsSheetCacheAt = 0; recordsSheetFetchPromise = null; recordsSheetEpoch++; }
 function fetchRecordsSheet(){
   /* ช่วงคอลัมน์ต้องกว้างพอเสมอ — RECORD_COLUMNS เพิ่มคอลัมน์ใหม่เรื่อยๆ ตามฟีเจอร์ (ปัจจุบันยาวเกินคอลัมน์ AZ ไปแล้ว)
      ถ้าช่วงที่อ่านแคบกว่าจำนวนคอลัมน์จริง ค่าที่อยู่คอลัมน์ท้ายๆ (เช่น proposalBw25Status/Date, graduated,
@@ -3915,6 +3921,7 @@ function fetchRecordsSheet(){
      ใช้ ZZ (คอลัมน์ที่ 702) กันไว้ล่วงหน้าให้เผื่อเหลือเผื่อขาดมาก ๆ */
   if(recordsSheetFetchPromise) return recordsSheetFetchPromise;
   if(recordsSheetCache && (Date.now()-recordsSheetCacheAt) < RECORDS_CACHE_TTL_MS) return Promise.resolve(recordsSheetCache);
+  var myEpoch = recordsSheetEpoch;
   recordsSheetFetchPromise = sheetsGetValues('Records!A1:ZZ100000').then(function(values){
     var headers = (values[0] && values[0].length) ? values[0] : RECORD_COLUMNS;
     var entries = [];
@@ -3923,14 +3930,14 @@ function fetchRecordsSheet(){
       if(!row || !row[0]) continue;
       entries.push({ rec: rowToRecord(headers, row), rowNumber: i+1 });
     }
-    recordsSheetCache = {headers:headers, entries:entries};
-    recordsSheetCacheAt = Date.now();
-    return recordsSheetCache;
+    var result = {headers:headers, entries:entries};
+    if(myEpoch === recordsSheetEpoch){ recordsSheetCache = result; recordsSheetCacheAt = Date.now(); }
+    return result;
   }).then(function(result){
-    recordsSheetFetchPromise = null;
+    if(myEpoch === recordsSheetEpoch) recordsSheetFetchPromise = null;
     return result;
   }, function(err){
-    recordsSheetFetchPromise = null;
+    if(myEpoch === recordsSheetEpoch) recordsSheetFetchPromise = null;
     throw err;
   });
   return recordsSheetFetchPromise;
@@ -3938,10 +3945,12 @@ function fetchRecordsSheet(){
 var filesSheetCache = null;
 var filesSheetCacheAt = 0;
 var filesSheetFetchPromise = null; /* เช่นเดียวกับ recordsSheetFetchPromise — กันการยิง request ซ้ำซ้อนพร้อมกัน */
-function invalidateFilesSheetCache(){ filesSheetCache = null; filesSheetCacheAt = 0; }
+var filesSheetEpoch = 0;
+function invalidateFilesSheetCache(){ filesSheetCache = null; filesSheetCacheAt = 0; filesSheetFetchPromise = null; filesSheetEpoch++; }
 function fetchFilesSheet(){
   if(filesSheetFetchPromise) return filesSheetFetchPromise;
   if(filesSheetCache && (Date.now()-filesSheetCacheAt) < RECORDS_CACHE_TTL_MS) return Promise.resolve(filesSheetCache);
+  var myEpoch = filesSheetEpoch;
   filesSheetFetchPromise = sheetsGetValues('Files!A1:ZZ100000').then(function(values){
     var headers = (values[0] && values[0].length) ? values[0] : FILE_COLUMNS;
     var entries = [];
@@ -3950,14 +3959,14 @@ function fetchFilesSheet(){
       if(!row || !row[0]) continue;
       entries.push({ rec: rowToFile(headers, row), rowNumber: i+1 });
     }
-    filesSheetCache = {headers:headers, entries:entries};
-    filesSheetCacheAt = Date.now();
-    return filesSheetCache;
+    var result = {headers:headers, entries:entries};
+    if(myEpoch === filesSheetEpoch){ filesSheetCache = result; filesSheetCacheAt = Date.now(); }
+    return result;
   }).then(function(result){
-    filesSheetFetchPromise = null;
+    if(myEpoch === filesSheetEpoch) filesSheetFetchPromise = null;
     return result;
   }, function(err){
-    filesSheetFetchPromise = null;
+    if(myEpoch === filesSheetEpoch) filesSheetFetchPromise = null;
     throw err;
   });
   return filesSheetFetchPromise;

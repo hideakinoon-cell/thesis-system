@@ -1470,8 +1470,8 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
   var sec2 = el('div',{class:'card section-card sec-green'},[
     el('h3',{text:'หมวดที่ 2: อาจารย์ที่ปรึกษา & หัวข้อ'}),
     el('div',{class:'kv-grid'},[
-      kv('อาจารย์ที่ปรึกษาหลัก', latest.mainAdvisor),
-      kvMultiLine('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).map(coAdvisorDisplayOf)),
+      kv('อาจารย์ที่ปรึกษาหลัก', latest.mainAdvisor, true),
+      kvMultiLine('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).map(coAdvisorDisplayOf), true),
       kv('หัวข้อวิทยานิพนธ์ (TH)', latest.titleTh, true),
       kv('หัวข้อวิทยานิพนธ์ (EN)', latest.titleEn, true)
     ])

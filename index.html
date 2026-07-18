@@ -608,6 +608,15 @@
   </div>
 
   <div class="card">
+    <h3>🧹 ล้างประวัติที่ปรึกษาที่ขึ้นผิดพลาด</h3>
+    <div class="help" style="margin-bottom:10px;">ก่อนหน้านี้ระบบเคยขึ้น "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ผิดพลาดในบางกรณี เช่น ตอนกรอกชื่อที่ปรึกษาให้นักศึกษาคนหนึ่งเป็นครั้งแรก ทั้งที่ไม่ได้เปลี่ยนจากชื่อเดิม เครื่องมือนี้จะสแกนหาแล้วลบเฉพาะรายการประวัติปลอมเหล่านั้นออก โดยไม่กระทบประวัติการเปลี่ยนแปลงที่ปรึกษาจริง</div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnScanBogusAdvisorHistory">🔍 เริ่มตรวจสอบ</button>
+    </div>
+    <div id="bogusAdvisorHistoryResult" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
     <h3>🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)</h3>
     <div class="help" style="margin-bottom:14px;">เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md</div>
     <div class="grid">
@@ -3682,6 +3691,7 @@ function bindGoogleButtons(){
   document.getElementById('btnBackupNow').addEventListener('click', function(){ backupNow(false); });
   document.getElementById('btnRestore').addEventListener('click', openRestorePicker);
   document.getElementById('btnCheckBrokenFiles').addEventListener('click', checkBrokenDriveFiles);
+  document.getElementById('btnScanBogusAdvisorHistory').addEventListener('click', scanBogusAdvisorHistory);
 }
 function ensureAuthed(){
   return new Promise(function(resolve, reject){
@@ -3857,6 +3867,61 @@ function checkBrokenDriveFiles(){
   }).then(function(){
     btn.disabled = false;
     btn.textContent = origText;
+  });
+}
+/* ================= ล้างประวัติที่ปรึกษาที่ขึ้นผิดพลาด (ทำความสะอาดข้อมูลเก่าที่ค้างจากบั๊กก่อนหน้า) =================
+   ใช้เกณฑ์เดียวกับ buildAdvisorHistoryEntry เวอร์ชันปัจจุบัน — รายการประวัติใดที่ "ไม่ควรถูกสร้างขึ้น" ตามเกณฑ์ใหม่นี้
+   (คือกรอกครั้งแรกจากช่องว่าง ไม่ใช่การเปลี่ยนจากชื่อเดิม) ถือว่าเป็นรายการปลอมจากบั๊กเดิม ต้องลบทิ้ง */
+function isGenuineAdvisorHistoryEntry(h){
+  var mainGenuine = (h.mainAdvisorFrom||'') !== '' && (h.mainAdvisorFrom||'') !== (h.mainAdvisorTo||'');
+  var coGenuine = (h.coAdvisorsFrom||[]).length > 0 && coAdvisorsSortedJson(h.coAdvisorsFrom||[]) !== coAdvisorsSortedJson(h.coAdvisorsTo||[]);
+  return mainGenuine || coGenuine;
+}
+function scanBogusAdvisorHistory(){
+  var btn = document.getElementById('btnScanBogusAdvisorHistory');
+  var resultBox = document.getElementById('bogusAdvisorHistoryResult');
+  resultBox.innerHTML='';
+  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  var origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  recordsGetAll().then(function(allRecords){
+    var affected = allRecords.map(function(r){
+      var hist = r.advisorHistory||[];
+      var genuine = hist.filter(isGenuineAdvisorHistoryEntry);
+      return {rec:r, genuine:genuine, bogusCount: hist.length - genuine.length};
+    }).filter(function(x){ return x.bogusCount>0; });
+    resultBox.innerHTML='';
+    btn.disabled=false; btn.textContent=origText;
+    if(affected.length===0){
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบประวัติที่ผิดพลาด ข้อมูลถูกต้องอยู่แล้ว'}));
+      return;
+    }
+    var totalBogus = affected.reduce(function(s,x){ return s+x.bogusCount; }, 0);
+    resultBox.appendChild(el('div',{class:'help', text:'พบประวัติที่ขึ้นผิดพลาด '+totalBogus+' รายการ ใน '+affected.length+' นักศึกษา:'}));
+    affected.forEach(function(x){
+      resultBox.appendChild(el('div',{class:'help', style:'margin:2px 0;', text:'• '+x.rec.studentId+' — '+(x.rec.studentName||'(ไม่ระบุชื่อ)')+' ('+x.bogusCount+' รายการ)'}));
+    });
+    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;color:#c0392b;', text:'🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด ('+totalBogus+' รายการ)'});
+    confirmBtn.addEventListener('click', function(){
+      if(!confirm('ยืนยันลบประวัติที่ขึ้นผิดพลาด '+totalBogus+' รายการ จาก '+affected.length+' นักศึกษา? ระบบจะลบเฉพาะรายการที่ตรวจพบว่าไม่ใช่การเปลี่ยนแปลงจริง ประวัติการเปลี่ยนแปลงที่ปรึกษาจริงจะไม่ถูกแตะต้อง')) return;
+      confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังลบ...';
+      Promise.all(affected.map(function(x){
+        var updated = Object.assign({}, x.rec, {advisorHistory: x.genuine});
+        return recordsPut(updated);
+      })).then(function(){
+        resultBox.innerHTML='';
+        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ลบประวัติที่ผิดพลาดออกแล้ว '+totalBogus+' รายการ จาก '+affected.length+' นักศึกษา'}));
+        toast('ล้างประวัติที่ปรึกษาที่ผิดพลาดเรียบร้อยแล้ว');
+      }).catch(function(e){
+        toast('ลบไม่สำเร็จ: '+(e && e.message ? e.message : e), true);
+        confirmBtn.disabled=false; confirmBtn.textContent = '🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด ('+totalBogus+' รายการ)';
+      });
+    });
+    resultBox.appendChild(confirmBtn);
+  }).catch(function(e){
+    resultBox.innerHTML='';
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    btn.disabled=false; btn.textContent=origText;
   });
 }
 function ensureDriveFolder(name, parentId){

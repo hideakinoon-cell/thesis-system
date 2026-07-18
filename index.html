@@ -297,12 +297,13 @@
         <div class="combo" style="margin-top:8px;"><input type="text" id="f_computerDocLink" placeholder="ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
       </div>
       <div class="field full">
-        <label>การสอบวัดความรู้ <span class="req">*</span></label>
+        <label>การสอบวัดความรู้</label>
         <div class="radio-group">
-          <label><input type="radio" name="qualifyingExam" value="ผ่านสอบประมวลความรู้ (ป.โท)" checked> ผ่านสอบประมวลความรู้ (ป.โท)</label>
+          <label><input type="radio" name="qualifyingExam" value="ผ่านสอบประมวลความรู้ (ป.โท)"> ผ่านสอบประมวลความรู้ (ป.โท)</label>
           <label><input type="radio" name="qualifyingExam" value="ผ่านสอบวัดคุณสมบัติ (ป.เอก)"> ผ่านสอบวัดคุณสมบัติ (ป.เอก)</label>
           <label><input type="radio" name="qualifyingExam" value="ยังไม่ผ่าน/อยู่ระหว่างรอผล"> ยังไม่ผ่าน / อยู่ระหว่างรอผล</label>
         </div>
+        <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบวัดความรู้</div>
         <div class="combo" style="margin-top:8px;"><input type="text" id="f_qualifyingDocLink" placeholder="ลิงก์เอกสารแนบการสอบวัดความรู้ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
       </div>
     </div>
@@ -2242,7 +2243,7 @@ function resetFormFields(){
   document.getElementById('f_englishDocLink').value='';
   document.querySelector('input[name=computerResult][value="สอบผ่าน"]').checked=true;
   document.getElementById('f_computerDocLink').value='';
-  document.querySelector('input[name=qualifyingExam][value="ผ่านสอบประมวลความรู้ (ป.โท)"]').checked=true;
+  uncheckRadioGroup('qualifyingExam');
   document.getElementById('f_qualifyingDocLink').value='';
   document.getElementById('f_mainAdvisor').value='';
   clearDynamicRows('coAdvisorList');
@@ -2281,6 +2282,7 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_englishDocLink').value = rec.englishDocLink||'';
   var cr = document.querySelector('input[name=computerResult][value="'+rec.computerResult+'"]'); if(cr) cr.checked=true;
   document.getElementById('f_computerDocLink').value = rec.computerDocLink||'';
+  uncheckRadioGroup('qualifyingExam');
   var qe = document.querySelector('input[name=qualifyingExam][value="'+rec.qualifyingExam+'"]'); if(qe) qe.checked=true;
   document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
   setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
@@ -2369,6 +2371,7 @@ function searchExistingStudent(){
     document.getElementById('f_englishDocLink').value = rec.englishDocLink||'';
     var cr = document.querySelector('input[name=computerResult][value="'+rec.computerResult+'"]'); if(cr) cr.checked=true;
     document.getElementById('f_computerDocLink').value = rec.computerDocLink||'';
+    uncheckRadioGroup('qualifyingExam');
     var qe = document.querySelector('input[name=qualifyingExam][value="'+rec.qualifyingExam+'"]'); if(qe) qe.checked=true;
     document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
     setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
@@ -2455,7 +2458,7 @@ function collectFormData(){
     englishDocLink: document.getElementById('f_englishDocLink').value.trim(),
     computerResult: document.querySelector('input[name=computerResult]:checked').value,
     computerDocLink: document.getElementById('f_computerDocLink').value.trim(),
-    qualifyingExam: document.querySelector('input[name=qualifyingExam]:checked').value,
+    qualifyingExam: (document.querySelector('input[name=qualifyingExam]:checked')||{}).value||'',
     qualifyingDocLink: document.getElementById('f_qualifyingDocLink').value.trim(),
     mainAdvisor: document.getElementById('f_mainAdvisor').value,
     coAdvisors: getDynamicValues('coAdvisorList'),

@@ -502,6 +502,11 @@
       <tbody id="listTbody"></tbody>
     </table>
     <div class="empty-state" id="listEmpty" style="display:none;">ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย</div>
+    <div id="listPagination" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
+      <span id="listPageInfo" class="help"></span>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnListPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnListNext">ถัดไป ›</button>
+    </div>
   </div>
 </section>
 
@@ -2686,10 +2691,15 @@ function deleteFile(id, section){
 }
 
 /* ================= LIST VIEW ================= */
+var LIST_PAGE_SIZE = 10;
+var listPage = 0; /* หน้าปัจจุบัน (เริ่มที่ 0) — แสดงทีละ LIST_PAGE_SIZE รายการ กันหน้ายาวเกินไปเวลามีข้อมูลเยอะ
+   หมายเหตุ: การแบ่งหน้านี้มีผลแค่กับ "การแสดงผล" เท่านั้น ตัวกรอง/ค้นหา และ export CSV/Excel ยังทำงานกับข้อมูลที่ตรงเงื่อนไขทั้งหมดตามปกติ ไม่ถูกตัดตามหน้า */
 function bindListEvents(){
-  document.getElementById('listSearch').addEventListener('input', function(){ renderList(); });
-  document.getElementById('listFilterType').addEventListener('change', function(){ renderList(); });
-  document.getElementById('listFilterResult').addEventListener('change', function(){ renderList(); });
+  document.getElementById('listSearch').addEventListener('input', function(){ listPage=0; renderList(); });
+  document.getElementById('listFilterType').addEventListener('change', function(){ listPage=0; renderList(); });
+  document.getElementById('listFilterResult').addEventListener('change', function(){ listPage=0; renderList(); });
+  document.getElementById('btnListPrev').addEventListener('click', function(){ if(listPage>0){ listPage--; renderList(); } });
+  document.getElementById('btnListNext').addEventListener('click', function(){ listPage++; renderList(); });
   document.getElementById('btnNewFromList').addEventListener('click', function(){ newDraft(); switchView('form'); });
   document.getElementById('btnExportCsv').addEventListener('click', function(){ exportData('csv'); });
   document.getElementById('btnExportXlsx').addEventListener('click', function(){ exportData('xlsx'); });
@@ -2718,10 +2728,30 @@ function getFilteredRecords(){
   });
 }
 function renderList(){
-  getFilteredRecords().then(function(rows){
+  getFilteredRecords().then(function(allRows){
     var tbody = document.getElementById('listTbody');
     tbody.innerHTML='';
-    document.getElementById('listEmpty').style.display = rows.length===0 ? '' : 'none';
+    document.getElementById('listEmpty').style.display = allRows.length===0 ? '' : 'none';
+
+    var totalPages = Math.max(1, Math.ceil(allRows.length / LIST_PAGE_SIZE));
+    if(listPage >= totalPages) listPage = totalPages - 1;
+    if(listPage < 0) listPage = 0;
+    var startIdx = listPage * LIST_PAGE_SIZE;
+    var rows = allRows.slice(startIdx, startIdx + LIST_PAGE_SIZE);
+
+    var pageInfoEl = document.getElementById('listPageInfo');
+    var prevBtn = document.getElementById('btnListPrev');
+    var nextBtn = document.getElementById('btnListNext');
+    if(allRows.length===0){
+      pageInfoEl.textContent = '';
+    } else {
+      pageInfoEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+rows.length)+' จาก '+allRows.length+' รายการ (หน้า '+(listPage+1)+'/'+totalPages+')';
+    }
+    prevBtn.disabled = listPage<=0;
+    nextBtn.disabled = listPage>=totalPages-1;
+    var pagerVisible = allRows.length > LIST_PAGE_SIZE;
+    document.getElementById('listPagination').style.display = pagerVisible ? 'flex' : 'none';
+
     Promise.all(rows.map(function(r){ return filesGetByRecordId(r.id).then(function(fs){ return fs.length; }); }))
     .then(function(counts){
       rows.forEach(function(r, i){

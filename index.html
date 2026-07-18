@@ -3406,37 +3406,52 @@ function openAdvisorEditModal(advisor){
   });
   roleWrap.appendChild(roleGroup);
   modal.appendChild(roleWrap);
+  /* ถ้าชื่อ/ตำแหน่งทางวิชาการเปลี่ยนจริง (เช่น ได้ตำแหน่งใหม่ เปลี่ยนนามสกุล) ค่าเริ่มต้นคือ "ไม่แก้ย้อนหลัง"
+     เพื่อให้ข้อมูลที่เคยบันทึกไว้แล้ว (มีผลต่อคำสั่งสอบที่ออกไปแล้ว) ยังคงเป็นชื่อ/ตำแหน่ง ณ วันที่บันทึกไว้เดิม
+     ติ๊กเลือกได้เฉพาะกรณีแก้ไขตัวสะกดผิด ที่ต้องการให้ปรับปรุงข้อมูลเก่าตามไปด้วย */
+  var cascadeField = el('div',{class:'field'},[
+    el('label',{},[
+      el('input',{type:'checkbox', id:'editAdvisorCascade'}),
+      document.createTextNode(' ปรับปรุงชื่อนี้ในข้อมูลนักศึกษาที่เคยบันทึกไว้แล้วด้วย')
+    ]),
+    el('div',{class:'help', text:'ใช้เฉพาะกรณีแก้ไขตัวสะกดผิด — ถ้าเป็นการเปลี่ยนชื่อ/ตำแหน่งจริง (เช่น เปลี่ยนนามสกุล หรือได้ตำแหน่งทางวิชาการใหม่) ไม่ควรติ๊ก เพื่อให้ข้อมูลเก่ายังตรงกับคำสั่งสอบที่เคยออกไปแล้ว'})
+  ]);
+  modal.appendChild(cascadeField);
   modal.appendChild(el('div',{class:'form-footer'},[
     el('button',{class:'btn btn-secondary', text:'ยกเลิก', onclick:function(){ backdrop.remove(); }}),
     el('button',{class:'btn btn-primary', text:'บันทึก', onclick:function(){
       var newName = document.getElementById('editAdvisorName').value.trim();
       var newRoles = Array.prototype.slice.call(modal.querySelectorAll('[data-edit-role]:checked')).map(function(c){ return c.value; });
       var newRank = document.getElementById('editAdvisorRank').value;
+      var doCascade = document.getElementById('editAdvisorCascade').checked;
       if(!newName){ toast('กรุณากรอกชื่อ', true); return; }
       if(newRoles.length===0){ toast('กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
       if(newName!==advisor.name && masterData.advisors.some(function(a){ return a.name===newName; })){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
       backdrop.remove();
-      updateAdvisor(advisor.name, newName, newRoles, newRank);
+      updateAdvisor(advisor.name, newName, newRoles, newRank, doCascade);
     }})
   ]));
   backdrop.appendChild(modal);
   backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
   root.appendChild(backdrop);
 }
-function updateAdvisor(oldName, newName, newRoles, newRank){
+function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
   var advisor = masterData.advisors.filter(function(a){ return a.name===oldName; })[0];
   if(!advisor) return;
   advisor.name = newName;
   advisor.roles = newRoles;
   advisor.rank = newRank||'';
   saveMasterData().then(function(){
-    if(newName!==oldName) return cascadeRenameInRecords('advisors', oldName, newName);
+    if(newName!==oldName && doCascade) return cascadeRenameInRecords('advisors', oldName, newName);
     return 0;
   }).then(function(updatedCount){
     renderMasterLists();
     renderAllSelects();
     renderList();
-    toast('บันทึกข้อมูลอาจารย์เรียบร้อย'+(updatedCount>0?' ปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
+    var msg = 'บันทึกข้อมูลอาจารย์เรียบร้อย';
+    if(updatedCount>0) msg += ' ปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ';
+    else if(newName!==oldName) msg += ' (ข้อมูลนักศึกษาที่เคยบันทึกชื่อเดิมไว้จะยังคงเป็นชื่อเดิม)';
+    toast(msg);
   });
 }
 function removeAdvisor(name){

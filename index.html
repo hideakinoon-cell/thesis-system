@@ -1497,6 +1497,18 @@ function renderAdvisorProfile(advisor, rep){
 function selectLookupStudent(studentId){
   recordsGetByStudentId(studentId).then(function(rows){
     if(rows.length===0) return;
+    if(rows.length>1){
+      /* พบข้อมูลของ นศ. คนเดียวกันซ้ำกันมากกว่า 1 แถว (ยังไม่เคยกดรวมแถวถาวร) — ถ้าปล่อยให้ examRecords มีหลายแถว
+         การ์ดสอบเค้าโครง/สอบป้องกันจะถูกสร้างซ้ำต่อแถว ทำให้เห็นการ์ดเดิมซ้ำกันในหน้านี้ จึงรวมข้อมูลด้วย mergeStudentRows
+         ก่อนแสดงผลเสมอ (รวมเฉพาะตอนแสดงผล ไม่ได้เขียนทับ/ลบข้อมูลจริงใน DB) แล้วเตือนให้กด "➕ เพิ่มการสอบใหม่" เพื่อรวมแถวถาวร */
+      var merged = mergeStudentRows(rows);
+      toast('พบข้อมูลนักศึกษาคนนี้ซ้ำกัน '+rows.length+' แถว ระบบรวมให้ดูชั่วคราว — แนะนำกด "➕ เพิ่มการสอบใหม่" เพื่อรวมข้อมูลให้ถาวร', true);
+      return Promise.all(rows.map(function(r){ return filesGetByRecordId(r.id); }))
+        .then(function(filesLists){
+          var combinedFiles = [].concat.apply([], filesLists);
+          renderStudentProfile(merged.primary, [merged.primary], [combinedFiles]);
+        });
+    }
     rows.sort(function(a,b){
       var da = a.examDate||'', db = b.examDate||'';
       if(da!==db) return da.localeCompare(db);
@@ -2152,12 +2164,13 @@ function mergeStudentRows(rows){
         primary.proposalChair=r.proposalChair; primary.proposalCommittee=r.proposalCommittee||[]; primary.proposalResult=r.proposalResult;
         primary.proposalRevisionStatus=r.proposalRevisionStatus; primary.proposalRevisionDate=r.proposalRevisionDate;
         primary.proposalBw25Status=r.proposalBw25Status; primary.proposalBw25Date=r.proposalBw25Date;
-      } else {
-        /* primary มีข้อมูล 3.1 ของตัวเองอยู่แล้ว — แถวซ้ำนี้ถือเป็นการสอบ 3.1 อีกครั้งหนึ่ง (คนละครั้งกัน) เก็บไว้เป็นประวัติแทนที่จะทิ้ง */
+      } else if(r.proposalDate !== primary.proposalDate){
+        /* primary มีข้อมูล 3.1 ของตัวเองอยู่แล้ว และวันที่สอบไม่ตรงกัน — ถือเป็นการสอบ 3.1 อีกครั้งหนึ่งจริง (คนละครั้งกัน) เก็บไว้เป็นประวัติแทนที่จะทิ้ง */
         proposalHistory.push({date:r.proposalDate, time:r.proposalTime, location:r.proposalLocation, chair:r.proposalChair,
           committee:r.proposalCommittee||[], result:r.proposalResult, revisionStatus:r.proposalRevisionStatus, revisionDate:r.proposalRevisionDate,
           bw25Status:r.proposalBw25Status, bw25Date:r.proposalBw25Date});
       }
+      /* ถ้าวันที่ตรงกันเป๊ะ ถือว่าเป็นแถวซ้ำของการสอบครั้งเดียวกัน (ไม่ใช่สอบใหม่) จึงไม่เพิ่มเป็นประวัติซ้ำ — ป้องกันการ์ดแสดงซ้ำในหน้าตรวจสอบข้อมูล */
     }
     /* บว.25 อาจถูกกรอกไว้ในแถว r ที่ยังไม่มีวันที่สอบเค้าโครง (recHasProposalData เป็นเท็จ) — สำรองไว้เผื่อ primary ยังไม่มีข้อมูล บว.25
        ของตัวเอง เพื่อไม่ให้ข้อมูล บว.25 หายไปตอนรวมแถวซ้ำ (แถว r จะถูกลบทิ้งหลังรวมเสร็จ) */
@@ -2171,7 +2184,7 @@ function mergeStudentRows(rows){
         primary.defenseDate=r.defenseDate; primary.defenseTime=r.defenseTime; primary.defenseLocation=r.defenseLocation;
         primary.defenseChair=r.defenseChair; primary.defenseCommittee=r.defenseCommittee||[]; primary.defenseResult=r.defenseResult;
         primary.defenseFullScore=r.defenseFullScore; primary.defenseObtainedScore=r.defenseObtainedScore; primary.defenseDueDate=r.defenseDueDate;
-      } else {
+      } else if(r.defenseDate !== primary.defenseDate){
         defenseHistory.push({date:r.defenseDate, time:r.defenseTime, location:r.defenseLocation, chair:r.defenseChair,
           committee:r.defenseCommittee||[], result:r.defenseResult, fullScore:r.defenseFullScore, obtainedScore:r.defenseObtainedScore, dueDate:r.defenseDueDate});
       }

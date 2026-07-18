@@ -723,6 +723,15 @@ function fmtBytes(n){
   if(n<1024*1024) return (n/1024).toFixed(1)+' KB';
   return (n/1024/1024).toFixed(1)+' MB';
 }
+/* แปลงวันที่แบบ ISO (YYYY-MM-DD ที่ได้จาก <input type="date">) เป็นรูปแบบไทย วัน/เดือน/ปี พ.ศ. (เช่น 2021-01-16 -> 16/01/2564)
+   ใช้แสดงผล (read-only) เท่านั้น — ค่าที่เก็บจริงในระบบและช่องปฏิทินของเบราว์เซอร์ยังเป็น ค.ศ. แบบ ISO เหมือนเดิม (เปลี่ยนปฏิทินเบราว์เซอร์ไม่ได้) */
+function toBuddhistDateStr(isoStr){
+  if(!isoStr) return '';
+  var m = String(isoStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return isoStr;
+  var y = parseInt(m[1],10) + 543;
+  return m[3]+'/'+m[2]+'/'+y;
+}
 function el(tag, attrs, children){
   var e = document.createElement(tag);
   attrs = attrs || {};
@@ -1633,7 +1642,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       }
       var d = h.changedAt ? new Date(h.changedAt) : null;
       function p2(n){ return String(n).padStart(2,'0'); }
-      var dateTxt = d ? (p2(d.getDate())+'/'+p2(d.getMonth()+1)+'/'+d.getFullYear()+' '+p2(d.getHours())+':'+p2(d.getMinutes())) : '';
+      var dateTxt = d ? (p2(d.getDate())+'/'+p2(d.getMonth()+1)+'/'+(d.getFullYear()+543)+' '+p2(d.getHours())+':'+p2(d.getMinutes())) : '';
       histBox.appendChild(el('div',{style:'font-size:13.5px;padding:6px 0;border-bottom:1px dashed #e5e7eb;'},[
         el('div',{text:dateTxt, style:'color:#94a3b8;font-size:12px;'}),
         el('div',{text:lines.join(' • ')||'(ไม่มีการเปลี่ยนแปลงที่ปรึกษา)'}),
@@ -1730,7 +1739,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     ];
     if(!r.preBw25Only){
       body.push(el('div',{class:'kv-grid'},[
-        kv('วันที่สอบ', r.examDate),
+        kv('วันที่สอบ', toBuddhistDateStr(r.examDate)),
         kv('เวลาสอบ', r.examTime),
         kv('สถานที่สอบ', r.location)
       ]));
@@ -1755,25 +1764,25 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
         kv('คะแนนเต็ม', r.fullScore),
         kv('คะแนนที่สอบได้', r.obtainedScore),
-        kv('กำหนดส่งเล่ม', r.dueDate)
+        kv('กำหนดส่งเล่ม', toBuddhistDateStr(r.dueDate))
       ]));
     }
     if(r.type==='proposal'){
       if(r.preBw25Only){
         body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
           kv('ส่งแบบฟอร์ม บว.25', r.proposalBw25Status||'ยังไม่ส่ง'),
-          kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date)
+          kv('วันที่อนุมัติหัวข้อ', toBuddhistDateStr(r.proposalBw25Date))
         ]));
       } else {
         var proposalKvs = [
           kv('ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์', r.proposalRevisionStatus||'ยังไม่ส่ง'),
-          kv('วันที่ส่งแก้ไข', r.proposalRevisionDate)
+          kv('วันที่ส่งแก้ไข', toBuddhistDateStr(r.proposalRevisionDate))
         ];
         /* บว.25 ใช้เฉพาะแผน ข (การค้นคว้าอิสระ) — แสดงในการ์ดนี้เฉพาะตอนมีข้อมูลจริงเท่านั้น
            ถ้าไม่เคยกรอกไว้เลย (วิทยานิพนธ์ที่ไม่ต้องใช้ บว.25) จะไม่โชว์แถวนี้ให้รกหน้าจอ */
         if(r.proposalBw25Status==='ส่งแล้ว' || r.proposalBw25Date){
           proposalKvs.push(kv('ส่งแบบฟอร์ม บว.25', r.proposalBw25Status||'ยังไม่ส่ง'));
-          proposalKvs.push(kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date));
+          proposalKvs.push(kv('วันที่อนุมัติหัวข้อ', toBuddhistDateStr(r.proposalBw25Date)));
         }
         body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'}, proposalKvs));
       }
@@ -1837,7 +1846,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     el('h3',{text:'หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์'}),
     el('div',{class:'kv-grid'},[
       kv('สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ', latest.bookSubmitStatus||'ยังไม่ส่ง'),
-      kv('วันที่ส่งเล่ม', latest.bookSubmitDate),
+      kv('วันที่ส่งเล่ม', toBuddhistDateStr(latest.bookSubmitDate)),
       kv('สถานะการสำเร็จการศึกษา', latest.graduated ? 'สำเร็จการศึกษาแล้ว' : 'ยังไม่สำเร็จการศึกษา')
     ]),
     el('div',{class:'kv-grid', style:'margin-top:12px;'},[
@@ -2808,8 +2817,8 @@ function renderList(){
         if(hasD) resultTagEls.push(el('div',{},[el('span',{class:'result-tag '+resultClassOf(r.defenseResult), text:'3.2: '+(r.defenseResult||'-')})]));
         if(!resultTagEls.length) resultTagEls.push(el('span',{text:'-'}));
         var dateParts = [];
-        if(hasP) dateParts.push('3.1: '+(r.proposalDate||'-'));
-        if(hasD) dateParts.push('3.2: '+(r.defenseDate||'-'));
+        if(hasP) dateParts.push('3.1: '+(toBuddhistDateStr(r.proposalDate)||'-'));
+        if(hasD) dateParts.push('3.2: '+(toBuddhistDateStr(r.defenseDate)||'-'));
         var tr = el('tr',{},[
           el('td',{text:r.studentId}),
           el('td',{text:r.studentName}),
@@ -2872,7 +2881,7 @@ function toExportRows(r){
       if(p.link) s += (s?' — ':'')+p.link;
       return s;
     }).join('; '),
-    bookSubmitStatus: r.bookSubmitStatus||'ยังไม่ส่ง', bookSubmitDate: r.bookSubmitDate||'', bookDocLink: r.bookDocLink||'',
+    bookSubmitStatus: r.bookSubmitStatus||'ยังไม่ส่ง', bookSubmitDate: toBuddhistDateStr(r.bookSubmitDate), bookDocLink: r.bookDocLink||'',
     graduatedStr: r.graduated ? 'สำเร็จการศึกษาแล้ว' : 'ยังไม่สำเร็จการศึกษา'
   };
   function committeeStrOf(list){
@@ -2894,11 +2903,11 @@ function toExportRows(r){
   proposalAll.forEach(function(att, i){
     out.push(Object.assign({}, bio, {
       examTypeStr:'สอบเค้าโครงวิทยานิพนธ์', attemptNo: i+1,
-      examDate:att.date||'', examTime:att.time||'', location:att.location||'',
+      examDate:toBuddhistDateStr(att.date), examTime:att.time||'', location:att.location||'',
       chair:att.chair||'', committeeStr:committeeStrOf(att.committee),
       fullScore:'', obtainedScore:'', dueDate:'',
-      proposalRevisionStatus:att.revisionStatus||'', proposalRevisionDate:att.revisionDate||'',
-      proposalBw25Status:att.bw25Status||'', proposalBw25Date:att.bw25Date||'',
+      proposalRevisionStatus:att.revisionStatus||'', proposalRevisionDate:toBuddhistDateStr(att.revisionDate),
+      proposalBw25Status:att.bw25Status||'', proposalBw25Date:toBuddhistDateStr(att.bw25Date),
       result:att.result||''
     }));
   });
@@ -2913,9 +2922,9 @@ function toExportRows(r){
   defenseAll.forEach(function(att, i){
     out.push(Object.assign({}, bio, {
       examTypeStr:'สอบป้องกันวิทยานิพนธ์/IS', attemptNo: i+1,
-      examDate:att.date||'', examTime:att.time||'', location:att.location||'',
+      examDate:toBuddhistDateStr(att.date), examTime:att.time||'', location:att.location||'',
       chair:att.chair||'', committeeStr:committeeStrOf(att.committee),
-      fullScore:att.fullScore||'', obtainedScore:att.obtainedScore||'', dueDate:att.dueDate||'',
+      fullScore:att.fullScore||'', obtainedScore:att.obtainedScore||'', dueDate:toBuddhistDateStr(att.dueDate),
       proposalRevisionStatus:'', proposalRevisionDate:'', proposalBw25Status:'', proposalBw25Date:'',
       result:att.result||''
     }));

@@ -1355,7 +1355,21 @@ function bindNav(){
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
     btn.addEventListener('click', function(){ switchView(btn.getAttribute('data-view')); });
   });
-  document.getElementById('lookupSearch').addEventListener('input', renderLookupList);
+  document.getElementById('lookupSearch').addEventListener('input', onLookupSearchInput);
+}
+var lookupSearchDebounceTimer = null;
+function onLookupSearchInput(){
+  /* ค้นหาทันทีทุกตัวอักษรทำให้ยิงอ่านข้อมูลจากชีทกลางซ้ำถี่เกินไป (แต่ละครั้งมีดีเลย์เครือข่าย) จึงหน่วงเวลาสั้นๆ
+     (debounce) ก่อนค้นหาจริง และขึ้นข้อความ "กำลังค้นหา..." ทันทีระหว่างรอ เพื่อให้รู้สึกว่าระบบตอบสนองทันที ไม่ค้าง */
+  var q = (document.getElementById('lookupSearch').value||'').trim();
+  if(lookupSearchDebounceTimer) clearTimeout(lookupSearchDebounceTimer);
+  if(q){
+    var emptyEl = document.getElementById('lookupEmpty');
+    document.getElementById('lookupResultList').innerHTML='';
+    emptyEl.textContent = 'กำลังค้นหา...';
+    emptyEl.style.display='';
+  }
+  lookupSearchDebounceTimer = setTimeout(renderLookupList, 300);
 }
 function switchView(name){
   if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard') name='dashboard';
@@ -1398,6 +1412,7 @@ function getStudentSummaries(){
     }).sort(function(a,b){ return (a.studentName||'').localeCompare(b.studentName||'', 'th'); });
   });
 }
+var lookupSearchResultToken = 0;
 function renderLookupList(){
   var q = (document.getElementById('lookupSearch').value||'').trim().toLowerCase();
   var container = document.getElementById('lookupResultList');
@@ -1410,7 +1425,11 @@ function renderLookupList(){
     emptyEl.style.display='';
     return;
   }
+  /* กันผลลัพธ์เก่ามาทับผลลัพธ์ใหม่ — ถ้าพิมพ์เร็วจนมีการค้นหาซ้อนกัน (คำค้นก่อนหน้ายังโหลดไม่เสร็จ) แล้วคำค้นก่อนหน้า
+     ตอบกลับมาช้ากว่าคำค้นล่าสุด ให้ทิ้งผลลัพธ์ที่ล้าสมัยไปแทนที่จะเอามาแสดงทับของใหม่ */
+  var myLookupToken = ++lookupSearchResultToken;
   getStudentSummaries().then(function(list){
+    if(myLookupToken !== lookupSearchResultToken) return;
     list = list.filter(function(s){
       return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
     });
@@ -4012,7 +4031,10 @@ function fileToRow(f){
    ที่ยังโหลดไม่เสร็จ) แล้วระหว่างนั้นมีการเขียนข้อมูลใหม่ (เช่น แนบลิงก์ 3.1/3.2) ตามด้วยอ่านซ้ำทันที — ถ้าไม่มี epoch กัน
    การอ่านครั้งใหม่จะไปเจอ fetch เก่าที่ยังค้างอยู่ (ซึ่งขอข้อมูลไปตั้งแต่ก่อนเขียน) แล้วเอาผลลัพธ์เก่านั้นมาใช้/มาทับแคชที่เพิ่งล้างไป
    ทำให้สิ่งที่เพิ่งบันทึกไม่โผล่ขึ้นมาทันที ทั้งที่บันทึกลงชีทจริงสำเร็จแล้ว */
-var RECORDS_CACHE_TTL_MS = 4000;
+/* ปรับจาก 4000 เป็น 10000 (10 วิ) — เดิมสั้นเกินไปจนหน้าตรวจสอบข้อมูลรู้สึกหน่วงเวลาพิมพ์ค้นหา เพราะพิมพ์แต่ละตัวอักษร
+   ห่างกันเกิน 4 วิบ่อยๆ ทำให้ต้องอ่านชีททั้งชีทซ้ำใหม่แทบทุกครั้ง ยืดเป็น 10 วิยังปลอดภัยกับการตรวจจับข้อมูลชนกัน
+   ตอนบันทึกอยู่ (เทียบเวลาเป็นนาทีตามที่อธิบายไว้ข้างบน) */
+var RECORDS_CACHE_TTL_MS = 10000;
 var recordsSheetCache = null;
 var recordsSheetCacheAt = 0;
 var recordsSheetFetchPromise = null; /* กันการยิง request ซ้ำซ้อนพร้อมกัน (เช่น renderList/selectLookupStudent ที่เรียกหลาย record พร้อมกันด้วย Promise.all) — ถ้ามี fetch ที่กำลังทำงานอยู่แล้ว ให้ใช้ผลลัพธ์เดียวกันแทนการยิงใหม่ทุกครั้ง */

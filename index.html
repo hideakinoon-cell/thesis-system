@@ -2579,8 +2579,11 @@ function buildAdvisorHistoryEntry(existing, rec, note){
   var newMain = rec.mainAdvisor||'';
   var prevCo = (existing.coAdvisors||[]).slice();
   var newCo = (rec.coAdvisors||[]).slice();
-  var mainChanged = prevMain !== newMain;
-  var coChanged = coAdvisorsSortedJson(prevCo) !== coAdvisorsSortedJson(newCo);
+  /* ถือเป็น "การเปลี่ยนแปลง" เฉพาะกรณีที่เดิมมีชื่อที่ปรึกษาอยู่แล้วแล้วถูกแก้เป็นชื่ออื่น/ถอนออก เท่านั้น
+     ถ้าเดิมยังว่างอยู่ (ยังไม่เคยกรอก) แล้วเพิ่งกรอกครั้งแรก ถือเป็น "การเพิ่มข้อมูล" ไม่ใช่ "การเปลี่ยนแปลง"
+     จึงไม่นับเป็นประวัติ — ป้องกันไม่ให้ขึ้นประวัติปลอมตอนกรอกข้อมูลนักศึกษาใหม่ครั้งแรก */
+  var mainChanged = prevMain !== '' && prevMain !== newMain;
+  var coChanged = prevCo.length > 0 && coAdvisorsSortedJson(prevCo) !== coAdvisorsSortedJson(newCo);
   if(!mainChanged && !coChanged) return null;
   return {
     changedAt: Date.now(),

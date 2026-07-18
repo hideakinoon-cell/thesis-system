@@ -495,12 +495,14 @@
       <button class="btn btn-accent btn-sm" id="btnExportXlsx">⬇ Excel</button>
       <button class="btn btn-primary btn-sm" id="btnNewFromList">＋ เพิ่มข้อมูลใหม่</button>
     </div>
+    <div style="overflow-x:auto;">
     <table>
       <thead>
         <tr><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>ประเภทสอบ</th><th>วันที่สอบ</th><th>ผลสอบ</th><th>ไฟล์แนบ</th><th>จัดการ</th></tr>
       </thead>
       <tbody id="listTbody"></tbody>
     </table>
+    </div>
     <div class="empty-state" id="listEmpty" style="display:none;">ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย</div>
     <div id="listPagination" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
       <span id="listPageInfo" class="help"></span>
@@ -2775,7 +2777,7 @@ function renderList(){
           el('td',{text: dateParts.length ? dateParts.join(' / ') : '-'}),
           el('td',{}, resultTagEls),
           el('td',{text: counts[i] + ' ไฟล์'}),
-          el('td',{},[
+          el('td',{style:'white-space:nowrap;'},[
             el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ recordsGet(r.id).then(loadRecordIntoForm); switchView('form'); }, text:'แก้ไข'}),
             el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ startNewExamForStudent(r.studentId); }, text:'➕ เพิ่มการสอบใหม่'}),
             el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteRecordConfirm(r.id); }, text:'ลบ'})

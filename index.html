@@ -373,17 +373,20 @@
           </div>
         </div>
         <div class="field"><label>วันที่ส่งแก้ไข</label><input type="date" id="p_revisionDate"></div>
-        <div class="field full">
-          <label>ส่งแบบฟอร์ม บว.25</label>
-          <div class="help" style="margin:0 0 6px;">(แบบเสนอเค้าโครงการค้นคว้าอิสระ และขออนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข)</div>
-          <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
-            <div class="radio-group">
-              <label><input type="radio" name="proposalBw25Status" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
-              <label><input type="radio" name="proposalBw25Status" value="ส่งแล้ว"> ส่งแล้ว</label>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <label style="font-size:13.5px;font-weight:600;color:#374151;">วันที่อนุมัติหัวข้อ</label>
-              <input type="date" id="p_bw25Date">
+        <div class="field full" id="p_bw25Wrap">
+          <button type="button" class="link-btn" id="p_btnToggleBw25" style="text-align:left;">＋ เพิ่มข้อมูล บว.25 (สำหรับแผน ข — ไม่บังคับ)</button>
+          <div id="p_bw25Fields" style="display:none;margin-top:10px;">
+            <label>ส่งแบบฟอร์ม บว.25</label>
+            <div class="help" style="margin:0 0 6px;">(แบบเสนอเค้าโครงการค้นคว้าอิสระ และขออนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข เท่านั้น วิทยานิพนธ์ไม่ต้องใช้)</div>
+            <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+              <div class="radio-group">
+                <label><input type="radio" name="proposalBw25Status" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
+                <label><input type="radio" name="proposalBw25Status" value="ส่งแล้ว"> ส่งแล้ว</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label style="font-size:13.5px;font-weight:600;color:#374151;">วันที่อนุมัติหัวข้อ</label>
+                <input type="date" id="p_bw25Date">
+              </div>
             </div>
           </div>
         </div>
@@ -1746,12 +1749,17 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
           kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date)
         ]));
       } else {
-        body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'},[
+        var proposalKvs = [
           kv('ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์', r.proposalRevisionStatus||'ยังไม่ส่ง'),
-          kv('วันที่ส่งแก้ไข', r.proposalRevisionDate),
-          kv('ส่งแบบฟอร์ม บว.25', r.proposalBw25Status||'ยังไม่ส่ง'),
-          kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date)
-        ]));
+          kv('วันที่ส่งแก้ไข', r.proposalRevisionDate)
+        ];
+        /* บว.25 ใช้เฉพาะแผน ข (การค้นคว้าอิสระ) — แสดงในการ์ดนี้เฉพาะตอนมีข้อมูลจริงเท่านั้น
+           ถ้าไม่เคยกรอกไว้เลย (วิทยานิพนธ์ที่ไม่ต้องใช้ บว.25) จะไม่โชว์แถวนี้ให้รกหน้าจอ */
+        if(r.proposalBw25Status==='ส่งแล้ว' || r.proposalBw25Date){
+          proposalKvs.push(kv('ส่งแบบฟอร์ม บว.25', r.proposalBw25Status||'ยังไม่ส่ง'));
+          proposalKvs.push(kv('วันที่อนุมัติหัวข้อ', r.proposalBw25Date));
+        }
+        body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'}, proposalKvs));
       }
     }
 
@@ -2024,6 +2032,15 @@ function bindFormEvents(){
       if(sentRadio) sentRadio.checked = true;
     }
   });
+  document.getElementById('p_btnToggleBw25').addEventListener('click', function(){
+    setBw25FieldsVisible(document.getElementById('p_bw25Fields').style.display==='none');
+  });
+}
+/* บว.25 ใช้เฉพาะแผน ข (การค้นคว้าอิสระ) วิทยานิพนธ์ไม่ต้องใช้ — เก็บซ่อนไว้เป็นค่าเริ่มต้น เจ้าหน้าที่กด "+" เพื่อเปิดกรอกเองเมื่อจำเป็นเท่านั้น
+   แต่ถ้าโหลดข้อมูลที่เคยกรอก บว.25 ไว้แล้ว (เช่น นศ. แผน ข ที่มีข้อมูลอยู่ก่อน) ให้เปิดให้เห็นอัตโนมัติ ไม่ซ่อนข้อมูลที่มีอยู่แล้ว */
+function setBw25FieldsVisible(visible){
+  document.getElementById('p_bw25Fields').style.display = visible ? '' : 'none';
+  document.getElementById('p_btnToggleBw25').textContent = visible ? '－ ซ่อนข้อมูล บว.25' : '＋ เพิ่มข้อมูล บว.25 (สำหรับแผน ข — ไม่บังคับ)';
 }
 /* ================= EXAM SUBSECTIONS (3.1 / 3.2 — always both visible, both can hold data in the same record) ================= */
 function sectionHasData(prefix){
@@ -2082,6 +2099,7 @@ function startNewAttempt(prefix){
     document.getElementById('p_revisionDate').value='';
     document.querySelector('input[name=proposalBw25Status][value="ยังไม่ส่ง"]').checked=true;
     document.getElementById('p_bw25Date').value='';
+    setBw25FieldsVisible(false);
     renderAttachmentList('proposal');
   } else {
     pendingDefenseAttempts.push({
@@ -2223,6 +2241,7 @@ function clearExamSectionFields(){
   document.getElementById('p_revisionDate').value='';
   document.querySelector('input[name=proposalBw25Status][value="ยังไม่ส่ง"]').checked=true;
   document.getElementById('p_bw25Date').value='';
+  setBw25FieldsVisible(false);
 
   document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
   document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
@@ -2316,6 +2335,7 @@ function loadRecordIntoForm(rec){
      ไม่ผูกไว้กับ recHasProposalData(rec) (ซึ่งเช็คจาก proposalDate เท่านั้น) มิฉะนั้นข้อมูล บว.25 ที่กรอกไว้ก่อนหน้าจะหายไปจากหน้าจอตอนเปิดฟอร์มกลับมาแก้ไข */
   var pbw = document.querySelector('input[name=proposalBw25Status][value="'+(rec.proposalBw25Status||'ยังไม่ส่ง')+'"]'); if(pbw) pbw.checked=true;
   document.getElementById('p_bw25Date').value = rec.proposalBw25Date||'';
+  setBw25FieldsVisible(bw25SectionHasData());
   if(recHasDefenseData(rec)){
     document.getElementById('d_date').value = rec.defenseDate||'';
     document.getElementById('d_examTime').value = rec.defenseTime||'';

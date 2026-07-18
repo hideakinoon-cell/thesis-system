@@ -1637,7 +1637,11 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
      — วางส่วนนี้ (หมวดที่ 3) ไว้ต่อจากหมวดที่ 2 ทันที เพื่อให้เรียงลำดับหมวดถูกต้อง (1, 1.1, 2, 3, 5, 6) */
   var examBlocks = [];
   examRecords.forEach(function(r, idx){
-    var files = filesByRecord[idx] || [];
+    var recFiles = filesByRecord[idx] || [];
+    /* ไฟล์แนบของแถวข้อมูลหนึ่งแถวอาจมีทั้งไฟล์ของหมวด 3.1 (เค้าโครง) และ 3.2 (ป้องกัน/IS) ปนกันอยู่
+       ต้องกรองตาม f.section ก่อนใส่ในแต่ละการ์ด ไม่เช่นนั้นการ์ดเค้าโครงจะโชว์ไฟล์ของป้องกันปนมาด้วย (และกลับกัน) */
+    var proposalFiles = recFiles.filter(function(f){ return f.section==='proposal'; });
+    var defenseFiles = recFiles.filter(function(f){ return f.section==='defense'; });
     /* ต่อประวัติการสอบครั้งก่อนๆ (proposalAttempts) เข้ากับข้อมูลครั้งล่าสุด (ฟิลด์ปกติ) ตามลำดับเวลา
        เพื่อแสดงทุกครั้งที่เคยสอบ (เช่น สอบไม่ผ่านครั้งที่ 1 แล้วสอบใหม่ครั้งที่ 2) */
     var proposalAll = (r.proposalAttempts||[]).map(function(a){
@@ -1658,7 +1662,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
         chair:att.chair, committee:att.committee, result:att.result,
         proposalRevisionStatus:att.proposalRevisionStatus, proposalRevisionDate:att.proposalRevisionDate,
         proposalBw25Status:att.proposalBw25Status, proposalBw25Date:att.proposalBw25Date,
-        recordId:r.id, files: isLatest ? files : []
+        recordId:r.id, files: isLatest ? proposalFiles : []
       });
     });
     /* บว.25 (อนุมัติหัวข้อ) มักถูกกรอกไว้ก่อนที่จะกำหนดวันสอบเค้าโครงจริง — ถ้ายังไม่มีวันที่สอบเลย (recHasProposalData เป็นเท็จ)
@@ -1687,7 +1691,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
         date:att.date, examDate:att.date, examTime:att.time, location:att.location,
         chair:att.chair, committee:att.committee, result:att.result,
         fullScore:att.fullScore, obtainedScore:att.obtainedScore, dueDate:att.dueDate,
-        recordId:r.id, files: isLatest ? files : []
+        recordId:r.id, files: isLatest ? defenseFiles : []
       });
     });
   });

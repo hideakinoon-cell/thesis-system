@@ -623,6 +623,15 @@
   </div>
 
   <div class="card">
+    <h3>⚠️ นักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่</h3>
+    <div class="help" style="margin-bottom:10px;">สแกนหานักศึกษาที่เคยมีอาจารย์ที่ปรึกษาหลักแล้วถูกถอนออก แต่ยังไม่ได้แต่งตั้งที่ปรึกษาคนใหม่แทน มีประโยชน์เวลาต้องการติดตามว่านักศึกษาคนไหนยังค้างเรื่องที่ปรึกษาอยู่บ้าง</div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnScanWithdrawnAdvisor">🔍 เริ่มตรวจสอบ</button>
+    </div>
+    <div id="withdrawnAdvisorResult" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
     <h3>🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)</h3>
     <div class="help" style="margin-bottom:14px;">เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md</div>
     <div class="grid">
@@ -1681,15 +1690,17 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
   ]);
   wrap.appendChild(sec1_1);
 
-  var sec2 = el('div',{class:'card section-card sec-green'},[
-    el('h3',{text:'หมวดที่ 2: อาจารย์ที่ปรึกษา & หัวข้อ'}),
-    el('div',{class:'kv-grid'},[
-      kv('อาจารย์ที่ปรึกษาหลัก', latest.mainAdvisor, true),
-      kvMultiLine('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).map(coAdvisorDisplayOf), true),
-      kv('หัวข้อวิทยานิพนธ์ (TH)', latest.titleTh, true),
-      kv('หัวข้อวิทยานิพนธ์ (EN)', latest.titleEn, true)
-    ])
-  ]);
+  var sec2Children = [el('h3',{text:'หมวดที่ 2: อาจารย์ที่ปรึกษา & หัวข้อ'})];
+  if(studentHasWithdrawnAdvisor(latest)){
+    sec2Children.push(el('div',{style:'background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13.5px;font-weight:600;', text:'⚠️ นักศึกษาคนนี้เคยมีอาจารย์ที่ปรึกษาหลักแล้วถูกถอนออก แต่ยังไม่ได้แต่งตั้งที่ปรึกษาคนใหม่แทน'}));
+  }
+  sec2Children.push(el('div',{class:'kv-grid'},[
+    kv('อาจารย์ที่ปรึกษาหลัก', latest.mainAdvisor, true),
+    kvMultiLine('อาจารย์ที่ปรึกษาร่วม', (latest.coAdvisors||[]).map(coAdvisorDisplayOf), true),
+    kv('หัวข้อวิทยานิพนธ์ (TH)', latest.titleTh, true),
+    kv('หัวข้อวิทยานิพนธ์ (EN)', latest.titleEn, true)
+  ]));
+  var sec2 = el('div',{class:'card section-card sec-green'}, sec2Children);
   if((latest.advisorHistory||[]).length){
     var histBox = el('div',{style:'margin-top:12px;border-top:1px solid #e5e7eb;padding-top:10px;'});
     histBox.appendChild(el('div',{style:'font-weight:600;font-size:13.5px;margin-bottom:6px;color:#374151;', text:'📜 ประวัติการเปลี่ยนแปลงที่ปรึกษา'}));
@@ -2634,6 +2645,18 @@ function buildAdvisorHistoryEntry(existing, rec, note){
     coAdvisorsFrom: prevCo, coAdvisorsTo: newCo,
     note: note||''
   };
+}
+/* ตรวจว่านักศึกษาคนนี้ "เคยมีที่ปรึกษาหลักแล้วถูกถอนออกจริง แต่ยังไม่ได้แต่งตั้งคนใหม่แทน" หรือไม่ —
+   นับเฉพาะกรณีที่เคยมีที่ปรึกษาจริงๆ (มีประวัติการเปลี่ยนแปลงที่ปรึกษาหลักที่เป็นของจริง ไม่ใช่ประวัติปลอมจากการกรอกครั้งแรก)
+   และเหตุการณ์เปลี่ยนแปลงที่ปรึกษาหลักล่าสุดคือ "ถอนออก" (เปลี่ยนเป็นค่าว่าง) ไม่นับกรณีนักศึกษาใหม่ที่ยังไม่เคยมีที่ปรึกษาเลย */
+function studentHasWithdrawnAdvisor(rec){
+  if(rec.mainAdvisor) return false;
+  var mainChanges = (rec.advisorHistory||[]).filter(function(h){
+    return (h.mainAdvisorFrom||'') !== '' && (h.mainAdvisorFrom||'') !== (h.mainAdvisorTo||'');
+  });
+  if(mainChanges.length===0) return false;
+  mainChanges.sort(function(a,b){ return (b.changedAt||0)-(a.changedAt||0); });
+  return (mainChanges[0].mainAdvisorTo||'')==='';
 }
 function saveRecord(){
   var err, rec;
@@ -3726,6 +3749,7 @@ function bindGoogleButtons(){
   document.getElementById('btnRestore').addEventListener('click', openRestorePicker);
   document.getElementById('btnCheckBrokenFiles').addEventListener('click', checkBrokenDriveFiles);
   document.getElementById('btnScanBogusAdvisorHistory').addEventListener('click', scanBogusAdvisorHistory);
+  document.getElementById('btnScanWithdrawnAdvisor').addEventListener('click', scanWithdrawnAdvisorStudents);
 }
 function ensureAuthed(){
   return new Promise(function(resolve, reject){
@@ -3952,6 +3976,41 @@ function scanBogusAdvisorHistory(){
       });
     });
     resultBox.appendChild(confirmBtn);
+  }).catch(function(e){
+    resultBox.innerHTML='';
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    btn.disabled=false; btn.textContent=origText;
+  });
+}
+/* ================= นักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่ ================= */
+function scanWithdrawnAdvisorStudents(){
+  var btn = document.getElementById('btnScanWithdrawnAdvisor');
+  var resultBox = document.getElementById('withdrawnAdvisorResult');
+  resultBox.innerHTML='';
+  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  var origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  recordsGetAll().then(function(allRecords){
+    var affected = allRecords.filter(studentHasWithdrawnAdvisor);
+    /* เจ้าหน้าที่สาขาให้เห็นเฉพาะสาขาของตัวเอง เช่นเดียวกับหน้าตรวจสอบข้อมูลอื่นๆ */
+    if(currentDeptRestriction) affected = affected.filter(function(r){ return r.department===currentDeptRestriction; });
+    resultBox.innerHTML='';
+    btn.disabled=false; btn.textContent=origText;
+    if(affected.length===0){
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบนักศึกษาที่ค้างเรื่องที่ปรึกษา'}));
+      return;
+    }
+    resultBox.appendChild(el('div',{class:'help', text:'พบนักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่ '+affected.length+' คน:'}));
+    affected.forEach(function(r){
+      resultBox.appendChild(el('div',{class:'attach-item'},[
+        el('span',{class:'name', text:'⚠️ '+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+(r.program||'-')+' / '+(r.department||'-')+')'}),
+        el('button',{type:'button', class:'link-btn', text:'ดูโปรไฟล์', onclick:function(){
+          switchView('dashboard');
+          document.getElementById('lookupSearch').value = r.studentId;
+          selectLookupStudent(r.studentId);
+        }})
+      ]));
+    });
   }).catch(function(e){
     resultBox.innerHTML='';
     resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));

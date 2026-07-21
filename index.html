@@ -192,13 +192,19 @@
       <input type="password" id="lockPinInput" placeholder="กรอกรหัสผ่าน" autocomplete="current-password">
       <div class="lock-error" id="lockError"></div>
       <button type="button" class="btn btn-primary" id="btnLockSubmit">ปลดล็อก</button>
+      <div class="help" id="lockGoToAdminSetupWrap" style="display:none;margin-top:10px;">
+        <a href="javascript:void(0)" id="lockGoToAdminSetupLink">ยังไม่เคยตั้งรหัสแอดมินบนเครื่องนี้? ตั้งรหัสแอดมินที่นี่</a>
+      </div>
     </div>
     <div id="lockSetupForm" style="display:none;">
-      <div class="help" style="text-align:left;">ตั้งรหัสผ่านสำหรับเข้าใช้งานระบบนี้ครั้งแรก (อย่างน้อย 4 ตัวอักษร) โปรดจดจำไว้ให้ดี — หากลืมจะไม่สามารถกู้คืนได้ ต้องล้างข้อมูลเบราว์เซอร์ทั้งหมดเพื่อเริ่มใหม่</div>
+      <div class="help" style="text-align:left;" id="lockSetupHelpText">ตั้งรหัสผ่านสำหรับเข้าใช้งานระบบนี้ครั้งแรก (อย่างน้อย 4 ตัวอักษร) โปรดจดจำไว้ให้ดี — หากลืมจะไม่สามารถกู้คืนได้ ต้องล้างข้อมูลเบราว์เซอร์ทั้งหมดเพื่อเริ่มใหม่</div>
       <input type="password" id="lockSetupPin1" placeholder="ตั้งรหัสผ่าน" autocomplete="new-password">
       <input type="password" id="lockSetupPin2" placeholder="ยืนยันรหัสผ่านอีกครั้ง" autocomplete="new-password">
       <div class="lock-error" id="lockSetupError"></div>
       <button type="button" class="btn btn-primary" id="btnLockSetupSubmit">ตั้งรหัสผ่านและเริ่มใช้งาน</button>
+      <div class="help" id="lockBackToLoginWrap" style="display:none;margin-top:10px;">
+        <a href="javascript:void(0)" id="lockBackToLoginLink">← กลับไปหน้าเข้าสู่ระบบ</a>
+      </div>
     </div>
   </div>
 </div>
@@ -1219,14 +1225,24 @@ function hideLockOverlay(){
 function renderLockForm(){
   var loginForm = document.getElementById('lockLoginForm');
   var setupForm = document.getElementById('lockSetupForm');
+  var goAdminSetupWrap = document.getElementById('lockGoToAdminSetupWrap');
+  var backToLoginWrap = document.getElementById('lockBackToLoginWrap');
   /* ถ้ามี appPinHash (แอดมินเคยตั้งไว้บนเครื่องนี้) หรือ viewerPinHash (ไม่ว่าเครื่องนี้ตั้งเองหรือใช้ค่าเริ่มต้นที่ฝังไว้)
-     ให้แสดงหน้า "เข้าสู่ระบบ" เสมอ — จะแสดงหน้า "ตั้งค่าเริ่มต้น" (สร้างรหัส admin ใหม่) ก็ต่อเมื่อไม่มีรหัสผ่านใดๆ เลยจริงๆ */
+     ให้แสดงหน้า "เข้าสู่ระบบ" เสมอ — จะแสดงหน้า "ตั้งค่าเริ่มต้น" (สร้างรหัส admin ใหม่) ก็ต่อเมื่อไม่มีรหัสผ่านใดๆ เลยจริงๆ
+     บั๊กที่เคยเกิดจริง: รหัสแอดมินเก็บเฉพาะในเครื่องนั้นๆ (IndexedDB local) ไม่ผูกกับอีเมล Google เลย เปิดเครื่องใหม่ที่ยัง
+     ไม่เคยตั้งรหัสแอดมินไว้ แต่มีรหัสดูอย่างเดียวที่ฝังไว้เป็น default อยู่แล้ว (viewerPinHash) ทำให้เงื่อนไขด้านล่างเป็นจริง
+     เสมอ เข้าหน้า "เข้าสู่ระบบ" อย่างเดียว ไม่มีทางตั้งรหัสแอดมินใหม่ได้เลย จึงเพิ่มลิงก์ "ตั้งรหัสแอดมินที่นี่" ไว้ในหน้า
+     เข้าสู่ระบบด้วย เฉพาะตอนที่เครื่องนี้ยังไม่เคยตั้งรหัสแอดมิน (appPinHash ว่าง) เพื่อให้ตั้งรหัสแอดมินได้ทุกเครื่อง */
   if(appPinHash || viewerPinHash || (deptPins&&deptPins.length)){
     loginForm.style.display=''; setupForm.style.display='none';
     document.getElementById('lockTitle').textContent='เข้าสู่ระบบ';
+    goAdminSetupWrap.style.display = appPinHash ? 'none' : '';
+    backToLoginWrap.style.display = 'none';
   } else {
     loginForm.style.display='none'; setupForm.style.display='';
     document.getElementById('lockTitle').textContent='ตั้งค่าเริ่มต้น';
+    document.getElementById('lockSetupHelpText').textContent='ตั้งรหัสผ่านสำหรับเข้าใช้งานระบบนี้ครั้งแรก (อย่างน้อย 4 ตัวอักษร) โปรดจดจำไว้ให้ดี — หากลืมจะไม่สามารถกู้คืนได้ ต้องล้างข้อมูลเบราว์เซอร์ทั้งหมดเพื่อเริ่มใหม่';
+    backToLoginWrap.style.display='none';
   }
   showLockOverlay();
 }
@@ -1244,6 +1260,24 @@ function bindLockEvents(){
   });
   document.getElementById('lockPinInput').addEventListener('keydown', function(e){
     if(e.key==='Enter') document.getElementById('btnLockSubmit').click();
+  });
+  document.getElementById('lockGoToAdminSetupLink').addEventListener('click', function(){
+    document.getElementById('lockLoginForm').style.display='none';
+    document.getElementById('lockSetupForm').style.display='';
+    document.getElementById('lockTitle').textContent='ตั้งรหัสแอดมินสำหรับเครื่องนี้';
+    document.getElementById('lockSetupHelpText').textContent='ตั้งรหัสผ่านแอดมินสำหรับเครื่องนี้ (อย่างน้อย 4 ตัวอักษร) — จะใช้รหัสเดิมที่เคยตั้งไว้บนเครื่องอื่น หรือจะตั้งรหัสใหม่ก็ได้ โปรดจดจำไว้ให้ดี';
+    /* แสดงลิงก์กลับไปหน้าเข้าสู่ระบบเฉพาะตอนที่มีรหัสอื่นให้กลับไปเข้าสู่ระบบด้วยจริงๆ (เช่น รหัสดูอย่างเดียว) */
+    document.getElementById('lockBackToLoginWrap').style.display = (viewerPinHash || (deptPins&&deptPins.length)) ? '' : 'none';
+    document.getElementById('lockSetupPin1').value='';
+    document.getElementById('lockSetupPin2').value='';
+    document.getElementById('lockSetupError').textContent='';
+  });
+  document.getElementById('lockBackToLoginLink').addEventListener('click', function(){
+    document.getElementById('lockSetupForm').style.display='none';
+    document.getElementById('lockLoginForm').style.display='';
+    document.getElementById('lockTitle').textContent='เข้าสู่ระบบ';
+    document.getElementById('lockPinInput').value='';
+    document.getElementById('lockError').textContent='';
   });
   document.getElementById('btnLockSetupSubmit').addEventListener('click', function(){
     var p1 = document.getElementById('lockSetupPin1').value;

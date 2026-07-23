@@ -234,8 +234,17 @@
   <div class="card">
     <h3>🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
     <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา...">
+    <div class="field" style="max-width:320px;margin-top:10px;">
+      <label>หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด</label>
+      <select id="lookupDeptFilter"><option value="">ทุกสาขา</option></select>
+    </div>
     <div class="lookup-result-list" id="lookupResultList"></div>
     <div class="empty-state" id="lookupEmpty" style="display:none;">ไม่พบนักศึกษาที่ตรงกับคำค้นหา</div>
+    <div id="lookupPagination" style="display:none;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
+      <span id="lookupPageInfo" class="help"></span>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnLookupPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnLookupNext">ถัดไป ›</button>
+    </div>
   </div>
   <div id="lookupDetail">
     <div class="empty-state">เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด</div>
@@ -1417,12 +1426,16 @@ function bindNav(){
     btn.addEventListener('click', function(){ switchView(btn.getAttribute('data-view')); });
   });
   document.getElementById('lookupSearch').addEventListener('input', onLookupSearchInput);
+  document.getElementById('lookupDeptFilter').addEventListener('change', function(){ lookupListPage=0; renderLookupList(); });
+  document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
+  document.getElementById('btnLookupNext').addEventListener('click', function(){ lookupListPage++; renderLookupList(); });
 }
 var lookupSearchDebounceTimer = null;
 function onLookupSearchInput(){
   /* ค้นหาทันทีทุกตัวอักษรทำให้ยิงอ่านข้อมูลจากชีทกลางซ้ำถี่เกินไป (แต่ละครั้งมีดีเลย์เครือข่าย) จึงหน่วงเวลาสั้นๆ
      (debounce) ก่อนค้นหาจริง และขึ้นข้อความ "กำลังค้นหา..." ทันทีระหว่างรอ เพื่อให้รู้สึกว่าระบบตอบสนองทันที ไม่ค้าง */
   var q = (document.getElementById('lookupSearch').value||'').trim();
+  lookupListPage = 0;
   if(lookupSearchDebounceTimer) clearTimeout(lookupSearchDebounceTimer);
   if(q){
     var emptyEl = document.getElementById('lookupEmpty');
@@ -1474,16 +1487,20 @@ function getStudentSummaries(){
   });
 }
 var lookupSearchResultToken = 0;
+var lookupListPage = 0; /* หน้าปัจจุบันของรายชื่อ นศ. เวลาเลือกดูทั้งสาขา (เริ่มที่ 0) แสดงทีละ LIST_PAGE_SIZE คน */
 function renderLookupList(){
   var q = (document.getElementById('lookupSearch').value||'').trim().toLowerCase();
+  var deptFilter = document.getElementById('lookupDeptFilter').value||'';
   var container = document.getElementById('lookupResultList');
   var emptyEl = document.getElementById('lookupEmpty');
-  /* ไม่แสดงรายชื่อ นศ. ทั้งหมดตั้งแต่แรก — ให้พิมพ์ค้นหาก่อนถึงจะขึ้นผลลัพธ์ (กันหน้ายาวเกินไปเวลามี นศ. เยอะ
+  var pagerEl = document.getElementById('lookupPagination');
+  /* ไม่แสดงรายชื่อ นศ. ทั้งหมดตั้งแต่แรก — ให้พิมพ์ค้นหาหรือเลือกสาขาก่อนถึงจะขึ้นผลลัพธ์ (กันหน้ายาวเกินไปเวลามี นศ. เยอะ
      และยังช่วยลดการอ่านข้อมูลทั้งชีทโดยไม่จำเป็นทุกครั้งที่เปิดหน้านี้ด้วย) */
-  if(!q){
+  if(!q && !deptFilter){
     container.innerHTML='';
-    emptyEl.textContent = 'พิมพ์รหัสนักศึกษา ชื่อ-นามสกุล หรือชื่ออาจารย์ที่ปรึกษา เพื่อค้นหา';
+    emptyEl.textContent = 'พิมพ์รหัสนักศึกษา ชื่อ-นามสกุล หรือชื่ออาจารย์ที่ปรึกษา เพื่อค้นหา หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด';
     emptyEl.style.display='';
+    pagerEl.style.display='none';
     return;
   }
   /* กันผลลัพธ์เก่ามาทับผลลัพธ์ใหม่ — ถ้าพิมพ์เร็วจนมีการค้นหาซ้อนกัน (คำค้นก่อนหน้ายังโหลดไม่เสร็จ) แล้วคำค้นก่อนหน้า
@@ -1491,11 +1508,17 @@ function renderLookupList(){
   var myLookupToken = ++lookupSearchResultToken;
   getStudentSummaries().then(function(list){
     if(myLookupToken !== lookupSearchResultToken) return;
-    list = list.filter(function(s){
-      return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
-    });
-    /* ซ่อนผลค้นหาอาจารย์สำหรับเจ้าหน้าที่สาขา เพราะรายงานที่ปรึกษาจะรวมนักศึกษาข้ามสาขาได้ (อาจารย์คนหนึ่งดูแลได้หลายสาขา) ซึ่งขัดกับเจตนาการจำกัดสิทธิ์ */
-    var advisorMatches = (!currentDeptRestriction) ? (masterData.advisors||[]).filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : [];
+    if(q){
+      list = list.filter(function(s){
+        return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
+      });
+    }
+    if(deptFilter){
+      list = list.filter(function(s){ return (s.department||'')===deptFilter; });
+    }
+    /* ค้นหารายชื่ออาจารย์เฉพาะตอนพิมพ์คำค้นเท่านั้น — เวลาแค่เลือกสาขาเพื่อดูรายชื่อ นศ. ทั้งหมดไม่ควรขึ้นผลอาจารย์มาปน
+       และซ่อนผลค้นหาอาจารย์สำหรับเจ้าหน้าที่สาขา เพราะรายงานที่ปรึกษาจะรวมนักศึกษาข้ามสาขาได้ (อาจารย์คนหนึ่งดูแลได้หลายสาขา) ซึ่งขัดกับเจตนาการจำกัดสิทธิ์ */
+    var advisorMatches = (q && !currentDeptRestriction) ? (masterData.advisors||[]).filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : [];
     container.innerHTML='';
     emptyEl.textContent = 'ไม่พบนักศึกษาที่ตรงกับคำค้นหา';
     emptyEl.style.display = (list.length===0 && advisorMatches.length===0) ? '' : 'none';
@@ -1520,7 +1543,14 @@ function renderLookupList(){
       if(list.length) container.appendChild(el('div',{style:'font-size:12px;font-weight:600;color:#64748b;margin:12px 4px 4px;', text:'🎓 นักศึกษา'}));
     }
 
-    list.forEach(function(s){
+    /* แบ่งหน้ารายชื่อนักศึกษาทีละ LIST_PAGE_SIZE คน (เหมือนหน้ารายการทั้งหมด) กันหน้ายาวเกินไปเวลาเลือกดูทั้งสาขาที่มี นศ. เยอะ */
+    var totalPages = Math.max(1, Math.ceil(list.length / LIST_PAGE_SIZE));
+    if(lookupListPage >= totalPages) lookupListPage = totalPages - 1;
+    if(lookupListPage < 0) lookupListPage = 0;
+    var startIdx = lookupListPage * LIST_PAGE_SIZE;
+    var pageItems = list.slice(startIdx, startIdx + LIST_PAGE_SIZE);
+
+    pageItems.forEach(function(s){
       var item = el('div',{class:'lookup-item'},[
         el('div',{class:'li-main'},[
           el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
@@ -1535,6 +1565,18 @@ function renderLookupList(){
       });
       container.appendChild(item);
     });
+
+    var pageInfoEl = document.getElementById('lookupPageInfo');
+    var prevBtn = document.getElementById('btnLookupPrev');
+    var nextBtn = document.getElementById('btnLookupNext');
+    if(list.length===0){
+      pageInfoEl.textContent = '';
+    } else {
+      pageInfoEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+pageItems.length)+' จาก '+list.length+' คน (หน้า '+(lookupListPage+1)+'/'+totalPages+')';
+    }
+    prevBtn.disabled = lookupListPage<=0;
+    nextBtn.disabled = lookupListPage>=totalPages-1;
+    pagerEl.style.display = list.length > LIST_PAGE_SIZE ? 'flex' : 'none';
   });
 }
 function selectLookupAdvisor(advisor){
@@ -1959,6 +2001,7 @@ function ensureSearchSelect(id, list, placeholder){
 }
 function renderAllSelects(){
   initDocLinkAutocompletes();
+  fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, 'ทุกสาขา');
   ensureSearchSelect('f_program', masterData.programs, 'พิมพ์เพื่อค้นหาหลักสูตร...');
   ensureSearchSelect('f_department', masterData.departments, 'พิมพ์เพื่อค้นหาสาขาวิชา...');
   fillSelect(document.getElementById('f_plan'), masterData.plans, 'เลือกแผนการเรียน');

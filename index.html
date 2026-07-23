@@ -152,9 +152,12 @@
   table th{text-align:left;background:#f1f4f9;padding:10px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);}
   table td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}
   table tr:hover td{background:#fafbfd;}
-  /* สลับสีพื้นหลังแต่ละแถวในหน้ารายการทั้งหมด (zebra striping) ช่วยให้ตาไล่ดูรายชื่อ นศ. แต่ละคนได้ง่ายขึ้นเวลาข้อมูลเยอะ */
-  #listTbody tr:nth-child(even) td{background:#f8fafc;}
-  #listTbody tr:nth-child(even):hover td{background:#f1f5f9;}
+  /* สลับสีพื้นหลังแต่ละแถวในหน้ารายการทั้งหมด (zebra striping) ช่วยให้ตาไล่ดูรายชื่อ นศ. แต่ละคนได้ง่ายขึ้นเวลาข้อมูลเยอะ
+     ใช้สีชมพูอ่อนสลับกับสีฟ้าอ่อน (โทนเดียวกับสีหลักของแอป) ให้เข้ากันแบบนุ่มนวล ไม่แสบตา */
+  #listTbody tr:nth-child(odd) td{background:#fdf2f8;}
+  #listTbody tr:nth-child(even) td{background:#eef4fc;}
+  #listTbody tr:nth-child(odd):hover td{background:#fbe4ef;}
+  #listTbody tr:nth-child(even):hover td{background:#e1ecfa;}
   .empty-state{text-align:center;padding:40px 10px;color:var(--muted);}
   .master-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
   .master-card{border:1px solid var(--border);border-radius:8px;padding:14px;}

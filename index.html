@@ -508,7 +508,7 @@
     <div style="overflow-x:auto;">
     <table>
       <thead>
-        <tr><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>ประเภทสอบ</th><th>วันที่สอบ</th><th>ผลสอบ</th><th>ไฟล์แนบ</th><th>จัดการ</th></tr>
+        <tr><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>สาขาวิชา</th><th>ประเภทสอบ</th><th>วันที่สอบ</th><th>ผลสอบ</th><th>ไฟล์แนบ</th><th>จัดการ</th></tr>
       </thead>
       <tbody id="listTbody"></tbody>
     </table>
@@ -2919,6 +2919,7 @@ function renderList(){
         var tr = el('tr',{},[
           el('td',{text:r.studentId}),
           el('td',{text:r.studentName}),
+          el('td',{text:r.department||'-'}),
           el('td',{}, typeTagEls),
           el('td',{text: dateParts.length ? dateParts.join(' / ') : '-'}),
           el('td',{}, resultTagEls),

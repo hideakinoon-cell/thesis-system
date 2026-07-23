@@ -152,6 +152,9 @@
   table th{text-align:left;background:#f1f4f9;padding:10px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);}
   table td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}
   table tr:hover td{background:#fafbfd;}
+  /* สลับสีพื้นหลังแต่ละแถวในหน้ารายการทั้งหมด (zebra striping) ช่วยให้ตาไล่ดูรายชื่อ นศ. แต่ละคนได้ง่ายขึ้นเวลาข้อมูลเยอะ */
+  #listTbody tr:nth-child(even) td{background:#f8fafc;}
+  #listTbody tr:nth-child(even):hover td{background:#f1f5f9;}
   .empty-state{text-align:center;padding:40px 10px;color:var(--muted);}
   .master-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
   .master-card{border:1px solid var(--border);border-radius:8px;padding:14px;}
@@ -497,7 +500,7 @@
 <section id="view-list" style="display:none;">
   <div class="card">
     <div class="toolbar">
-      <input type="text" id="listSearch" placeholder="ค้นหา รหัส/ชื่อ/หัวข้อ">
+      <input type="text" id="listSearch" placeholder="ค้นหา รหัส/ชื่อ/สาขา/หัวข้อ">
       <select id="listFilterType">
         <option value="">ทุกประเภทการสอบ</option>
         <option value="proposal">สอบเค้าโครง</option>
@@ -2909,7 +2912,7 @@ function getFilteredRecords(){
         if(!matchesResult) return false;
       }
       if(q){
-        var hay = [r.studentId,r.studentName,r.titleTh,r.titleEn].join(' ').toLowerCase();
+        var hay = [r.studentId,r.studentName,r.department,r.titleTh,r.titleEn].join(' ').toLowerCase();
         if(hay.indexOf(q)===-1) return false;
       }
       return true;

@@ -220,7 +220,8 @@
   <div class="badge" id="roleBadge">เจ้าหน้าที่ (Admin)</div>
 </header>
 <nav class="tabs">
-  <button data-view="dashboard" class="active">🔍 ตรวจสอบข้อมูล</button>
+  <button data-view="summary" class="active">📊 แดชบอร์ด</button>
+  <button data-view="dashboard">🔍 ตรวจสอบข้อมูล</button>
   <button data-view="form">📝 บันทึกข้อมูล</button>
   <button data-view="list">📋 รายการทั้งหมด</button>
   <button data-view="settings">⚙️ ตั้งค่า</button>
@@ -235,8 +236,31 @@
 </div>
 <main>
 
+<!-- ============ SUMMARY DASHBOARD VIEW (แสดงทันทีหลังปลดล็อก) ============ -->
+<section id="view-summary">
+  <div class="card">
+    <h3>📊 สรุปจำนวนนักศึกษา</h3>
+    <div class="kv-grid" id="summaryStudentTotals"></div>
+    <div id="summaryByProgramWrap" style="margin-top:18px;">
+      <h4 style="margin:0 0 10px;font-size:14.5px;color:var(--primary-dark);">แยกตามหลักสูตร</h4>
+      <div id="summaryByProgram"></div>
+    </div>
+    <div id="summaryByDeptWrap" style="margin-top:18px;">
+      <h4 style="margin:0 0 10px;font-size:14.5px;color:var(--primary-dark);">แยกตามสาขาวิชา</h4>
+      <div id="summaryByDept"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📈 สรุปผลสอบ</h3>
+    <h4 style="margin:0 0 10px;font-size:14.5px;color:var(--primary-dark);">สอบเค้าโครงวิทยานิพนธ์/IS (3.1)</h4>
+    <div class="kv-grid" id="summaryProposalResults" style="margin-bottom:18px;"></div>
+    <h4 style="margin:0 0 10px;font-size:14.5px;color:var(--primary-dark);">สอบป้องกันวิทยานิพนธ์/IS (3.2)</h4>
+    <div class="kv-grid" id="summaryDefenseResults"></div>
+  </div>
+</section>
+
 <!-- ============ DASHBOARD / LOOKUP VIEW ============ -->
-<section id="view-dashboard">
+<section id="view-dashboard" style="display:none;">
   <div class="card">
     <h3>🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
     <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา...">
@@ -905,7 +929,7 @@ window.addEventListener('DOMContentLoaded', function(){
     renderViewerPinStatus();
     renderAuthExpiryStatus();
     newDraft();
-    switchView('dashboard');
+    switchView('summary');
     initAutoBackupTimer();
     initOfflineDetection();
     checkPendingOfflineSync();
@@ -1333,14 +1357,16 @@ function applyRoleUI(){
   var isViewer = currentRole==='viewer' || currentRole==='dept-viewer';
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
     var v = btn.getAttribute('data-view');
-    btn.style.display = (isViewer && v!=='dashboard') ? 'none' : '';
+    btn.style.display = (isViewer && v!=='dashboard' && v!=='summary') ? 'none' : '';
   });
   var badge = document.getElementById('roleBadge');
   if(badge){
     badge.textContent = currentRole==='dept-viewer' ? 'เจ้าหน้าที่สาขา (ดูอย่างเดียว) — '+currentDeptRestriction
       : isViewer ? 'เจ้าหน้าที่ (ดูอย่างเดียว)' : 'เจ้าหน้าที่ (Admin)';
   }
-  if(isViewer) switchView('dashboard');
+  /* หน้าแดชบอร์ดสรุปข้อมูลให้ขึ้นเป็นหน้าแรกเสมอทันทีหลังปลดล็อกรหัสผ่านสำเร็จ ไม่ว่าจะเป็นสิทธิ์ใดก็ตาม
+     (applyRoleUI() ถูกเรียกเฉพาะตอนล็อกอิน/ตั้งรหัสผ่านสำเร็จเท่านั้น จึงใช้จุดนี้เป็นตัวควบคุมหน้าที่แสดงหลังเข้าระบบ) */
+  switchView('summary');
 }
 function setViewerPin(){
   var p1 = document.getElementById('viewerPin1').value;
@@ -1452,8 +1478,9 @@ function onLookupSearchInput(){
   lookupSearchDebounceTimer = setTimeout(renderLookupList, 300);
 }
 function switchView(name){
-  if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard') name='dashboard';
-  ['dashboard','form','list','settings'].forEach(function(v){
+  /* เจ้าหน้าที่ดูอย่างเดียว (viewer/dept-viewer) เข้าได้เฉพาะหน้าแดชบอร์ดสรุปข้อมูล กับหน้าตรวจสอบข้อมูลรายบุคคลเท่านั้น */
+  if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard' && name!=='summary') name='dashboard';
+  ['summary','dashboard','form','list','settings'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
@@ -1467,8 +1494,70 @@ function switchView(name){
     computeAdvisorUsedCounts().then(renderAdvisorList);
   }
   if(name==='dashboard') renderDashboard();
+  if(name==='summary') renderSummaryDashboard();
 }
 
+/* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
+function renderSummaryDashboard(){
+  return recordsGetAll().then(function(rows){
+    var latestByStudent = {};
+    rows.forEach(function(r){
+      if(!r.studentId) return;
+      if(currentDeptRestriction && r.department!==currentDeptRestriction) return; /* จำกัดให้เห็นเฉพาะสาขาของตัวเอง (เจ้าหน้าที่สาขา) */
+      if(!latestByStudent[r.studentId] || (r.updatedAt||0) > (latestByStudent[r.studentId].updatedAt||0)){
+        latestByStudent[r.studentId] = r;
+      }
+    });
+    var students = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
+
+    /* สรุปจำนวนนักศึกษาทั้งหมด แยกตามหลักสูตร/สาขาวิชา */
+    var programCounts = {}, deptCounts = {};
+    students.forEach(function(r){
+      var p = r.program || 'ไม่ระบุหลักสูตร';
+      var d = r.department || 'ไม่ระบุสาขา';
+      programCounts[p] = (programCounts[p]||0)+1;
+      deptCounts[d] = (deptCounts[d]||0)+1;
+    });
+    var totalsWrap = document.getElementById('summaryStudentTotals');
+    totalsWrap.innerHTML='';
+    totalsWrap.appendChild(kv('จำนวนนักศึกษาทั้งหมด', students.length+' คน'));
+
+    var progWrap = document.getElementById('summaryByProgram');
+    progWrap.innerHTML='';
+    var progKeys = Object.keys(programCounts).sort(function(a,b){ return programCounts[b]-programCounts[a]; });
+    progWrap.appendChild(progKeys.length
+      ? el('div',{class:'kv-grid'}, progKeys.map(function(p){ return kv(p, programCounts[p]+' คน'); }))
+      : el('div',{class:'help', text:'ยังไม่มีข้อมูลนักศึกษา'}));
+
+    var deptWrap = document.getElementById('summaryByDept');
+    deptWrap.innerHTML='';
+    var deptKeys = Object.keys(deptCounts).sort(function(a,b){ return deptCounts[b]-deptCounts[a]; });
+    deptWrap.appendChild(deptKeys.length
+      ? el('div',{class:'kv-grid'}, deptKeys.map(function(d){ return kv(d, deptCounts[d]+' คน'); }))
+      : el('div',{class:'help', text:'ยังไม่มีข้อมูลนักศึกษา'}));
+
+    /* สรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
+    var proposalStats = {'ผ่าน':0, 'ไม่ผ่าน':0, 'รอผล':0};
+    var defenseStats = {'ผ่าน':0, 'ผ่านแบบมีเงื่อนไข':0, 'ไม่ผ่าน':0, 'รอผล':0};
+    students.forEach(function(r){
+      if(recHasProposalData(r)){
+        var pr = r.proposalResult || 'รอผล';
+        proposalStats[pr] = (proposalStats[pr]||0)+1;
+      }
+      if(recHasDefenseData(r)){
+        var dr = r.defenseResult || 'รอผล';
+        defenseStats[dr] = (defenseStats[dr]||0)+1;
+      }
+    });
+    var proposalWrap = document.getElementById('summaryProposalResults');
+    proposalWrap.innerHTML='';
+    ['ผ่าน','ไม่ผ่าน','รอผล'].forEach(function(k){ proposalWrap.appendChild(kv(k, proposalStats[k]+' คน')); });
+
+    var defenseWrap = document.getElementById('summaryDefenseResults');
+    defenseWrap.innerHTML='';
+    ['ผ่าน','ผ่านแบบมีเงื่อนไข','ไม่ผ่าน','รอผล'].forEach(function(k){ defenseWrap.appendChild(kv(k, defenseStats[k]+' คน')); });
+  });
+}
 /* ================= DASHBOARD / STUDENT LOOKUP ================= */
 function renderDashboard(){
   renderLookupList();

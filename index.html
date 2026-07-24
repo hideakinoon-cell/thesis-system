@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root{
     --primary:#1e4d8b; --primary-dark:#153a68; --primary-light:#e8f0fb;
@@ -50,6 +51,21 @@
   .kv-item.full{grid-column:1/-1;}
   .kv-item .k{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
   .kv-item .v{font-size:15.5px;font-weight:600;color:var(--text);white-space:pre-line;line-height:1.5;}
+  /* หน้าแดชบอร์ดสรุปข้อมูล — การ์ดสถิติสีสัน + กราฟ ให้ดูสวยงามและเห็นภาพรวมได้ไวกว่าตัวเลขล้วนๆ */
+  .summary-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:20px;}
+  .stat-card{border-radius:16px;padding:20px 22px;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.12);position:relative;overflow:hidden;}
+  .stat-card .stat-icon{font-size:28px;opacity:.9;margin-bottom:6px;}
+  .stat-card .stat-value{font-size:32px;font-weight:800;line-height:1.1;}
+  .stat-card .stat-label{font-size:13.5px;font-weight:600;opacity:.92;margin-top:4px;}
+  .stat-card.stat-blue{background:linear-gradient(135deg,#2f6fc0,#1e4d8b);}
+  .stat-card.stat-green{background:linear-gradient(135deg,#4caf7d,#2f8f5b);}
+  .stat-card.stat-amber{background:linear-gradient(135deg,#f0ad4e,#b7791f);}
+  .stat-card.stat-pink{background:linear-gradient(135deg,#ec6fa8,#c23e79);}
+  .summary-charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:18px;}
+  .chart-card{padding:20px 22px 12px;}
+  .chart-card h3{margin-bottom:16px;}
+  .chart-card-body{position:relative;height:260px;}
+  .chart-empty-msg{display:flex;align-items:center;justify-content:center;height:260px;color:var(--muted);font-size:14px;}
   .kv-item .v.empty{color:#adb3bd;font-weight:400;}
   .kv-item .v.doc-link{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer;}
   .kv-item .v.doc-link:hover{text-decoration:underline;}
@@ -238,24 +254,49 @@
 
 <!-- ============ SUMMARY DASHBOARD VIEW (แสดงทันทีหลังปลดล็อก) ============ -->
 <section id="view-summary">
-  <div class="card">
-    <h3>📊 สรุปจำนวนนักศึกษา</h3>
-    <div class="kv-grid" id="summaryStudentTotals"></div>
-    <div id="summaryByProgramWrap" style="margin-top:18px;">
-      <h4 style="margin:0 0 10px;font-size:14.5px;color:var(--primary-dark);">แยกตามหลักสูตร</h4>
-      <div id="summaryByProgram"></div>
+  <div class="summary-stats-row">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">🎓</div>
+      <div class="stat-value" id="statTotalStudents">0</div>
+      <div class="stat-label">นักศึกษาทั้งหมด</div>
     </div>
-    <div id="summaryByDeptWrap" style="margin-top:18px;">
-      <h4 style="margin:0 0 10px;font-size:14.5px;color:var(--primary-dark);">แยกตามสาขาวิชา</h4>
-      <div id="summaryByDept"></div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon">🎉</div>
+      <div class="stat-value" id="statGraduated">0</div>
+      <div class="stat-label">สำเร็จการศึกษาแล้ว</div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-icon">📖</div>
+      <div class="stat-value" id="statActive">0</div>
+      <div class="stat-label">กำลังศึกษา</div>
+    </div>
+    <div class="stat-card stat-pink">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-value" id="statWithdrawnAdvisor">0</div>
+      <div class="stat-label">ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่</div>
     </div>
   </div>
-  <div class="card">
-    <h3>📈 สรุปผลสอบ</h3>
-    <h4 style="margin:0 0 10px;font-size:14.5px;color:var(--primary-dark);">สอบเค้าโครงวิทยานิพนธ์/IS (3.1)</h4>
-    <div class="kv-grid" id="summaryProposalResults" style="margin-bottom:18px;"></div>
-    <h4 style="margin:0 0 10px;font-size:14.5px;color:var(--primary-dark);">สอบป้องกันวิทยานิพนธ์/IS (3.2)</h4>
-    <div class="kv-grid" id="summaryDefenseResults"></div>
+
+  <div class="summary-charts-row">
+    <div class="card chart-card">
+      <h3>🎓 นักศึกษาแยกตามหลักสูตร</h3>
+      <div class="chart-card-body"><canvas id="chartByProgram"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>🏫 นักศึกษาแยกตามสาขาวิชา</h3>
+      <div class="chart-card-body"><canvas id="chartByDept"></canvas></div>
+    </div>
+  </div>
+
+  <div class="summary-charts-row">
+    <div class="card chart-card">
+      <h3>📘 ผลสอบเค้าโครงวิทยานิพนธ์/IS (3.1)</h3>
+      <div class="chart-card-body"><canvas id="chartProposal"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>📗 ผลสอบป้องกันวิทยานิพนธ์/IS (3.2)</h3>
+      <div class="chart-card-body"><canvas id="chartDefense"></canvas></div>
+    </div>
   </div>
 </section>
 
@@ -1498,6 +1539,32 @@ function switchView(name){
 }
 
 /* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
+var summaryCharts = {}; /* เก็บ instance ของกราฟแต่ละอันไว้ทำลายทิ้งก่อนวาดใหม่ทุกครั้ง กัน canvas ชนกัน (Chart.js ต้อง destroy ของเก่าก่อน) */
+var SUMMARY_CHART_COLORS = {
+  program: ['#2f6fc0','#4caf7d','#f0ad4e','#ec6fa8','#8b5cf6','#14b8a6','#f87171','#64748b'],
+  dept: ['#ec6fa8','#2f6fc0','#4caf7d','#f0ad4e','#8b5cf6','#14b8a6','#f87171','#64748b'],
+  proposal: {'ผ่าน':'#2f8f5b','ไม่ผ่าน':'#c0392b','รอผล':'#b7791f'},
+  defense: {'ผ่าน':'#2f8f5b','ผ่านแบบมีเงื่อนไข':'#e08a2b','ไม่ผ่าน':'#c0392b','รอผล':'#94a3b8'}
+};
+function renderOrUpdateDonutChart(canvasId, chartKey, labels, values, colors, emptyMsgSelector){
+  var canvas = document.getElementById(canvasId);
+  var wrap = canvas.parentElement;
+  var total = values.reduce(function(a,b){ return a+b; }, 0);
+  if(summaryCharts[chartKey]){ summaryCharts[chartKey].destroy(); delete summaryCharts[chartKey]; }
+  var existingEmpty = wrap.querySelector('.chart-empty-msg');
+  if(existingEmpty) existingEmpty.remove();
+  if(total===0 || typeof Chart==='undefined'){
+    canvas.style.display='none';
+    wrap.appendChild(el('div',{class:'chart-empty-msg', text: typeof Chart==='undefined' ? 'ไม่สามารถโหลดกราฟได้ (ไม่มีอินเทอร์เน็ต) — แสดงเฉพาะตัวเลข' : 'ยังไม่มีข้อมูล'}));
+    return;
+  }
+  canvas.style.display='';
+  summaryCharts[chartKey] = new Chart(canvas, {
+    type:'doughnut',
+    data:{ labels:labels, datasets:[{ data:values, backgroundColor:colors, borderColor:'#fff', borderWidth:2 }] },
+    options:{ maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ boxWidth:13, font:{ family:'Sarabun', size:12.5 } } } } }
+  });
+}
 function renderSummaryDashboard(){
   return recordsGetAll().then(function(rows){
     var latestByStudent = {};
@@ -1510,7 +1577,15 @@ function renderSummaryDashboard(){
     });
     var students = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
 
-    /* สรุปจำนวนนักศึกษาทั้งหมด แยกตามหลักสูตร/สาขาวิชา */
+    /* การ์ดสถิติสีสันด้านบน */
+    var graduatedCount = students.filter(function(r){ return !!r.graduated; }).length;
+    var withdrawnCount = students.filter(studentHasWithdrawnAdvisor).length;
+    document.getElementById('statTotalStudents').textContent = students.length;
+    document.getElementById('statGraduated').textContent = graduatedCount;
+    document.getElementById('statActive').textContent = students.length - graduatedCount;
+    document.getElementById('statWithdrawnAdvisor').textContent = withdrawnCount;
+
+    /* กราฟจำนวนนักศึกษาแยกตามหลักสูตร/สาขาวิชา */
     var programCounts = {}, deptCounts = {};
     students.forEach(function(r){
       var p = r.program || 'ไม่ระบุหลักสูตร';
@@ -1518,25 +1593,13 @@ function renderSummaryDashboard(){
       programCounts[p] = (programCounts[p]||0)+1;
       deptCounts[d] = (deptCounts[d]||0)+1;
     });
-    var totalsWrap = document.getElementById('summaryStudentTotals');
-    totalsWrap.innerHTML='';
-    totalsWrap.appendChild(kv('จำนวนนักศึกษาทั้งหมด', students.length+' คน'));
-
-    var progWrap = document.getElementById('summaryByProgram');
-    progWrap.innerHTML='';
     var progKeys = Object.keys(programCounts).sort(function(a,b){ return programCounts[b]-programCounts[a]; });
-    progWrap.appendChild(progKeys.length
-      ? el('div',{class:'kv-grid'}, progKeys.map(function(p){ return kv(p, programCounts[p]+' คน'); }))
-      : el('div',{class:'help', text:'ยังไม่มีข้อมูลนักศึกษา'}));
+    renderOrUpdateDonutChart('chartByProgram','program', progKeys, progKeys.map(function(k){ return programCounts[k]; }), SUMMARY_CHART_COLORS.program);
 
-    var deptWrap = document.getElementById('summaryByDept');
-    deptWrap.innerHTML='';
     var deptKeys = Object.keys(deptCounts).sort(function(a,b){ return deptCounts[b]-deptCounts[a]; });
-    deptWrap.appendChild(deptKeys.length
-      ? el('div',{class:'kv-grid'}, deptKeys.map(function(d){ return kv(d, deptCounts[d]+' คน'); }))
-      : el('div',{class:'help', text:'ยังไม่มีข้อมูลนักศึกษา'}));
+    renderOrUpdateDonutChart('chartByDept','dept', deptKeys, deptKeys.map(function(k){ return deptCounts[k]; }), SUMMARY_CHART_COLORS.dept);
 
-    /* สรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
+    /* กราฟสรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
     var proposalStats = {'ผ่าน':0, 'ไม่ผ่าน':0, 'รอผล':0};
     var defenseStats = {'ผ่าน':0, 'ผ่านแบบมีเงื่อนไข':0, 'ไม่ผ่าน':0, 'รอผล':0};
     students.forEach(function(r){
@@ -1549,13 +1612,11 @@ function renderSummaryDashboard(){
         defenseStats[dr] = (defenseStats[dr]||0)+1;
       }
     });
-    var proposalWrap = document.getElementById('summaryProposalResults');
-    proposalWrap.innerHTML='';
-    ['ผ่าน','ไม่ผ่าน','รอผล'].forEach(function(k){ proposalWrap.appendChild(kv(k, proposalStats[k]+' คน')); });
+    var proposalLabels = ['ผ่าน','ไม่ผ่าน','รอผล'];
+    renderOrUpdateDonutChart('chartProposal','proposal', proposalLabels, proposalLabels.map(function(k){ return proposalStats[k]; }), proposalLabels.map(function(k){ return SUMMARY_CHART_COLORS.proposal[k]; }));
 
-    var defenseWrap = document.getElementById('summaryDefenseResults');
-    defenseWrap.innerHTML='';
-    ['ผ่าน','ผ่านแบบมีเงื่อนไข','ไม่ผ่าน','รอผล'].forEach(function(k){ defenseWrap.appendChild(kv(k, defenseStats[k]+' คน')); });
+    var defenseLabels = ['ผ่าน','ผ่านแบบมีเงื่อนไข','ไม่ผ่าน','รอผล'];
+    renderOrUpdateDonutChart('chartDefense','defense', defenseLabels, defenseLabels.map(function(k){ return defenseStats[k]; }), defenseLabels.map(function(k){ return SUMMARY_CHART_COLORS.defense[k]; }));
   });
 }
 /* ================= DASHBOARD / STUDENT LOOKUP ================= */

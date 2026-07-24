@@ -263,49 +263,26 @@
   .lhv-badge-1{top:-14px;right:-8px;}
   .lhv-badge-2{bottom:-14px;left:-14px;}
 
-  .landing-features{max-width:1100px;margin:0 auto;padding:36px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;}
-  .lf-item{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 14px;text-align:center;box-shadow:var(--shadow-sm);transition:transform .18s,box-shadow .18s;}
+  .landing-features{max-width:1100px;margin:0 auto;padding:44px 32px 36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;}
+  .lf-item{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px 14px;text-align:center;box-shadow:var(--shadow-sm);transition:transform .18s,box-shadow .18s;}
   .lf-item:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
-  .lf-icon{font-size:26px;margin-bottom:8px;}
+  .lf-icon-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:23px;margin:0 auto 12px;}
+  .lf-c1{background:linear-gradient(135deg,#d3e6fb,#a9cbf5);}
+  .lf-c2{background:linear-gradient(135deg,#fbd9ea,#f7b3d3);}
+  .lf-c3{background:linear-gradient(135deg,#e0d4fb,#c9b3f7);}
+  .lf-c4{background:linear-gradient(135deg,#d3f5e4,#a9e8c6);}
+  .lf-c5{background:linear-gradient(135deg,#fde7c7,#f6cd8f);}
   .lf-label{font-size:13px;font-weight:700;color:var(--primary-dark);}
 
-  .landing-benefits{max-width:1100px;margin:0 auto;padding:40px 32px;text-align:center;}
-  .landing-benefits h2,.landing-preview h2,.landing-why h2{color:var(--primary-dark);font-size:23px;margin:0 0 6px;}
-  .landing-sub{color:var(--muted);font-size:14px;margin:0 0 30px;}
-  .lb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:22px;}
-  .lb-item p{font-size:13.5px;color:var(--text);line-height:1.65;margin:12px 0 0;}
-  .lb-circle{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:29px;margin:0 auto;}
-  .lb-c1{background:linear-gradient(135deg,#e0d4fb,#c9b3f7);}
-  .lb-c2{background:linear-gradient(135deg,#fbd9ea,#f7b3d3);}
-  .lb-c3{background:linear-gradient(135deg,#d3e6fb,#a9cbf5);}
-  .lb-c4{background:linear-gradient(135deg,#d3f5e4,#a9e8c6);}
-
-  .landing-preview{background:#fff;padding:44px 32px;text-align:center;}
-  .lp-mockups{max-width:1100px;margin:30px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;}
-  .lp-mock{background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .18s;text-align:left;}
-  .lp-mock:hover{transform:translateY(-4px);}
-  .lp-mock-mid{background:linear-gradient(135deg,#1e4d8b,#7c3aed);}
-  .lp-mock-bar{height:24px;background:rgba(0,0,0,.06);}
-  .lp-mock-mid .lp-mock-bar{background:rgba(255,255,255,.15);}
-  .lp-mock-body{padding:16px;}
-  .lp-mock-row{height:11px;border-radius:6px;background:var(--border);margin-bottom:9px;}
-  .lp-mock-row.short{width:60%;}
-  .lp-mock-chip{display:inline-block;width:64px;height:22px;border-radius:20px;background:rgba(255,255,255,.28);margin:0 6px 8px 0;}
-  .lp-mock-table span{display:block;height:10px;background:var(--border);border-radius:4px;margin-bottom:9px;}
-  .lp-mock-table span:nth-child(2){width:82%;}
-  .lp-mock-table span:nth-child(3){width:58%;}
-
-  .landing-why{max-width:1100px;margin:0 auto;padding:44px 32px;text-align:center;}
-  .landing-why h2{margin-bottom:30px;}
-  .lw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;}
-  .lw-card{border-radius:16px;padding:28px 22px;color:#fff;box-shadow:var(--shadow-md);transition:transform .18s;}
-  .lw-card:hover{transform:translateY(-5px);}
-  .lw-card h3{margin:10px 0 8px;font-size:16px;}
-  .lw-card p{margin:0;font-size:13.5px;opacity:.92;line-height:1.6;}
-  .lw-icon{font-size:27px;}
-  .lw-c1{background:linear-gradient(135deg,#7c3aed,#5b21b6);}
-  .lw-c2{background:linear-gradient(135deg,#2f6fc0,#1e4d8b);}
-  .lw-c3{background:linear-gradient(135deg,#ec6fa8,#c23e79);}
+  /* แถบปิดท้ายก่อน footer: ภาพประกอบมินิมอลแบบ blob สีนุ่มๆ แทนข้อความยาวๆ */
+  .landing-cta{position:relative;overflow:hidden;padding:70px 32px;text-align:center;background:#fff;}
+  .landing-cta::before,.landing-cta::after{content:'';position:absolute;border-radius:50%;filter:blur(50px);opacity:.4;z-index:0;}
+  .landing-cta::before{width:260px;height:260px;background:var(--accent2);top:-70px;left:-50px;}
+  .landing-cta::after{width:300px;height:300px;background:var(--accent3);bottom:-90px;right:-70px;}
+  .landing-cta-inner{position:relative;z-index:1;max-width:520px;margin:0 auto;}
+  .landing-cta-icon{width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 18px;box-shadow:var(--shadow-lg);}
+  .landing-cta h2{font-size:22px;color:var(--primary-dark);margin:0 0 10px;}
+  .landing-cta p{color:var(--muted);font-size:14px;margin:0 0 24px;line-height:1.7;}
 
   .landing-footer{background:linear-gradient(120deg,#1e4d8b,#2f6fc0 45%,#7c3aed);color:#fff;padding:32px 32px 18px;}
   .landing-footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
@@ -332,8 +309,6 @@
     <div class="landing-brand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
     <div class="landing-nav-links">
       <a href="#lp-features">ฟีเจอร์</a>
-      <a href="#lp-preview">ตัวอย่างหน้าจอ</a>
-      <a href="#lp-why">ทำไมต้องใช้</a>
     </div>
     <button type="button" class="btn btn-primary" id="btnLandingEnterNav">เข้าสู่ระบบ</button>
   </nav>
@@ -360,49 +335,19 @@
   </section>
 
   <section class="landing-features" id="lp-features">
-    <div class="lf-item"><div class="lf-icon">📊</div><div class="lf-label">แดชบอร์ดสรุปข้อมูล</div></div>
-    <div class="lf-item"><div class="lf-icon">🔍</div><div class="lf-label">ตรวจสอบข้อมูลนักศึกษา</div></div>
-    <div class="lf-item"><div class="lf-icon">📝</div><div class="lf-label">บันทึกข้อมูลการสอบ</div></div>
-    <div class="lf-item"><div class="lf-icon">📋</div><div class="lf-label">รายการทั้งหมด</div></div>
-    <div class="lf-item"><div class="lf-icon">⚙️</div><div class="lf-label">ตั้งค่าระบบ</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c1">📊</div><div class="lf-label">แดชบอร์ดสรุปข้อมูล</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c2">🔍</div><div class="lf-label">ตรวจสอบข้อมูลนักศึกษา</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c3">📝</div><div class="lf-label">บันทึกข้อมูลการสอบ</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c4">📋</div><div class="lf-label">รายการทั้งหมด</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c5">⚙️</div><div class="lf-label">ตั้งค่าระบบ</div></div>
   </section>
 
-  <section class="landing-benefits">
-    <h2>ประโยชน์ของระบบ</h2>
-    <p class="landing-sub">เมื่อใช้ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</p>
-    <div class="lb-grid">
-      <div class="lb-item"><div class="lb-circle lb-c1">📝</div><p>เจ้าหน้าที่บันทึกข้อมูลได้รวดเร็วและแม่นยำ</p></div>
-      <div class="lb-item"><div class="lb-circle lb-c2">⏱️</div><p>ตรวจสอบสถานะนักศึกษาได้ทันทีแบบเรียลไทม์</p></div>
-      <div class="lb-item"><div class="lb-circle lb-c3">📂</div><p>ลดความซ้ำซ้อนของเอกสารและการกรอกข้อมูลซ้ำ</p></div>
-      <div class="lb-item"><div class="lb-circle lb-c4">📈</div><p>รายงานสรุปพร้อมกราฟ เข้าใจง่ายในหน้าเดียว</p></div>
-    </div>
-  </section>
-
-  <section class="landing-preview" id="lp-preview">
-    <h2>ตัวอย่างหน้าจอการใช้งาน</h2>
-    <p class="landing-sub">จัดการข้อมูลได้ครบทุกขั้นตอนในระบบเดียว</p>
-    <div class="lp-mockups">
-      <div class="lp-mock">
-        <div class="lp-mock-bar"></div>
-        <div class="lp-mock-body"><div class="lp-mock-row"></div><div class="lp-mock-row short"></div><div class="lp-mock-row"></div></div>
-      </div>
-      <div class="lp-mock lp-mock-mid">
-        <div class="lp-mock-bar"></div>
-        <div class="lp-mock-body"><div class="lp-mock-chip"></div><div class="lp-mock-chip"></div><div class="lp-mock-row"></div></div>
-      </div>
-      <div class="lp-mock">
-        <div class="lp-mock-bar"></div>
-        <div class="lp-mock-body"><div class="lp-mock-table"><span></span><span></span><span></span></div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="landing-why" id="lp-why">
-    <h2>ทำไมต้องใช้ระบบนี้</h2>
-    <div class="lw-grid">
-      <div class="lw-card lw-c1"><div class="lw-icon">💡</div><h3>ใช้งานง่าย</h3><p>ออกแบบมาเพื่อเจ้าหน้าที่บัณฑิตวิทยาลัยโดยเฉพาะ</p></div>
-      <div class="lw-card lw-c2"><div class="lw-icon">🔒</div><h3>ข้อมูลปลอดภัย</h3><p>เก็บข้อมูลบน Google Sheets/Drive ของหน่วยงานเอง</p></div>
-      <div class="lw-card lw-c3"><div class="lw-icon">🤝</div><h3>ใช้งานร่วมกันได้</h3><p>รองรับหลายสาขาวิชา หลายเจ้าหน้าที่พร้อมกัน</p></div>
+  <section class="landing-cta">
+    <div class="landing-cta-inner">
+      <div class="landing-cta-icon">🎓</div>
+      <h2>พร้อมเริ่มใช้งานแล้วหรือยัง?</h2>
+      <p>เข้าถึงข้อมูลการสอบวิทยานิพนธ์และการค้นคว้าอิสระของนักศึกษาได้ทุกที่ ทุกเวลา</p>
+      <button type="button" class="btn btn-primary btn-lg" id="btnLandingEnterCta">เข้าสู่ระบบ →</button>
     </div>
   </section>
 
@@ -411,8 +356,6 @@
       <div class="lf-brand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
       <div class="lf-links">
         <a href="#lp-features">ฟีเจอร์</a>
-        <a href="#lp-preview">ตัวอย่างหน้าจอ</a>
-        <a href="#lp-why">ทำไมต้องใช้</a>
       </div>
       <button type="button" class="btn btn-on-dark" id="btnLandingEnterFooter">เข้าสู่ระบบ</button>
     </div>
@@ -1541,7 +1484,7 @@ function enterFromLandingPage(){
   if(pinInput) pinInput.focus();
 }
 function bindLandingPageEvents(){
-  ['btnLandingEnterNav','btnLandingEnterHero','btnLandingEnterFooter'].forEach(function(id){
+  ['btnLandingEnterNav','btnLandingEnterHero','btnLandingEnterCta','btnLandingEnterFooter'].forEach(function(id){
     var btn = document.getElementById(id);
     if(btn) btn.addEventListener('click', enterFromLandingPage);
   });

@@ -298,6 +298,13 @@
       <div class="chart-card-body"><canvas id="chartDefense"></canvas></div>
     </div>
   </div>
+
+  <div class="summary-charts-row">
+    <div class="card chart-card">
+      <h3>🎉 ผู้สำเร็จการศึกษา แยกตามสาขาวิชา</h3>
+      <div class="chart-card-body"><canvas id="chartGraduatedByDept"></canvas></div>
+    </div>
+  </div>
 </section>
 
 <!-- ============ DASHBOARD / LOOKUP VIEW ============ -->
@@ -1598,6 +1605,16 @@ function renderSummaryDashboard(){
 
     var deptKeys = Object.keys(deptCounts).sort(function(a,b){ return deptCounts[b]-deptCounts[a]; });
     renderOrUpdateDonutChart('chartByDept','dept', deptKeys, deptKeys.map(function(k){ return deptCounts[k]; }), SUMMARY_CHART_COLORS.dept);
+
+    /* กราฟจำนวนผู้สำเร็จการศึกษาแล้ว แยกตามสาขาวิชา */
+    var graduatedByDept = {};
+    students.forEach(function(r){
+      if(!r.graduated) return;
+      var d = r.department || 'ไม่ระบุสาขา';
+      graduatedByDept[d] = (graduatedByDept[d]||0)+1;
+    });
+    var gradDeptKeys = Object.keys(graduatedByDept).sort(function(a,b){ return graduatedByDept[b]-graduatedByDept[a]; });
+    renderOrUpdateDonutChart('chartGraduatedByDept','graduatedByDept', gradDeptKeys, gradDeptKeys.map(function(k){ return graduatedByDept[k]; }), SUMMARY_CHART_COLORS.dept);
 
     /* กราฟสรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
     var proposalStats = {'ผ่าน':0, 'ไม่ผ่าน':0, 'รอผล':0};

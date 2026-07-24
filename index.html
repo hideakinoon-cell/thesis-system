@@ -274,6 +274,13 @@
   .lf-c5{background:linear-gradient(135deg,#fde7c7,#f6cd8f);}
   .lf-label{font-size:13px;font-weight:700;color:var(--primary-dark);}
 
+  /* แถบจุดเด่นสั้นๆ (1 บรรทัดต่อรายการ) เติมช่องว่างระหว่างฟีเจอร์กับ CTA แบบไม่หนักเกินไป */
+  .landing-benefits-mini{max-width:900px;margin:0 auto;padding:6px 32px 46px;}
+  .lbm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;}
+  .lbm-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:13px 16px;font-size:13.5px;font-weight:600;color:var(--text);box-shadow:var(--shadow-sm);transition:transform .15s,box-shadow .15s;}
+  .lbm-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .lbm-icon{font-size:19px;flex-shrink:0;}
+
   /* แถบปิดท้ายก่อน footer: ภาพประกอบมินิมอลแบบ blob สีนุ่มๆ แทนข้อความยาวๆ */
   .landing-cta{position:relative;overflow:hidden;padding:70px 32px;text-align:center;background:#fff;}
   .landing-cta::before,.landing-cta::after{content:'';position:absolute;border-radius:50%;filter:blur(50px);opacity:.4;z-index:0;}
@@ -340,6 +347,15 @@
     <div class="lf-item"><div class="lf-icon-circle lf-c3">📝</div><div class="lf-label">บันทึกข้อมูลการสอบ</div></div>
     <div class="lf-item"><div class="lf-icon-circle lf-c4">📋</div><div class="lf-label">รายการทั้งหมด</div></div>
     <div class="lf-item"><div class="lf-icon-circle lf-c5">⚙️</div><div class="lf-label">ตั้งค่าระบบ</div></div>
+  </section>
+
+  <section class="landing-benefits-mini" id="lp-benefits">
+    <div class="lbm-grid">
+      <div class="lbm-item"><span class="lbm-icon">⚡</span> รวดเร็ว ลดการกรอกข้อมูลซ้ำ</div>
+      <div class="lbm-item"><span class="lbm-icon">🔒</span> ปลอดภัย เก็บบน Google Sheets/Drive ของหน่วยงาน</div>
+      <div class="lbm-item"><span class="lbm-icon">📱</span> ใช้งานได้ทุกที่ ทุกอุปกรณ์</div>
+      <div class="lbm-item"><span class="lbm-icon">🤝</span> รองรับหลายสาขาวิชา หลายเจ้าหน้าที่</div>
+    </div>
   </section>
 
   <section class="landing-cta">

@@ -550,6 +550,10 @@
       <h3>🎉 ผู้สำเร็จการศึกษา แยกตามสาขาวิชา</h3>
       <div class="chart-card-body"><canvas id="chartGraduatedByDept"></canvas></div>
     </div>
+    <div class="card chart-card">
+      <h3>📅 ผู้สำเร็จการศึกษา แยกตามปีการศึกษา</h3>
+      <div class="chart-card-body"><canvas id="chartGraduatedByYear"></canvas></div>
+    </div>
   </div>
 </section>
 
@@ -1817,8 +1821,17 @@ var SUMMARY_CHART_COLORS = {
   program: ['#2f6fc0','#4caf7d','#f0ad4e','#ec6fa8','#8b5cf6','#14b8a6','#f87171','#64748b'],
   dept: ['#ec6fa8','#2f6fc0','#4caf7d','#f0ad4e','#8b5cf6','#14b8a6','#f87171','#64748b'],
   proposal: {'ผ่าน':'#2f8f5b','ไม่ผ่าน':'#c0392b','รอผล':'#b7791f'},
-  defense: {'ผ่าน':'#2f8f5b','ผ่านแบบมีเงื่อนไข':'#e08a2b','ไม่ผ่าน':'#c0392b','รอผล':'#94a3b8'}
+  defense: {'ผ่าน':'#2f8f5b','ผ่านแบบมีเงื่อนไข':'#e08a2b','ไม่ผ่าน':'#c0392b','รอผล':'#94a3b8'},
+  year: ['#2f6fc0','#4caf7d','#f0ad4e','#ec6fa8','#8b5cf6','#14b8a6','#f87171','#64748b']
 };
+/* ดึงปีการศึกษา (พ.ศ. 4 หลัก) ออกจากช่อง graduatedTerm ที่กรอกแบบ "ภาคเรียน/ปี" เช่น "1/2568" —
+   รองรับกรณีกรอกแค่ปีเดี่ยวๆ ด้วย ถ้าไม่พบรูปแบบที่ใช้ได้คืนค่าว่าง (ไปจัดกลุ่ม "ไม่ระบุปี" แทน) */
+function extractGraduatedYear(term){
+  if(!term) return '';
+  var parts = String(term).split('/');
+  var y = parts[parts.length-1].trim();
+  return /^\d{4}$/.test(y) ? y : '';
+}
 function renderOrUpdateDonutChart(canvasId, chartKey, labels, values, colors, emptyMsgSelector){
   var canvas = document.getElementById(canvasId);
   var wrap = canvas.parentElement;
@@ -1881,6 +1894,21 @@ function renderSummaryDashboard(){
     });
     var gradDeptKeys = Object.keys(graduatedByDept).sort(function(a,b){ return graduatedByDept[b]-graduatedByDept[a]; });
     renderOrUpdateDonutChart('chartGraduatedByDept','graduatedByDept', gradDeptKeys, gradDeptKeys.map(function(k){ return graduatedByDept[k]; }), SUMMARY_CHART_COLORS.dept);
+
+    /* กราฟจำนวนผู้สำเร็จการศึกษาแล้ว แยกตามปีการศึกษา (ดึงจากช่องภาคเรียนที่สำเร็จการศึกษา เช่น "1/2568") */
+    var graduatedByYear = {};
+    students.forEach(function(r){
+      if(!r.graduated) return;
+      var y = extractGraduatedYear(r.graduatedTerm);
+      var label = y ? ('ปีการศึกษา '+y) : 'ไม่ระบุปี';
+      graduatedByYear[label] = (graduatedByYear[label]||0)+1;
+    });
+    var gradYearKeys = Object.keys(graduatedByYear).sort(function(a,b){
+      if(a==='ไม่ระบุปี') return 1;
+      if(b==='ไม่ระบุปี') return -1;
+      return a.localeCompare(b, undefined, {numeric:true});
+    });
+    renderOrUpdateDonutChart('chartGraduatedByYear','graduatedByYear', gradYearKeys, gradYearKeys.map(function(k){ return graduatedByYear[k]; }), SUMMARY_CHART_COLORS.year);
 
     /* กราฟสรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
     var proposalStats = {'ผ่าน':0, 'ไม่ผ่าน':0, 'รอผล':0};

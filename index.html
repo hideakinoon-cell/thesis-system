@@ -728,6 +728,38 @@
   <div class="card">
     <h3>หมวดที่ 3: กำหนดการสอบและผลสอบ</h3>
     <div class="help">กรอกข้อมูลใน "3.1" หรือ "3.2" เพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (1 รายการ = การสอบ 1 ครั้ง) ถ้านักศึกษาเคยสอบมาก่อน หรือจะบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนเดิม ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 แล้วกด "＋ เพิ่มข้อมูลใหม่" เพื่อเริ่มรายการใหม่ — ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม เมื่อกด "แก้ไข" รายการที่เคยบันทึกไว้ ส่วนที่ไม่ตรงกับประเภทเดิมจะถูกล็อกไว้เพื่อป้องกันการเขียนทับ</div>
+
+    <div class="grid cols-3" style="margin-top:14px;">
+      <div class="field full">
+        <label>สถานะการลงทะเบียน/รักษาสภาพในภาคเรียนที่ขอสอบ</label>
+        <div class="radio-group">
+          <label><input type="radio" name="examTermStatus" value="ลงทะเบียน" checked> ลงทะเบียน</label>
+          <label><input type="radio" name="examTermStatus" value="รักษาสภาพ"> รักษาสภาพการเป็นนักศึกษา</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>ภาคเรียนที่ขอสอบ</label>
+        <div style="display:flex;gap:8px;">
+          <select id="f_examTermSemester" style="flex:1;">
+            <option value="">ภาคเรียน</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">ฤดูร้อน</option>
+          </select>
+          <select id="f_examTermYear" style="flex:1.3;">
+            <option value="">ปีการศึกษา (พ.ศ.)</option>
+            <option value="2555">2555</option><option value="2556">2556</option><option value="2557">2557</option>
+            <option value="2558">2558</option><option value="2559">2559</option><option value="2560">2560</option>
+            <option value="2561">2561</option><option value="2562">2562</option><option value="2563">2563</option>
+            <option value="2564">2564</option><option value="2565">2565</option><option value="2566">2566</option>
+            <option value="2567">2567</option><option value="2568">2568</option><option value="2569">2569</option>
+            <option value="2570">2570</option><option value="2571">2571</option><option value="2572">2572</option>
+            <option value="2573">2573</option><option value="2574">2574</option><option value="2575">2575</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <div id="studentHistoryBox" style="display:none;margin-top:14px;">
       <h4>ประวัติการสอบของนักศึกษาคนนี้</h4>
       <div id="studentHistoryList"></div>
@@ -2572,6 +2604,16 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
   });
   examBlocks.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
 
+  /* ช่องลงทะเบียน/รักษาสภาพภาคเรียนที่ขอสอบ เป็นข้อมูลเดียวใช้ร่วมกันทั้งหมวดที่ 3 (ไม่แยกตาม 3.1/3.2)
+     แสดงเป็นการ์ดเล็กๆ นำหน้าการ์ดรายละเอียดการสอบแต่ละครั้ง — แสดงเฉพาะตอนมีข้อมูลจริงเท่านั้น */
+  if(latest.examTerm || latest.examTermStatus){
+    wrap.appendChild(el('div',{class:'card section-card', style:'padding:12px 16px;margin-bottom:12px;'},[
+      el('div',{class:'kv-grid'},[
+        kv((latest.examTermStatus||'ลงทะเบียน')+'ในภาคเรียนที่ขอสอบ', latest.examTerm ? ('ภาคเรียนที่ '+latest.examTerm.split('/')[0]+' ปีการศึกษา '+latest.examTerm.split('/')[1]) : '')
+      ])
+    ]));
+  }
+
   examBlocks.forEach(function(r, idx){
     var files = r.files;
     var resultClass = r.result==='ผ่าน' ? 'pass' : (r.result==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail');
@@ -3019,7 +3061,7 @@ function mergeStudentRows(rows){
   var advisorHistory = (primary.advisorHistory||[]).slice();
   var bioFields = ['studentName','degreeLevel','plan','program','department','englishResult','englishScore','englishDocLink',
     'computerResult','computerDocLink','qualifyingExam','qualifyingDocLink','mainAdvisor','titleTh','titleEn',
-    'bookSubmitStatus','bookSubmitDate','bookDocLink','graduated','graduatedTerm'];
+    'bookSubmitStatus','bookSubmitDate','bookDocLink','graduated','graduatedTerm','examTermStatus','examTerm'];
   for(var i=1;i<sorted.length;i++){
     var r = sorted[i];
     obsoleteIds.push(r.id);
@@ -3153,6 +3195,10 @@ function resetFormFields(){
   document.getElementById('f_titleEn').value='';
   clearDynamicRows('publicationList');
 
+  document.querySelector('input[name=examTermStatus][value="ลงทะเบียน"]').checked=true;
+  document.getElementById('f_examTermSemester').value='';
+  document.getElementById('f_examTermYear').value='';
+
   document.querySelector('input[name=bookSubmitStatus][value="ยังไม่ส่ง"]').checked=true;
   document.getElementById('f_bookSubmitDate').value='';
   document.getElementById('f_bookDocLink').value='';
@@ -3209,6 +3255,16 @@ function loadRecordIntoForm(rec){
     var yr = parts.length===2 ? parts[1].trim() : '';
     document.getElementById('f_graduatedTermSemester').value = ['1','2','3'].indexOf(sem)>-1 ? sem : '';
     document.getElementById('f_graduatedTermYear').value = /^\d{4}$/.test(yr) ? yr : '';
+  })();
+
+  (function(){
+    var ets = document.querySelector('input[name=examTermStatus][value="'+(rec.examTermStatus||'ลงทะเบียน')+'"]'); if(ets) ets.checked=true;
+    var term = rec.examTerm||'';
+    var parts = String(term).split('/');
+    var sem = parts.length===2 ? parts[0].trim() : '';
+    var yr = parts.length===2 ? parts[1].trim() : '';
+    document.getElementById('f_examTermSemester').value = ['1','2','3'].indexOf(sem)>-1 ? sem : '';
+    document.getElementById('f_examTermYear').value = /^\d{4}$/.test(yr) ? yr : '';
   })();
 
   if(recHasProposalData(rec)){
@@ -3379,6 +3435,12 @@ function collectFormData(){
     titleTh: document.getElementById('f_titleTh').value.trim(),
     titleEn: document.getElementById('f_titleEn').value.trim(),
     publications: getPublicationValues(),
+    examTermStatus: (document.querySelector('input[name=examTermStatus]:checked')||{}).value||'',
+    examTerm: (function(){
+      var sem = document.getElementById('f_examTermSemester').value;
+      var yr = document.getElementById('f_examTermYear').value;
+      return (sem && yr) ? (sem+'/'+yr) : '';
+    })(),
     bookSubmitStatus: document.querySelector('input[name=bookSubmitStatus]:checked').value,
     bookSubmitDate: document.getElementById('f_bookSubmitDate').value,
     bookDocLink: document.getElementById('f_bookDocLink').value.trim(),
@@ -3752,6 +3814,7 @@ var EXPORT_COLUMNS = [
   ['mainAdvisor','อาจารย์ที่ปรึกษาหลัก'],['coAdvisorsStr','อาจารย์ที่ปรึกษาร่วม'],
   ['titleTh','หัวข้อวิทยานิพนธ์ (TH)'],['titleEn','หัวข้อวิทยานิพนธ์ (EN)'],
   ['publicationsStr','การเผยแพร่ผลงานวิจัย'],
+  ['examTermStatus','สถานะการลงทะเบียน/รักษาสภาพ'],['examTerm','ภาคเรียนที่ขอสอบ'],
   ['examTypeStr','ประเภทการสอบ'],['attemptNo','ครั้งที่'],['examDate','วันที่สอบ'],['examTime','เวลาสอบ'],['location','สถานที่สอบ'],
   ['chair','ประธานกรรมการ'],['committeeStr','กรรมการสอบ'],
   ['fullScore','คะแนนเต็ม'],['obtainedScore','คะแนนที่สอบได้'],['dueDate','กำหนดส่งเล่ม'],
@@ -3780,7 +3843,8 @@ function toExportRows(r){
     }).join('; '),
     bookSubmitStatus: r.bookSubmitStatus||'ยังไม่ส่ง', bookSubmitDate: toBuddhistDateStr(r.bookSubmitDate), bookDocLink: r.bookDocLink||'',
     graduatedStr: r.graduated ? 'สำเร็จการศึกษาแล้ว' : 'ยังไม่สำเร็จการศึกษา',
-    graduatedTerm: r.graduatedTerm||''
+    graduatedTerm: r.graduatedTerm||'',
+    examTermStatus: r.examTermStatus||'', examTerm: r.examTerm||''
   };
   function committeeStrOf(list){
     return (list||[]).map(function(c){
@@ -4972,6 +5036,8 @@ var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','p
   'graduated',
   'graduatedTerm',
   'advisorHistoryJson',
+  'examTermStatus',
+  'examTerm',
   'deleted'];
 var FILE_COLUMNS = ['id','recordId','section','name','type','size','driveFileId','driveLink','addedAt','isLink','deleted'];
 function extractSheetId(input){

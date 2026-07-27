@@ -1263,6 +1263,14 @@ var DEFAULT_SHEET_ID = '1Rymd5QMIXL1j2f4fLujmDXgK0sKy_umKEYI5z2iP8sQ';
 var DEFAULT_CLOUD_MODE_ENABLED = true;
 var DEFAULT_VIEWER_PIN_HASH = 'ad7d15dafd42a49ca8e6ba2dfbb41abaa96d7a368cad455c07f622f7fb90ddc2';
 var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[] };
+/* ตรวจว่าแผนการเรียนนี้เป็น "การค้นคว้าอิสระ" (IS) หรือไม่ — ใช้เกณฑ์นี้ทุกจุดที่ต้องแยกวิทยานิพนธ์ออกจากการค้นคว้าอิสระ
+   (เช่น เช็คลิสต์ความครบถ้วน, การคำนวณโควตาที่ปรึกษา) แทนการเทียบสตริง "แผน ข" ตรงๆ เพียงอย่างเดียว เพราะ masterData.plans
+   แก้ไขเองได้จากหน้าตั้งค่า (งานที่ #14) — บางสาขาใช้ชื่อ "แผน 1 แบบวิชาการ (วิทยานิพนธ์)" / "แผน 2 แบบวิชาชีพ (ค้นคว้าอิสระ)"
+   แทนชื่อมาตรฐาน "แผน ก" / "แผน ข" ถ้าเทียบเฉพาะ "แผน ข" ตรงๆ จะพลาดแผนชื่ออื่นที่หมายถึงการค้นคว้าอิสระเหมือนกัน */
+function isIndependentStudyPlan(plan){
+  if(!plan) return false;
+  return plan==='แผน ข' || plan.indexOf('ค้นคว้าอิสระ')>-1;
+}
 var googleClientId = '';
 var appPinHash = null;
 var viewerPinHash = null;
@@ -2391,7 +2399,7 @@ function computeMissingItems(rec){
   if(!rec.titleTh) missing.push('ยังไม่ระบุหัวข้อวิทยานิพนธ์ (ภาษาไทย)');
   /* แผน ข = การค้นคว้าอิสระ ไม่มีขั้นตอนสอบเค้าโครง (3.1) แบบเป็นทางการเหมือนวิทยานิพนธ์ (ใช้แบบฟอร์ม บว.25 แทน ซึ่งไม่บังคับ)
      จึงไม่ควรฟ้องว่า "ยังไม่มีข้อมูล" สำหรับนักศึกษากลุ่มนี้ */
-  if(rec.plan!=='แผน ข' && !recHasProposalData(rec)) missing.push('ยังไม่มีข้อมูลสอบเค้าโครงวิทยานิพนธ์ (3.1)');
+  if(!isIndependentStudyPlan(rec.plan) && !recHasProposalData(rec)) missing.push('ยังไม่มีข้อมูลสอบเค้าโครงวิทยานิพนธ์ (3.1)');
   if(!recHasDefenseData(rec)) missing.push('ยังไม่มีข้อมูลสอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2)');
   if(rec.bookSubmitStatus==='ส่งแล้ว' && !rec.bookDocLink) missing.push('ระบุว่าส่งเล่มฉบับสมบูรณ์แล้ว แต่ยังไม่แนบลิงก์เอกสาร');
   if(rec.graduated && !rec.graduatedTerm) missing.push('ติ๊กว่าสำเร็จการศึกษาแล้ว แต่ยังไม่ระบุภาคเรียนที่สำเร็จการศึกษา');
@@ -4206,7 +4214,7 @@ function computeAdvisorUsedCounts(){
       if(r.deleted) return;
       if(!r.mainAdvisor) return;
       if(ADVISOR_QUOTA_FREEING_DEFENSE_RESULTS[r.defenseResult]) return; /* สอบป้องกันผ่านแล้ว (รวมผ่านแบบมีเงื่อนไข) ไม่นับเป็นโควตาที่ใช้อยู่ */
-      var weight = r.plan==='แผน ข' ? (1/3) : 1;
+      var weight = isIndependentStudyPlan(r.plan) ? (1/3) : 1;
       map[r.mainAdvisor] = (map[r.mainAdvisor]||0) + weight;
     });
     advisorUsedMap = map;

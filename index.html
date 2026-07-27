@@ -2307,7 +2307,9 @@ function computeMissingItems(rec){
   if(!rec.computerResult) missing.push('ยังไม่ระบุผลคอมพิวเตอร์');
   if(!rec.mainAdvisor) missing.push('ยังไม่ระบุอาจารย์ที่ปรึกษาหลัก');
   if(!rec.titleTh) missing.push('ยังไม่ระบุหัวข้อวิทยานิพนธ์ (ภาษาไทย)');
-  if(!recHasProposalData(rec)) missing.push('ยังไม่มีข้อมูลสอบเค้าโครงวิทยานิพนธ์/การค้นคว้าอิสระ (3.1)');
+  /* แผน ข = การค้นคว้าอิสระ ไม่มีขั้นตอนสอบเค้าโครง (3.1) แบบเป็นทางการเหมือนวิทยานิพนธ์ (ใช้แบบฟอร์ม บว.25 แทน ซึ่งไม่บังคับ)
+     จึงไม่ควรฟ้องว่า "ยังไม่มีข้อมูล" สำหรับนักศึกษากลุ่มนี้ */
+  if(rec.plan!=='แผน ข' && !recHasProposalData(rec)) missing.push('ยังไม่มีข้อมูลสอบเค้าโครงวิทยานิพนธ์ (3.1)');
   if(!recHasDefenseData(rec)) missing.push('ยังไม่มีข้อมูลสอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2)');
   if(rec.bookSubmitStatus==='ส่งแล้ว' && !rec.bookDocLink) missing.push('ระบุว่าส่งเล่มฉบับสมบูรณ์แล้ว แต่ยังไม่แนบลิงก์เอกสาร');
   if(rec.graduated && !rec.graduatedTerm) missing.push('ติ๊กว่าสำเร็จการศึกษาแล้ว แต่ยังไม่ระบุภาคเรียนที่สำเร็จการศึกษา');

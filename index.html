@@ -133,6 +133,9 @@
   .exam-subsection.locked{opacity:.55;}
   .exam-subsection.locked .combo-input,.exam-subsection.locked input,.exam-subsection.locked select,.exam-subsection.locked textarea{background:#f2f4f7;cursor:not-allowed;}
   .locked-note{background:#fdf0e0;color:var(--warn);border:1px solid #f5dcb0;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:14px;}
+  .conflict-note{background:#fdeceb;color:var(--danger);border:1px solid #f3c8c3;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:14px;}
+  .conflict-note .cn-title{margin-bottom:4px;}
+  .conflict-note .cn-row{font-weight:500;padding:2px 0;}
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;}
   .grid.cols-3{grid-template-columns:repeat(3,1fr);}
   .field{display:flex;flex-direction:column;gap:5px;}
@@ -737,6 +740,7 @@
     <div class="exam-subsection" id="sub-proposal">
       <h4 class="exam-subsection-title">3.1 การสอบเค้าโครงวิทยานิพนธ์</h4>
       <div class="locked-note" id="sub-proposal-lockMsg" style="display:none;"></div>
+      <div class="conflict-note" id="sub-proposal-conflictMsg" style="display:none;"></div>
       <div class="grid cols-3">
         <div class="field"><label>วันที่สอบเค้าโครง</label><input type="date" id="p_date"></div>
         <div class="field"><label>เวลาสอบ</label><input type="text" id="p_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
@@ -796,6 +800,7 @@
     <div class="exam-subsection" id="sub-defense">
       <h4 class="exam-subsection-title">3.2 การสอบป้องกันวิทยานิพนธ์ / การค้นคว้าอิสระ (IS)</h4>
       <div class="locked-note" id="sub-defense-lockMsg" style="display:none;"></div>
+      <div class="conflict-note" id="sub-defense-conflictMsg" style="display:none;"></div>
       <div class="grid cols-3" style="margin-bottom:14px;">
         <div class="field full">
           <label>สถานะการลงทะเบียน/รักษาสภาพในภาคเรียนที่ขอสอบ</label>
@@ -2902,6 +2907,93 @@ function warnDuplicateCommitteeIfAny(prefix){
   if(dup) toast('⚠️ ชื่อ "'+dup+'" ถูกเลือกซ้ำในคณะกรรมการสอบ'+(prefix==='p'?'เค้าโครง (3.1)':'ป้องกัน/IS (3.2)'), true);
 }
 
+/* ================= EXAM COMMITTEE SCHEDULE CONFLICT CHECK ================= */
+/* เวลาสอบเป็นข้อความอิสระ (เช่น "09.00 - 12.00 น.") ไม่ใช่ช่องเวลาที่มีโครงสร้างตายตัว
+   จึงพยายามดึงตัวเลข ชม.นาที ตัวแรกและตัวที่สองในข้อความมาตีความเป็นเวลาเริ่ม-สิ้นสุด ถ้าตีความไม่ได้ (พาร์สไม่ครบ 2 ค่า
+   หรือเวลาสิ้นสุดไม่มากกว่าเวลาเริ่ม) ให้คืนค่า null — ฟังก์ชันที่เรียกใช้จะถือว่า "ไม่แน่ใจ" และแจ้งเตือนไว้ก่อนเพื่อความปลอดภัย */
+function parseExamTimeRange(text){
+  if(!text) return null;
+  var matches = String(text).match(/(\d{1,2})[.:](\d{2})/g);
+  if(!matches || matches.length<2) return null;
+  function toMin(t){
+    var m = t.match(/(\d{1,2})[.:](\d{2})/);
+    if(!m) return null;
+    var h = parseInt(m[1],10), mi = parseInt(m[2],10);
+    if(isNaN(h)||isNaN(mi)||h>23||mi>59) return null;
+    return h*60+mi;
+  }
+  var start = toMin(matches[0]), end = toMin(matches[matches.length-1]);
+  if(start==null || end==null || end<=start) return null;
+  return {start:start, end:end};
+}
+/* ถ้าพาร์สช่วงเวลาฝั่งใดฝั่งหนึ่งไม่ได้ ให้ถือว่า "อาจจะทับกัน" (แจ้งเตือนไว้ก่อน) ปลอดภัยกว่าการเงียบไปเฉยๆ */
+function timeRangesOverlap(a, b){
+  if(!a || !b) return true;
+  return a.start < b.end && b.start < a.end;
+}
+function examSectionCommitteeNames(prefix){
+  var chairEl = document.getElementById(prefix+'_chair');
+  var chairVal = chairEl ? (chairEl.value||'').trim() : '';
+  var names = [];
+  if(chairVal) names.push(chairVal);
+  getCommitteeValues(prefix+'_committeeList').forEach(function(c){ if(c.name) names.push(String(c.name).trim()); });
+  return names;
+}
+/* ตรวจสอบว่ากรรมการ (ประธาน/กรรมการ) ที่เลือกไว้ในส่วน 3.1 หรือ 3.2 ที่กำลังกรอกอยู่นี้ ถูกจัดสอบให้นักศึกษาคนอื่นในวันเวลาที่ทับซ้อนกันหรือไม่
+   เทียบกับข้อมูลทุกแถวในระบบ (ยกเว้นแถวที่กำลังแก้ไขอยู่ตอนนี้) ทั้งฝั่ง 3.1 และ 3.2 ของแถวอื่น — เป็นการเตือนเท่านั้น ไม่บล็อกการบันทึก
+   เพราะบางกรณีอาจเป็นข้อมูลที่กรอกไว้ก่อนแล้วจะแก้ไขวันเวลาทีหลัง */
+function checkCommitteeScheduleConflict(prefix){
+  var msgBox = document.getElementById('sub-'+(prefix==='p'?'proposal':'defense')+'-conflictMsg');
+  if(!msgBox) return;
+  var dateEl = document.getElementById(prefix+'_date');
+  var timeEl = document.getElementById(prefix+'_examTime');
+  var date = dateEl ? dateEl.value : '';
+  var timeText = timeEl ? timeEl.value : '';
+  var names = examSectionCommitteeNames(prefix);
+  if(!date || names.length===0){ msgBox.style.display='none'; msgBox.innerHTML=''; return; }
+  var myRange = parseExamTimeRange(timeText);
+  var excludeId = currentDraftId;
+  return recordsGetAll().then(function(rows){
+    var msgs = [];
+    var seen = {};
+    (rows||[]).forEach(function(r){
+      if(!r || r.id===excludeId) return;
+      [
+        {type:'proposal', typeTxt:'เค้าโครงวิทยานิพนธ์ (3.1)', date:r.proposalDate, time:r.proposalTime, chair:r.proposalChair, committee:r.proposalCommittee},
+        {type:'defense', typeTxt:'ป้องกันวิทยานิพนธ์/IS (3.2)', date:r.defenseDate, time:r.defenseTime, chair:r.defenseChair, committee:r.defenseCommittee}
+      ].forEach(function(entry){
+        if(!entry.date || entry.date!==date) return;
+        var otherRange = parseExamTimeRange(entry.time);
+        if(!timeRangesOverlap(myRange, otherRange)) return;
+        var otherNames = [];
+        if(entry.chair) otherNames.push(String(entry.chair).trim());
+        (entry.committee||[]).forEach(function(c){
+          var nm = typeof c==='string' ? c : (c && c.name);
+          if(nm) otherNames.push(String(nm).trim());
+        });
+        names.forEach(function(nm){
+          if(otherNames.indexOf(nm)===-1) return;
+          var key = nm+'|'+r.id+'|'+entry.type;
+          if(seen[key]) return;
+          seen[key] = true;
+          msgs.push(nm+' ถูกจัดสอบ'+entry.typeTxt+'ให้ '+(r.studentName||'(ไม่ทราบชื่อ)')+' ('+(r.studentId||'-')+') ในวันเดียวกัน'+(entry.time?(' เวลา '+entry.time):'')+' ด้วย');
+        });
+      });
+    });
+    if(msgs.length===0){ msgBox.style.display='none'; msgBox.innerHTML=''; return; }
+    msgBox.style.display='';
+    msgBox.innerHTML='';
+    msgBox.appendChild(el('div',{class:'cn-title', text:'⚠️ พบวันเวลาสอบซ้ำซ้อนของกรรมการสอบ:'}));
+    msgs.forEach(function(m){ msgBox.appendChild(el('div',{class:'cn-row', text:'• '+m})); });
+  }).catch(function(){ /* เงียบไว้ ไม่ให้ error ของการเช็คกระทบการกรอกฟอร์มหลัก */ });
+}
+/* หน่วงเวลาการเช็ค (debounce) กันเรียก recordsGetAll ถี่เกินไปตอนพิมพ์/เลือกข้อมูลต่อเนื่องกันหลายครั้งรัวๆ */
+var examConflictCheckTimer = {};
+function debouncedCheckCommitteeScheduleConflict(prefix){
+  clearTimeout(examConflictCheckTimer[prefix]);
+  examConflictCheckTimer[prefix] = setTimeout(function(){ checkCommitteeScheduleConflict(prefix); }, 350);
+}
+
 /* ================= PUBLICATIONS (หมวดที่ 5) ================= */
 function addPublicationRow(existing){
   var container = document.getElementById('publicationList');
@@ -2938,6 +3030,16 @@ function bindFormEvents(){
   document.getElementById('sub-defense').addEventListener('change', function(e){
     if(e.target && e.target.classList.contains('combo-input')) warnDuplicateCommitteeIfAny('d');
   });
+  /* ตรวจสอบวันเวลาสอบซ้ำซ้อนของกรรมการ — เช็คใหม่ทุกครั้งที่วันที่/เวลาสอบ หรือรายชื่อประธาน/กรรมการ (combo) เปลี่ยนแปลง
+     ใช้ debounce กันเรียกถี่เกินไป และไม่บล็อกการบันทึก เป็นแค่การเตือนให้เจ้าหน้าที่ตรวจสอบ */
+  document.getElementById('sub-proposal').addEventListener('change', function(e){
+    if(e.target && (e.target.classList.contains('combo-input') || e.target.id==='p_date')) debouncedCheckCommitteeScheduleConflict('p');
+  });
+  document.getElementById('sub-defense').addEventListener('change', function(e){
+    if(e.target && (e.target.classList.contains('combo-input') || e.target.id==='d_date')) debouncedCheckCommitteeScheduleConflict('d');
+  });
+  document.getElementById('p_examTime').addEventListener('input', function(){ debouncedCheckCommitteeScheduleConflict('p'); });
+  document.getElementById('d_examTime').addEventListener('input', function(){ debouncedCheckCommitteeScheduleConflict('d'); });
   document.getElementById('btnAddPublication').addEventListener('click', function(){ addPublicationRow(); });
   document.getElementById('btnFindStudent').addEventListener('click', searchExistingStudent);
   document.getElementById('btnSaveForm').addEventListener('click', saveRecord);
@@ -3178,6 +3280,12 @@ function clearExamSectionFields(){
   document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
   document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
   uncheckRadioGroup('defenseResult');
+
+  /* ล้างข้อความเตือนวันเวลาสอบซ้ำซ้อนของกรรมการที่อาจค้างจากรายการก่อนหน้า */
+  ['sub-proposal-conflictMsg','sub-defense-conflictMsg'].forEach(function(id){
+    var box = document.getElementById(id);
+    if(box){ box.style.display='none'; box.innerHTML=''; }
+  });
 }
 function resetFormFields(){
   currentExamType = null;
@@ -3313,6 +3421,9 @@ function loadRecordIntoForm(rec){
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
   renderExamHistory(rec.studentId);
+  /* เช็คทันทีที่เปิดข้อมูลเดิมมาแก้ไข เผื่อกรรมการที่เคยเลือกไว้เกิดชนกับข้อมูลนักศึกษาคนอื่นที่กรอกเพิ่มเข้ามาทีหลัง */
+  checkCommitteeScheduleConflict('p');
+  checkCommitteeScheduleConflict('d');
 }
 function cancelForm(){
   if(!editingExisting){

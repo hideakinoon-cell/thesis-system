@@ -998,6 +998,15 @@
   </div>
 
   <div class="card">
+    <h3>🛠️ ซ่อมข้อมูล "ภาคเรียนที่สำเร็จการศึกษา" ที่สลับกับ "ประวัติที่ปรึกษา"</h3>
+    <div class="help" style="margin-bottom:10px;">ก่อนหน้านี้เคยมีบั๊กที่ทำให้ตอนบันทึกข้อมูลบางครั้ง ค่า "ภาคเรียนที่สำเร็จการศึกษา" กับ "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ของนักศึกษาบางคนสลับตำแหน่งกัน (สังเกตได้จากช่องภาคเรียนที่สำเร็จการศึกษาขึ้นเป็นข้อความ "[]" แทนที่จะเป็นค่าว่างหรือภาคเรียนจริง) เครื่องมือนี้จะสแกนหาแล้วสลับค่ากลับให้ถูกตำแหน่ง โดยไม่กระทบข้อมูลอื่น (บั๊กต้นเหตุได้รับการแก้ไขแล้ว การบันทึกครั้งต่อไปจะไม่เกิดปัญหานี้อีก เครื่องมือนี้ใช้สำหรับซ่อมข้อมูลเก่าที่อาจได้รับผลกระทบไปแล้วเท่านั้น)</div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnScanSwappedGradTerm">🔍 เริ่มตรวจสอบ</button>
+    </div>
+    <div id="swappedGradTermResult" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
     <h3>⚠️ นักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่</h3>
     <div class="help" style="margin-bottom:10px;">สแกนหานักศึกษาที่เคยมีอาจารย์ที่ปรึกษาหลักแล้วถูกถอนออก แต่ยังไม่ได้แต่งตั้งที่ปรึกษาคนใหม่แทน มีประโยชน์เวลาต้องการติดตามว่านักศึกษาคนไหนยังค้างเรื่องที่ปรึกษาอยู่บ้าง</div>
     <div class="form-footer" style="justify-content:flex-start;">
@@ -4469,6 +4478,7 @@ function bindGoogleButtons(){
   document.getElementById('btnRestore').addEventListener('click', openRestorePicker);
   document.getElementById('btnCheckBrokenFiles').addEventListener('click', checkBrokenDriveFiles);
   document.getElementById('btnScanBogusAdvisorHistory').addEventListener('click', scanBogusAdvisorHistory);
+  document.getElementById('btnScanSwappedGradTerm').addEventListener('click', scanSwappedGradTermData);
   document.getElementById('btnScanWithdrawnAdvisor').addEventListener('click', scanWithdrawnAdvisorStudents);
 }
 function ensureAuthed(){
@@ -4702,6 +4712,91 @@ function scanBogusAdvisorHistory(){
     btn.disabled=false; btn.textContent=origText;
   });
 }
+/* ================= ซ่อมข้อมูล graduatedTerm/advisorHistoryJson ที่สลับตำแหน่งกัน (บั๊ก header/แถวเหลื่อมคอลัมน์) =================
+   ต้นเหตุ: recordToRow() เดิมเขียนแถวตามลำดับ RECORD_COLUMNS ที่ประกาศในโค้ดตรงๆ แต่ alignSheetHeader() จะ "ต่อท้าย"
+   คอลัมน์ใหม่ที่ยังไม่มีในชีทเดิม โดยไม่จัดเรียงลำดับใหม่ให้ตรงกับ RECORD_COLUMNS ปัจจุบัน — ทำให้ชีทที่มีอยู่ก่อนเพิ่มฟีเจอร์
+   "ภาคเรียนที่สำเร็จการศึกษา" (graduatedTerm) มีลำดับคอลัมน์จริงต่างจากที่โค้ดคาดไว้ พอมีการบันทึกซ้ำ ค่า graduatedTerm
+   กับ advisorHistoryJson จึงไปตกคอลัมน์สลับกัน (แก้ต้นเหตุแล้วใน recordToRow/fileToRow ที่รับ headers จริงจากชีทเสมอ
+   ฟังก์ชันนี้ใช้ซ่อมเฉพาะแถวเก่าที่อาจถูกเขียนสลับไปแล้วก่อนหน้านี้)
+   วิธีตรวจจับ: ในแถวที่ถูกต้อง ช่อง advisorHistoryJson จะเป็น JSON array เสมอ (เช่น "[]" หรือ "[{...}]") ส่วน graduatedTerm
+   จะเป็นข้อความรูปแบบ "ภาคเรียน/ปี" (เช่น "1/2568") หรือว่างเปล่า ไม่มีทางเป็น JSON array ได้ ถ้าพบว่าช่อง graduatedTerm
+   ดันเป็น JSON array แทน แสดงว่าแถวนี้ถูกสลับ ต้องสลับค่ากลับ */
+function scanSwappedGradTermData(){
+  var btn = document.getElementById('btnScanSwappedGradTerm');
+  var resultBox = document.getElementById('swappedGradTermResult');
+  resultBox.innerHTML='';
+  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  var origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  function looksLikeJsonArray(s){
+    if(!s) return false;
+    var t = String(s).trim();
+    if(!/^\[[\s\S]*\]$/.test(t)) return false;
+    try{ var p = JSON.parse(t); return Array.isArray(p); }catch(e){ return false; }
+  }
+  ensureAuthed().then(function(){ return sheetsGetValues('Records!A1:ZZ100000'); }).then(function(values){
+    btn.disabled=false; btn.textContent=origText;
+    resultBox.innerHTML='';
+    var headers = values[0]||[];
+    var gradIdx = headers.indexOf('graduatedTerm');
+    var advIdx = headers.indexOf('advisorHistoryJson');
+    if(gradIdx===-1 || advIdx===-1){
+      resultBox.appendChild(el('div',{class:'help', text:'ไม่พบคอลัมน์ที่เกี่ยวข้องในชีท (อาจยังไม่เคยมีการซ่อม header หรือยังไม่เคยใช้ฟีเจอร์นี้) — ไม่มีอะไรต้องซ่อม'}));
+      return;
+    }
+    var affected = [];
+    for(var i=1;i<values.length;i++){
+      var row = values[i];
+      if(!row || !row[0]) continue;
+      var rawGrad = row[gradIdx]!==undefined ? row[gradIdx] : '';
+      var rawAdv = row[advIdx]!==undefined ? row[advIdx] : '';
+      if(looksLikeJsonArray(rawGrad)){
+        /* พบสัญญาณว่าสลับกัน: ค่าที่ควรเป็น advisorHistoryJson ดันอยู่ในช่อง graduatedTerm
+           ค่าจริงของ graduatedTerm (ถ้ามี) คือค่าที่อยู่ในช่อง advisorHistoryJson ตอนนี้ ถ้ามันไม่ใช่ JSON array เอง */
+        var recoveredGradTerm = looksLikeJsonArray(rawAdv) ? '' : rawAdv;
+        affected.push({
+          rowNumber: i+1,
+          row: row,
+          rawGrad: rawGrad, rawAdv: rawAdv,
+          fixedGrad: recoveredGradTerm, fixedAdv: rawGrad,
+          rec: rowToRecord(headers, row)
+        });
+      }
+    }
+    if(affected.length===0){
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบข้อมูลที่สลับตำแหน่งกัน'}));
+      return;
+    }
+    resultBox.appendChild(el('div',{class:'help', text:'พบนักศึกษาที่ข้อมูลสลับตำแหน่งกัน '+affected.length+' คน:'}));
+    affected.forEach(function(x){
+      resultBox.appendChild(el('div',{class:'help', style:'margin:2px 0;', text:'• '+x.rec.studentId+' — '+(x.rec.studentName||'(ไม่ระบุชื่อ)')+' (ภาคเรียนที่สำเร็จการศึกษาจะกลายเป็น "'+(x.fixedGrad||'(ว่าง)')+'")'}));
+    });
+    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;', text:'🛠️ ยืนยันซ่อมข้อมูล ('+affected.length+' คน)'});
+    confirmBtn.addEventListener('click', function(){
+      if(!confirm('ยืนยันสลับค่ากลับให้ถูกตำแหน่งสำหรับ '+affected.length+' คน?')) return;
+      confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังซ่อม...';
+      Promise.all(affected.map(function(x){
+        var newRow = x.row.slice();
+        newRow[gradIdx] = x.fixedGrad;
+        newRow[advIdx] = x.fixedAdv;
+        return sheetsUpdateRow('Records', x.rowNumber, newRow);
+      })).then(function(){
+        invalidateRecordsSheetCache();
+        resultBox.innerHTML='';
+        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ซ่อมข้อมูลเรียบร้อยแล้ว '+affected.length+' คน'}));
+        toast('ซ่อมข้อมูลที่สลับตำแหน่งกันเรียบร้อยแล้ว');
+      }).catch(function(e){
+        toast('ซ่อมไม่สำเร็จ: '+(e && e.message ? e.message : e), true);
+        confirmBtn.disabled=false; confirmBtn.textContent = '🛠️ ยืนยันซ่อมข้อมูล ('+affected.length+' คน)';
+      });
+    });
+    resultBox.appendChild(confirmBtn);
+  }).catch(function(e){
+    resultBox.innerHTML='';
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    btn.disabled=false; btn.textContent=origText;
+  });
+}
 /* ================= นักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่ ================= */
 function scanWithdrawnAdvisorStudents(){
   var btn = document.getElementById('btnScanWithdrawnAdvisor');
@@ -4867,8 +4962,17 @@ function rowToRecord(headers, row){
   if(!rec.advisorHistory) rec.advisorHistory = [];
   return rec;
 }
-function recordToRow(rec){
-  return RECORD_COLUMNS.map(function(h){
+/* สำคัญ: ต้องรับ headers (ลำดับคอลัมน์จริงในชีทสด) มาด้วยเสมอ ห้ามใช้ RECORD_COLUMNS ตรงๆ เป็นลำดับเขียน
+   เพราะ alignSheetHeader() จะ "ต่อท้าย" คอลัมน์ใหม่ที่ยังไม่มีในชีทเดิม โดยไม่ได้จัดเรียงใหม่ตามลำดับที่ประกาศไว้ใน
+   RECORD_COLUMNS ปัจจุบัน — ถ้าชีทถูกสร้าง/ซ่อมมาก่อนที่จะมีการเพิ่มฟิลด์ใหม่ตรงกลาง (เช่น graduatedTerm ที่แทรกไว้ระหว่าง
+   graduated กับ advisorHistoryJson) ลำดับคอลัมน์จริงในชีทกับลำดับใน RECORD_COLUMNS จะไม่ตรงกัน ถ้าเขียนตาม RECORD_COLUMNS
+   ตรงๆ ค่าจะไปตกคอลัมน์ผิด (บั๊กที่เจอจริง: graduatedTerm กับ advisorHistoryJson สลับกัน ทำให้ภาคเรียนที่สำเร็จการศึกษา
+   แสดงเป็น "[]" เพราะมันคือค่า advisorHistory ที่ว่างเปล่าไปสลับที่กัน)
+   headers ควรมาจาก cache.headers (ลำดับจริงจาก fetchRecordsSheet) เสมอ ส่วน RECORD_COLUMNS ใช้เป็นค่า fallback
+   เฉพาะตอนที่ยังไม่เคยมี header แถวแรกในชีทเลย (ชีทใหม่เอี่ยม) เท่านั้น */
+function recordToRow(rec, headers){
+  var cols = (headers && headers.length) ? headers : RECORD_COLUMNS;
+  return cols.map(function(h){
     if(h==='coAdvisorsJson') return JSON.stringify(rec.coAdvisors||[]);
     if(h==='committeeJson') return JSON.stringify(rec.committee||[]);
     if(h==='proposalCommitteeJson') return JSON.stringify(rec.proposalCommittee||[]);
@@ -4895,8 +4999,10 @@ function rowToFile(headers, row){
   });
   return f;
 }
-function fileToRow(f){
-  return FILE_COLUMNS.map(function(h){
+/* เช่นเดียวกับ recordToRow — ต้องรับ headers (ลำดับจริงในชีท) มาด้วย ห้ามใช้ FILE_COLUMNS ตรงๆ เป็นลำดับเขียนเสมอ */
+function fileToRow(f, headers){
+  var cols = (headers && headers.length) ? headers : FILE_COLUMNS;
+  return cols.map(function(h){
     if(h==='deleted') return f.deleted ? 'TRUE' : '';
     if(h==='isLink') return f.isLink ? 'TRUE' : '';
     var v = f[h];
@@ -5041,7 +5147,7 @@ function recordsPut(rec){
   if(!cloudModeEnabled) return dbPut('records', rec);
   return ensureAuthed().then(ensureRecordsHeaderAligned).then(fetchRecordsSheet).then(function(cache){
     var existing = cache.entries.filter(function(e){ return e.rec.id===rec.id; })[0];
-    var row = recordToRow(rec);
+    var row = recordToRow(rec, cache.headers);
     if(existing){
       return sheetsUpdateRow('Records', existing.rowNumber, row).then(function(){ return rec; });
     } else {
@@ -5055,7 +5161,7 @@ function recordsDelete(id){
     var existing = cache.entries.filter(function(e){ return e.rec.id===id; })[0];
     if(!existing) return;
     var rec = Object.assign({}, existing.rec, {deleted:true, updatedAt:Date.now()});
-    return sheetsUpdateRow('Records', existing.rowNumber, recordToRow(rec));
+    return sheetsUpdateRow('Records', existing.rowNumber, recordToRow(rec, cache.headers));
   }).then(function(result){ invalidateRecordsSheetCache(); return result; });
 }
 /* ---- audit log adapter (บันทึกว่าใครสร้าง/แก้ไข/ลบข้อมูลนักศึกษาคนไหนเมื่อไหร่ — append-only, ไม่มีการแก้ไข/ลบย้อนหลัง) ---- */
@@ -5117,8 +5223,9 @@ function filesGet(id){
 }
 function filesPut(f){
   if(!cloudModeEnabled) return dbPut('files', f);
-  return ensureAuthed().then(ensureFilesHeaderAligned).then(function(){ return sheetsAppendRow('Files', fileToRow(f)); })
-    .then(function(){ invalidateFilesSheetCache(); return f; });
+  return ensureAuthed().then(ensureFilesHeaderAligned).then(fetchFilesSheet).then(function(cache){
+    return sheetsAppendRow('Files', fileToRow(f, cache.headers));
+  }).then(function(){ invalidateFilesSheetCache(); return f; });
 }
 function filesDelete(id){
   if(!cloudModeEnabled) return dbDelete('files', id);
@@ -5126,7 +5233,7 @@ function filesDelete(id){
     var existing = cache.entries.filter(function(e){ return e.rec.id===id; })[0];
     if(!existing) return;
     var f = Object.assign({}, existing.rec, {deleted:true});
-    return sheetsUpdateRow('Files', existing.rowNumber, fileToRow(f));
+    return sheetsUpdateRow('Files', existing.rowNumber, fileToRow(f, cache.headers));
   }).then(function(result){ invalidateFilesSheetCache(); return result; });
 }
 /* ---- sheet structure setup ---- */

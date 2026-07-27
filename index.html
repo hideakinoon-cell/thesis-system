@@ -66,22 +66,33 @@
   .kv-item .v{font-size:15.5px;font-weight:600;color:var(--text);white-space:pre-line;line-height:1.5;}
   /* หน้าแดชบอร์ดสรุปข้อมูล — การ์ดสถิติสีสัน + กราฟ ให้ดูสวยงามและเห็นภาพรวมได้ไวกว่าตัวเลขล้วนๆ */
   .summary-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:20px;}
-  .stat-card{border-radius:16px;padding:20px 22px;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.12);position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease;}
-  .stat-card:hover{transform:translateY(-4px) scale(1.015);box-shadow:0 14px 28px rgba(0,0,0,.2);}
+  .stat-card{border-radius:16px;padding:20px 22px;color:var(--text);box-shadow:0 1px 3px rgba(20,30,60,.06);position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease;border:1px solid rgba(0,0,0,.04);}
+  .stat-card:hover{transform:translateY(-4px) scale(1.015);box-shadow:0 10px 20px rgba(20,30,60,.1);}
   .stat-card .stat-icon{font-size:28px;opacity:.9;margin-bottom:6px;transition:transform .2s ease;}
   .stat-card:hover .stat-icon{transform:scale(1.15) rotate(-4deg);}
   .stat-card .stat-value{font-size:32px;font-weight:800;line-height:1.1;}
-  .stat-card .stat-label{font-size:13.5px;font-weight:600;opacity:.92;margin-top:4px;}
-  .stat-card.stat-blue{background:linear-gradient(135deg,#2f6fc0,#1e4d8b);}
-  .stat-card.stat-green{background:linear-gradient(135deg,#4caf7d,#2f8f5b);}
-  .stat-card.stat-amber{background:linear-gradient(135deg,#f0ad4e,#b7791f);}
-  .stat-card.stat-pink{background:linear-gradient(135deg,#ec6fa8,#c23e79);}
+  .stat-card .stat-label{font-size:13.5px;font-weight:600;opacity:.85;margin-top:4px;}
+  .stat-card.stat-blue{background:#DCEBFA;color:#1e4d8b;}
+  .stat-card.stat-green{background:#DFF3E8;color:#2f8f5b;}
+  .stat-card.stat-amber{background:#FDEEDC;color:#a06414;}
+  .stat-card.stat-pink{background:#FBE4EE;color:#c23e79;}
+  .stat-card.stat-coral{background:#FFE3DA;color:#c2542f;}
   .summary-charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:18px;}
   .chart-card{padding:20px 22px 12px;transition:transform .2s ease,box-shadow .2s ease;}
   .chart-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
   .chart-card h3{margin-bottom:16px;}
   .chart-card-body{position:relative;height:260px;}
   .chart-empty-msg{display:flex;align-items:center;justify-content:center;height:260px;color:var(--muted);font-size:14px;}
+  /* แถบสัดส่วนแบบพาสเทล (ปกติ/เลยกำหนด) — ใช้แทนกราฟโดนัทสำหรับหมวดที่อยากเห็นสัดส่วนคนเลยกำหนดควบคู่ไปด้วย */
+  .dash-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:14px;}
+  .dash-legend label{display:flex;align-items:center;gap:8px;cursor:pointer;}
+  .dash-legend .sw{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .dash-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:13.5px;}
+  .dash-bar-row .lbl{width:170px;flex-shrink:0;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dash-bar-row .track{flex:1;display:flex;height:16px;border-radius:6px;overflow:hidden;background:#eef1f6;}
+  .dash-bar-row .ok{background:#B8E0D2;}
+  .dash-bar-row .ovd{background:#FFC2B4;}
+  .dash-bar-row .tot{width:30px;text-align:right;flex-shrink:0;font-weight:600;color:var(--muted);}
   .kv-item .v.empty{color:#adb3bd;font-weight:400;}
   .kv-item .v.doc-link{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer;}
   .kv-item .v.doc-link:hover{text-decoration:underline;}
@@ -533,25 +544,43 @@
       <div class="stat-value" id="statWithdrawnAdvisor">0</div>
       <div class="stat-label">ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่</div>
     </div>
+    <div class="stat-card stat-coral">
+      <div class="stat-icon">⏰</div>
+      <div class="stat-value" id="statOverdueBook">0</div>
+      <div class="stat-label">เลยกำหนดส่งเล่มฉบับสมบูรณ์</div>
+    </div>
   </div>
 
-  <div class="card" id="dueDateWarningCard" style="display:none;border-left:4px solid var(--warn);">
+  <div class="card" id="dueDateWarningCard" style="display:none;border-left:4px solid #FFC2B4;">
     <h3>⏰ ใกล้/เลยกำหนดส่งเล่มฉบับสมบูรณ์</h3>
     <div id="dueDateWarningList"></div>
+  </div>
+
+  <div class="card">
+    <div class="dash-legend">
+      <span>สัดส่วนในแต่ละหมวดด้านล่าง:</span>
+      <span><span class="sw" style="background:#B8E0D2;"></span>ปกติ</span>
+      <span><span class="sw" style="background:#FFC2B4;"></span>เลยกำหนดส่งเล่ม</span>
+      <label style="margin-left:auto;"><input type="checkbox" id="dashOverdueToggle">แสดงเฉพาะที่เลยกำหนด</label>
+    </div>
   </div>
 
   <div class="summary-charts-row">
     <div class="card chart-card">
       <h3>🎓 นักศึกษาแยกตามหลักสูตร</h3>
-      <div class="chart-card-body"><canvas id="chartByProgram"></canvas></div>
+      <div id="barByProgram"></div>
     </div>
     <div class="card chart-card">
       <h3>🏫 นักศึกษาแยกตามสาขาวิชา</h3>
-      <div class="chart-card-body"><canvas id="chartByDept"></canvas></div>
+      <div id="barByDept"></div>
     </div>
   </div>
 
   <div class="summary-charts-row">
+    <div class="card chart-card">
+      <h3>📋 นักศึกษาแยกตามแผนการศึกษา</h3>
+      <div id="barByPlan"></div>
+    </div>
     <div class="card chart-card">
       <h3>📘 ผลสอบเค้าโครงวิทยานิพนธ์/IS (3.1)</h3>
       <div class="chart-card-body"><canvas id="chartProposal"></canvas></div>
@@ -1836,6 +1865,16 @@ function bindNav(){
   document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
   document.getElementById('btnLookupNext').addEventListener('click', function(){ lookupListPage++; renderLookupList(); });
   document.getElementById('auditLogSearch').addEventListener('input', renderAuditLogFiltered);
+  document.getElementById('dashOverdueToggle').addEventListener('change', function(e){
+    dashOverdueOnly = e.target.checked;
+    applyDashOverdueToggle();
+  });
+}
+/* สถานะปุ่ม "แสดงเฉพาะที่เลยกำหนด" ในแดชบอร์ด — เก็บไว้แยกจาก DOM เพราะแถบสัดส่วนถูกวาดใหม่ทุกครั้งที่ renderSummaryDashboard
+   ทำงาน (ข้อมูลอาจเปลี่ยน) จึงต้องสั่ง apply ซ้ำหลังวาดใหม่ทุกรอบ ไม่ใช่แค่ตอนกดปุ่มครั้งเดียว */
+var dashOverdueOnly = false;
+function applyDashOverdueToggle(){
+  document.querySelectorAll('.dash-split-ok').forEach(function(el){ el.style.opacity = dashOverdueOnly ? '0.15' : '1'; });
 }
 var lookupSearchDebounceTimer = null;
 function onLookupSearchInput(){
@@ -1877,13 +1916,43 @@ function switchView(name){
 
 /* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
 var summaryCharts = {}; /* เก็บ instance ของกราฟแต่ละอันไว้ทำลายทิ้งก่อนวาดใหม่ทุกครั้ง กัน canvas ชนกัน (Chart.js ต้อง destroy ของเก่าก่อน) */
+/* โทนสีพาสเทลทั้งหมด — ใช้ทั่วทั้งหน้าแดชบอร์ดให้ดูนุ่มนวลสอดคล้องกัน */
 var SUMMARY_CHART_COLORS = {
-  program: ['#2f6fc0','#4caf7d','#f0ad4e','#ec6fa8','#8b5cf6','#14b8a6','#f87171','#64748b'],
-  dept: ['#ec6fa8','#2f6fc0','#4caf7d','#f0ad4e','#8b5cf6','#14b8a6','#f87171','#64748b'],
-  proposal: {'ผ่าน':'#2f8f5b','ไม่ผ่าน':'#c0392b','รอผล':'#b7791f'},
-  defense: {'ผ่าน':'#2f8f5b','ผ่านแบบมีเงื่อนไข':'#e08a2b','ไม่ผ่าน':'#c0392b','รอผล':'#94a3b8'},
-  year: ['#2f6fc0','#4caf7d','#f0ad4e','#ec6fa8','#8b5cf6','#14b8a6','#f87171','#64748b']
+  program: ['#AFCBE8','#B8E0D2','#FDD9A0','#F7B8CE','#D2C4EE','#A8DED2','#F6B6A8','#C9CDD6'],
+  dept: ['#F7B8CE','#AFCBE8','#B8E0D2','#FDD9A0','#D2C4EE','#A8DED2','#F6B6A8','#C9CDD6'],
+  proposal: {'ผ่าน':'#B8E0D2','ไม่ผ่าน':'#F6B6A8','รอผล':'#FDD9A0'},
+  defense: {'ผ่าน':'#B8E0D2','ผ่านแบบมีเงื่อนไข':'#FDD9A0','ไม่ผ่าน':'#F6B6A8','รอผล':'#C9CDD6'},
+  year: ['#AFCBE8','#B8E0D2','#FDD9A0','#F7B8CE','#D2C4EE','#A8DED2','#F6B6A8','#C9CDD6']
 };
+/* พาสเทลคู่ ปกติ/เลยกำหนด — ใช้กับแถบสัดส่วนแยกตามสาขาวิชา/แผนการศึกษา/หลักสูตร */
+var DASH_OK_COLOR = '#B8E0D2', DASH_OVD_COLOR = '#FFC2B4';
+/* นักศึกษาเลยกำหนดส่งเล่มฉบับสมบูรณ์ — ใช้เกณฑ์เดียวกับแถบเตือน "ใกล้/เลยกำหนดส่งเล่ม" ทุกจุดที่ต้องนับ
+   (สอบป้องกันผ่านแล้ว, ยังไม่ส่งเล่ม, ยังไม่สำเร็จการศึกษา, มีกำหนดส่งเล่ม และเลยวันนั้นมาแล้ว) */
+function isOverdueRec(r){
+  if(r.graduated) return false;
+  if((r.bookSubmitStatus||'ยังไม่ส่ง')==='ส่งแล้ว') return false;
+  var passed = r.defenseResult==='ผ่าน' || r.defenseResult==='ผ่านแบบมีเงื่อนไข';
+  if(!passed || !r.defenseDueDate) return false;
+  var due = new Date(r.defenseDueDate+'T00:00:00');
+  if(isNaN(due.getTime())) return false;
+  return due.getTime() < Date.now();
+}
+/* วาดแถวแถบสัดส่วนพาสเทล (ปกติ/เลยกำหนด) ลงใน container ที่ระบุ — items = [{name,total,overdue}] เรียงมาก่อนหลังตามต้องการ */
+function renderSplitBars(containerId, items){
+  var box = document.getElementById(containerId);
+  if(!box) return;
+  if(!items.length){ box.innerHTML = '<div class="chart-empty-msg" style="height:auto;padding:20px 0;">ยังไม่มีข้อมูล</div>'; return; }
+  var max = Math.max.apply(null, items.map(function(x){ return x.total; }));
+  box.innerHTML = items.map(function(x){
+    var okCount = x.total - x.overdue;
+    var okPct = (okCount/max*100).toFixed(1);
+    var ovdPct = (x.overdue/max*100).toFixed(1);
+    return '<div class="dash-bar-row">'
+      + '<span class="lbl" title="'+x.name+'">'+x.name+'</span>'
+      + '<span class="track"><span class="ok dash-split-ok" style="width:'+okPct+'%;"></span><span class="ovd dash-split-ovd" style="width:'+ovdPct+'%;"></span></span>'
+      + '<span class="tot">'+x.total+'</span></div>';
+  }).join('');
+}
 /* ดึงปีการศึกษา (พ.ศ. 4 หลัก) ออกจากช่อง graduatedTerm ที่กรอกแบบ "ภาคเรียน/ปี" เช่น "1/2568" —
    รองรับกรณีกรอกแค่ปีเดี่ยวๆ ด้วย ถ้าไม่พบรูปแบบที่ใช้ได้คืนค่าว่าง (ไปจัดกลุ่ม "ไม่ระบุปี" แทน) */
 function extractGraduatedYear(term){
@@ -1926,24 +1995,28 @@ function renderSummaryDashboard(){
     /* การ์ดสถิติสีสันด้านบน */
     var graduatedCount = students.filter(function(r){ return !!r.graduated; }).length;
     var withdrawnCount = students.filter(studentHasWithdrawnAdvisor).length;
+    var overdueCount = students.filter(isOverdueRec).length;
     document.getElementById('statTotalStudents').textContent = students.length;
     document.getElementById('statGraduated').textContent = graduatedCount;
     document.getElementById('statActive').textContent = students.length - graduatedCount;
     document.getElementById('statWithdrawnAdvisor').textContent = withdrawnCount;
+    document.getElementById('statOverdueBook').textContent = overdueCount;
 
-    /* กราฟจำนวนนักศึกษาแยกตามหลักสูตร/สาขาวิชา */
-    var programCounts = {}, deptCounts = {};
-    students.forEach(function(r){
-      var p = r.program || 'ไม่ระบุหลักสูตร';
-      var d = r.department || 'ไม่ระบุสาขา';
-      programCounts[p] = (programCounts[p]||0)+1;
-      deptCounts[d] = (deptCounts[d]||0)+1;
-    });
-    var progKeys = Object.keys(programCounts).sort(function(a,b){ return programCounts[b]-programCounts[a]; });
-    renderOrUpdateDonutChart('chartByProgram','program', progKeys, progKeys.map(function(k){ return programCounts[k]; }), SUMMARY_CHART_COLORS.program);
-
-    var deptKeys = Object.keys(deptCounts).sort(function(a,b){ return deptCounts[b]-deptCounts[a]; });
-    renderOrUpdateDonutChart('chartByDept','dept', deptKeys, deptKeys.map(function(k){ return deptCounts[k]; }), SUMMARY_CHART_COLORS.dept);
+    /* แถบสัดส่วน (ปกติ/เลยกำหนด) แยกตามหลักสูตร/สาขาวิชา/แผนการศึกษา */
+    function groupSplit(getKey, emptyLabel){
+      var m = {};
+      students.forEach(function(r){
+        var k = getKey(r) || emptyLabel;
+        if(!m[k]) m[k] = {name:k, total:0, overdue:0};
+        m[k].total++;
+        if(isOverdueRec(r)) m[k].overdue++;
+      });
+      return Object.keys(m).map(function(k){ return m[k]; }).sort(function(a,b){ return b.total-a.total; });
+    }
+    renderSplitBars('barByProgram', groupSplit(function(r){ return r.program; }, 'ไม่ระบุหลักสูตร'));
+    renderSplitBars('barByDept', groupSplit(function(r){ return r.department; }, 'ไม่ระบุสาขา'));
+    renderSplitBars('barByPlan', groupSplit(function(r){ return r.plan; }, 'ไม่ระบุแผน'));
+    applyDashOverdueToggle();
 
     /* กราฟจำนวนผู้สำเร็จการศึกษาแล้ว แยกตามสาขาวิชา */
     var graduatedByDept = {};

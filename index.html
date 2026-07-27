@@ -287,6 +287,17 @@
     .landing-hero-visual{width:100%;max-width:320px;}
     .landing-nav-links{display:none;}
   }
+
+  /* โหมดพิมพ์ / บันทึกเป็น PDF สำหรับหน้าโปรไฟล์นักศึกษา (หน้าตรวจสอบข้อมูล) — ซ่อนทุกอย่างยกเว้นเนื้อหาโปรไฟล์
+     เพื่อให้กด Print แล้วเลือก "Save as PDF" จากเบราว์เซอร์ได้ผลลัพธ์ที่อ่านง่าย ไม่มีเมนู/ปุ่มติดไปด้วย */
+  .print-only{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #lookupDetail, #lookupDetail *{ visibility:visible; }
+    #lookupDetail{ position:absolute; left:0; top:0; width:100%; }
+    .no-print{ display:none !important; }
+    .print-only{ display:block !important; }
+  }
 </style>
 </head>
 <body>
@@ -487,6 +498,7 @@
   <button data-view="form">📝 บันทึกข้อมูล</button>
   <button data-view="list">📋 รายการทั้งหมด</button>
   <button data-view="settings">⚙️ ตั้งค่า</button>
+  <button data-view="auditlog">📜 ประวัติการแก้ไข</button>
   <div class="spacer"></div>
   <div class="drive-status" id="driveStatus"><span class="dot"></span><span id="driveStatusText">ยังไม่เชื่อมต่อ Google Drive</span></div>
   <button type="button" class="btn-lock-nav" id="btnLockNow">🔒 ล็อกระบบ</button>
@@ -521,6 +533,11 @@
       <div class="stat-value" id="statWithdrawnAdvisor">0</div>
       <div class="stat-label">ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่</div>
     </div>
+  </div>
+
+  <div class="card" id="dueDateWarningCard" style="display:none;border-left:4px solid var(--warn);">
+    <h3>⏰ ใกล้/เลยกำหนดส่งเล่มฉบับสมบูรณ์</h3>
+    <div id="dueDateWarningList"></div>
   </div>
 
   <div class="summary-charts-row">
@@ -814,7 +831,24 @@
       </div>
       <div class="field">
         <label>ภาคเรียนที่สำเร็จการศึกษา</label>
-        <input type="text" id="f_graduatedTerm" placeholder="เช่น 1/2568">
+        <div style="display:flex;gap:8px;">
+          <select id="f_graduatedTermSemester" style="flex:1;">
+            <option value="">ภาคเรียน</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">ฤดูร้อน</option>
+          </select>
+          <select id="f_graduatedTermYear" style="flex:1.3;">
+            <option value="">ปีการศึกษา (พ.ศ.)</option>
+            <option value="2555">2555</option><option value="2556">2556</option><option value="2557">2557</option>
+            <option value="2558">2558</option><option value="2559">2559</option><option value="2560">2560</option>
+            <option value="2561">2561</option><option value="2562">2562</option><option value="2563">2563</option>
+            <option value="2564">2564</option><option value="2565">2565</option><option value="2566">2566</option>
+            <option value="2567">2567</option><option value="2568">2568</option><option value="2569">2569</option>
+            <option value="2570">2570</option><option value="2571">2571</option><option value="2572">2572</option>
+            <option value="2573">2573</option><option value="2574">2574</option><option value="2575">2575</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
@@ -1063,6 +1097,17 @@
   </div>
 </section>
 
+<!-- ============ AUDIT LOG VIEW (เฉพาะ Admin) ============ -->
+<section id="view-auditlog" style="display:none;">
+  <div class="card">
+    <h3>📜 ประวัติการแก้ไขข้อมูล</h3>
+    <div class="help" style="margin-bottom:10px;">บันทึกทุกครั้งที่มีการสร้าง/แก้ไข/ลบข้อมูลนักศึกษาในระบบ เรียงจากล่าสุดไปเก่าสุด</div>
+    <input type="text" id="auditLogSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อกรอง...">
+    <div id="auditLogList" style="margin-top:12px;"></div>
+    <div class="empty-state" id="auditLogEmpty" style="display:none;">ยังไม่มีประวัติการแก้ไขข้อมูล</div>
+  </div>
+</section>
+
 </main>
 
 <div id="toast" class="toast"></div>
@@ -1111,7 +1156,7 @@ function el(tag, attrs, children){
 }
 
 /* ================= INDEXEDDB ================= */
-var DB_NAME='ThesisManagerDB', DB_VERSION=1, db;
+var DB_NAME='ThesisManagerDB', DB_VERSION=2, db;
 function openDB(){
   return new Promise(function(resolve,reject){
     var req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -1127,6 +1172,10 @@ function openDB(){
       }
       if(!d.objectStoreNames.contains('meta')){
         d.createObjectStore('meta',{keyPath:'key'});
+      }
+      if(!d.objectStoreNames.contains('auditLog')){
+        var al = d.createObjectStore('auditLog',{keyPath:'id'});
+        al.createIndex('studentId','studentId',{unique:false});
       }
     };
     req.onsuccess = function(){ resolve(req.result); };
@@ -1777,6 +1826,7 @@ function bindNav(){
   document.getElementById('lookupDeptFilter').addEventListener('change', function(){ lookupListPage=0; renderLookupList(); });
   document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
   document.getElementById('btnLookupNext').addEventListener('click', function(){ lookupListPage++; renderLookupList(); });
+  document.getElementById('auditLogSearch').addEventListener('input', renderAuditLogFiltered);
 }
 var lookupSearchDebounceTimer = null;
 function onLookupSearchInput(){
@@ -1797,7 +1847,7 @@ function onLookupSearchInput(){
 function switchView(name){
   /* เจ้าหน้าที่ดูอย่างเดียว (viewer/dept-viewer) เข้าได้เฉพาะหน้าแดชบอร์ดสรุปข้อมูล กับหน้าตรวจสอบข้อมูลรายบุคคลเท่านั้น */
   if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard' && name!=='summary') name='dashboard';
-  ['summary','dashboard','form','list','settings'].forEach(function(v){
+  ['summary','dashboard','form','list','settings','auditlog'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
@@ -1813,6 +1863,7 @@ function switchView(name){
   }
   if(name==='dashboard') renderDashboard();
   if(name==='summary') renderSummaryDashboard();
+  if(name==='auditlog') renderAuditLog();
 }
 
 /* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
@@ -1910,6 +1961,25 @@ function renderSummaryDashboard(){
     });
     renderOrUpdateDonutChart('chartGraduatedByYear','graduatedByYear', gradYearKeys, gradYearKeys.map(function(k){ return graduatedByYear[k]; }), SUMMARY_CHART_COLORS.year);
 
+    /* แถบเตือนใกล้/เลยกำหนดส่งเล่มฉบับสมบูรณ์ — เฉพาะคนที่สอบป้องกันผ่านแล้ว (ผ่าน/ผ่านแบบมีเงื่อนไข), ยังไม่ส่งเล่ม,
+       ยังไม่สำเร็จการศึกษา และมีการระบุกำหนดส่งเล่ม (defenseDueDate) ไว้ */
+    var DUE_SOON_DAYS = 30;
+    var nowTs = Date.now();
+    var dueSoonList = students.filter(function(r){
+      if(r.graduated) return false;
+      if((r.bookSubmitStatus||'ยังไม่ส่ง')==='ส่งแล้ว') return false;
+      var passed = r.defenseResult==='ผ่าน' || r.defenseResult==='ผ่านแบบมีเงื่อนไข';
+      if(!passed || !r.defenseDueDate) return false;
+      var due = new Date(r.defenseDueDate+'T00:00:00');
+      if(isNaN(due.getTime())) return false;
+      var daysLeft = Math.floor((due.getTime()-nowTs)/86400000);
+      return daysLeft <= DUE_SOON_DAYS;
+    }).map(function(r){
+      var due = new Date(r.defenseDueDate+'T00:00:00');
+      return {rec:r, daysLeft: Math.floor((due.getTime()-nowTs)/86400000)};
+    }).sort(function(a,b){ return a.daysLeft-b.daysLeft; });
+    renderDueDateWarningCard(dueSoonList);
+
     /* กราฟสรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
     var proposalStats = {'ผ่าน':0, 'ไม่ผ่าน':0, 'รอผล':0};
     var defenseStats = {'ผ่าน':0, 'ผ่านแบบมีเงื่อนไข':0, 'ไม่ผ่าน':0, 'รอผล':0};
@@ -1930,9 +2000,75 @@ function renderSummaryDashboard(){
     renderOrUpdateDonutChart('chartDefense','defense', defenseLabels, defenseLabels.map(function(k){ return defenseStats[k]; }), defenseLabels.map(function(k){ return SUMMARY_CHART_COLORS.defense[k]; }));
   });
 }
+function renderDueDateWarningCard(list){
+  var card = document.getElementById('dueDateWarningCard');
+  var box = document.getElementById('dueDateWarningList');
+  box.innerHTML='';
+  if(!list.length){ card.style.display='none'; return; }
+  card.style.display='';
+  list.forEach(function(item){
+    var r = item.rec;
+    var overdue = item.daysLeft < 0;
+    var statusTxt = overdue ? ('เลยกำหนดแล้ว '+Math.abs(item.daysLeft)+' วัน') : (item.daysLeft===0 ? 'ครบกำหนดวันนี้' : 'เหลืออีก '+item.daysLeft+' วัน');
+    box.appendChild(el('div',{class:'attach-item'},[
+      el('span',{class:'name', text:(overdue?'🔴 ':'🟡 ')+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' (กำหนดส่งเล่ม '+toBuddhistDateStr(r.defenseDueDate)+' • '+statusTxt+')'}),
+      el('button',{type:'button', class:'link-btn', text:'ดูโปรไฟล์', onclick:function(){
+        switchView('dashboard');
+        document.getElementById('lookupSearch').value = r.studentId;
+        selectLookupStudent(r.studentId);
+      }})
+    ]));
+  });
+}
 /* ================= DASHBOARD / STUDENT LOOKUP ================= */
 function renderDashboard(){
   renderLookupList();
+}
+/* ================= AUDIT LOG VIEW (เฉพาะ Admin — ดูได้จาก switchView ที่บังคับ redirect role อื่นออกไปแล้ว) ================= */
+var auditLogCache = null;
+function formatAuditTs(ts){
+  if(!ts) return '';
+  var d = new Date(ts);
+  function p2(n){ return String(n).padStart(2,'0'); }
+  return p2(d.getDate())+'/'+p2(d.getMonth()+1)+'/'+(d.getFullYear()+543)+' '+p2(d.getHours())+':'+p2(d.getMinutes());
+}
+function renderAuditLog(){
+  var emptyBox = document.getElementById('auditLogEmpty');
+  document.getElementById('auditLogList').innerHTML='';
+  emptyBox.textContent = 'กำลังโหลด...';
+  emptyBox.style.display='';
+  auditLogGetAll().then(function(entries){
+    auditLogCache = entries.slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    renderAuditLogFiltered();
+  }).catch(function(e){
+    emptyBox.textContent = 'โหลดประวัติไม่สำเร็จ: '+(e && e.message ? e.message : e);
+    emptyBox.style.display='';
+  });
+}
+function renderAuditLogFiltered(){
+  var listBox = document.getElementById('auditLogList');
+  var emptyBox = document.getElementById('auditLogEmpty');
+  var q = (document.getElementById('auditLogSearch').value||'').trim().toLowerCase();
+  listBox.innerHTML='';
+  var entries = auditLogCache||[];
+  if(q){
+    entries = entries.filter(function(e){
+      return (e.studentId||'').toLowerCase().indexOf(q)>-1 || (e.studentName||'').toLowerCase().indexOf(q)>-1;
+    });
+  }
+  if(entries.length===0){
+    emptyBox.textContent = q ? 'ไม่พบประวัติที่ตรงกับคำค้นหา' : 'ยังไม่มีประวัติการแก้ไขข้อมูล';
+    emptyBox.style.display='';
+    return;
+  }
+  emptyBox.style.display='none';
+  /* แสดงล่าสุด 300 รายการ กันหน้าอืดถ้า log สะสมมาก — ใช้ช่องค้นหาเพื่อกรองหารายนักศึกษาที่ต้องการแทน */
+  entries.slice(0,300).forEach(function(e){
+    var actionIcon = e.action==='ลบข้อมูล' ? '🗑️' : (e.action==='สร้างข้อมูลใหม่' ? '🆕' : '✏️');
+    listBox.appendChild(el('div',{class:'attach-item'},[
+      el('span',{class:'name', text: actionIcon+' '+formatAuditTs(e.ts)+' — '+e.action+': '+(e.studentId||'-')+' '+(e.studentName||'')+' (โดย '+e.role+')'})
+    ]));
+  });
 }
 function getStudentSummaries(){
   return recordsGetAll().then(function(rows){
@@ -2163,22 +2299,55 @@ function kvFileLink(label, file){
     valEl
   ]);
 }
+/* ตรวจสอบความครบถ้วนของข้อมูลหลักที่ควรมีก่อนปิดเคสของนักศึกษาคนหนึ่ง — คืนค่าเป็นรายการข้อความภาษาไทย
+   ของสิ่งที่ยังขาด (ไม่ใช่การบังคับกรอก แค่ช่วยเจ้าหน้าที่เช็คก่อนถือว่าเคสนี้เรียบร้อย) */
+function computeMissingItems(rec){
+  var missing = [];
+  if(!rec.englishResult) missing.push('ยังไม่ระบุผลภาษาอังกฤษ');
+  if(!rec.computerResult) missing.push('ยังไม่ระบุผลคอมพิวเตอร์');
+  if(!rec.mainAdvisor) missing.push('ยังไม่ระบุอาจารย์ที่ปรึกษาหลัก');
+  if(!rec.titleTh) missing.push('ยังไม่ระบุหัวข้อวิทยานิพนธ์ (ภาษาไทย)');
+  if(!recHasProposalData(rec)) missing.push('ยังไม่มีข้อมูลสอบเค้าโครงวิทยานิพนธ์/การค้นคว้าอิสระ (3.1)');
+  if(!recHasDefenseData(rec)) missing.push('ยังไม่มีข้อมูลสอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2)');
+  if(rec.bookSubmitStatus==='ส่งแล้ว' && !rec.bookDocLink) missing.push('ระบุว่าส่งเล่มฉบับสมบูรณ์แล้ว แต่ยังไม่แนบลิงก์เอกสาร');
+  if(rec.graduated && !rec.graduatedTerm) missing.push('ติ๊กว่าสำเร็จการศึกษาแล้ว แต่ยังไม่ระบุภาคเรียนที่สำเร็จการศึกษา');
+  return missing;
+}
 function renderStudentProfile(latest, examRecords, filesByRecord){
   var wrap = document.getElementById('lookupDetail');
   wrap.innerHTML='';
 
   var englishVal = latest.englishResult ? (latest.englishResult + (latest.englishScore ? ' ('+latest.englishScore+')' : '')) : '';
 
-  var header = el('div',{class:'card'},[
+  var header = el('div',{class:'card no-print'},[
     el('div',{class:'profile-header', style:'border-bottom:none;margin-bottom:0;padding-bottom:0;'},[
       el('div',{},[
         el('div',{class:'ph-name', text: latest.studentName||'(ไม่ระบุชื่อ)'}),
         el('div',{class:'ph-id', text:'รหัสนักศึกษา '+latest.studentId})
       ]),
-      (currentRole==='viewer' || currentRole==='dept-viewer') ? null : el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){ startNewExamForStudent(latest.studentId); }})
+      el('div',{style:'display:flex;gap:8px;flex-wrap:wrap;'},[
+        el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'🖨️ พิมพ์ / บันทึกเป็น PDF', onclick:function(){ window.print(); }}),
+        (currentRole==='viewer' || currentRole==='dept-viewer') ? null : el('button',{type:'button', class:'btn btn-primary btn-sm', text:'📝 บันทึกข้อมูลสอบครั้งใหม่ให้นักศึกษาคนนี้', onclick:function(){ startNewExamForStudent(latest.studentId); }})
+      ])
     ])
   ]);
   wrap.appendChild(header);
+
+  var printTitle = el('div',{class:'print-only', style:'display:none;'},[
+    el('h2',{style:'margin:0 0 4px;', text:'ข้อมูลการสอบวิทยานิพนธ์/การค้นคว้าอิสระ'}),
+    el('div',{style:'font-weight:700;font-size:16px;', text: latest.studentName||'(ไม่ระบุชื่อ)'}),
+    el('div',{style:'font-size:13px;color:#555;margin-bottom:6px;', text:'รหัสนักศึกษา '+latest.studentId})
+  ]);
+  wrap.appendChild(printTitle);
+
+  var missingItems = computeMissingItems(latest);
+  var completenessCard = el('div',{class:'card section-card', style:'border-left:4px solid '+(missingItems.length?'var(--warn)':'var(--accent)')+';'},[
+    el('h3',{text:'✅ ความครบถ้วนของข้อมูล'}),
+    missingItems.length===0
+      ? el('div',{style:'color:var(--accent);font-weight:600;font-size:13.5px;', text:'ข้อมูลครบถ้วนตามเกณฑ์หลักแล้ว'})
+      : el('ul',{style:'margin:0;padding-left:20px;color:#b7791f;font-size:13.5px;line-height:1.9;'}, missingItems.map(function(m){ return el('li',{text:m}); }))
+  ]);
+  wrap.appendChild(completenessCard);
 
   var sec1 = el('div',{class:'card section-card sec-blue'},[
     el('h3',{text:'หมวดที่ 1: ข้อมูลนักศึกษา'}),
@@ -2896,7 +3065,8 @@ function resetFormFields(){
   document.getElementById('f_bookSubmitDate').value='';
   document.getElementById('f_bookDocLink').value='';
   document.getElementById('f_graduated').checked=false;
-  document.getElementById('f_graduatedTerm').value='';
+  document.getElementById('f_graduatedTermSemester').value='';
+  document.getElementById('f_graduatedTermYear').value='';
 
   clearExamSectionFields();
 
@@ -2938,7 +3108,16 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_bookSubmitDate').value = rec.bookSubmitDate||'';
   document.getElementById('f_bookDocLink').value = rec.bookDocLink||'';
   document.getElementById('f_graduated').checked = !!rec.graduated;
-  document.getElementById('f_graduatedTerm').value = rec.graduatedTerm||'';
+  (function(){
+    /* รองรับค่าที่เคยกรอกแบบอิสระก่อนหน้านี้ (เช่น "1/2568") — แยกภาคเรียน/ปีออกมาใส่ dropdown ถ้ารูปแบบตรง
+       ถ้าไม่ตรง (เช่น กรอกมาแบบอื่น) จะปล่อยว่างไว้ทั้งคู่ แทนที่จะทำข้อมูลเดิมหาย ผู้ใช้ต้องเลือกใหม่ตอนบันทึกครั้งถัดไป */
+    var term = rec.graduatedTerm||'';
+    var parts = String(term).split('/');
+    var sem = parts.length===2 ? parts[0].trim() : '';
+    var yr = parts.length===2 ? parts[1].trim() : '';
+    document.getElementById('f_graduatedTermSemester').value = ['1','2','3'].indexOf(sem)>-1 ? sem : '';
+    document.getElementById('f_graduatedTermYear').value = /^\d{4}$/.test(yr) ? yr : '';
+  })();
 
   if(recHasProposalData(rec)){
     document.getElementById('p_date').value = rec.proposalDate||'';
@@ -3112,7 +3291,11 @@ function collectFormData(){
     bookSubmitDate: document.getElementById('f_bookSubmitDate').value,
     bookDocLink: document.getElementById('f_bookDocLink').value.trim(),
     graduated: document.getElementById('f_graduated').checked,
-    graduatedTerm: document.getElementById('f_graduatedTerm').value.trim(),
+    graduatedTerm: (function(){
+      var sem = document.getElementById('f_graduatedTermSemester').value;
+      var yr = document.getElementById('f_graduatedTermYear').value;
+      return (sem && yr) ? (sem+'/'+yr) : '';
+    })(),
     proposalAttempts: pendingProposalAttempts,
     defenseAttempts: pendingDefenseAttempts,
     updatedAt: Date.now()
@@ -3205,9 +3388,11 @@ function saveRecord(){
       return null;
     });
   }
+  var wasExisting = false;
   dupCheck.then(function(){
     return recordsGet(rec.id);
   }).then(function(existing){
+    wasExisting = !!existing;
     rec.createdAt = existing ? existing.createdAt : Date.now();
     if(cloudModeEnabled && existing && formOpenedAt && existing.updatedAt && existing.updatedAt > formOpenedAt){
       var ok = confirm('ข้อมูลรายการนี้ถูกแก้ไขโดยผู้อื่นหลังจากที่คุณเปิดฟอร์มนี้ขึ้นมา หากบันทึกต่อ การแก้ไขของคุณจะบันทึกทับข้อมูลล่าสุด ต้องการบันทึกทับหรือไม่?');
@@ -3231,6 +3416,7 @@ function saveRecord(){
       return reassignFilesToRecord(oldId, rec.id).then(function(){ return recordsDelete(oldId); });
     }));
   }).then(function(){
+    logAudit(wasExisting?'แก้ไขข้อมูล':'สร้างข้อมูลใหม่', rec.studentId, rec.studentName);
     toast('บันทึกข้อมูลเรียบร้อย');
     refreshDocLinkSuggestions(); /* ให้ลิงก์ที่เพิ่งบันทึกโผล่เป็นตัวเลือกแนะนำทันทีสำหรับ นศ. คนถัดไปในประกาศเดียวกัน */
     newDraft();
@@ -3453,10 +3639,15 @@ function renderList(){
 }
 function deleteRecordConfirm(id){
   if(!confirm('ยืนยันลบข้อมูลรายการนี้? (ไฟล์แนบที่เกี่ยวข้องจะถูกลบด้วย)')) return;
-  Promise.all([
-    recordsDelete(id),
-    filesGetByRecordId(id).then(function(files){ return Promise.all(files.map(function(f){ return filesDelete(f.id); })); })
-  ]).then(function(){ toast('ลบข้อมูลแล้ว'); renderList(); });
+  recordsGet(id).then(function(existing){
+    return Promise.all([
+      recordsDelete(id),
+      filesGetByRecordId(id).then(function(files){ return Promise.all(files.map(function(f){ return filesDelete(f.id); })); })
+    ]).then(function(){
+      logAudit('ลบข้อมูล', existing ? existing.studentId : '', existing ? existing.studentName : '');
+      toast('ลบข้อมูลแล้ว'); renderList();
+    });
+  });
 }
 
 /* ================= EXPORT ================= */
@@ -4865,6 +5056,44 @@ function recordsDelete(id){
     return sheetsUpdateRow('Records', existing.rowNumber, recordToRow(rec));
   }).then(function(result){ invalidateRecordsSheetCache(); return result; });
 }
+/* ---- audit log adapter (บันทึกว่าใครสร้าง/แก้ไข/ลบข้อมูลนักศึกษาคนไหนเมื่อไหร่ — append-only, ไม่มีการแก้ไข/ลบย้อนหลัง) ---- */
+var AUDIT_COLUMNS = ['id','ts','action','studentId','studentName','role','department'];
+function auditRoleLabel(){
+  if(currentRole==='admin') return 'ผู้ดูแลระบบ';
+  if(currentRole==='viewer') return 'เจ้าหน้าที่ (ดูอย่างเดียว)';
+  if(currentRole==='dept-viewer') return 'เจ้าหน้าที่สาขา: '+(currentDeptRestriction||'');
+  return currentRole||'';
+}
+function logAudit(action, studentId, studentName){
+  var entry = {
+    id: 'audit_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
+    ts: Date.now(),
+    action: action,
+    studentId: studentId||'',
+    studentName: studentName||'',
+    role: auditRoleLabel(),
+    department: currentDeptRestriction||''
+  };
+  /* บันทึก log เป็นงานเสริม ไม่ให้ความล้มเหลวของ log กระทบการบันทึก/ลบข้อมูลจริงซึ่งสำคัญกว่า */
+  auditLogPut(entry).catch(function(e){ console.error('audit log write failed', e); });
+}
+function auditLogPut(entry){
+  if(!cloudModeEnabled) return dbPut('auditLog', entry);
+  return ensureAuthed().then(function(){
+    return sheetsAppendRow('AuditLog', AUDIT_COLUMNS.map(function(h){ return entry[h]!==undefined ? entry[h] : ''; }));
+  });
+}
+function auditLogGetAll(){
+  if(!cloudModeEnabled) return dbGetAll('auditLog');
+  return ensureAuthed().then(function(){ return sheetsGetValues('AuditLog!A2:Z200000'); }).then(function(rows){
+    return (rows||[]).map(function(row){
+      var rec = {};
+      AUDIT_COLUMNS.forEach(function(h,i){ rec[h] = row[i]!==undefined ? row[i] : ''; });
+      rec.ts = rec.ts ? Number(rec.ts) : 0;
+      return rec;
+    });
+  });
+}
 /* ---- files adapter ---- */
 function filesGetByRecordId(recordId){
   if(!cloudModeEnabled) return dbGetByIndex('files','recordId', recordId);
@@ -4912,7 +5141,8 @@ function initSheetStructure(){
     var wanted = [
       {title:'Records', headers:RECORD_COLUMNS},
       {title:'Files', headers:FILE_COLUMNS},
-      {title:'MasterData', headers:['json']}
+      {title:'MasterData', headers:['json']},
+      {title:'AuditLog', headers:AUDIT_COLUMNS}
     ];
     var addRequests = wanted.filter(function(w){ return existingTitles.indexOf(w.title)===-1; })
       .map(function(w){ return {addSheet:{properties:{title:w.title}}}; });
@@ -4925,6 +5155,13 @@ function initSheetStructure(){
           return sheetsGetValues('MasterData!A1:A1').then(function(vals){
             if(vals.length>0 && vals[0].length>0) return; // already has data
             return sheetsUpdateRow('MasterData', 1, [JSON.stringify(masterData)]);
+          });
+        }
+        if(w.title==='AuditLog'){
+          // append-only log, ไม่มีคอลัมน์ 'deleted' เหมือน Records/Files จึงไม่ต้องผ่านตรรกะรวม header ด้านล่าง
+          return sheetsGetValues('AuditLog!1:1').then(function(vals){
+            if(vals.length>0 && vals[0].length>0) return; // มี header อยู่แล้ว
+            return sheetsUpdateRow('AuditLog', 1, w.headers);
           });
         }
         // Records / Files: read the full header row and add any missing columns.

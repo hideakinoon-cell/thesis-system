@@ -1443,6 +1443,11 @@ function migrateAdvisorFormat(){
     }
     return item;
   });
+  /* เพิ่มฟิลด์ aliases (ชื่อ/ตำแหน่งทางวิชาการเดิมที่เคยใช้เรียกอาจารย์ท่านนี้) ให้ทุกรายการที่ยังไม่มี
+     ใช้สำหรับรวมข้อมูลโควตา/รายงานที่ปรึกษาข้ามชื่อเดิม-ใหม่ ดู updateAdvisor() */
+  masterData.advisors.forEach(function(a){
+    if(!Array.isArray(a.aliases)){ a.aliases = []; changed = true; }
+  });
   var committeeSlotNames = masterData.positions.filter(function(p){ return p.slot==='committee'; }).map(function(p){ return p.name; });
   masterData.advisors.forEach(function(a){
     if(!a.roles) return;
@@ -2311,7 +2316,7 @@ function renderLookupList(){
   });
 }
 function selectLookupAdvisor(advisor){
-  getAdvisorReport(advisor.name).then(function(rep){ renderAdvisorProfile(advisor, rep); });
+  getAdvisorReport(advisor).then(function(rep){ renderAdvisorProfile(advisor, rep); });
 }
 function renderAdvisorProfile(advisor, rep){
   var wrap = document.getElementById('lookupDetail');
@@ -4403,10 +4408,22 @@ function computeAdvisorUsedCounts(){
     return map;
   }).catch(function(){ return advisorUsedMap; });
 }
+/* เมื่ออาจารย์เปลี่ยนชื่อ/ตำแหน่งทางวิชาการ (เช่น ผศ. -> รศ.) ผ่าน updateAdvisor() โดยไม่ได้ติ๊ก "ปรับปรุงข้อมูลเก่า"
+   (ค่าเริ่มต้น เพื่อรักษาความถูกต้องของคำสั่งสอบที่เคยออกไปแล้ว) ข้อมูลนักศึกษาเก่าจะยังอ้างอิงชื่อเดิม (alias) อยู่
+   ฟังก์ชันนี้จึงรวมทั้งชื่อปัจจุบันและชื่อเดิมทั้งหมด (aliases) เข้าด้วยกัน เพื่อไม่ให้โควตา/รายงานที่ปรึกษานับตกหล่น
+   ทั้งที่เป็นอาจารย์คนเดียวกัน — นี่คือจุดแก้บั๊กที่ผู้ใช้แจ้งว่า "เปลี่ยนตำแหน่งทางวิชาการแล้วไม่นับให้" */
+function advisorNameVariants(advisor){
+  var names = [advisor.name];
+  (advisor.aliases||[]).forEach(function(a){ if(a && names.indexOf(a)===-1) names.push(a); });
+  return names;
+}
+function advisorUsedCount(advisor){
+  return advisorNameVariants(advisor).reduce(function(sum, nm){ return sum + (advisorUsedMap[nm]||0); }, 0);
+}
 function advisorQuotaBadgeText(advisor){
   var max = ADVISOR_RANK_QUOTA[advisor.rank];
   if(!max) return null;
-  var used = advisorUsedMap[advisor.name] || 0;
+  var used = advisorUsedCount(advisor);
   var usedTxt = (Math.round(used*100)/100).toString().replace(/\.0+$/,'');
   return 'ที่ปรึกษา: '+usedTxt+'/'+max+' คน';
 }
@@ -4423,14 +4440,24 @@ function buildAdvisorReport(rows){
   });
   return byAdvisor;
 }
-function getAdvisorReport(advisorName){
+/* advisor: object จาก masterData.advisors (ต้องมี .name และ .aliases) — รวมรายชื่อ นศ. จากทุกชื่อที่เคยใช้เรียกอาจารย์ท่านนี้
+   (ชื่อปัจจุบัน + ชื่อเดิมก่อนเปลี่ยนตำแหน่งทางวิชาการ/สะกดใหม่) ไม่เช่นนั้นรายงานจะแสดงรายชื่อ นศ. ไม่ครบ */
+function getAdvisorReport(advisor){
+  var names = advisorNameVariants(advisor);
   return recordsGetAll().then(function(rows){
     var byAdvisor = buildAdvisorReport(rows);
-    return byAdvisor[advisorName] || {graduated:[], active:[]};
+    var merged = {graduated:[], active:[]};
+    names.forEach(function(nm){
+      var entry = byAdvisor[nm];
+      if(!entry) return;
+      merged.graduated = merged.graduated.concat(entry.graduated);
+      merged.active = merged.active.concat(entry.active);
+    });
+    return merged;
   });
 }
 function openAdvisorReportModal(advisor){
-  getAdvisorReport(advisor.name).then(function(rep){
+  getAdvisorReport(advisor).then(function(rep){
     var total = rep.graduated.length + rep.active.length;
     var root = document.getElementById('modalRoot');
     var backdrop = el('div',{class:'modal-backdrop'});
@@ -4491,7 +4518,7 @@ function renderAdvisorList(){
     var quotaTxt = advisorQuotaBadgeText(advisor);
     if(quotaTxt){
       var max = ADVISOR_RANK_QUOTA[advisor.rank];
-      var used = advisorUsedMap[advisor.name] || 0;
+      var used = advisorUsedCount(advisor);
       var over = used > max;
       badges.push(el('span',{class:'role-badge', style:'background:'+(over?'#fee2e2':'#eef2ff')+';color:'+(over?'#dc2626':'#4338ca')+';', text:(over?'⚠️ ':'')+quotaTxt}));
     }
@@ -4567,20 +4594,32 @@ function openAdvisorEditModal(advisor){
 function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
   var advisor = masterData.advisors.filter(function(a){ return a.name===oldName; })[0];
   if(!advisor) return;
+  /* เก็บชื่อเดิมไว้เป็น alias เสมอเมื่อชื่อ/ตำแหน่งทางวิชาการเปลี่ยน (ไม่ว่าจะติ๊ก "ปรับปรุงข้อมูลเก่า" หรือไม่ก็ตาม)
+     เพื่อให้การคำนวณโควตาที่ปรึกษาและรายงานที่ปรึกษา (getAdvisorReport) ยังรวมนักศึกษาที่เคยบันทึกไว้ด้วยชื่อเดิม
+     ของอาจารย์ท่านนี้ได้ถูกต้อง แม้ข้อมูลนักศึกษาเก่าจะยังคงเป็นชื่อเดิมอยู่ (ไม่ได้ถูกแก้ไขย้อนหลัง) — แก้บั๊กที่เคยพบว่า
+     เปลี่ยนตำแหน่งทางวิชาการ (เช่น ผศ. -> รศ.) แล้วนักศึกษาที่บันทึกไว้ก่อนหน้าไม่ถูกนับรวมในโควตา ทั้งที่เป็นคนเดียวกัน */
+  if(newName!==oldName){
+    advisor.aliases = (advisor.aliases||[]).slice();
+    if(advisor.aliases.indexOf(oldName)===-1) advisor.aliases.push(oldName);
+    advisor.aliases = advisor.aliases.filter(function(a){ return a!==newName; });
+  }
   advisor.name = newName;
   advisor.roles = newRoles;
   advisor.rank = newRank||'';
-  saveMasterData().then(function(){
+  return saveMasterData().then(function(){
     if(newName!==oldName && doCascade) return cascadeRenameInRecords('advisors', oldName, newName);
     return 0;
   }).then(function(updatedCount){
     renderMasterLists();
     renderAllSelects();
     renderList();
-    var msg = 'บันทึกข้อมูลอาจารย์เรียบร้อย';
-    if(updatedCount>0) msg += ' ปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ';
-    else if(newName!==oldName) msg += ' (ข้อมูลนักศึกษาที่เคยบันทึกชื่อเดิมไว้จะยังคงเป็นชื่อเดิม)';
-    toast(msg);
+    return computeAdvisorUsedCounts().then(function(){
+      renderAdvisorList();
+      var msg = 'บันทึกข้อมูลอาจารย์เรียบร้อย';
+      if(updatedCount>0) msg += ' ปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ';
+      else if(newName!==oldName) msg += ' (ข้อมูลนักศึกษาที่เคยบันทึกชื่อเดิมไว้จะยังคงเป็นชื่อเดิม แต่ยังนับรวมในโควตา/รายงานของชื่อใหม่ให้อัตโนมัติ)';
+      toast(msg);
+    });
   });
 }
 function removeAdvisor(name){

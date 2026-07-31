@@ -252,7 +252,7 @@
   .btn-on-dark:hover{filter:brightness(.96);}
   .btn-lg{padding:13px 26px;font-size:16px;}
 
-  .landing-hero{position:relative;background:#1e4d8b;color:#fff;padding:96px 32px;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:440px;}
+  .landing-hero{position:relative;background:#1e4d8b;color:#fff;padding:96px 32px;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:calc(100vh - 64px);}
   .landing-hero-bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
   .landing-hero-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(120deg,rgba(20,45,90,.80),rgba(35,80,150,.68) 45%,rgba(105,45,200,.78));}
   .landing-hero-text{position:relative;z-index:2;max-width:560px;text-align:center;}
@@ -270,21 +270,12 @@
   .lf-c5{background:linear-gradient(135deg,#fde7c7,#f6cd8f);}
   .lf-label{font-size:13px;font-weight:700;color:var(--primary-dark);}
 
-  /* แถบจุดเด่นสั้นๆ (1 บรรทัดต่อรายการ) เติมช่องว่างระหว่างฟีเจอร์กับ CTA แบบไม่หนักเกินไป */
+  /* แถบจุดเด่นสั้นๆ (1 บรรทัดต่อรายการ) เติมช่องว่างระหว่างฟีเจอร์กับ footer แบบไม่หนักเกินไป */
   .landing-benefits-mini{max-width:1100px;margin:0 auto;padding:6px 32px 46px;}
   .lbm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
   .lbm-item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;font-size:13.5px;font-weight:600;color:var(--text);box-shadow:var(--shadow-sm);transition:transform .15s,box-shadow .15s;}
   .lbm-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
   .lbm-icon{font-size:19px;flex-shrink:0;}
-
-  /* แถบปิดท้ายก่อน footer: ภาพประกอบมินิมอลแบบ blob สีนุ่มๆ แทนข้อความยาวๆ */
-  .landing-cta{padding:56px 32px;background:#fff;display:flex;align-items:center;justify-content:center;gap:52px;flex-wrap:wrap;}
-  .landing-cta-inner{max-width:420px;}
-  .landing-cta h2{font-size:22px;color:var(--primary-dark);margin:0 0 10px;}
-  .landing-cta p{color:var(--muted);font-size:14px;margin:0 0 24px;line-height:1.7;}
-  .landing-cta-visual{width:300px;flex-shrink:0;}
-  .landing-cta-visual svg{width:100%;height:auto;}
-  @media(max-width:760px){.landing-cta{text-align:center;}}
 
   .landing-footer{background:linear-gradient(120deg,#1e4d8b,#2f6fc0 45%,#7c3aed);color:#fff;padding:32px 32px 18px;}
   .landing-footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
@@ -296,7 +287,7 @@
   .landing-footer-copyright{max-width:1100px;margin:22px auto 0;padding-top:16px;border-top:1px solid rgba(255,255,255,.2);text-align:center;font-size:12px;opacity:.75;}
 
   @media(max-width:720px){
-    .landing-hero{padding:64px 20px;min-height:380px;}
+    .landing-hero{padding:64px 20px;min-height:calc(100vh - 64px);}
     .landing-hero-text{max-width:100%;}
     .landing-nav-links{display:none;}
   }
@@ -351,79 +342,6 @@
       <div class="lbm-item"><span class="lbm-icon">🔒</span> ปลอดภัย เก็บบน Google Sheets/Drive ของหน่วยงาน</div>
       <div class="lbm-item"><span class="lbm-icon">📱</span> ใช้งานได้ทุกที่ ทุกอุปกรณ์</div>
       <div class="lbm-item"><span class="lbm-icon">🤝</span> รองรับหลายสาขาวิชา หลายเจ้าหน้าที่</div>
-    </div>
-  </section>
-
-  <section class="landing-cta">
-    <div class="landing-cta-inner">
-      <h2>พร้อมเริ่มใช้งานแล้วหรือยัง?</h2>
-      <p>เข้าถึงข้อมูลการสอบวิทยานิพนธ์และการค้นคว้าอิสระของนักศึกษาได้ทุกที่ ทุกเวลา</p>
-      <button type="button" class="btn btn-primary btn-lg" id="btnLandingEnterCta">เข้าสู่ระบบ →</button>
-    </div>
-    <div class="landing-cta-visual">
-      <svg viewBox="0 0 340 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ภาพประกอบอาจารย์ที่ปรึกษาและเจ้าหน้าที่ทำงานร่วมกัน">
-        <ellipse cx="112" cy="150" rx="98" ry="108" fill="#e6f0fd"/>
-        <ellipse cx="112" cy="150" rx="98" ry="108" fill="url(#ctaBlueBlob)" opacity="0.9"/>
-        <defs>
-          <linearGradient id="ctaBlueBlob" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#4fc3d8"/>
-            <stop offset="1" stop-color="#2f6fc0"/>
-          </linearGradient>
-          <linearGradient id="ctaGreenBlob" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#6fcf97"/>
-            <stop offset="1" stop-color="#2f8f5b"/>
-          </linearGradient>
-        </defs>
-        <rect x="196" y="58" width="130" height="192" rx="26" fill="url(#ctaGreenBlob)" opacity="0.9"/>
-        <circle cx="66" cy="70" r="4" fill="#ffffff" opacity=".8"/>
-        <circle cx="150" cy="216" r="5" fill="#ffffff" opacity=".7"/>
-        <circle cx="308" cy="90" r="4" fill="#ffffff" opacity=".8"/>
-        <rect x="52" y="92" width="14" height="34" rx="4" fill="#2ea19c" transform="rotate(-18 59 109)"/>
-        <path d="M282 74 L308 66 L296 88 Z" fill="#ffffff"/>
-        <rect x="60" y="204" width="34" height="26" rx="3" fill="#ffffff"/>
-        <rect x="65" y="211" width="24" height="3" fill="#2f6fc0"/>
-        <rect x="65" y="217" width="18" height="3" fill="#2f6fc0"/>
-        <ellipse cx="112" cy="256" rx="46" ry="8" fill="rgba(0,0,0,.10)"/>
-        <path d="M78 250 Q78 176 112 176 Q146 176 146 250 Z" fill="#ffffff"/>
-        <path d="M86 182 Q66 190 70 232 L88 232 Z" fill="#eef4fc"/>
-        <path d="M138 182 Q158 190 154 232 L136 232 Z" fill="#eef4fc"/>
-        <rect x="104" y="182" width="16" height="30" fill="#f0ad4e"/>
-        <path d="M64 214 Q52 220 55 236" stroke="#f6cba0" stroke-width="9" fill="none" stroke-linecap="round"/>
-        <line x1="55" y1="236" x2="118" y2="150" stroke="#8a6a3e" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="118" cy="150" r="3.4" fill="#8a6a3e"/>
-        <circle cx="112" cy="158" r="26" fill="#f6cba0"/>
-        <path d="M88 150 Q86 122 112 120 Q138 122 136 150 Q136 138 112 136 Q88 138 88 150 Z" fill="#241a30"/>
-        <circle cx="103" cy="154" r="8.5" fill="none" stroke="#3a3a3a" stroke-width="2"/>
-        <circle cx="121" cy="154" r="8.5" fill="none" stroke="#3a3a3a" stroke-width="2"/>
-        <line x1="111" y1="154" x2="113" y2="154" stroke="#3a3a3a" stroke-width="2"/>
-        <circle cx="103" cy="154" r="2" fill="#241a30"/>
-        <circle cx="121" cy="154" r="2" fill="#241a30"/>
-        <path d="M104 170 Q112 175 120 170" stroke="#241a30" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-        <ellipse cx="238" cy="256" rx="44" ry="8" fill="rgba(0,0,0,.12)"/>
-        <path d="M204 250 Q204 168 238 168 Q272 168 272 250 Z" fill="#ffffff"/>
-        <path d="M212 174 Q196 182 200 224 L216 224 Z" fill="#e5e9ef"/>
-        <path d="M264 174 Q280 182 276 224 L260 224 Z" fill="#e5e9ef"/>
-        <rect x="228" y="176" width="20" height="26" fill="#1e293b"/>
-        <path d="M198 208 Q186 214 190 230" stroke="#f6cba0" stroke-width="9" fill="none" stroke-linecap="round"/>
-        <rect x="182" y="196" width="30" height="40" rx="4" fill="#d6dbe1"/>
-        <rect x="186" y="192" width="22" height="8" rx="2" fill="#a8b0ba"/>
-        <rect x="187" y="204" width="18" height="3" fill="#8a93a0"/>
-        <rect x="187" y="211" width="18" height="3" fill="#8a93a0"/>
-        <rect x="187" y="218" width="12" height="3" fill="#8a93a0"/>
-        <path d="M272 208 Q284 214 280 230" stroke="#f6cba0" stroke-width="9" fill="none" stroke-linecap="round"/>
-        <circle cx="238" cy="146" r="26" fill="#f6cba0"/>
-        <path d="M214 140 Q210 108 238 106 Q266 108 262 140 Q262 124 238 122 Q214 124 214 140 Z" fill="#241a30"/>
-        <circle cx="229" cy="142" r="8.5" fill="none" stroke="#3a3a3a" stroke-width="2"/>
-        <circle cx="247" cy="142" r="8.5" fill="none" stroke="#3a3a3a" stroke-width="2"/>
-        <line x1="237" y1="142" x2="239" y2="142" stroke="#3a3a3a" stroke-width="2"/>
-        <circle cx="229" cy="142" r="2" fill="#241a30"/>
-        <circle cx="247" cy="142" r="2" fill="#241a30"/>
-        <path d="M230 158 Q238 163 246 158" stroke="#241a30" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-        <g stroke="#fff2c4" stroke-width="2.4" stroke-linecap="round">
-          <path d="M270 100 L270 110"/>
-          <path d="M265 105 L275 105"/>
-        </g>
-      </svg>
     </div>
   </section>
 
@@ -1679,7 +1597,7 @@ function enterFromLandingPage(){
   if(pinInput) pinInput.focus();
 }
 function bindLandingPageEvents(){
-  ['btnLandingEnterNav','btnLandingEnterHero','btnLandingEnterCta','btnLandingEnterFooter'].forEach(function(id){
+  ['btnLandingEnterNav','btnLandingEnterHero','btnLandingEnterFooter'].forEach(function(id){
     var btn = document.getElementById(id);
     if(btn) btn.addEventListener('click', enterFromLandingPage);
   });

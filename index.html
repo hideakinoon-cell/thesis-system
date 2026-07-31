@@ -252,12 +252,12 @@
   .btn-on-dark:hover{filter:brightness(.96);}
   .btn-lg{padding:13px 26px;font-size:16px;}
 
-  .landing-hero{background:linear-gradient(120deg,#1e4d8b,#2f6fc0 45%,#7c3aed);color:#fff;padding:64px 32px;display:flex;align-items:center;gap:50px;flex-wrap:wrap;justify-content:center;}
-  .landing-hero-text{max-width:460px;}
-  .landing-hero-text h1{font-size:33px;line-height:1.32;margin:0 0 16px;font-weight:800;}
-  .landing-hero-text p{font-size:15px;opacity:.92;line-height:1.75;margin:0 0 26px;}
-  .landing-hero-visual{position:relative;width:320px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-  .landing-hero-visual svg{width:100%;height:auto;max-width:320px;}
+  .landing-hero{position:relative;background:#1e4d8b;color:#fff;padding:96px 32px;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:440px;}
+  .landing-hero-bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+  .landing-hero-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(120deg,rgba(20,45,90,.80),rgba(35,80,150,.68) 45%,rgba(105,45,200,.78));}
+  .landing-hero-text{position:relative;z-index:2;max-width:560px;text-align:center;}
+  .landing-hero-text h1{font-size:33px;line-height:1.32;margin:0 0 16px;font-weight:800;text-shadow:0 2px 10px rgba(0,0,0,.25);}
+  .landing-hero-text p{font-size:15px;opacity:.95;line-height:1.75;margin:0 0 26px;text-shadow:0 1px 6px rgba(0,0,0,.2);}
 
   .landing-features{max-width:1100px;margin:0 auto;padding:44px 32px 36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;}
   .lf-item{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px 14px;text-align:center;box-shadow:var(--shadow-sm);transition:transform .18s,box-shadow .18s;}
@@ -296,9 +296,8 @@
   .landing-footer-copyright{max-width:1100px;margin:22px auto 0;padding-top:16px;border-top:1px solid rgba(255,255,255,.2);text-align:center;font-size:12px;opacity:.75;}
 
   @media(max-width:720px){
-    .landing-hero{padding:44px 20px;flex-direction:column;text-align:center;}
+    .landing-hero{padding:64px 20px;min-height:380px;}
     .landing-hero-text{max-width:100%;}
-    .landing-hero-visual{width:100%;max-width:320px;}
     .landing-nav-links{display:none;}
   }
 
@@ -327,51 +326,14 @@
   </nav>
 
   <section class="landing-hero">
+    <video class="landing-hero-bg-video" autoplay muted loop playsinline preload="auto" poster="hero-bg-poster.jpg" aria-hidden="true">
+      <source src="hero-bg.mp4" type="video/mp4">
+    </video>
+    <div class="landing-hero-overlay"></div>
     <div class="landing-hero-text">
       <h1>ระบบจัดเก็บข้อมูล<br>การสอบวิทยานิพนธ์</h1>
       <p>บันทึก ติดตาม และตรวจสอบข้อมูลการสอบของนักศึกษาระดับบัณฑิตศึกษาในที่เดียว ตั้งแต่เสนอหัวข้อจนถึงสำเร็จการศึกษา ลดความซ้ำซ้อนของเอกสารและประหยัดเวลาให้เจ้าหน้าที่</p>
       <button type="button" class="btn btn-on-dark btn-lg" id="btnLandingEnterHero">เข้าสู่ระบบ →</button>
-    </div>
-    <div class="landing-hero-visual">
-      <svg viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ภาพประกอบนักศึกษาสวมหมวกรับปริญญานั่งใช้งานระบบผ่านแล็ปท็อป">
-        <circle cx="160" cy="150" r="140" fill="rgba(255,255,255,0.10)"/>
-        <circle cx="160" cy="150" r="110" fill="rgba(255,255,255,0.08)"/>
-        <ellipse cx="160" cy="246" rx="80" ry="10" fill="rgba(0,0,0,0.12)"/>
-        <rect x="30" y="222" width="260" height="12" rx="6" fill="#e2e8f0"/>
-        <rect x="52" y="234" width="12" height="26" fill="#cbd5e1"/>
-        <rect x="256" y="234" width="12" height="26" fill="#cbd5e1"/>
-        <path d="M108 224 Q108 160 160 160 Q212 160 212 224 Z" fill="#7c3aed"/>
-        <path d="M118 168 Q90 178 96 224 L118 224 Z" fill="#6a2fd1"/>
-        <path d="M202 168 Q230 178 224 224 L202 224 Z" fill="#6a2fd1"/>
-        <path d="M96 210 Q80 216 84 232" stroke="#f6cba0" stroke-width="11" fill="none" stroke-linecap="round"/>
-        <path d="M224 210 Q240 216 236 232" stroke="#f6cba0" stroke-width="11" fill="none" stroke-linecap="round"/>
-        <rect x="118" y="168" width="84" height="58" rx="7" fill="#1e4d8b"/>
-        <rect x="124" y="174" width="72" height="46" rx="3" fill="#eef4fc"/>
-        <rect x="131" y="182" width="32" height="6" rx="2" fill="#7c3aed"/>
-        <rect x="131" y="192" width="48" height="6" rx="2" fill="#2f6fc0"/>
-        <rect x="131" y="202" width="24" height="6" rx="2" fill="#ec6fa8"/>
-        <rect x="131" y="212" width="40" height="6" rx="2" fill="#2f8f5b"/>
-        <circle cx="160" cy="128" r="30" fill="#f6cba0"/>
-        <path d="M130 122 Q128 90 160 88 Q192 90 190 122 Q190 108 160 106 Q130 108 130 122 Z" fill="#2b2118"/>
-        <circle cx="148" cy="130" r="2.6" fill="#2b2118"/>
-        <circle cx="172" cy="130" r="2.6" fill="#2b2118"/>
-        <path d="M150 140 Q160 146 170 140" stroke="#2b2118" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <g transform="translate(160,78)">
-          <polygon points="0,-20 40,0 0,18 -40,0" fill="#1e293b"/>
-          <rect x="-16" y="14" width="32" height="9" rx="2" fill="#1e293b"/>
-          <circle cx="0" cy="-20" r="3.4" fill="#f0ad4e"/>
-          <line x1="0" y1="-20" x2="22" y2="10" stroke="#f0ad4e" stroke-width="2.2"/>
-          <circle cx="22" cy="10" r="3.4" fill="#f0ad4e"/>
-        </g>
-        <g transform="translate(246,120)">
-          <rect x="-22" y="-16" width="44" height="32" rx="8" fill="#ffffff"/>
-          <text x="0" y="7" font-size="20" text-anchor="middle">✅</text>
-        </g>
-        <g transform="translate(66,150)">
-          <rect x="-22" y="-16" width="44" height="32" rx="8" fill="#ffffff"/>
-          <text x="0" y="7" font-size="20" text-anchor="middle">🔍</text>
-        </g>
-      </svg>
     </div>
   </section>
 

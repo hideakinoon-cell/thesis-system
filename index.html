@@ -93,6 +93,11 @@
   .dash-bar-row .ok{background:#B8E0D2;}
   .dash-bar-row .ovd{background:#FFC2B4;}
   .dash-bar-row .tot{width:30px;text-align:right;flex-shrink:0;font-weight:600;color:var(--muted);}
+  /* แถบค้นหา/กรองข้อมูลด้านบนแดชบอร์ดสรุปข้อมูล — ค้นหานักศึกษารายคน + กรองสาขา/หลักสูตร/แผน/ปีการศึกษา แล้วคำนวณการ์ด+กราฟทั้งหมดใหม่ */
+  .dash-filter-row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;}
+  .dash-filter-row .field{min-width:170px;flex:1 1 170px;max-width:240px;}
+  .dash-filter-search{position:relative;min-width:220px;max-width:300px;}
+  .dash-filter-search .lookup-result-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:9px;box-shadow:var(--shadow-md);z-index:20;margin-top:6px;padding:8px;max-height:280px;}
   .kv-item .v.empty{color:#adb3bd;font-weight:400;}
   .kv-item .v.doc-link{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer;}
   .kv-item .v.doc-link:hover{text-decoration:underline;}
@@ -406,6 +411,34 @@
 
 <!-- ============ SUMMARY DASHBOARD VIEW (แสดงทันทีหลังปลดล็อก) ============ -->
 <section id="view-summary">
+  <div class="card" id="dashFilterCard">
+    <h3>🔎 ค้นหา / กรองข้อมูลแดชบอร์ด</h3>
+    <div class="dash-filter-row">
+      <div class="field dash-filter-search">
+        <label>ค้นหานักศึกษา (รหัส/ชื่อ-นามสกุล)</label>
+        <input type="text" id="dashSearchInput" placeholder="พิมพ์แล้วเลือกจากรายการเพื่อดูข้อมูลนักศึกษาคนนั้น...">
+        <div class="lookup-result-list" id="dashSearchResults" style="display:none;"></div>
+      </div>
+      <div class="field">
+        <label>สาขาวิชา</label>
+        <select id="dashDeptFilter"><option value="">ทุกสาขา</option></select>
+      </div>
+      <div class="field">
+        <label>หลักสูตร</label>
+        <select id="dashProgramFilter"><option value="">ทุกหลักสูตร</option></select>
+      </div>
+      <div class="field">
+        <label>แผนการเรียน</label>
+        <select id="dashPlanFilter"><option value="">ทุกแผน</option></select>
+      </div>
+      <div class="field">
+        <label>ปีการศึกษา</label>
+        <select id="dashYearFilter"><option value="">ทุกปี</option></select>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnDashFilterReset">ล้างตัวกรอง</button>
+    </div>
+  </div>
+
   <div class="summary-stats-row">
     <div class="stat-card stat-blue">
       <div class="stat-icon">🎓</div>
@@ -1798,6 +1831,58 @@ function bindNav(){
     dashOverdueOnly = e.target.checked;
     applyDashOverdueToggle();
   });
+  /* แถบค้นหา/กรองข้อมูลด้านบนแดชบอร์ดสรุปข้อมูล */
+  document.getElementById('dashSearchInput').addEventListener('input', onDashSearchInput);
+  document.getElementById('dashSearchInput').addEventListener('blur', function(){
+    setTimeout(function(){ document.getElementById('dashSearchResults').style.display='none'; }, 150); /* ดีเลย์สั้นๆ ให้ทันกับ event click ของรายการก่อนถูกซ่อน */
+  });
+  ['dashDeptFilter','dashProgramFilter','dashPlanFilter','dashYearFilter'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', renderSummaryDashboard);
+  });
+  document.getElementById('btnDashFilterReset').addEventListener('click', function(){
+    ['dashDeptFilter','dashProgramFilter','dashPlanFilter','dashYearFilter'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('dashSearchInput').value='';
+    document.getElementById('dashSearchResults').style.display='none';
+    document.getElementById('dashSearchResults').innerHTML='';
+    renderSummaryDashboard();
+  });
+}
+/* ค้นหานักศึกษารายคนจากแดชบอร์ดสรุปข้อมูล — พิมพ์แล้วเลือกจากรายการเพื่อกระโดดไปดูโปรไฟล์เต็มที่หน้าตรวจสอบข้อมูล
+   (ไม่ได้กรองการ์ด/กราฟในหน้านี้ — ใช้ dropdown สาขา/หลักสูตร/แผน/ปีการศึกษาด้านข้างสำหรับกรองภาพรวมแทน) */
+var dashSearchDebounceTimer = null;
+function onDashSearchInput(){
+  var q = (document.getElementById('dashSearchInput').value||'').trim().toLowerCase();
+  var resultsBox = document.getElementById('dashSearchResults');
+  if(dashSearchDebounceTimer) clearTimeout(dashSearchDebounceTimer);
+  if(!q){ resultsBox.style.display='none'; resultsBox.innerHTML=''; return; }
+  dashSearchDebounceTimer = setTimeout(function(){
+    getStudentSummaries().then(function(list){
+      var matches = list.filter(function(s){
+        return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
+      }).slice(0,8);
+      resultsBox.innerHTML='';
+      if(!matches.length){
+        resultsBox.appendChild(el('div',{class:'empty-state', style:'padding:16px;font-size:13px;', text:'ไม่พบนักศึกษาที่ตรงกับคำค้นหา'}));
+        resultsBox.style.display='';
+        return;
+      }
+      matches.forEach(function(s){
+        var item = el('div',{class:'lookup-item'},[
+          el('div',{class:'li-main'},[
+            el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
+            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||'ไม่ระบุสาขา')})
+          ])
+        ]);
+        item.addEventListener('click', function(){
+          resultsBox.style.display='none';
+          switchView('dashboard');
+          selectLookupStudent(s.studentId);
+        });
+        resultsBox.appendChild(item);
+      });
+      resultsBox.style.display='';
+    });
+  }, 300);
 }
 /* สถานะปุ่ม "แสดงเฉพาะที่เลยกำหนด" ในแดชบอร์ด — เก็บไว้แยกจาก DOM เพราะแถบสัดส่วนถูกวาดใหม่ทุกครั้งที่ renderSummaryDashboard
    ทำงาน (ข้อมูลอาจเปลี่ยน) จึงต้องสั่ง apply ซ้ำหลังวาดใหม่ทุกรอบ ไม่ใช่แค่ตอนกดปุ่มครั้งเดียว */
@@ -1890,6 +1975,16 @@ function extractGraduatedYear(term){
   var y = parts[parts.length-1].trim();
   return /^\d{4}$/.test(y) ? y : '';
 }
+/* รวมปีการศึกษา (พ.ศ.) ทั้งหมดที่เกี่ยวข้องกับ record หนึ่งๆ ไว้ในอาร์เรย์เดียว — ใช้สำหรับตัวกรอง "ปีการศึกษา" ในแดชบอร์ด
+   ดึงจากทั้งภาคเรียนที่ขอสอบ (examTerm) และภาคเรียนที่สำเร็จการศึกษา (graduatedTerm) เพื่อให้กรองเจอไม่ว่าจะเลือกปีจากมุมไหน */
+function recordAcademicYears(r){
+  var years = [];
+  var yExam = extractGraduatedYear(r.examTerm);
+  var yGrad = extractGraduatedYear(r.graduatedTerm);
+  if(yExam) years.push(yExam);
+  if(yGrad && years.indexOf(yGrad)===-1) years.push(yGrad);
+  return years;
+}
 function renderOrUpdateDonutChart(canvasId, chartKey, labels, values, colors, emptyMsgSelector){
   var canvas = document.getElementById(canvasId);
   var wrap = canvas.parentElement;
@@ -1919,7 +2014,27 @@ function renderSummaryDashboard(){
         latestByStudent[r.studentId] = r;
       }
     });
-    var students = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
+    var studentsAll = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
+
+    /* ตัวเลือกปีการศึกษาในตัวกรอง คำนวณจากข้อมูลจริงทุกครั้ง (ภาคเรียนที่ขอสอบ + ภาคเรียนที่สำเร็จการศึกษา) — ใช้ค่าที่มีอยู่แล้วทั้งหมด
+       ไม่ขึ้นกับตัวกรองอื่นๆ ที่เลือกไว้ เพื่อให้สลับปีไปมาได้อิสระโดยตัวเลือกไม่หายไป */
+    var dashYearsSet = {};
+    studentsAll.forEach(function(r){ recordAcademicYears(r).forEach(function(y){ dashYearsSet[y]=true; }); });
+    var dashYearOptions = Object.keys(dashYearsSet).sort(function(a,b){ return b-a; });
+    fillSelect(document.getElementById('dashYearFilter'), dashYearOptions, 'ทุกปี');
+
+    /* อ่านค่าตัวกรองปัจจุบันแล้วกรอง students ก่อนคำนวณการ์ด/กราฟทั้งหมดด้านล่าง */
+    var fDept = document.getElementById('dashDeptFilter').value||'';
+    var fProgram = document.getElementById('dashProgramFilter').value||'';
+    var fPlan = document.getElementById('dashPlanFilter').value||'';
+    var fYear = document.getElementById('dashYearFilter').value||'';
+    var students = studentsAll.filter(function(r){
+      if(fDept && r.department!==fDept) return false;
+      if(fProgram && r.program!==fProgram) return false;
+      if(fPlan && r.plan!==fPlan) return false;
+      if(fYear && recordAcademicYears(r).indexOf(fYear)===-1) return false;
+      return true;
+    });
 
     /* การ์ดสถิติสีสันด้านบน */
     var graduatedCount = students.filter(function(r){ return !!r.graduated; }).length;
@@ -2672,6 +2787,9 @@ function ensureSearchSelect(id, list, placeholder){
 function renderAllSelects(){
   initDocLinkAutocompletes();
   fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, 'ทุกสาขา');
+  fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, 'ทุกสาขา');
+  fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, 'ทุกหลักสูตร');
+  fillSelect(document.getElementById('dashPlanFilter'), masterData.plans, 'ทุกแผน');
   ensureSearchSelect('f_program', masterData.programs, 'พิมพ์เพื่อค้นหาหลักสูตร...');
   ensureSearchSelect('f_department', masterData.departments, 'พิมพ์เพื่อค้นหาสาขาวิชา...');
   fillSelect(document.getElementById('f_plan'), masterData.plans, 'เลือกแผนการเรียน');

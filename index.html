@@ -4319,6 +4319,12 @@ function buildNewRecordFromImportRow(row){
     advisorHistory:[], createdAt:now, updatedAt:now
   };
 }
+/* หมายเหตุ (แก้บั๊ก 429 Sheets API quota): เดิมโหมดกลาง (Google Sheets) เขียนทีละแถวต่อ 1 นักศึกษา (append/update แยกกัน)
+   พอนำเข้าไฟล์ที่มีหลายสิบ/หลายร้อยแถว จะยิง write request ถี่จนชนโควตา 60 ครั้ง/นาที/ผู้ใช้ ของ Google Sheets API
+   (error 429 RESOURCE_EXHAUSTED) ทำให้นำเข้าไม่สำเร็จกลางคัน
+   ตอนนี้โหมดกลางจะรวมแถวที่ต้องสร้างใหม่ทั้งหมดเป็น "append หลายแถวในคำขอเดียว" และแถวที่ต้องอัปเดตเป็น
+   "batchUpdate หลายแถวในคำขอเดียว" — ไม่ว่าจะนำเข้ากี่ร้อยแถว ก็ใช้ write request แค่ 2 ครั้ง (+audit log อีก 1 ครั้ง)
+   ทำให้ไม่ชนโควตาและเร็วขึ้นมากด้วย ส่วนโหมดเครื่องเดียว (IndexedDB) ไม่มีโควตา จึงยังเขียนทีละแถวตามปกติ */
 function runImport(importBtn){
   var rows = importParsedRows.filter(function(r){ return r.errors.length===0; });
   if(rows.length===0) return;
@@ -4328,6 +4334,7 @@ function runImport(importBtn){
   var progressBox = document.getElementById('importPreviewBox');
   var progressEl = el('div',{class:'help', style:'margin-top:10px;font-weight:600;'});
   progressBox.appendChild(progressEl);
+  progressEl.textContent = 'กำลังเตรียมนำเข้า...';
 
   var newPrograms=[], newDepartments=[], newPlans=[];
   if(autoAddMaster){
@@ -4339,45 +4346,99 @@ function runImport(importBtn){
   }
 
   var created=0, updated=0, skipped=0, failed=0;
-  var chain = Promise.resolve();
-  rows.forEach(function(r, idx){
-    chain = chain.then(function(){
-      progressEl.textContent = 'กำลังนำเข้า '+(idx+1)+' / '+rows.length+' ('+r.studentId+')';
-      if(r.existing){
+  var auditEntries=[];
+
+  function finishImport(){
+    var chainMaster = Promise.resolve();
+    if(newPrograms.length>0 || newDepartments.length>0 || newPlans.length>0){
+      masterData.programs = masterData.programs.concat(newPrograms);
+      masterData.departments = masterData.departments.concat(newDepartments);
+      masterData.plans = masterData.plans.concat(newPlans);
+      chainMaster = saveMasterData();
+    }
+    return chainMaster.then(function(){
+      return logAuditMany(auditEntries);
+    }).then(function(){
+      renderAllSelects();
+      renderMasterLists();
+      renderList();
+      var addedMasterCount = newPrograms.length+newDepartments.length+newPlans.length;
+      progressEl.textContent = 'นำเข้าเสร็จสิ้น: สร้างใหม่ '+created+' รายการ'
+        +(updated>0?', อัปเดต '+updated+' รายการ':'')
+        +(skipped>0?', ข้าม (ซ้ำ) '+skipped+' รายการ':'')
+        +(failed>0?', ล้มเหลว '+failed+' รายการ':'')
+        +(addedMasterCount>0?' — เพิ่มข้อมูลหลักสูตร/สาขา/แผนใหม่ '+addedMasterCount+' รายการ':'');
+      toast('นำเข้าข้อมูลเสร็จสิ้น');
+      importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
+    });
+  }
+
+  if(!cloudModeEnabled){
+    /* โหมดเครื่องเดียว: ไม่มีโควตา เขียนทีละแถวตามเดิมได้ */
+    var chain = Promise.resolve();
+    rows.forEach(function(r, idx){
+      chain = chain.then(function(){
+        progressEl.textContent = 'กำลังนำเข้า '+(idx+1)+' / '+rows.length+' ('+r.studentId+')';
+        if(r.existing){
+          if(dupMode==='skip'){ skipped++; return; }
+          var rec = Object.assign({}, r.existing, {
+            studentName:r.studentName, degreeLevel:r.degreeLevel, plan:r.plan, program:r.program, department:r.department,
+            updatedAt: Date.now()
+          });
+          return recordsPut(rec).then(function(){ updated++; auditEntries.push(makeAuditEntry('นำเข้าข้อมูล (อัปเดตหมวด 1)', rec.studentId, rec.studentName)); })
+            .catch(function(e){ failed++; console.error('import update failed', r.studentId, e); });
+        }
+        var rec2 = buildNewRecordFromImportRow(r);
+        return recordsPut(rec2).then(function(){ created++; auditEntries.push(makeAuditEntry('นำเข้าข้อมูล (สร้างใหม่)', rec2.studentId, rec2.studentName)); })
+          .catch(function(e){ failed++; console.error('import create failed', r.studentId, e); });
+      });
+    });
+    chain.then(finishImport).catch(function(e){
+      progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า: '+(e&&e.message?e.message:e);
+    });
+    return;
+  }
+
+  /* โหมดกลาง (Google Sheets): รวมเป็น write request ให้น้อยที่สุด กันชนโควตา */
+  var appendCount=0, updateCount=0;
+  ensureAuthed().then(ensureRecordsHeaderAligned).then(function(){
+    invalidateRecordsSheetCache();
+    return fetchRecordsSheet();
+  }).then(function(cache){
+    var existingByStudentId = {};
+    cache.entries.forEach(function(e){ if(!e.rec.deleted && e.rec.studentId) existingByStudentId[e.rec.studentId]=e; });
+    var appendRows=[], updateOps=[];
+    rows.forEach(function(r){
+      var existingEntry = r.studentId ? existingByStudentId[r.studentId] : null;
+      if(existingEntry){
         if(dupMode==='skip'){ skipped++; return; }
-        var rec = Object.assign({}, r.existing, {
+        var rec = Object.assign({}, existingEntry.rec, {
           studentName:r.studentName, degreeLevel:r.degreeLevel, plan:r.plan, program:r.program, department:r.department,
           updatedAt: Date.now()
         });
-        return recordsPut(rec).then(function(){ updated++; logAudit('นำเข้าข้อมูล (อัปเดตหมวด 1)', rec.studentId, rec.studentName); })
-          .catch(function(e){ failed++; console.error('import update failed', r.studentId, e); });
+        updateOps.push({rowNumber:existingEntry.rowNumber, rowArray:recordToRow(rec, cache.headers)});
+        auditEntries.push(makeAuditEntry('นำเข้าข้อมูล (อัปเดตหมวด 1)', rec.studentId, rec.studentName));
+      } else {
+        var rec2 = buildNewRecordFromImportRow(r);
+        appendRows.push(recordToRow(rec2, cache.headers));
+        auditEntries.push(makeAuditEntry('นำเข้าข้อมูล (สร้างใหม่)', rec2.studentId, rec2.studentName));
       }
-      var rec2 = buildNewRecordFromImportRow(r);
-      return recordsPut(rec2).then(function(){ created++; logAudit('นำเข้าข้อมูล (สร้างใหม่)', rec2.studentId, rec2.studentName); })
-        .catch(function(e){ failed++; console.error('import create failed', r.studentId, e); });
     });
-  });
-
-  chain.then(function(){
-    if(newPrograms.length===0 && newDepartments.length===0 && newPlans.length===0) return;
-    masterData.programs = masterData.programs.concat(newPrograms);
-    masterData.departments = masterData.departments.concat(newDepartments);
-    masterData.plans = masterData.plans.concat(newPlans);
-    return saveMasterData();
+    appendCount = appendRows.length; updateCount = updateOps.length;
+    progressEl.textContent = 'กำลังบันทึกลง Google Sheets ('+(appendCount+updateCount)+' รายการ)...';
+    var writeChain = Promise.resolve();
+    if(appendRows.length>0) writeChain = writeChain.then(function(){ return sheetsAppendRows('Records', appendRows); }).then(function(){ created += appendCount; });
+    if(updateOps.length>0) writeChain = writeChain.then(function(){ return sheetsBatchUpdateRows('Records', updateOps); }).then(function(){ updated += updateCount; });
+    return writeChain;
   }).then(function(){
-    renderAllSelects();
-    renderMasterLists();
-    renderList();
-    var addedMasterCount = newPrograms.length+newDepartments.length+newPlans.length;
-    progressEl.textContent = 'นำเข้าเสร็จสิ้น: สร้างใหม่ '+created+' รายการ'
-      +(updated>0?', อัปเดต '+updated+' รายการ':'')
-      +(skipped>0?', ข้าม (ซ้ำ) '+skipped+' รายการ':'')
-      +(failed>0?', ล้มเหลว '+failed+' รายการ':'')
-      +(addedMasterCount>0?' — เพิ่มข้อมูลหลักสูตร/สาขา/แผนใหม่ '+addedMasterCount+' รายการ':'');
-    toast('นำเข้าข้อมูลเสร็จสิ้น');
-    importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
+    invalidateRecordsSheetCache();
+    return finishImport();
   }).catch(function(e){
-    progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า: '+(e&&e.message?e.message:e);
+    var accountedFor = created+updated+skipped;
+    failed = rows.length - accountedFor;
+    renderList();
+    progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า (บันทึกสำเร็จแล้ว: สร้างใหม่ '+created+', อัปเดต '+updated
+      +') — '+(e&&e.message?e.message:e)+' ลองกดนำเข้าอีกครั้ง (รายการที่บันทึกไปแล้วจะถูกตรวจพบว่ามีอยู่แล้ว ไม่ซ้ำ)';
   });
 }
 
@@ -5475,10 +5536,19 @@ function extractSheetId(input){
   var m = input.match(/\/d\/([a-zA-Z0-9-_]+)/);
   return m ? m[1] : input;
 }
-function sheetsFetch(url, options){
+/* เพิ่ม retry แบบ exponential backoff สำหรับ 429 (Sheets API quota: 60 write requests/นาที/ผู้ใช้)
+   เดิมพอโดน 429 จะโยน error ทันที ทำให้งานที่ยิง write ถี่ๆ (เช่น นำเข้าข้อมูลทีละหลายแถว) ล้มเหลวกลางคัน
+   ตอนนี้ถ้าเจอ 429 จะรอแล้วลองใหม่อัตโนมัติ (สูงสุด 5 ครั้ง, รอ 1s→2s→4s→8s→16s) ก่อนจะถือว่าล้มเหลวจริง */
+function sheetsFetch(url, options, attempt){
+  attempt = attempt || 0;
   options = options || {};
   options.headers = Object.assign({}, options.headers, {Authorization: 'Bearer '+accessToken});
   return fetch(url, options).then(function(res){
+    if(res.status===429 && attempt<5){
+      var waitMs = Math.min(20000, 1000*Math.pow(2, attempt));
+      return new Promise(function(resolve){ setTimeout(resolve, waitMs); })
+        .then(function(){ return sheetsFetch(url, options, attempt+1); });
+    }
     if(!res.ok) return res.text().then(function(t){ throw new Error('Sheets API error '+res.status+': '+t); });
     return res;
   }).catch(function(e){
@@ -5490,18 +5560,34 @@ function sheetsGetValues(range){
   return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+encodeURIComponent(range))
     .then(function(res){ return res.json(); }).then(function(data){ return data.values||[]; });
 }
-function sheetsAppendRow(tabName, rowArray){
+/* เขียนหลายแถวในคำขอเดียว (1 write request ไม่ว่าจะกี่แถว) — ใช้ตอนนำเข้าข้อมูลจำนวนมาก
+   เพื่อไม่ให้ยิง write request ถี่เกินโควตา 60 ครั้ง/นาที/ผู้ใช้ ของ Google Sheets API */
+function sheetsAppendRows(tabName, rowArrays){
+  if(!rowArrays || rowArrays.length===0) return Promise.resolve();
   var range = tabName+'!A1';
   return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+encodeURIComponent(range)+':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({values:[rowArray]})
+    body: JSON.stringify({values:rowArrays})
   });
+}
+function sheetsAppendRow(tabName, rowArray){
+  return sheetsAppendRows(tabName, [rowArray]);
 }
 function sheetsUpdateRow(tabName, rowNumber, rowArray){
   var range = tabName+'!A'+rowNumber;
   return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+encodeURIComponent(range)+'?valueInputOption=RAW', {
     method:'PUT', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({values:[rowArray]})
+  });
+}
+/* อัปเดตหลายแถว (คนละตำแหน่งกัน) ในคำขอเดียว (1 write request) — ใช้คู่กับ sheetsAppendRows ตอนนำเข้าข้อมูลจำนวนมาก
+   updates: [{rowNumber, rowArray}, ...] */
+function sheetsBatchUpdateRows(tabName, updates){
+  if(!updates || updates.length===0) return Promise.resolve();
+  var data = updates.map(function(u){ return {range: tabName+'!A'+u.rowNumber, values:[u.rowArray]}; });
+  return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values:batchUpdate', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({valueInputOption:'RAW', data: data})
   });
 }
 function rowToRecord(headers, row){
@@ -5749,8 +5835,8 @@ function auditRoleLabel(){
   if(currentRole==='dept-viewer') return 'เจ้าหน้าที่สาขา: '+(currentDeptRestriction||'');
   return currentRole||'';
 }
-function logAudit(action, studentId, studentName){
-  var entry = {
+function makeAuditEntry(action, studentId, studentName){
+  return {
     id: 'audit_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
     ts: Date.now(),
     action: action,
@@ -5759,8 +5845,20 @@ function logAudit(action, studentId, studentName){
     role: auditRoleLabel(),
     department: currentDeptRestriction||''
   };
+}
+function logAudit(action, studentId, studentName){
+  var entry = makeAuditEntry(action, studentId, studentName);
   /* บันทึก log เป็นงานเสริม ไม่ให้ความล้มเหลวของ log กระทบการบันทึก/ลบข้อมูลจริงซึ่งสำคัญกว่า */
   auditLogPut(entry).catch(function(e){ console.error('audit log write failed', e); });
+}
+/* บันทึก audit log หลายรายการในคำขอเดียว (1 write request) — ใช้ตอนนำเข้าข้อมูลจำนวนมาก
+   เพื่อไม่ให้แต่ละแถวที่นำเข้ายิง write request แยกกันจนชนโควตา 60 ครั้ง/นาที/ผู้ใช้ */
+function logAuditMany(entries){
+  if(!entries || entries.length===0) return Promise.resolve();
+  if(!cloudModeEnabled) return Promise.all(entries.map(function(e){ return dbPut('auditLog', e); })).catch(function(e){ console.error('audit log bulk write failed', e); });
+  return ensureAuthed().then(function(){
+    return sheetsAppendRows('AuditLog', entries.map(function(entry){ return AUDIT_COLUMNS.map(function(h){ return entry[h]!==undefined?entry[h]:''; }); }));
+  }).catch(function(e){ console.error('audit log bulk write failed', e); });
 }
 function auditLogPut(entry){
   if(!cloudModeEnabled) return dbPut('auditLog', entry);

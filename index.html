@@ -4347,6 +4347,7 @@ function runImport(importBtn){
 
   var created=0, updated=0, skipped=0, failed=0;
   var auditEntries=[];
+  var failedDetails=[]; /* {studentId, studentName, reason} รายละเอียดแถวที่บันทึกไม่สำเร็จ ไว้โชว์ในหน้าจอ + ดาวน์โหลด */
 
   function finishImport(){
     var chainMaster = Promise.resolve();
@@ -4370,6 +4371,7 @@ function runImport(importBtn){
         +(addedMasterCount>0?' — เพิ่มข้อมูลหลักสูตร/สาขา/แผนใหม่ '+addedMasterCount+' รายการ':'');
       toast('นำเข้าข้อมูลเสร็จสิ้น');
       importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
+      if(failedDetails.length>0) renderImportFailedList(progressBox, failedDetails);
     });
   }
 
@@ -4386,11 +4388,21 @@ function runImport(importBtn){
             updatedAt: Date.now()
           });
           return recordsPut(rec).then(function(){ updated++; auditEntries.push(makeAuditEntry('นำเข้าข้อมูล (อัปเดตหมวด 1)', rec.studentId, rec.studentName)); })
-            .catch(function(e){ failed++; console.error('import update failed', r.studentId, e); });
+            .catch(function(e){
+              failed++;
+              var msg = (e&&e.message?e.message:String(e));
+              failedDetails.push({studentId:r.studentId, studentName:r.studentName, reason:msg});
+              console.error('import update failed', r.studentId, e);
+            });
         }
         var rec2 = buildNewRecordFromImportRow(r);
         return recordsPut(rec2).then(function(){ created++; auditEntries.push(makeAuditEntry('นำเข้าข้อมูล (สร้างใหม่)', rec2.studentId, rec2.studentName)); })
-          .catch(function(e){ failed++; console.error('import create failed', r.studentId, e); });
+          .catch(function(e){
+            failed++;
+            var msg = (e&&e.message?e.message:String(e));
+            failedDetails.push({studentId:r.studentId, studentName:r.studentName, reason:msg});
+            console.error('import create failed', r.studentId, e);
+          });
       });
     });
     chain.then(finishImport).catch(function(e){
@@ -4399,8 +4411,12 @@ function runImport(importBtn){
     return;
   }
 
-  /* โหมดกลาง (Google Sheets): รวมเป็น write request ให้น้อยที่สุด กันชนโควตา */
+  /* โหมดกลาง (Google Sheets): รวมเป็น write request ให้น้อยที่สุด กันชนโควตา
+     appendMeta/updateMeta เก็บรหัส/ชื่อ นศ. คู่ขนานกับ appendRows/updateOps ไว้ระบุว่าใครบ้างที่ล้มเหลว
+     ถ้า sheetsAppendRows หรือ sheetsBatchUpdateRows ล้มเหลว ทั้งชุดนั้นถือว่าล้มเหลวทั้งหมด (เป็น request เดียว) */
   var appendCount=0, updateCount=0;
+  var appendMeta=[], updateMeta=[];
+  var appendDone=false, updateDone=false;
   ensureAuthed().then(ensureRecordsHeaderAligned).then(function(){
     invalidateRecordsSheetCache();
     return fetchRecordsSheet();
@@ -4417,29 +4433,83 @@ function runImport(importBtn){
           updatedAt: Date.now()
         });
         updateOps.push({rowNumber:existingEntry.rowNumber, rowArray:recordToRow(rec, cache.headers)});
+        updateMeta.push({studentId:rec.studentId, studentName:rec.studentName});
         auditEntries.push(makeAuditEntry('นำเข้าข้อมูล (อัปเดตหมวด 1)', rec.studentId, rec.studentName));
       } else {
         var rec2 = buildNewRecordFromImportRow(r);
         appendRows.push(recordToRow(rec2, cache.headers));
+        appendMeta.push({studentId:rec2.studentId, studentName:rec2.studentName});
         auditEntries.push(makeAuditEntry('นำเข้าข้อมูล (สร้างใหม่)', rec2.studentId, rec2.studentName));
       }
     });
     appendCount = appendRows.length; updateCount = updateOps.length;
     progressEl.textContent = 'กำลังบันทึกลง Google Sheets ('+(appendCount+updateCount)+' รายการ)...';
+    if(appendRows.length===0) appendDone = true;
+    if(updateOps.length===0) updateDone = true;
     var writeChain = Promise.resolve();
-    if(appendRows.length>0) writeChain = writeChain.then(function(){ return sheetsAppendRows('Records', appendRows); }).then(function(){ created += appendCount; });
-    if(updateOps.length>0) writeChain = writeChain.then(function(){ return sheetsBatchUpdateRows('Records', updateOps); }).then(function(){ updated += updateCount; });
+    if(appendRows.length>0) writeChain = writeChain.then(function(){ return sheetsAppendRows('Records', appendRows); }).then(function(){ created += appendCount; appendDone = true; });
+    if(updateOps.length>0) writeChain = writeChain.then(function(){ return sheetsBatchUpdateRows('Records', updateOps); }).then(function(){ updated += updateCount; updateDone = true; });
     return writeChain;
   }).then(function(){
     invalidateRecordsSheetCache();
     return finishImport();
   }).catch(function(e){
+    var reasonMsg = (e&&e.message?e.message:String(e));
+    if(!appendDone) appendMeta.forEach(function(m){ failedDetails.push({studentId:m.studentId, studentName:m.studentName, reason:reasonMsg}); });
+    if(!updateDone) updateMeta.forEach(function(m){ failedDetails.push({studentId:m.studentId, studentName:m.studentName, reason:reasonMsg}); });
     var accountedFor = created+updated+skipped;
     failed = rows.length - accountedFor;
     renderList();
     progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า (บันทึกสำเร็จแล้ว: สร้างใหม่ '+created+', อัปเดต '+updated
-      +') — '+(e&&e.message?e.message:e)+' ลองกดนำเข้าอีกครั้ง (รายการที่บันทึกไปแล้วจะถูกตรวจพบว่ามีอยู่แล้ว ไม่ซ้ำ)';
+      +') — '+reasonMsg+' ลองกดนำเข้าอีกครั้ง (รายการที่บันทึกไปแล้วจะถูกตรวจพบว่ามีอยู่แล้ว ไม่ซ้ำ)';
+    if(failedDetails.length>0) renderImportFailedList(progressBox, failedDetails);
   });
+}
+/* แสดงรายการนำเข้าที่บันทึกไม่สำเร็จ (รหัส/ชื่อ/สาเหตุ) พร้อมปุ่มดูรายละเอียดและดาวน์โหลดเป็น Excel
+   เผื่อผู้ใช้ต้องการตรวจสอบและนำแถวเหล่านั้นไปนำเข้าใหม่ */
+function renderImportFailedList(container, details){
+  var old = document.getElementById('importFailedBox');
+  if(old) old.remove();
+  var box = el('div',{id:'importFailedBox', style:'margin-top:10px;border:1px solid var(--danger);border-radius:8px;padding:10px 12px;background:#fdecec;'});
+  var headerRow = el('div',{style:'display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;'});
+  headerRow.appendChild(el('div',{style:'font-weight:600;color:var(--danger);', text:'⚠️ รายการที่บันทึกไม่สำเร็จ ('+details.length+' รายการ)'}));
+  var btnRow = el('div',{style:'display:flex;gap:8px;'});
+  var toggleBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'ดูรายละเอียด'});
+  var downloadBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'⬇ ดาวน์โหลด Excel'});
+  btnRow.appendChild(toggleBtn); btnRow.appendChild(downloadBtn);
+  headerRow.appendChild(btnRow);
+  box.appendChild(headerRow);
+
+  var listWrap = el('div',{style:'display:none;max-height:260px;overflow:auto;margin-top:10px;border-top:1px solid #f3c8c3;padding-top:8px;'});
+  var table = el('table',{style:'font-size:12px;'});
+  var theadTr = el('tr');
+  ['รหัสนักศึกษา','ชื่อ-นามสกุล','สาเหตุ'].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
+  table.appendChild(el('thead',{},[theadTr]));
+  var tbody = el('tbody');
+  details.forEach(function(d){
+    tbody.appendChild(el('tr',{},[
+      el('td',{text:d.studentId||'-'}), el('td',{text:d.studentName||'-'}), el('td',{text:d.reason||'-'})
+    ]));
+  });
+  table.appendChild(tbody);
+  listWrap.appendChild(table);
+  box.appendChild(listWrap);
+
+  toggleBtn.addEventListener('click', function(){
+    var showing = listWrap.style.display !== 'none';
+    listWrap.style.display = showing ? 'none' : 'block';
+    toggleBtn.textContent = showing ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
+  });
+  downloadBtn.addEventListener('click', function(){
+    var wb = XLSX.utils.book_new();
+    var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','สาเหตุ']].concat(details.map(function(d){ return [d.studentId||'', d.studentName||'', d.reason||'']; }));
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch:16},{wch:28},{wch:50}];
+    XLSX.utils.book_append_sheet(wb, ws, 'รายการที่ล้มเหลว');
+    XLSX.writeFile(wb, 'รายการนำเข้าที่ล้มเหลว-'+dateStamp()+'.xlsx');
+  });
+
+  container.appendChild(box);
 }
 
 /* ================= SETTINGS: MASTER DATA ================= */

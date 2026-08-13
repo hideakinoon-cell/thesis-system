@@ -856,6 +856,7 @@
       <div class="spacer"></div>
       <button class="btn btn-secondary btn-sm" id="btnExportCsv">⬇ CSV</button>
       <button class="btn btn-accent btn-sm" id="btnExportXlsx">⬇ Excel</button>
+      <button class="btn btn-secondary btn-sm" id="btnImportBulk">📥 นำเข้าข้อมูล</button>
       <button class="btn btn-primary btn-sm" id="btnNewFromList">＋ เพิ่มข้อมูลใหม่</button>
     </div>
     <div style="overflow-x:auto;">
@@ -3826,6 +3827,7 @@ function bindListEvents(){
   document.getElementById('btnListPrev').addEventListener('click', function(){ if(listPage>0){ listPage--; renderList(); } });
   document.getElementById('btnListNext').addEventListener('click', function(){ listPage++; renderList(); });
   document.getElementById('btnNewFromList').addEventListener('click', function(){ newDraft(); switchView('form'); });
+  document.getElementById('btnImportBulk').addEventListener('click', openImportModal);
   document.getElementById('btnExportCsv').addEventListener('click', function(){ exportData('csv'); });
   document.getElementById('btnExportXlsx').addEventListener('click', function(){ exportData('xlsx'); });
 }
@@ -4104,6 +4106,279 @@ function uniqueSheetName(base, usedNames){
   } while(usedNames[finalName]);
   usedNames[finalName]=1;
   return finalName;
+}
+
+/* ================= BULK IMPORT (นำเข้าข้อมูลจำนวนมาก — เฉพาะหมวดที่ 1 ข้อมูลพื้นฐานนักศึกษา) =================
+   อ่านไฟล์ Excel/CSV ด้วย SheetJS แล้วสร้าง/อัปเดตแถวนักศึกษาให้อัตโนมัติทีละหลายร้อยคน โดยกรอกเฉพาะฟิลด์หมวด 1
+   (รหัสนักศึกษา, ชื่อ-นามสกุล, ระดับการศึกษา, แผนการเรียน, หลักสูตร, สาขาวิชา) ส่วนที่เหลือ (หมวด 2-6) เว้นว่างไว้
+   ให้เจ้าหน้าที่กลับมากรอกทีหลังทีละคนตามปกติ */
+var IMPORT_COLUMNS = [
+  {key:'studentId', labels:['รหัสนักศึกษา','รหัส นศ.','รหัส นศ','รหัสนศ','รหัส','studentid','student id']},
+  {key:'studentName', labels:['ชื่อ-นามสกุล','ชื่อ - นามสกุล','ชื่อนามสกุล','ชื่อสกุล','ชื่อ','name','studentname']},
+  {key:'degreeLevel', labels:['ระดับการศึกษา','ระดับ','degreelevel','degree']},
+  {key:'plan', labels:['แผนการเรียน','แผน','plan']},
+  {key:'program', labels:['หลักสูตร','program']},
+  {key:'department', labels:['สาขาวิชา','สาขา','department']}
+];
+var importParsedRows = [];
+function normalizeHeaderText(s){
+  return String(s||'').replace(/\s+/g,'').replace(/\*/g,'').toLowerCase();
+}
+function normalizeDegreeLevelForImport(raw){
+  var t = String(raw||'').trim().replace(/\s+/g,'');
+  if(!t) return {value:'', recognized:false};
+  if(/^(ปริญญาโท|ป\.?โท|โท|master)$/i.test(t)) return {value:'ปริญญาโท', recognized:true};
+  if(/^(ปริญญาเอก|ป\.?เอก|เอก|doctor|phd|ph\.d\.?)$/i.test(t)) return {value:'ปริญญาเอก', recognized:true};
+  return {value:'', recognized:false};
+}
+function openImportModal(){
+  importParsedRows = [];
+  var root = document.getElementById('modalRoot');
+  var backdrop = el('div',{class:'modal-backdrop'});
+  var modal = el('div',{class:'modal', style:'width:min(980px,96vw);'});
+  modal.appendChild(el('h3',{text:'📥 นำเข้าข้อมูลจำนวนมาก (หมวดที่ 1: ข้อมูลพื้นฐานนักศึกษา)'}));
+  modal.appendChild(el('div',{class:'help', text:'อัปโหลดไฟล์ Excel (.xlsx) หรือ CSV ที่มีคอลัมน์: รหัสนักศึกษา, ชื่อ-นามสกุล, ระดับการศึกษา, แผนการเรียน, หลักสูตร, สาขาวิชา (ส่วนหมวดอื่นๆ กรอกทีหลังได้ตามปกติ)'}));
+  modal.appendChild(el('div',{style:'margin:10px 0;'},[
+    el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'⬇ ดาวน์โหลดเทมเพลต Excel', onclick: downloadImportTemplate})
+  ]));
+
+  var fileInput = el('input',{type:'file', id:'importFileInput', accept:'.xlsx,.xls,.csv'});
+  modal.appendChild(el('div',{class:'field'},[el('label',{text:'เลือกไฟล์'}), fileInput]));
+
+  var dupSelect = el('select',{id:'importDupMode'});
+  dupSelect.appendChild(el('option',{value:'skip', text:'ข้ามแถวนั้น (แนะนำ)'}));
+  dupSelect.appendChild(el('option',{value:'update', text:'อัปเดตข้อมูลหมวด 1 ของแถวเดิม'}));
+  modal.appendChild(el('div',{class:'field'},[el('label',{text:'ถ้ารหัสนักศึกษาซ้ำกับข้อมูลที่มีอยู่แล้วในระบบ'}), dupSelect]));
+
+  var addMasterChk = el('input',{type:'checkbox', id:'importAutoAddMaster', checked:'checked'});
+  modal.appendChild(el('label',{style:'display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px;'},[
+    addMasterChk, document.createTextNode('เพิ่มหลักสูตร/สาขาวิชา/แผนการเรียนที่ยังไม่มีในระบบเข้า master data ให้อัตโนมัติ')
+  ]));
+
+  var previewBox = el('div',{id:'importPreviewBox', style:'margin-top:14px;'});
+  modal.appendChild(previewBox);
+
+  var importBtn = el('button',{class:'btn btn-primary', text:'เริ่มนำเข้า', id:'btnConfirmImport', disabled:'disabled'});
+  importBtn.addEventListener('click', function(){ runImport(importBtn); });
+  modal.appendChild(el('div',{class:'form-footer'},[
+    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }}),
+    importBtn
+  ]));
+
+  fileInput.addEventListener('change', function(){
+    var f = fileInput.files[0];
+    if(!f) return;
+    handleImportFile(f, previewBox, importBtn);
+  });
+
+  backdrop.appendChild(modal);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+  root.appendChild(backdrop);
+}
+function downloadImportTemplate(){
+  var headers = ['รหัสนักศึกษา','ชื่อ-นามสกุล','ระดับการศึกษา','แผนการเรียน','หลักสูตร','สาขาวิชา'];
+  var example = ['66010123','นายสมศักดิ์ รักเรียน','ปริญญาโท', (masterData.plans[0]||'แผน ก'), (masterData.programs[0]||'ครุศาสตรมหาบัณฑิต'), (masterData.departments[0]||'สาขาวิชาหลักสูตรและการสอน')];
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet([headers, example]);
+  ws['!cols'] = headers.map(function(){ return {wch:24}; });
+  XLSX.utils.book_append_sheet(wb, ws, 'นำเข้าข้อมูล');
+  XLSX.writeFile(wb, 'เทมเพลตนำเข้าข้อมูลนักศึกษา.xlsx');
+}
+function handleImportFile(file, previewBox, importBtn){
+  previewBox.innerHTML='';
+  previewBox.appendChild(el('div',{class:'help', text:'กำลังอ่านไฟล์...'}));
+  importBtn.setAttribute('disabled','disabled');
+  importBtn.textContent = 'เริ่มนำเข้า';
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var wb = XLSX.read(e.target.result, {type:'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
+      processImportAoa(aoa, previewBox, importBtn);
+    }catch(ex){
+      previewBox.innerHTML='';
+      previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'อ่านไฟล์ไม่สำเร็จ: '+(ex && ex.message ? ex.message : ex)}));
+    }
+  };
+  reader.onerror = function(){
+    previewBox.innerHTML='';
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'อ่านไฟล์ไม่สำเร็จ'}));
+  };
+  reader.readAsArrayBuffer(file);
+}
+function processImportAoa(aoa, previewBox, importBtn){
+  if(!aoa || aoa.length===0){
+    previewBox.innerHTML='';
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไฟล์นี้ไม่มีข้อมูล'}));
+    return;
+  }
+  var headerRow = aoa[0];
+  var colMap = {};
+  headerRow.forEach(function(h, idx){
+    var norm = normalizeHeaderText(h);
+    IMPORT_COLUMNS.forEach(function(col){
+      if(colMap[col.key]!==undefined) return;
+      if(col.labels.some(function(lbl){ return normalizeHeaderText(lbl)===norm; })) colMap[col.key]=idx;
+    });
+  });
+  var missingCols = IMPORT_COLUMNS.filter(function(c){ return colMap[c.key]===undefined; }).map(function(c){ return c.labels[0]; });
+  if(missingCols.length>0){
+    previewBox.innerHTML='';
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไม่พบคอลัมน์ที่จำเป็นในไฟล์ (แถวแรกต้องเป็นหัวตาราง): '+missingCols.join(', ')+' — แนะนำให้ดาวน์โหลดเทมเพลตแล้วกรอกตามรูปแบบ'}));
+    return;
+  }
+  previewBox.innerHTML='';
+  previewBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบข้อมูล...'}));
+  recordsGetAll().then(function(existingRows){
+    var existingByStudentId = {};
+    existingRows.forEach(function(r){ if(r.studentId) existingByStudentId[r.studentId]=r; });
+    var seenInFile = {};
+    var rows = [];
+    for(var i=1;i<aoa.length;i++){
+      var raw = aoa[i];
+      if(!raw || raw.every(function(c){ return String(c||'').trim()===''; })) continue;
+      var get = function(key){ var idx=colMap[key]; return idx!==undefined ? String(raw[idx]||'').trim() : ''; };
+      var studentId = get('studentId'), studentName = get('studentName'), degreeRaw = get('degreeLevel'),
+          plan = get('plan'), program = get('program'), department = get('department');
+      var errors=[], warnings=[];
+      if(!studentId) errors.push('ไม่มีรหัสนักศึกษา');
+      else if(seenInFile[studentId]) errors.push('รหัสนักศึกษาซ้ำกับแถวที่ '+seenInFile[studentId]+' ในไฟล์เดียวกัน');
+      if(studentId) seenInFile[studentId] = i+1;
+      if(!studentName) errors.push('ไม่มีชื่อ-นามสกุล');
+      var dl = normalizeDegreeLevelForImport(degreeRaw);
+      if(!degreeRaw){ dl.value='ปริญญาโท'; warnings.push('ไม่ระบุระดับการศึกษา ใช้ค่าเริ่มต้น "ปริญญาโท"'); }
+      else if(!dl.recognized){ dl.value='ปริญญาโท'; warnings.push('ระดับการศึกษา "'+degreeRaw+'" ไม่รู้จัก ใช้ค่าเริ่มต้น "ปริญญาโท"'); }
+      if(!plan) errors.push('ไม่มีแผนการเรียน');
+      else if(masterData.plans.indexOf(plan)===-1) warnings.push('แผนการเรียน "'+plan+'" ยังไม่มีในระบบ');
+      if(!program) errors.push('ไม่มีหลักสูตร');
+      else if(masterData.programs.indexOf(program)===-1) warnings.push('หลักสูตร "'+program+'" ยังไม่มีในระบบ');
+      if(!department) errors.push('ไม่มีสาขาวิชา');
+      else if(masterData.departments.indexOf(department)===-1) warnings.push('สาขาวิชา "'+department+'" ยังไม่มีในระบบ');
+      var existing = studentId ? existingByStudentId[studentId] : null;
+      if(existing) warnings.push('รหัสนี้มีอยู่แล้วในระบบ ('+(existing.studentName||'-')+')');
+      rows.push({rowNum:i+1, studentId:studentId, studentName:studentName, degreeLevel:dl.value,
+        plan:plan, program:program, department:department, existing:existing||null, errors:errors, warnings:warnings});
+    }
+    importParsedRows = rows;
+    renderImportPreview(previewBox, importBtn);
+  }).catch(function(e){
+    previewBox.innerHTML='';
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบข้อมูลไม่สำเร็จ: '+(e&&e.message?e.message:e)}));
+  });
+}
+function renderImportPreview(previewBox, importBtn){
+  var rows = importParsedRows;
+  var validRows = rows.filter(function(r){ return r.errors.length===0; });
+  previewBox.innerHTML='';
+  if(rows.length===0){
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไม่พบแถวข้อมูลในไฟล์ (นอกเหนือจากหัวตาราง)'}));
+    importBtn.setAttribute('disabled','disabled');
+    return;
+  }
+  previewBox.appendChild(el('div',{class:'help', style:'font-weight:600;margin-bottom:8px;',
+    text:'พบทั้งหมด '+rows.length+' แถว — พร้อมนำเข้า '+validRows.length+' แถว, ข้ามเนื่องจากข้อมูลไม่ครบ '+(rows.length-validRows.length)+' แถว'}));
+  var wrap = el('div',{style:'max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:8px;'});
+  var table = el('table',{style:'font-size:12px;'});
+  var theadTr = el('tr');
+  ['แถว','รหัส นศ.','ชื่อ-นามสกุล','ระดับ','แผน','หลักสูตร','สาขา','สถานะ'].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
+  table.appendChild(el('thead',{},[theadTr]));
+  var tbody = el('tbody');
+  rows.forEach(function(r){
+    var statusText, statusColor;
+    if(r.errors.length>0){ statusText='❌ '+r.errors.join('; '); statusColor='#c0392b'; }
+    else if(r.warnings.length>0){ statusText='⚠️ '+r.warnings.join('; '); statusColor='#b7860b'; }
+    else { statusText='✅ พร้อมนำเข้า'; statusColor='#1f8a4c'; }
+    tbody.appendChild(el('tr',{},[
+      el('td',{text:String(r.rowNum)}), el('td',{text:r.studentId}), el('td',{text:r.studentName}),
+      el('td',{text:r.degreeLevel}), el('td',{text:r.plan}), el('td',{text:r.program}), el('td',{text:r.department}),
+      el('td',{text:statusText, style:'color:'+statusColor+';'})
+    ]));
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  previewBox.appendChild(wrap);
+  if(validRows.length>0){ importBtn.removeAttribute('disabled'); importBtn.textContent='เริ่มนำเข้า ('+validRows.length+' รายการ)'; }
+  else { importBtn.setAttribute('disabled','disabled'); importBtn.textContent='เริ่มนำเข้า'; }
+}
+function buildNewRecordFromImportRow(row){
+  var now = Date.now();
+  return {
+    id: uuid(), examType:'defense', studentId:row.studentId, studentName:row.studentName,
+    degreeLevel:row.degreeLevel, plan:row.plan, program:row.program, department:row.department,
+    englishResult:'', englishScore:'', englishDocLink:'',
+    computerResult:'', computerDocLink:'',
+    qualifyingExam:'', qualifyingDocLink:'',
+    mainAdvisor:'', coAdvisors:[],
+    titleTh:'', titleEn:'', publications:[],
+    examTermStatus:'', examTerm:'',
+    bookSubmitStatus:'ยังไม่ส่ง', bookSubmitDate:'', bookDocLink:'',
+    graduated:false, graduatedTerm:'',
+    proposalAttempts:[], defenseAttempts:[],
+    proposalBw25Status:'ยังไม่ส่ง', proposalBw25Date:'',
+    advisorHistory:[], createdAt:now, updatedAt:now
+  };
+}
+function runImport(importBtn){
+  var rows = importParsedRows.filter(function(r){ return r.errors.length===0; });
+  if(rows.length===0) return;
+  var dupMode = document.getElementById('importDupMode').value;
+  var autoAddMaster = document.getElementById('importAutoAddMaster').checked;
+  importBtn.setAttribute('disabled','disabled');
+  var progressBox = document.getElementById('importPreviewBox');
+  var progressEl = el('div',{class:'help', style:'margin-top:10px;font-weight:600;'});
+  progressBox.appendChild(progressEl);
+
+  var newPrograms=[], newDepartments=[], newPlans=[];
+  if(autoAddMaster){
+    rows.forEach(function(r){
+      if(r.program && masterData.programs.indexOf(r.program)===-1 && newPrograms.indexOf(r.program)===-1) newPrograms.push(r.program);
+      if(r.department && masterData.departments.indexOf(r.department)===-1 && newDepartments.indexOf(r.department)===-1) newDepartments.push(r.department);
+      if(r.plan && masterData.plans.indexOf(r.plan)===-1 && newPlans.indexOf(r.plan)===-1) newPlans.push(r.plan);
+    });
+  }
+
+  var created=0, updated=0, skipped=0, failed=0;
+  var chain = Promise.resolve();
+  rows.forEach(function(r, idx){
+    chain = chain.then(function(){
+      progressEl.textContent = 'กำลังนำเข้า '+(idx+1)+' / '+rows.length+' ('+r.studentId+')';
+      if(r.existing){
+        if(dupMode==='skip'){ skipped++; return; }
+        var rec = Object.assign({}, r.existing, {
+          studentName:r.studentName, degreeLevel:r.degreeLevel, plan:r.plan, program:r.program, department:r.department,
+          updatedAt: Date.now()
+        });
+        return recordsPut(rec).then(function(){ updated++; logAudit('นำเข้าข้อมูล (อัปเดตหมวด 1)', rec.studentId, rec.studentName); })
+          .catch(function(e){ failed++; console.error('import update failed', r.studentId, e); });
+      }
+      var rec2 = buildNewRecordFromImportRow(r);
+      return recordsPut(rec2).then(function(){ created++; logAudit('นำเข้าข้อมูล (สร้างใหม่)', rec2.studentId, rec2.studentName); })
+        .catch(function(e){ failed++; console.error('import create failed', r.studentId, e); });
+    });
+  });
+
+  chain.then(function(){
+    if(newPrograms.length===0 && newDepartments.length===0 && newPlans.length===0) return;
+    masterData.programs = masterData.programs.concat(newPrograms);
+    masterData.departments = masterData.departments.concat(newDepartments);
+    masterData.plans = masterData.plans.concat(newPlans);
+    return saveMasterData();
+  }).then(function(){
+    renderAllSelects();
+    renderMasterLists();
+    renderList();
+    var addedMasterCount = newPrograms.length+newDepartments.length+newPlans.length;
+    progressEl.textContent = 'นำเข้าเสร็จสิ้น: สร้างใหม่ '+created+' รายการ'
+      +(updated>0?', อัปเดต '+updated+' รายการ':'')
+      +(skipped>0?', ข้าม (ซ้ำ) '+skipped+' รายการ':'')
+      +(failed>0?', ล้มเหลว '+failed+' รายการ':'')
+      +(addedMasterCount>0?' — เพิ่มข้อมูลหลักสูตร/สาขา/แผนใหม่ '+addedMasterCount+' รายการ':'');
+    toast('นำเข้าข้อมูลเสร็จสิ้น');
+    importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
+  }).catch(function(e){
+    progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า: '+(e&&e.message?e.message:e);
+  });
 }
 
 /* ================= SETTINGS: MASTER DATA ================= */

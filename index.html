@@ -620,6 +620,7 @@
     <h3>📥 ลงทะเบียนรับเอกสาร</h3>
     <div class="help" style="margin-bottom:10px;">บันทึกเอกสารที่นักศึกษาส่งมา เช่น บว.04 (ขอแต่งตั้งอาจารย์ที่ปรึกษา) — พิมพ์ค้นหารหัส/ชื่อนักศึกษาที่มีข้อมูลอยู่แล้วในระบบเพื่อดึงชื่อ-สาขาอัตโนมัติ หรือกรอกเองได้ถ้ายังไม่มีข้อมูลนักศึกษาคนนี้ในระบบ</div>
     <div class="field-row-with-btn" style="flex-wrap:wrap;gap:14px;">
+      <div class="field" style="min-width:110px;"><label>เลขรับเอกสาร</label><input type="text" id="di_intakeNo" readonly style="background:#f4f6fa;font-weight:600;text-align:center;"></div>
       <div class="field" style="min-width:150px;"><label>วันที่รับเอกสาร</label><input type="date" id="di_receivedDate"></div>
       <div class="field" style="min-width:220px;flex:1 1 220px;"><label>ประเภทเอกสาร</label><select id="di_docType"></select></div>
       <div class="field" style="min-width:170px;"><label>สถานะ</label>
@@ -676,7 +677,7 @@
     <div style="overflow-x:auto;margin-top:12px;">
     <table>
       <thead>
-        <tr><th>วันที่รับ</th><th>ประเภทเอกสาร</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>สถานะ</th><th>หมายเหตุ</th><th>จัดการ</th></tr>
+        <tr><th>เลขรับ</th><th>วันที่รับ</th><th>ประเภทเอกสาร</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>สถานะ</th><th>หมายเหตุ</th><th>จัดการ</th></tr>
       </thead>
       <tbody id="docIntakeTbody"></tbody>
     </table>
@@ -2968,6 +2969,13 @@ function renderDocIntakeSelects(){
     function p(n){ return String(n).padStart(2,'0'); }
     dateInput.value = now.getFullYear()+'-'+p(now.getMonth()+1)+'-'+p(now.getDate());
   }
+  refreshDocIntakeNextNo();
+}
+function refreshDocIntakeNextNo(){
+  var noEl = document.getElementById('di_intakeNo');
+  if(!noEl) return;
+  noEl.value = '...';
+  getNextDocIntakeNo().then(function(n){ noEl.value = n; }).catch(function(){ noEl.value=''; });
 }
 /* ค้นหานักศึกษาจากข้อมูลที่เคยบันทึกไว้แล้วใน records (ไม่ซ้ำรหัสนักศึกษา) เพื่อดึงชื่อ/สาขาอัตโนมัติตอนลงทะเบียนรับเอกสาร
    ถ้าไม่พบในระบบ (เช่น นักศึกษาใหม่ที่ยังไม่เคยมีข้อมูลการสอบ) ยังกรอกรหัส/ชื่อ/สาขาเองในช่องด้านล่างได้ตามปกติ */
@@ -3023,13 +3031,15 @@ function addDocIntakeEntry(){
   if(!docType){ toast('กรุณาเลือกประเภทเอกสาร', true); return; }
   if(!studentName){ toast('กรุณากรอกชื่อ-นามสกุลนักศึกษา', true); return; }
   var now = Date.now();
-  var entry = {
-    id: 'doc_'+now+'_'+Math.random().toString(36).slice(2,8),
-    receivedDate: receivedDate, docType: docType, status: status||'received',
-    studentId: studentId, studentName: studentName, department: department, program:'',
-    note: note, createdAt: now, updatedAt: now, deleted:false
-  };
-  docIntakePut(entry).then(function(){
+  getNextDocIntakeNo().then(function(intakeNo){
+    var entry = {
+      id: 'doc_'+now+'_'+Math.random().toString(36).slice(2,8),
+      intakeNo: intakeNo, receivedDate: receivedDate, docType: docType, status: status||'received',
+      studentId: studentId, studentName: studentName, department: department, program:'',
+      note: note, createdAt: now, updatedAt: now, deleted:false
+    };
+    return docIntakePut(entry);
+  }).then(function(){
     toast('บันทึกรายการลงทะเบียนแล้ว');
     document.getElementById('di_studentSearch').value='';
     document.getElementById('di_studentId').value='';
@@ -3038,6 +3048,7 @@ function addDocIntakeEntry(){
     document.getElementById('di_note').value='';
     document.getElementById('di_status').value='received';
     renderDocIntakeList();
+    refreshDocIntakeNextNo();
   }).catch(function(e){ toast('บันทึกไม่สำเร็จ: '+e, true); });
 }
 function getFilteredDocIntake(){
@@ -3082,6 +3093,7 @@ function renderDocIntakeList(){
         });
       });
       var tr = el('tr',{},[
+        el('td',{text: r.intakeNo||'-'}),
         el('td',{text: toBuddhistDateStr(r.receivedDate)||'-'}),
         el('td',{text: r.docType||'-'}),
         el('td',{text: r.studentId||'-'}),
@@ -3104,13 +3116,13 @@ function deleteDocIntakeConfirm(id){
 function exportDocIntakeExcel(){
   getFilteredDocIntake().then(function(rows){
     if(rows.length===0){ toast('ไม่มีรายการให้ดาวน์โหลด', true); return; }
-    var aoa = [['วันที่รับ','ประเภทเอกสาร','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','สถานะ','หมายเหตุ']]
+    var aoa = [['เลขรับ','วันที่รับ','ประเภทเอกสาร','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','สถานะ','หมายเหตุ']]
       .concat(rows.map(function(r){
-        return [toBuddhistDateStr(r.receivedDate)||'', r.docType||'', r.studentId||'', r.studentName||'', r.department||'', docStatusLabel(r.status), r.note||''];
+        return [r.intakeNo||'', toBuddhistDateStr(r.receivedDate)||'', r.docType||'', r.studentId||'', r.studentName||'', r.department||'', docStatusLabel(r.status), r.note||''];
       }));
     var wb = XLSX.utils.book_new();
     var ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = [{wch:12},{wch:30},{wch:14},{wch:26},{wch:24},{wch:18},{wch:36}];
+    ws['!cols'] = [{wch:10},{wch:12},{wch:30},{wch:14},{wch:26},{wch:24},{wch:18},{wch:36}];
     XLSX.utils.book_append_sheet(wb, ws, 'ลงทะเบียนรับเอกสาร');
     XLSX.writeFile(wb, 'ลงทะเบียนรับเอกสาร-'+dateStamp()+'.xlsx');
   });
@@ -6266,7 +6278,7 @@ function recordsDelete(id){
   }).then(function(result){ invalidateRecordsSheetCache(); return result; });
 }
 /* ---- เอกสารรับเข้า (บว.04/บว.25 ฯลฯ) adapter: routes to Sheets tab 'DocIntake' เมื่อเปิดโหมดกลาง มิฉะนั้นใช้ IndexedDB ในเครื่อง ---- */
-var DOC_INTAKE_COLUMNS = ['id','receivedDate','docType','studentId','studentName','department','program','status','note','createdAt','updatedAt','deleted'];
+var DOC_INTAKE_COLUMNS = ['id','intakeNo','receivedDate','docType','studentId','studentName','department','program','status','note','createdAt','updatedAt','deleted'];
 function rowToDocIntake(headers, row){
   var d = {};
   headers.forEach(function(h, i){
@@ -6329,6 +6341,21 @@ function docIntakeGetAll(){
   if(!cloudModeEnabled) return dbGetAll('docIntake');
   return ensureAuthed().then(ensureDocIntakeHeaderAligned).then(fetchDocIntakeSheet).then(function(cache){
     return cache.entries.filter(function(e){ return !e.rec.deleted; }).map(function(e){ return e.rec; });
+  });
+}
+/* เลขรับเอกสาร — เรียงเลขต่อเนื่องไม่รีเซ็ต อิงจากเลขสูงสุดที่เคยใช้ไปแล้วทั้งหมด (รวมรายการที่ลบไปแล้วในโหมดกลาง กันเลขซ้ำ) */
+function getNextDocIntakeNo(){
+  if(!cloudModeEnabled){
+    return dbGetAll('docIntake').then(function(rows){
+      var max = 0;
+      (rows||[]).forEach(function(r){ var n = parseInt(r.intakeNo,10); if(!isNaN(n) && n>max) max = n; });
+      return max+1;
+    });
+  }
+  return ensureAuthed().then(ensureDocIntakeHeaderAligned).then(fetchDocIntakeSheet).then(function(cache){
+    var max = 0;
+    (cache.entries||[]).forEach(function(e){ var n = parseInt(e.rec.intakeNo,10); if(!isNaN(n) && n>max) max = n; });
+    return max+1;
   });
 }
 function docIntakePut(d){

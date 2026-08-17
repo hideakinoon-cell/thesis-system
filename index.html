@@ -425,6 +425,7 @@
   <button data-view="docintake">📥 ลงทะเบียนรับเอกสาร</button>
   <button data-view="dashboard">🔍 ตรวจสอบข้อมูล</button>
   <button data-view="advisors">👨‍🏫 ที่ปรึกษา</button>
+  <button data-view="advisorlist">👥 รายชื่ออาจารย์</button>
   <button data-view="form">📝 บันทึกข้อมูล</button>
   <button data-view="list">📋 รายการทั้งหมด</button>
   <button data-view="settings">⚙️ ตั้งค่า</button>
@@ -583,6 +584,33 @@
   </div>
   <div id="advisorLookupDetail">
     <div class="empty-state">เลือกอาจารย์จากรายการด้านบนเพื่อดูรายงานที่ปรึกษา</div>
+  </div>
+</section>
+
+<!-- ============ ADVISOR LIST VIEW (รายชื่ออาจารย์ที่ปรึกษา/กรรมการ ทั้งหมด) ============ -->
+<section id="view-advisorlist" style="display:none;">
+  <div class="card">
+    <h3>👥 รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h3>
+    <div class="help" style="margin-bottom:8px;">รายชื่ออาจารย์ทั้งหมดที่ใช้เลือกในช่องที่ปรึกษา/กรรมการสอบทั่วทั้งระบบ</div>
+    <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor">เพิ่ม</button></div>
+    <div id="m_advisor_dupWarning" style="display:none;color:#dc2626;font-size:13px;margin-top:4px;">⚠️ มีชื่อนี้อยู่แล้วในรายการ</div>
+    <div class="field" style="max-width:340px;margin-top:10px;">
+      <label>ตำแหน่งทางวิชาการ (ใช้คำนวณโควตาที่ปรึกษา)</label>
+      <select id="m_advisor_rank">
+        <option value="">ไม่ระบุ (ไม่คำนวณโควตา)</option>
+        <option value="ดร.">ดร. (โควตา 5 คน)</option>
+        <option value="ผศ.">ผศ. (โควตา 10 คน)</option>
+        <option value="รศ.">รศ. (โควตา 10 คน)</option>
+        <option value="ศ.">ศ. (โควตา 10 คน)</option>
+      </select>
+    </div>
+    <div class="help" style="margin:10px 0 4px;">เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):</div>
+    <div class="radio-group" id="m_advisor_roles"></div>
+    <div class="field" style="max-width:340px;margin-top:14px;">
+      <input type="text" id="m_advisor_search" placeholder="🔍 ค้นหาชื่ออาจารย์...">
+    </div>
+    <div class="help" id="m_advisor_count" style="margin:6px 0 2px;"></div>
+    <div class="chip-list" id="m_advisors" style="margin-top:8px;"></div>
   </div>
 </section>
 
@@ -1182,25 +1210,8 @@
       </div>
       <div class="master-card" style="grid-column:1/-1;">
         <h4>รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h4>
-        <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor">เพิ่ม</button></div>
-        <div id="m_advisor_dupWarning" style="display:none;color:#dc2626;font-size:13px;margin-top:4px;">⚠️ มีชื่อนี้อยู่แล้วในรายการ</div>
-        <div class="field" style="max-width:340px;margin-top:10px;">
-          <label>ตำแหน่งทางวิชาการ (ใช้คำนวณโควตาที่ปรึกษา)</label>
-          <select id="m_advisor_rank">
-            <option value="">ไม่ระบุ (ไม่คำนวณโควตา)</option>
-            <option value="ดร.">ดร. (โควตา 5 คน)</option>
-            <option value="ผศ.">ผศ. (โควตา 10 คน)</option>
-            <option value="รศ.">รศ. (โควตา 10 คน)</option>
-            <option value="ศ.">ศ. (โควตา 10 คน)</option>
-          </select>
-        </div>
-        <div class="help" style="margin:10px 0 4px;">เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):</div>
-        <div class="radio-group" id="m_advisor_roles"></div>
-        <div class="field" style="max-width:340px;margin-top:14px;">
-          <input type="text" id="m_advisor_search" placeholder="🔍 ค้นหาชื่ออาจารย์...">
-        </div>
-        <div class="help" id="m_advisor_count" style="margin:6px 0 2px;"></div>
-        <div class="chip-list" id="m_advisors" style="margin-top:8px;"></div>
+        <div class="help">ย้ายไปจัดการที่แท็บ <strong>👥 รายชื่ออาจารย์</strong> แล้ว (แยกเป็นแท็บของตัวเองเพราะรายชื่อมีจำนวนมาก)</div>
+        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="switchView('advisorlist')">ไปที่แท็บรายชื่ออาจารย์ →</button>
       </div>
     </div>
   </div>
@@ -2055,7 +2066,7 @@ function onLookupSearchInput(){
 function switchView(name){
   /* เจ้าหน้าที่ดูอย่างเดียว (viewer/dept-viewer) เข้าได้เฉพาะหน้าแดชบอร์ดสรุปข้อมูล กับหน้าตรวจสอบข้อมูลรายบุคคลเท่านั้น */
   if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard' && name!=='summary') name='dashboard';
-  ['summary','dashboard','advisors','docintake','form','list','settings','auditlog'].forEach(function(v){
+  ['summary','dashboard','advisors','advisorlist','docintake','form','list','settings','auditlog'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
@@ -2067,8 +2078,8 @@ function switchView(name){
   if(name==='list') renderList();
   if(name==='settings'){
     renderMasterLists();
-    computeAdvisorUsedCounts().then(renderAdvisorList);
   }
+  if(name==='advisorlist') computeAdvisorUsedCounts().then(renderAdvisorList);
   if(name==='dashboard') renderDashboard();
   if(name==='summary') renderSummaryDashboard();
   if(name==='auditlog') renderAuditLog();

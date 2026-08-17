@@ -46,6 +46,23 @@
   .card h3{margin:0 0 14px;font-size:16px;color:var(--primary-dark);border-left:4px solid var(--primary);padding-left:10px;}
   .card h4{margin:24px 0 14px;font-size:15.5px;font-weight:700;color:var(--primary-dark);padding-bottom:9px;border-bottom:2px solid var(--primary-light);}
   .card h4:first-child{margin-top:2px;}
+  /* สีประจำหมวดในหน้าบันทึกข้อมูล ช่วยแยกแต่ละส่วนให้เห็นชัดตอนกรอกข้อมูลเยอะๆ */
+  #formSec1{border-left:4px solid var(--primary);}
+  #formSec1 h4{border-bottom-color:#fdf0e0;color:var(--warn);}
+  #formSec2{border-left:4px solid var(--accent2);}
+  #formSec2 h3{border-left-color:var(--accent2);}
+  #formSec3{border-left:4px solid #0e9488;}
+  #formSec3 h3{border-left-color:#0e9488;}
+  #sub-proposal{border-top-color:#0e9488;}
+  #sub-proposal .exam-subsection-title{color:#0e9488;}
+  #sub-proposal h4:not(.exam-subsection-title){border-bottom-color:#c9ede9;color:#0e9488;}
+  #sub-defense{border-top-color:var(--accent3);}
+  #sub-defense .exam-subsection-title{color:var(--accent3);}
+  #sub-defense h4:not(.exam-subsection-title){border-bottom-color:#fbdce9;color:var(--accent3);}
+  #formSec5{border-left:4px solid var(--accent);}
+  #formSec5 h3{border-left-color:var(--accent);}
+  #formSec6{border-left:4px solid #e2725b;}
+  #formSec6 h3{border-left-color:#e2725b;}
   #lookupSearch{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px;transition:border-color .15s,box-shadow .15s;}
   #lookupSearch:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,77,139,.14);}
   .lookup-result-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:360px;overflow:auto;}
@@ -634,7 +651,7 @@
 
 <!-- ============ FORM VIEW ============ -->
 <section id="view-form" style="display:none;">
-  <div class="card">
+  <div class="card" id="formSec1">
     <h3>หมวดที่ 1: ข้อมูลนักศึกษา</h3>
     <div class="grid">
       <div class="field">
@@ -705,7 +722,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="formSec2">
     <h3>หมวดที่ 2: อาจารย์ที่ปรึกษา &amp; หัวข้อ</h3>
     <div class="grid">
       <div class="field full">
@@ -732,7 +749,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="formSec3">
     <h3>หมวดที่ 3: กำหนดการสอบและผลสอบ</h3>
     <div class="help">กรอกข้อมูลใน "3.1" หรือ "3.2" เพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (1 รายการ = การสอบ 1 ครั้ง) ถ้านักศึกษาเคยสอบมาก่อน หรือจะบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนเดิม ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 แล้วกด "＋ เพิ่มข้อมูลใหม่" เพื่อเริ่มรายการใหม่ — ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม เมื่อกด "แก้ไข" รายการที่เคยบันทึกไว้ ส่วนที่ไม่ตรงกับประเภทเดิมจะถูกล็อกไว้เพื่อป้องกันการเขียนทับ</div>
 
@@ -871,7 +888,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="formSec5">
     <h3>หมวดที่ 5: การเผยแพร่ผลงานวิจัย</h3>
     <div class="help" style="margin-bottom:10px;">กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน</div>
     <div class="field full">
@@ -880,7 +897,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="formSec6">
     <h3>หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</h3>
     <div class="grid">
       <div class="field">

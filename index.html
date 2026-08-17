@@ -192,6 +192,10 @@
   .result-tag.pass{background:#e5f4ec;color:var(--accent);}
   .result-tag.cond{background:#fdf0e0;color:var(--warn);}
   .result-tag.fail{background:#fdeceb;color:var(--danger);}
+  .doc-status-tag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12.5px;font-weight:600;white-space:nowrap;}
+  .doc-status-tag.received{background:#e6f0fb;color:#2f6fb3;}
+  .doc-status-tag.in_progress{background:#fdf0e0;color:var(--warn);}
+  .doc-status-tag.done{background:#e5f4ec;color:var(--accent);}
   .attach-box{border:1px dashed var(--border);border-radius:8px;padding:12px;}
   .attach-link-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
   .attach-link-row input{flex:1;min-width:160px;}
@@ -395,6 +399,7 @@
   <button data-view="summary" class="active">📊 แดชบอร์ด</button>
   <button data-view="dashboard">🔍 ตรวจสอบข้อมูล</button>
   <button data-view="advisors">👨‍🏫 ที่ปรึกษา</button>
+  <button data-view="docintake">📥 ลงทะเบียนรับเอกสาร</button>
   <button data-view="form">📝 บันทึกข้อมูล</button>
   <button data-view="list">📋 รายการทั้งหมด</button>
   <button data-view="settings">⚙️ ตั้งค่า</button>
@@ -553,6 +558,77 @@
   </div>
   <div id="advisorLookupDetail">
     <div class="empty-state">เลือกอาจารย์จากรายการด้านบนเพื่อดูรายงานที่ปรึกษา</div>
+  </div>
+</section>
+
+<!-- ============ DOC INTAKE VIEW (ลงทะเบียนรับเอกสาร) ============ -->
+<section id="view-docintake" style="display:none;">
+  <div class="card">
+    <h3>📥 ลงทะเบียนรับเอกสาร</h3>
+    <div class="help" style="margin-bottom:10px;">บันทึกเอกสารที่นักศึกษาส่งมา เช่น บว.04 (ขอแต่งตั้งอาจารย์ที่ปรึกษา) — พิมพ์ค้นหารหัส/ชื่อนักศึกษาที่มีข้อมูลอยู่แล้วในระบบเพื่อดึงชื่อ-สาขาอัตโนมัติ หรือกรอกเองได้ถ้ายังไม่มีข้อมูลนักศึกษาคนนี้ในระบบ</div>
+    <div class="field-row-with-btn" style="flex-wrap:wrap;gap:14px;">
+      <div class="field" style="min-width:150px;"><label>วันที่รับเอกสาร</label><input type="date" id="di_receivedDate"></div>
+      <div class="field" style="min-width:220px;flex:1 1 220px;"><label>ประเภทเอกสาร</label><select id="di_docType"></select></div>
+      <div class="field" style="min-width:170px;"><label>สถานะ</label>
+        <select id="di_status">
+          <option value="received">🔵 รับเรื่องแล้ว</option>
+          <option value="in_progress">🟠 กำลังดำเนินการ</option>
+          <option value="done">🟢 ดำเนินการเสร็จสิ้น</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="position:relative;margin-top:8px;">
+      <label>ค้นหานักศึกษา (รหัส/ชื่อ)</label>
+      <input type="text" id="di_studentSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหาในระบบ...">
+      <div id="di_studentSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:30;background:#fff;max-height:240px;overflow-y:auto;box-shadow:var(--shadow-md);border:1px solid var(--border);border-radius:9px;margin-top:4px;padding:6px;"></div>
+    </div>
+    <div class="field-row-with-btn" style="flex-wrap:wrap;gap:14px;margin-top:6px;">
+      <div class="field" style="min-width:140px;"><label>รหัสนักศึกษา</label><input type="text" id="di_studentId"></div>
+      <div class="field" style="min-width:200px;flex:1 1 200px;"><label>ชื่อ-นามสกุล</label><input type="text" id="di_studentName"></div>
+      <div class="field" style="min-width:180px;flex:1 1 180px;">
+        <label>สาขาวิชา</label>
+        <input type="text" id="di_department" list="di_departmentList">
+        <datalist id="di_departmentList"></datalist>
+      </div>
+    </div>
+    <div class="field" style="margin-top:6px;"><label>หมายเหตุ (ถ้ามี)</label><input type="text" id="di_note" placeholder="เช่น ชื่ออาจารย์ที่ขอแต่งตั้งเป็นที่ปรึกษา"></div>
+    <div style="margin-top:14px;"><button type="button" class="btn btn-primary" id="btnAddDocIntake">➕ บันทึกรายการ</button></div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3>🔎 ตัวกรอง</h3>
+    <div class="dash-filter-row">
+      <div class="field"><label>ตั้งแต่วันที่</label><input type="date" id="di_filterFrom"></div>
+      <div class="field"><label>ถึงวันที่</label><input type="date" id="di_filterTo"></div>
+      <div class="field"><label>ประเภทเอกสาร</label><select id="di_filterDocType"></select></div>
+      <div class="field"><label>สาขาวิชา</label><select id="di_filterDept"></select></div>
+      <div class="field">
+        <label>สถานะ</label>
+        <select id="di_filterStatus">
+          <option value="">ทุกสถานะ</option>
+          <option value="received">🔵 รับเรื่องแล้ว</option>
+          <option value="in_progress">🟠 กำลังดำเนินการ</option>
+          <option value="done">🟢 ดำเนินการเสร็จสิ้น</option>
+        </select>
+      </div>
+      <div class="field" style="min-width:200px;"><label>ค้นหาชื่อ/รหัส</label><input type="text" id="di_filterSearch" placeholder="พิมพ์เพื่อค้นหา..."></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <h3 style="margin:0;">📋 รายการที่ลงทะเบียน</h3>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnExportDocIntake">⬇ Excel</button>
+    </div>
+    <div style="overflow-x:auto;margin-top:12px;">
+    <table>
+      <thead>
+        <tr><th>วันที่รับ</th><th>ประเภทเอกสาร</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>สถานะ</th><th>หมายเหตุ</th><th>จัดการ</th></tr>
+      </thead>
+      <tbody id="docIntakeTbody"></tbody>
+    </table>
+    </div>
+    <div class="empty-state" id="docIntakeEmpty" style="display:none;">ยังไม่มีรายการลงทะเบียน — เริ่มบันทึกรายการใหม่ได้ที่ด้านบน</div>
   </div>
 </section>
 
@@ -1059,6 +1135,11 @@
         <div class="field-row-with-btn"><input type="text" id="m_plan_input" placeholder="เช่น แผน ก, แบบ 1.1"><button class="btn btn-secondary btn-sm" data-add="plans">เพิ่ม</button></div>
         <div class="chip-list" id="m_plans"></div>
       </div>
+      <div class="master-card">
+        <h4>ประเภทเอกสาร (หน้าลงทะเบียนรับเอกสาร)</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_docType_input" placeholder="เช่น บว.04, บว.25"><button class="btn btn-secondary btn-sm" data-add="documentTypes">เพิ่ม</button></div>
+        <div class="chip-list" id="m_docTypes"></div>
+      </div>
       <div class="master-card" style="grid-column:1/-1;">
         <h4>ตำแหน่งกรรมการ/อาจารย์</h4>
         <div class="help" style="margin-bottom:8px;">กำหนดรายชื่อตำแหน่งเองได้ทั้งหมด แก้ไข/เพิ่ม/ลบได้ตามต้องการ แต่ละตำแหน่งต้องระบุว่าใช้กับช่องไหนในฟอร์ม</div>
@@ -1180,6 +1261,10 @@ function openDB(){
         var al = d.createObjectStore('auditLog',{keyPath:'id'});
         al.createIndex('studentId','studentId',{unique:false});
       }
+      if(!d.objectStoreNames.contains('docIntake')){
+        var di = d.createObjectStore('docIntake',{keyPath:'id'});
+        di.createIndex('studentId','studentId',{unique:false});
+      }
     };
     req.onsuccess = function(){ resolve(req.result); };
     req.onerror = function(){ reject(req.error); };
@@ -1227,7 +1312,7 @@ var DEFAULT_GOOGLE_CLIENT_ID = '735808286134-4c4itsvdhe1v7po7bl71cnnq6k5imgve.ap
 var DEFAULT_SHEET_ID = '1Rymd5QMIXL1j2f4fLujmDXgK0sKy_umKEYI5z2iP8sQ';
 var DEFAULT_CLOUD_MODE_ENABLED = true;
 var DEFAULT_VIEWER_PIN_HASH = 'ad7d15dafd42a49ca8e6ba2dfbb41abaa96d7a368cad455c07f622f7fb90ddc2';
-var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[] };
+var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[], documentTypes:[] };
 /* ตรวจว่าแผนการเรียนนี้เป็น "การค้นคว้าอิสระ" (IS) หรือไม่ — ใช้เกณฑ์นี้ทุกจุดที่ต้องแยกวิทยานิพนธ์ออกจากการค้นคว้าอิสระ
    (เช่น เช็คลิสต์ความครบถ้วน, การคำนวณโควตาที่ปรึกษา) แทนการเทียบสตริง "แผน ข" ตรงๆ เพียงอย่างเดียว เพราะ masterData.plans
    แก้ไขเองได้จากหน้าตั้งค่า (งานที่ #14) — บางสาขาใช้ชื่อ "แผน 1 แบบวิชาการ (วิทยานิพนธ์)" / "แผน 2 แบบวิชาชีพ (ค้นคว้าอิสระ)"
@@ -1286,6 +1371,7 @@ window.addEventListener('DOMContentLoaded', function(){
     bindFormEvents();
     bindListEvents();
     bindSettingsEvents();
+    bindDocIntakeEvents();
     bindLockEvents();
     bindLandingPageEvents();
     renderLockForm();
@@ -1316,6 +1402,13 @@ var DEFAULT_POSITIONS = [
   {name:'กรรมการผู้ทรงคุณวุฒิเฉพาะด้าน', slot:'committee'},
   {name:'กรรมการและเลขานุการ', slot:'committee'},
   {name:'กรรมการ', slot:'committee'}
+];
+/* ประเภทเอกสารเริ่มต้นสำหรับหน้า "ลงทะเบียนรับเอกสาร" — แก้ไข/เพิ่มเองได้ที่หน้าตั้งค่า (เหมือน positions/plans) */
+var DEFAULT_DOCUMENT_TYPES = [
+  'บว.04 (ขอแต่งตั้งอาจารย์ที่ปรึกษา)',
+  'บว.05 (ขอสอบเค้าโครงวิทยานิพนธ์/สารนิพนธ์)',
+  'บว.25 (ขออนุมัติหัวข้อ/ขอสอบป้องกัน)',
+  'อื่นๆ'
 ];
 var OLD_ROLE_KEY_TO_NAME = {
   chair:'ประธานกรรมการ',
@@ -1363,6 +1456,10 @@ function migrateAdvisorFormat(){
   var changed = false;
   if(!masterData.positions || masterData.positions.length===0){
     masterData.positions = DEFAULT_POSITIONS.map(function(p){ return {name:p.name, slot:p.slot}; });
+    changed = true;
+  }
+  if(!masterData.documentTypes || masterData.documentTypes.length===0){
+    masterData.documentTypes = DEFAULT_DOCUMENT_TYPES.slice();
     changed = true;
   }
   masterData.advisors = (masterData.advisors||[]).map(function(item){
@@ -1933,7 +2030,7 @@ function onLookupSearchInput(){
 function switchView(name){
   /* เจ้าหน้าที่ดูอย่างเดียว (viewer/dept-viewer) เข้าได้เฉพาะหน้าแดชบอร์ดสรุปข้อมูล กับหน้าตรวจสอบข้อมูลรายบุคคลเท่านั้น */
   if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard' && name!=='summary') name='dashboard';
-  ['summary','dashboard','advisors','form','list','settings','auditlog'].forEach(function(v){
+  ['summary','dashboard','advisors','docintake','form','list','settings','auditlog'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
@@ -1951,6 +2048,7 @@ function switchView(name){
   if(name==='summary') renderSummaryDashboard();
   if(name==='auditlog') renderAuditLog();
   if(name==='advisors') computeAdvisorUsedCounts().then(renderAdvisorLookupResults);
+  if(name==='docintake'){ renderDocIntakeSelects(); renderDocIntakeList(); }
 }
 
 /* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
@@ -2810,6 +2908,194 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
   wrap.appendChild(sec6);
 }
 
+/* ================= DOC INTAKE VIEW (ลงทะเบียนรับเอกสาร บว.04/บว.25 ฯลฯ) =================
+   หน้าลงทะเบียนรับเอกสารที่นักศึกษาส่งมา แยกเป็นข้อมูลของตัวเอง (docIntake) ไม่ปนกับ records (ข้อมูลการสอบ)
+   เพราะเอกสารบางประเภท (เช่น บว.04 ขอแต่งตั้งที่ปรึกษา) มักถูกส่งมา "ก่อน" ที่จะมีแถวข้อมูลการสอบใดๆ เกิดขึ้นเลย
+   ค้นหานักศึกษาจากข้อมูลที่มีอยู่แล้วใน records เพื่อดึงชื่อ/สาขาอัตโนมัติ แต่ยังกรอกเองได้เสมอถ้ายังไม่มีข้อมูล */
+var DOC_STATUS_LABELS = { received:'🔵 รับเรื่องแล้ว', in_progress:'🟠 กำลังดำเนินการ', done:'🟢 ดำเนินการเสร็จสิ้น' };
+function docStatusLabel(s){ return DOC_STATUS_LABELS[s] || s || '-'; }
+
+function renderDocIntakeSelects(){
+  var docTypeSel = document.getElementById('di_docType');
+  if(!docTypeSel) return; // section อยู่ใน DOM เสมอ แต่กันไว้เผื่อยังไม่โหลด
+  fillSelect(docTypeSel, masterData.documentTypes||[], 'เลือกประเภทเอกสาร');
+  fillSelect(document.getElementById('di_filterDocType'), masterData.documentTypes||[], 'ทุกประเภท');
+  fillSelect(document.getElementById('di_filterDept'), masterData.departments||[], 'ทุกสาขา');
+  var deptList = document.getElementById('di_departmentList');
+  if(deptList){
+    deptList.innerHTML='';
+    (masterData.departments||[]).forEach(function(d){ deptList.appendChild(el('option',{value:d})); });
+  }
+  var dateInput = document.getElementById('di_receivedDate');
+  if(dateInput && !dateInput.value){
+    var now = new Date();
+    function p(n){ return String(n).padStart(2,'0'); }
+    dateInput.value = now.getFullYear()+'-'+p(now.getMonth()+1)+'-'+p(now.getDate());
+  }
+}
+/* ค้นหานักศึกษาจากข้อมูลที่เคยบันทึกไว้แล้วใน records (ไม่ซ้ำรหัสนักศึกษา) เพื่อดึงชื่อ/สาขาอัตโนมัติตอนลงทะเบียนรับเอกสาร
+   ถ้าไม่พบในระบบ (เช่น นักศึกษาใหม่ที่ยังไม่เคยมีข้อมูลการสอบ) ยังกรอกรหัส/ชื่อ/สาขาเองในช่องด้านล่างได้ตามปกติ */
+function renderDocIntakeStudentSearchResults(){
+  var input = document.getElementById('di_studentSearch');
+  var container = document.getElementById('di_studentSearchResults');
+  var q = (input.value||'').trim().toLowerCase();
+  if(!q){ container.style.display='none'; container.innerHTML=''; return; }
+  recordsGetAll().then(function(rows){
+    var seen = {};
+    var students = [];
+    (rows||[]).forEach(function(r){
+      if(!r.studentId || seen[r.studentId]) return;
+      seen[r.studentId] = true;
+      students.push({studentId:r.studentId, studentName:r.studentName, department:r.department||'', program:r.program||''});
+    });
+    var matches = students.filter(function(s){
+      return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
+    }).slice(0,20);
+    container.innerHTML='';
+    if(matches.length===0){
+      container.appendChild(el('div',{class:'empty-state', style:'padding:10px;', text:'ไม่พบนักศึกษาที่ตรงกับคำค้นหาในระบบ — กรอกข้อมูลเองด้านล่างได้'}));
+    } else {
+      matches.forEach(function(s){
+        var item = el('div',{class:'lookup-item', style:'margin-bottom:6px;'},[
+          el('div',{class:'li-main'},[
+            el('span',{class:'li-name', text:s.studentName}),
+            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||'-')})
+          ])
+        ]);
+        item.addEventListener('click', function(){
+          document.getElementById('di_studentId').value = s.studentId;
+          document.getElementById('di_studentName').value = s.studentName;
+          document.getElementById('di_department').value = s.department||'';
+          input.value = s.studentName;
+          container.style.display='none'; container.innerHTML='';
+        });
+        container.appendChild(item);
+      });
+    }
+    container.style.display='block';
+  });
+}
+function addDocIntakeEntry(){
+  var receivedDate = document.getElementById('di_receivedDate').value;
+  var docType = document.getElementById('di_docType').value;
+  var status = document.getElementById('di_status').value;
+  var studentId = document.getElementById('di_studentId').value.trim();
+  var studentName = document.getElementById('di_studentName').value.trim();
+  var department = document.getElementById('di_department').value.trim();
+  var note = document.getElementById('di_note').value.trim();
+  if(!receivedDate){ toast('กรุณาเลือกวันที่รับเอกสาร', true); return; }
+  if(!docType){ toast('กรุณาเลือกประเภทเอกสาร', true); return; }
+  if(!studentName){ toast('กรุณากรอกชื่อ-นามสกุลนักศึกษา', true); return; }
+  var now = Date.now();
+  var entry = {
+    id: 'doc_'+now+'_'+Math.random().toString(36).slice(2,8),
+    receivedDate: receivedDate, docType: docType, status: status||'received',
+    studentId: studentId, studentName: studentName, department: department, program:'',
+    note: note, createdAt: now, updatedAt: now, deleted:false
+  };
+  docIntakePut(entry).then(function(){
+    toast('บันทึกรายการลงทะเบียนแล้ว');
+    document.getElementById('di_studentSearch').value='';
+    document.getElementById('di_studentId').value='';
+    document.getElementById('di_studentName').value='';
+    document.getElementById('di_department').value='';
+    document.getElementById('di_note').value='';
+    document.getElementById('di_status').value='received';
+    renderDocIntakeList();
+  }).catch(function(e){ toast('บันทึกไม่สำเร็จ: '+e, true); });
+}
+function getFilteredDocIntake(){
+  return docIntakeGetAll().then(function(rows){
+    var from = document.getElementById('di_filterFrom').value;
+    var to = document.getElementById('di_filterTo').value;
+    var docType = document.getElementById('di_filterDocType').value;
+    var dept = document.getElementById('di_filterDept').value;
+    var status = document.getElementById('di_filterStatus').value;
+    var q = (document.getElementById('di_filterSearch').value||'').trim().toLowerCase();
+    var list = (rows||[]).filter(function(r){
+      if(from && r.receivedDate && r.receivedDate<from) return false;
+      if(to && r.receivedDate && r.receivedDate>to) return false;
+      if(docType && r.docType!==docType) return false;
+      if(dept && r.department!==dept) return false;
+      if(status && r.status!==status) return false;
+      if(q && (r.studentId||'').toLowerCase().indexOf(q)===-1 && (r.studentName||'').toLowerCase().indexOf(q)===-1) return false;
+      return true;
+    });
+    list.sort(function(a,b){
+      if(a.receivedDate!==b.receivedDate) return (b.receivedDate||'').localeCompare(a.receivedDate||'');
+      return (b.createdAt||0)-(a.createdAt||0);
+    });
+    return list;
+  });
+}
+function renderDocIntakeList(){
+  getFilteredDocIntake().then(function(rows){
+    var tbody = document.getElementById('docIntakeTbody');
+    tbody.innerHTML='';
+    document.getElementById('docIntakeEmpty').style.display = rows.length===0 ? '' : 'none';
+    rows.forEach(function(r){
+      var statusSel = el('select',{},[
+        el('option',{value:'received', text:'🔵 รับเรื่องแล้ว'}),
+        el('option',{value:'in_progress', text:'🟠 กำลังดำเนินการ'}),
+        el('option',{value:'done', text:'🟢 ดำเนินการเสร็จสิ้น'})
+      ]);
+      statusSel.value = r.status||'received';
+      statusSel.addEventListener('change', function(){
+        docIntakePut(Object.assign({}, r, {status:statusSel.value, updatedAt:Date.now()})).then(function(){
+          toast('อัปเดตสถานะแล้ว'); renderDocIntakeList();
+        });
+      });
+      var tr = el('tr',{},[
+        el('td',{text: toBuddhistDateStr(r.receivedDate)||'-'}),
+        el('td',{text: r.docType||'-'}),
+        el('td',{text: r.studentId||'-'}),
+        el('td',{text: r.studentName||'-'}),
+        el('td',{text: r.department||'-'}),
+        el('td',{}, [statusSel]),
+        el('td',{text: r.note||'-'}),
+        el('td',{},[
+          el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteDocIntakeConfirm(r.id); }, text:'ลบ'})
+        ])
+      ]);
+      tbody.appendChild(tr);
+    });
+  });
+}
+function deleteDocIntakeConfirm(id){
+  if(!confirm('ยืนยันลบรายการลงทะเบียนนี้?')) return;
+  docIntakeDelete(id).then(function(){ toast('ลบรายการแล้ว'); renderDocIntakeList(); });
+}
+function exportDocIntakeExcel(){
+  getFilteredDocIntake().then(function(rows){
+    if(rows.length===0){ toast('ไม่มีรายการให้ดาวน์โหลด', true); return; }
+    var aoa = [['วันที่รับ','ประเภทเอกสาร','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','สถานะ','หมายเหตุ']]
+      .concat(rows.map(function(r){
+        return [toBuddhistDateStr(r.receivedDate)||'', r.docType||'', r.studentId||'', r.studentName||'', r.department||'', docStatusLabel(r.status), r.note||''];
+      }));
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch:12},{wch:30},{wch:14},{wch:26},{wch:24},{wch:18},{wch:36}];
+    XLSX.utils.book_append_sheet(wb, ws, 'ลงทะเบียนรับเอกสาร');
+    XLSX.writeFile(wb, 'ลงทะเบียนรับเอกสาร-'+dateStamp()+'.xlsx');
+  });
+}
+function bindDocIntakeEvents(){
+  document.getElementById('btnAddDocIntake').addEventListener('click', addDocIntakeEntry);
+  document.getElementById('di_studentSearch').addEventListener('input', renderDocIntakeStudentSearchResults);
+  document.getElementById('di_studentSearch').addEventListener('focus', renderDocIntakeStudentSearchResults);
+  document.addEventListener('click', function(ev){
+    var box = document.getElementById('di_studentSearchResults');
+    var input = document.getElementById('di_studentSearch');
+    if(!box || !input) return;
+    if(ev.target!==input && !box.contains(ev.target)) { box.style.display='none'; }
+  });
+  ['di_filterFrom','di_filterTo','di_filterDocType','di_filterDept','di_filterStatus'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', renderDocIntakeList);
+  });
+  document.getElementById('di_filterSearch').addEventListener('input', renderDocIntakeList);
+  document.getElementById('btnExportDocIntake').addEventListener('click', exportDocIntakeExcel);
+}
+
 /* ================= SELECT RENDERING ================= */
 function fillSelect(selectEl, list, placeholder){
   var current = selectEl.value;
@@ -2850,6 +3136,7 @@ function renderAllSelects(){
     if(nameCombo) nameCombo.setOptions(allAdvisorNames());
     if(posSel) fillSelect(posSel, allPositionNames(), 'ระบุตำแหน่ง');
   });
+  renderDocIntakeSelects();
 }
 
 /* ================= DYNAMIC ROWS (co-advisor / committee) ================= */
@@ -4561,7 +4848,7 @@ function bindSettingsEvents(){
   document.querySelectorAll('#view-settings [data-add]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var key = btn.getAttribute('data-add');
-      var inputId = key==='programs'?'m_program_input': key==='departments'?'m_department_input': key==='plans'?'m_plan_input':'m_advisor_input';
+      var inputId = key==='programs'?'m_program_input': key==='departments'?'m_department_input': key==='plans'?'m_plan_input': key==='documentTypes'?'m_docType_input':'m_advisor_input';
       var input = document.getElementById(inputId);
       var val = input.value.trim();
       if(!val) return;
@@ -4655,6 +4942,7 @@ function renderMasterLists(){
   renderChipList('m_programs','programs');
   renderChipList('m_departments','departments');
   renderChipList('m_plans','plans');
+  renderChipList('m_docTypes','documentTypes');
   renderPositionList();
   renderAdvisorRoleCheckboxes();
   renderAdvisorList();
@@ -5875,7 +6163,7 @@ function alignSheetHeader(tabName, columns, existingHeaders){
   var same = merged.length===existingHeaders.length && merged.every(function(h,i){ return h===existingHeaders[i]; });
   if(same) return Promise.resolve(false);
   return sheetsUpdateRow(tabName, 1, merged).then(function(){
-    if(tabName==='Records') invalidateRecordsSheetCache(); else if(tabName==='Files') invalidateFilesSheetCache();
+    if(tabName==='Records') invalidateRecordsSheetCache(); else if(tabName==='Files') invalidateFilesSheetCache(); else if(tabName==='DocIntake') invalidateDocIntakeSheetCache();
     return true;
   });
 }
@@ -5940,6 +6228,93 @@ function recordsDelete(id){
     var rec = Object.assign({}, existing.rec, {deleted:true, updatedAt:Date.now()});
     return sheetsUpdateRow('Records', existing.rowNumber, recordToRow(rec, cache.headers));
   }).then(function(result){ invalidateRecordsSheetCache(); return result; });
+}
+/* ---- เอกสารรับเข้า (บว.04/บว.25 ฯลฯ) adapter: routes to Sheets tab 'DocIntake' เมื่อเปิดโหมดกลาง มิฉะนั้นใช้ IndexedDB ในเครื่อง ---- */
+var DOC_INTAKE_COLUMNS = ['id','receivedDate','docType','studentId','studentName','department','program','status','note','createdAt','updatedAt','deleted'];
+function rowToDocIntake(headers, row){
+  var d = {};
+  headers.forEach(function(h, i){
+    var v = row[i]!==undefined ? row[i] : '';
+    if(h==='createdAt' || h==='updatedAt'){ d[h] = v ? Number(v) : 0; return; }
+    if(h==='deleted'){ d.deleted = (v===true || v==='TRUE' || v==='true' || v==='1'); return; }
+    d[h] = v;
+  });
+  return d;
+}
+function docIntakeToRow(d, headers){
+  var cols = (headers && headers.length) ? headers : DOC_INTAKE_COLUMNS;
+  return cols.map(function(h){
+    if(h==='deleted') return d.deleted ? 'TRUE' : '';
+    var v = d[h];
+    return v===undefined || v===null ? '' : v;
+  });
+}
+var docIntakeSheetCache = null;
+var docIntakeSheetCacheAt = 0;
+var docIntakeSheetFetchPromise = null;
+var docIntakeSheetEpoch = 0;
+function invalidateDocIntakeSheetCache(){ docIntakeSheetCache = null; docIntakeSheetCacheAt = 0; docIntakeSheetFetchPromise = null; docIntakeSheetEpoch++; }
+function fetchDocIntakeSheet(){
+  if(docIntakeSheetFetchPromise) return docIntakeSheetFetchPromise;
+  if(docIntakeSheetCache && (Date.now()-docIntakeSheetCacheAt) < RECORDS_CACHE_TTL_MS) return Promise.resolve(docIntakeSheetCache);
+  var myEpoch = docIntakeSheetEpoch;
+  docIntakeSheetFetchPromise = sheetsGetValues('DocIntake!A1:ZZ100000').then(function(values){
+    var headers = (values[0] && values[0].length) ? values[0] : DOC_INTAKE_COLUMNS;
+    var entries = [];
+    for(var i=1;i<values.length;i++){
+      var row = values[i];
+      if(!row || !row[0]) continue;
+      entries.push({ rec: rowToDocIntake(headers, row), rowNumber: i+1 });
+    }
+    var result = {headers:headers, entries:entries};
+    if(myEpoch === docIntakeSheetEpoch){ docIntakeSheetCache = result; docIntakeSheetCacheAt = Date.now(); }
+    return result;
+  }).then(function(result){
+    if(myEpoch === docIntakeSheetEpoch) docIntakeSheetFetchPromise = null;
+    return result;
+  }, function(err){
+    if(myEpoch === docIntakeSheetEpoch) docIntakeSheetFetchPromise = null;
+    throw err;
+  });
+  return docIntakeSheetFetchPromise;
+}
+var docIntakeHeaderAligned = false;
+function ensureDocIntakeHeaderAligned(){
+  if(docIntakeHeaderAligned) return Promise.resolve();
+  docIntakeHeaderAligned = true;
+  if(currentRole==='viewer' || currentRole==='dept-viewer') return Promise.resolve();
+  return fetchDocIntakeSheet().then(function(cache){
+    return alignSheetHeader('DocIntake', DOC_INTAKE_COLUMNS, cache.headers);
+  }).then(function(changed){
+    return changed ? fetchDocIntakeSheet() : null;
+  });
+}
+function docIntakeGetAll(){
+  if(!cloudModeEnabled) return dbGetAll('docIntake');
+  return ensureAuthed().then(ensureDocIntakeHeaderAligned).then(fetchDocIntakeSheet).then(function(cache){
+    return cache.entries.filter(function(e){ return !e.rec.deleted; }).map(function(e){ return e.rec; });
+  });
+}
+function docIntakePut(d){
+  if(!cloudModeEnabled) return dbPut('docIntake', d);
+  return ensureAuthed().then(ensureDocIntakeHeaderAligned).then(fetchDocIntakeSheet).then(function(cache){
+    var existing = cache.entries.filter(function(e){ return e.rec.id===d.id; })[0];
+    var row = docIntakeToRow(d, cache.headers);
+    if(existing){
+      return sheetsUpdateRow('DocIntake', existing.rowNumber, row).then(function(){ return d; });
+    } else {
+      return sheetsAppendRow('DocIntake', row).then(function(){ return d; });
+    }
+  }).then(function(result){ invalidateDocIntakeSheetCache(); return result; });
+}
+function docIntakeDelete(id){
+  if(!cloudModeEnabled) return dbDelete('docIntake', id);
+  return ensureAuthed().then(ensureDocIntakeHeaderAligned).then(fetchDocIntakeSheet).then(function(cache){
+    var existing = cache.entries.filter(function(e){ return e.rec.id===id; })[0];
+    if(!existing) return;
+    var d = Object.assign({}, existing.rec, {deleted:true, updatedAt:Date.now()});
+    return sheetsUpdateRow('DocIntake', existing.rowNumber, docIntakeToRow(d, cache.headers));
+  }).then(function(result){ invalidateDocIntakeSheetCache(); return result; });
 }
 /* ---- audit log adapter (บันทึกว่าใครสร้าง/แก้ไข/ลบข้อมูลนักศึกษาคนไหนเมื่อไหร่ — append-only, ไม่มีการแก้ไข/ลบย้อนหลัง) ---- */
 var AUDIT_COLUMNS = ['id','ts','action','studentId','studentName','role','department'];
@@ -6040,7 +6415,8 @@ function initSheetStructure(){
       {title:'Records', headers:RECORD_COLUMNS},
       {title:'Files', headers:FILE_COLUMNS},
       {title:'MasterData', headers:['json']},
-      {title:'AuditLog', headers:AUDIT_COLUMNS}
+      {title:'AuditLog', headers:AUDIT_COLUMNS},
+      {title:'DocIntake', headers:DOC_INTAKE_COLUMNS}
     ];
     var addRequests = wanted.filter(function(w){ return existingTitles.indexOf(w.title)===-1; })
       .map(function(w){ return {addSheet:{properties:{title:w.title}}}; });

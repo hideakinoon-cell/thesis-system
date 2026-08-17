@@ -546,6 +546,7 @@
 <section id="view-advisors" style="display:none;">
   <div class="card">
     <h3>👨‍🏫 ค้นหาอาจารย์ที่ปรึกษา</h3>
+    <div class="help" style="margin-bottom:10px;">แสดงเฉพาะผู้ที่มีตำแหน่งที่ปรึกษาหลักหรือที่ปรึกษาร่วม ไม่รวมผู้ที่มีแค่ตำแหน่งประธาน/กรรมการสอบ (เช่น กรรมการสอบจากภายนอก) — จัดการรายชื่อทั้งหมดได้ที่หน้าตั้งค่า</div>
     <input type="text" id="advisorLookupSearch" placeholder="พิมพ์ชื่ออาจารย์ที่ปรึกษาเพื่อค้นหา...">
     <div class="lookup-result-list" id="advisorLookupResultList"></div>
     <div class="empty-state" id="advisorLookupEmpty" style="display:none;"></div>
@@ -1404,6 +1405,13 @@ function advisorNamesByRole(roleOrRoles){
   return masterData.advisors.filter(function(a){
     return a.roles && roles.some(function(r){ return a.roles.indexOf(r)>-1; });
   }).map(function(a){ return a.name; });
+}
+/* แยก "ที่ปรึกษาจริง" (มีตำแหน่งที่ปรึกษาหลักหรือที่ปรึกษาร่วม) ออกจากคนที่มีแค่ตำแหน่งประธาน/กรรมการสอบ
+   (เช่น กรรมการสอบจากภายนอกที่ไม่ได้เป็นที่ปรึกษา) กันไม่ให้ปนกันในแท็บ "ที่ปรึกษา" — ใช้ตำแหน่ง (roles) เทียบกับ
+   ตำแหน่งที่ผูก slot mainAdvisor/coAdvisor ไว้ในหน้าตั้งค่า ไม่ได้ดูว่าอยู่ภายใน/ภายนอกสถาบัน */
+function isRealAdvisorPerson(advisor){
+  var advisorSlotNames = positionsBySlot('mainAdvisor').concat(positionsBySlot('coAdvisor'));
+  return !!(advisor.roles && advisor.roles.some(function(r){ return advisorSlotNames.indexOf(r)>-1; }));
 }
 function setSelectValueWithFallback(selectEl, value){
   if(!value || !selectEl) return;
@@ -2307,17 +2315,26 @@ function renderLookupList(){
 function selectLookupAdvisor(advisor){
   getAdvisorReport(advisor).then(function(rep){ renderAdvisorProfile(advisor, rep); });
 }
-/* หน้าค้นหาอาจารย์ที่ปรึกษาแยกเป็นแท็บของตัวเอง (👨‍🏫 ที่ปรึกษา) — แสดงรายชื่ออาจารย์ทั้งหมด (กรองได้ด้วยช่องค้นหา)
-   พร้อมโควตาที่ใช้อยู่ ณ ตอนนี้ กดที่ชื่อเพื่อดูรายงานที่ปรึกษาแบบละเอียด (renderAdvisorProfile ด้านล่าง) */
+/* หน้าค้นหาอาจารย์ที่ปรึกษาแยกเป็นแท็บของตัวเอง (👨‍🏫 ที่ปรึกษา) — แสดงเฉพาะคนที่มีตำแหน่งที่ปรึกษาหลัก/ที่ปรึกษาร่วมจริง
+   (isRealAdvisorPerson) กรองได้ด้วยช่องค้นหา พร้อมโควตาที่ใช้อยู่ ณ ตอนนี้ กดที่ชื่อเพื่อดูรายงานที่ปรึกษาแบบละเอียด
+   (renderAdvisorProfile ด้านล่าง) — คนที่มีแค่ตำแหน่งประธาน/กรรมการสอบ (เช่น กรรมการสอบจากภายนอก) จะไม่ขึ้นในแท็บนี้
+   เพื่อไม่ให้ปนกับที่ปรึกษาจริง แก้ไข/ดูรายชื่อทั้งหมดรวมกรรมการสอบได้ที่หน้าตั้งค่า */
 function renderAdvisorLookupResults(){
   var q = (document.getElementById('advisorLookupSearch').value||'').trim().toLowerCase();
   var container = document.getElementById('advisorLookupResultList');
   var emptyEl = document.getElementById('advisorLookupEmpty');
-  var all = (masterData.advisors||[]).slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','th'); });
+  var allAdvisors = masterData.advisors||[];
+  var realAdvisors = allAdvisors.filter(isRealAdvisorPerson);
+  var all = realAdvisors.slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','th'); });
   var list = q ? all.filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : all;
   container.innerHTML='';
+  if(allAdvisors.length===0){
+    emptyEl.textContent = 'ยังไม่มีข้อมูลอาจารย์ในระบบ — เพิ่มได้ที่หน้าตั้งค่า';
+    emptyEl.style.display='';
+    return;
+  }
   if(all.length===0){
-    emptyEl.textContent = 'ยังไม่มีข้อมูลอาจารย์ที่ปรึกษาในระบบ — เพิ่มได้ที่หน้าตั้งค่า';
+    emptyEl.textContent = 'ยังไม่มีผู้ที่มีตำแหน่งที่ปรึกษาหลัก/ที่ปรึกษาร่วมในระบบ (มีเฉพาะประธาน/กรรมการสอบ) — ตั้งตำแหน่งได้ที่หน้าตั้งค่า';
     emptyEl.style.display='';
     return;
   }

@@ -394,6 +394,7 @@
 <nav class="tabs">
   <button data-view="summary" class="active">📊 แดชบอร์ด</button>
   <button data-view="dashboard">🔍 ตรวจสอบข้อมูล</button>
+  <button data-view="advisors">👨‍🏫 ที่ปรึกษา</button>
   <button data-view="form">📝 บันทึกข้อมูล</button>
   <button data-view="list">📋 รายการทั้งหมด</button>
   <button data-view="settings">⚙️ ตั้งค่า</button>
@@ -538,6 +539,19 @@
   </div>
   <div id="lookupDetail">
     <div class="empty-state">เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด</div>
+  </div>
+</section>
+
+<!-- ============ ADVISOR LOOKUP VIEW ============ -->
+<section id="view-advisors" style="display:none;">
+  <div class="card">
+    <h3>👨‍🏫 ค้นหาอาจารย์ที่ปรึกษา</h3>
+    <input type="text" id="advisorLookupSearch" placeholder="พิมพ์ชื่ออาจารย์ที่ปรึกษาเพื่อค้นหา...">
+    <div class="lookup-result-list" id="advisorLookupResultList"></div>
+    <div class="empty-state" id="advisorLookupEmpty" style="display:none;"></div>
+  </div>
+  <div id="advisorLookupDetail">
+    <div class="empty-state">เลือกอาจารย์จากรายการด้านบนเพื่อดูรายงานที่ปรึกษา</div>
   </div>
 </section>
 
@@ -1825,6 +1839,7 @@ function bindNav(){
   });
   document.getElementById('lookupSearch').addEventListener('input', onLookupSearchInput);
   document.getElementById('lookupDeptFilter').addEventListener('change', function(){ lookupListPage=0; renderLookupList(); });
+  document.getElementById('advisorLookupSearch').addEventListener('input', renderAdvisorLookupResults);
   document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
   document.getElementById('btnLookupNext').addEventListener('click', function(){ lookupListPage++; renderLookupList(); });
   document.getElementById('auditLogSearch').addEventListener('input', renderAuditLogFiltered);
@@ -1910,7 +1925,7 @@ function onLookupSearchInput(){
 function switchView(name){
   /* เจ้าหน้าที่ดูอย่างเดียว (viewer/dept-viewer) เข้าได้เฉพาะหน้าแดชบอร์ดสรุปข้อมูล กับหน้าตรวจสอบข้อมูลรายบุคคลเท่านั้น */
   if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard' && name!=='summary') name='dashboard';
-  ['summary','dashboard','form','list','settings','auditlog'].forEach(function(v){
+  ['summary','dashboard','advisors','form','list','settings','auditlog'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
@@ -1927,6 +1942,7 @@ function switchView(name){
   if(name==='dashboard') renderDashboard();
   if(name==='summary') renderSummaryDashboard();
   if(name==='auditlog') renderAuditLog();
+  if(name==='advisors') computeAdvisorUsedCounts().then(renderAdvisorLookupResults);
 }
 
 /* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
@@ -2228,7 +2244,7 @@ function renderLookupList(){
      และยังช่วยลดการอ่านข้อมูลทั้งชีทโดยไม่จำเป็นทุกครั้งที่เปิดหน้านี้ด้วย) */
   if(!q && !deptFilter){
     container.innerHTML='';
-    emptyEl.textContent = 'พิมพ์รหัสนักศึกษา ชื่อ-นามสกุล หรือชื่ออาจารย์ที่ปรึกษา เพื่อค้นหา หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด';
+    emptyEl.textContent = 'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด';
     emptyEl.classList.remove('is-loading');
     emptyEl.style.display='';
     pagerEl.style.display='none';
@@ -2247,33 +2263,10 @@ function renderLookupList(){
     if(deptFilter){
       list = list.filter(function(s){ return (s.department||'')===deptFilter; });
     }
-    /* ค้นหารายชื่ออาจารย์เฉพาะตอนพิมพ์คำค้นเท่านั้น — เวลาแค่เลือกสาขาเพื่อดูรายชื่อ นศ. ทั้งหมดไม่ควรขึ้นผลอาจารย์มาปน
-       และซ่อนผลค้นหาอาจารย์สำหรับเจ้าหน้าที่สาขา เพราะรายงานที่ปรึกษาจะรวมนักศึกษาข้ามสาขาได้ (อาจารย์คนหนึ่งดูแลได้หลายสาขา) ซึ่งขัดกับเจตนาการจำกัดสิทธิ์ */
-    var advisorMatches = (q && !currentDeptRestriction) ? (masterData.advisors||[]).filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : [];
     container.innerHTML='';
     emptyEl.textContent = 'ไม่พบนักศึกษาที่ตรงกับคำค้นหา';
     emptyEl.classList.remove('is-loading');
-    emptyEl.style.display = (list.length===0 && advisorMatches.length===0) ? '' : 'none';
-
-    if(advisorMatches.length){
-      container.appendChild(el('div',{style:'font-size:12px;font-weight:600;color:#64748b;margin:2px 4px 4px;', text:'👨‍🏫 อาจารย์ที่ปรึกษา'}));
-      advisorMatches.forEach(function(advisor){
-        var item = el('div',{class:'lookup-item'},[
-          el('div',{class:'li-main'},[
-            el('span',{class:'li-name', text:advisor.name}),
-            el('span',{class:'li-sub', text:(advisor.rank?advisor.rank+' • ':'')+'ดูรายงานที่ปรึกษา'})
-          ]),
-          el('span',{class:'li-count', text:'📋 รายงาน'})
-        ]);
-        item.addEventListener('click', function(){
-          document.querySelectorAll('.lookup-item').forEach(function(x){ x.classList.remove('active'); });
-          item.classList.add('active');
-          selectLookupAdvisor(advisor);
-        });
-        container.appendChild(item);
-      });
-      if(list.length) container.appendChild(el('div',{style:'font-size:12px;font-weight:600;color:#64748b;margin:12px 4px 4px;', text:'🎓 นักศึกษา'}));
-    }
+    emptyEl.style.display = (list.length===0) ? '' : 'none';
 
     /* แบ่งหน้ารายชื่อนักศึกษาทีละ LIST_PAGE_SIZE คน (เหมือนหน้ารายการทั้งหมด) กันหน้ายาวเกินไปเวลาเลือกดูทั้งสาขาที่มี นศ. เยอะ */
     var totalPages = Math.max(1, Math.ceil(list.length / LIST_PAGE_SIZE));
@@ -2314,8 +2307,41 @@ function renderLookupList(){
 function selectLookupAdvisor(advisor){
   getAdvisorReport(advisor).then(function(rep){ renderAdvisorProfile(advisor, rep); });
 }
+/* หน้าค้นหาอาจารย์ที่ปรึกษาแยกเป็นแท็บของตัวเอง (👨‍🏫 ที่ปรึกษา) — แสดงรายชื่ออาจารย์ทั้งหมด (กรองได้ด้วยช่องค้นหา)
+   พร้อมโควตาที่ใช้อยู่ ณ ตอนนี้ กดที่ชื่อเพื่อดูรายงานที่ปรึกษาแบบละเอียด (renderAdvisorProfile ด้านล่าง) */
+function renderAdvisorLookupResults(){
+  var q = (document.getElementById('advisorLookupSearch').value||'').trim().toLowerCase();
+  var container = document.getElementById('advisorLookupResultList');
+  var emptyEl = document.getElementById('advisorLookupEmpty');
+  var all = (masterData.advisors||[]).slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','th'); });
+  var list = q ? all.filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : all;
+  container.innerHTML='';
+  if(all.length===0){
+    emptyEl.textContent = 'ยังไม่มีข้อมูลอาจารย์ที่ปรึกษาในระบบ — เพิ่มได้ที่หน้าตั้งค่า';
+    emptyEl.style.display='';
+    return;
+  }
+  emptyEl.textContent = 'ไม่พบชื่อที่ตรงกับคำค้นหา';
+  emptyEl.style.display = list.length===0 ? '' : 'none';
+  list.forEach(function(advisor){
+    var quotaTxt = advisorQuotaBadgeText(advisor);
+    var item = el('div',{class:'lookup-item'},[
+      el('div',{class:'li-main'},[
+        el('span',{class:'li-name', text:advisor.name}),
+        el('span',{class:'li-sub', text:(advisor.rank||'ยังไม่ระบุตำแหน่งทางวิชาการ')+(quotaTxt?' • '+quotaTxt:'')})
+      ]),
+      el('span',{class:'li-count', text:'📋 รายงาน'})
+    ]);
+    item.addEventListener('click', function(){
+      document.querySelectorAll('#advisorLookupResultList .lookup-item').forEach(function(x){ x.classList.remove('active'); });
+      item.classList.add('active');
+      selectLookupAdvisor(advisor);
+    });
+    container.appendChild(item);
+  });
+}
 function renderAdvisorProfile(advisor, rep){
-  var wrap = document.getElementById('lookupDetail');
+  var wrap = document.getElementById('advisorLookupDetail');
   wrap.innerHTML='';
   var total = rep.graduated.length + rep.active.length;
   var header = el('div',{class:'card section-card'},[
@@ -2344,6 +2370,7 @@ function renderAdvisorProfile(advisor, rep){
           el('span',{class:'li-count', text:'ดูข้อมูล →'})
         ]);
         item.addEventListener('click', function(){
+          switchView('dashboard');
           document.getElementById('lookupSearch').value = s.studentId;
           renderLookupList();
           selectLookupStudent(s.studentId);

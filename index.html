@@ -611,6 +611,10 @@
     </div>
     <div class="help" id="m_advisor_count" style="margin:6px 0 2px;"></div>
     <div class="chip-list" id="m_advisors" style="margin-top:8px;"></div>
+    <div id="advisorListPagination" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorListPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorListNext">ถัดไป ›</button>
+    </div>
   </div>
 </section>
 
@@ -4974,7 +4978,9 @@ function bindSettingsEvents(){
       document.getElementById('btnAddAdvisor').disabled=false;
     });
   });
-  document.getElementById('m_advisor_search').addEventListener('input', function(){ renderAdvisorList(); });
+  document.getElementById('m_advisor_search').addEventListener('input', function(){ advisorListPage=0; renderAdvisorList(); });
+  document.getElementById('btnAdvisorListPrev').addEventListener('click', function(){ if(advisorListPage>0){ advisorListPage--; renderAdvisorList(); } });
+  document.getElementById('btnAdvisorListNext').addEventListener('click', function(){ advisorListPage++; renderAdvisorList(); });
   document.getElementById('btnAddPosition').addEventListener('click', function(){
     var input = document.getElementById('m_position_input');
     var name = input.value.trim();
@@ -5276,7 +5282,8 @@ function openAdvisorReportModal(advisor){
     root.appendChild(backdrop);
   });
 }
-var ADVISOR_LIST_DEFAULT_CAP = 10;
+var ADVISOR_LIST_PAGE_SIZE = 20;
+var advisorListPage = 0; /* หน้าปัจจุบัน (เริ่มที่ 0) — แสดงทีละ ADVISOR_LIST_PAGE_SIZE รายชื่อ กันหน้ายาวเกินไปเวลามีรายชื่อเยอะ (เหมือนหน้ารายการทั้งหมด) */
 function renderAdvisorList(){
   var container = document.getElementById('m_advisors');
   var countEl = document.getElementById('m_advisor_count');
@@ -5285,16 +5292,28 @@ function renderAdvisorList(){
   container.innerHTML='';
   var all = masterData.advisors || [];
   var filtered = q ? all.filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : all;
-  var capped = q ? filtered : filtered.slice(0, ADVISOR_LIST_DEFAULT_CAP);
+
+  var totalPages = Math.max(1, Math.ceil(filtered.length / ADVISOR_LIST_PAGE_SIZE));
+  if(advisorListPage >= totalPages) advisorListPage = totalPages - 1;
+  if(advisorListPage < 0) advisorListPage = 0;
+  var startIdx = advisorListPage * ADVISOR_LIST_PAGE_SIZE;
+  var capped = filtered.slice(startIdx, startIdx + ADVISOR_LIST_PAGE_SIZE);
 
   if(countEl){
-    if(q){
-      countEl.textContent = 'พบ '+filtered.length+' รายชื่อ จากทั้งหมด '+all.length+' รายชื่อ';
-    } else if(all.length > ADVISOR_LIST_DEFAULT_CAP){
-      countEl.textContent = 'แสดง '+capped.length+' จากทั้งหมด '+all.length+' รายชื่อ — พิมพ์ในช่องค้นหาด้านบนเพื่อหาชื่อที่ต้องการ';
+    if(filtered.length===0){
+      countEl.textContent = q ? 'ไม่พบรายชื่อที่ตรงกับคำค้นหา' : 'ยังไม่มีรายชื่ออาจารย์';
     } else {
-      countEl.textContent = 'ทั้งหมด '+all.length+' รายชื่อ';
+      var pageTxt = totalPages>1 ? ' (หน้า '+(advisorListPage+1)+'/'+totalPages+')' : '';
+      countEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+capped.length)+' จาก '+filtered.length+' รายชื่อ'+pageTxt;
     }
+  }
+  var prevBtn = document.getElementById('btnAdvisorListPrev');
+  var nextBtn = document.getElementById('btnAdvisorListNext');
+  var pagerEl = document.getElementById('advisorListPagination');
+  if(prevBtn && nextBtn && pagerEl){
+    prevBtn.disabled = advisorListPage<=0;
+    nextBtn.disabled = advisorListPage>=totalPages-1;
+    pagerEl.style.display = filtered.length > ADVISOR_LIST_PAGE_SIZE ? 'flex' : 'none';
   }
 
   capped.forEach(function(advisor){

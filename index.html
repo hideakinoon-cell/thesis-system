@@ -5345,8 +5345,13 @@ function openAdvisorEditModal(advisor){
   modal.appendChild(nameField);
   var rankOptions = [['','ไม่ระบุ (ไม่คำนวณโควตา)'],['ดร.','ดร. (โควตา 5 คน)'],['ผศ.','ผศ. (โควตา 10 คน)'],['รศ.','รศ. (โควตา 10 คน)'],['ศ.','ศ. (โควตา 10 คน)']];
   var rankSelect = el('select',{id:'editAdvisorRank'}, rankOptions.map(function(o){
-    return el('option',{value:o[0], text:o[1], selected:(advisor.rank||'')===o[0]?'selected':null});
+    return el('option',{value:o[0], text:o[1]});
   }));
+  /* ตั้งตำแหน่งที่เลือกไว้ผ่าน .value แทนการใส่ attribute selected ตอนสร้าง — เดิม setAttribute('selected', null)
+     กลายเป็น string "null" (ทำให้ attribute ติดอยู่จริง) ทุก option เลยมี selected ติดหมด แล้วตัวเลือกตัวสุดท้าย (ศ.)
+     ในลำดับ insertion จะเป็นตัวที่ถูกเลือกจริงเสมอไม่ว่าตำแหน่งจริงของอาจารย์จะเป็นอะไร แก้บั๊ก: เลือก ผศ. แล้วบันทึก
+     พอเปิดแก้ไขอีกครั้งกลับเห็น ศ. ถูกเลือกอยู่ (และถ้ากดบันทึกซ้ำโดยไม่สังเกต จะทับข้อมูลจริงเป็น ศ. ไปเลย) */
+  rankSelect.value = advisor.rank || '';
   var rankField = el('div',{class:'field'},[
     el('label',{text:'ตำแหน่งทางวิชาการ (ใช้คำนวณโควตาที่ปรึกษา)'}),
     rankSelect

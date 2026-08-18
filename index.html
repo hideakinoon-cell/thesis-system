@@ -2510,30 +2510,52 @@ function renderAdvisorProfile(advisor, rep){
   ]);
   wrap.appendChild(header);
 
+  /* จัดกลุ่มรายชื่อ นศ. ตามแผนการเรียน (เช่น แบบ 2.1, แผน ข) เรียงตามลำดับที่ตั้งไว้ใน masterData.plans
+     ก่อน แล้วตามด้วยแผนอื่นที่ไม่รู้จัก (ถ้ามี) และปิดท้ายด้วยกลุ่ม "ไม่ระบุแผน" */
+  function groupByPlan(list){
+    var groups = {};
+    var order = [];
+    list.forEach(function(s){
+      var key = s.plan || '';
+      if(!groups[key]){ groups[key] = []; order.push(key); }
+      groups[key].push(s);
+    });
+    var planOrder = masterData.plans || [];
+    order.sort(function(a,b){
+      var ia = a ? planOrder.indexOf(a) : 999998; if(ia===-1) ia = 999997;
+      var ib = b ? planOrder.indexOf(b) : 999998; if(ib===-1) ib = 999997;
+      if(ia!==ib) return ia-ib;
+      return a.localeCompare(b,'th');
+    });
+    return order.map(function(k){ return {plan:k, items:groups[k]}; });
+  }
   function studentSection(title, list){
     var card = el('div',{class:'card section-card'});
     card.appendChild(el('h3',{text:title+' ('+list.length+' คน)'}));
     if(!list.length){
       card.appendChild(el('div',{class:'empty-state', text:'ไม่มีข้อมูล'}));
     } else {
-      var listEl = el('div',{class:'lookup-result-list'});
-      list.forEach(function(s){
-        var item = el('div',{class:'lookup-item'},[
-          el('div',{class:'li-main'},[
-            el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
-            el('span',{class:'li-sub', text:s.studentId+(s.plan?' • '+s.plan:'')})
-          ]),
-          el('span',{class:'li-count', text:'ดูข้อมูล →'})
-        ]);
-        item.addEventListener('click', function(){
-          switchView('dashboard');
-          document.getElementById('lookupSearch').value = s.studentId;
-          renderLookupList();
-          selectLookupStudent(s.studentId);
+      groupByPlan(list).forEach(function(g){
+        card.appendChild(el('div',{style:'font-weight:600;font-size:13px;color:var(--muted);margin:10px 0 4px;', text:(g.plan||'ไม่ระบุแผน')+' ('+g.items.length+' คน)'}));
+        var listEl = el('div',{class:'lookup-result-list'});
+        g.items.forEach(function(s){
+          var item = el('div',{class:'lookup-item'},[
+            el('div',{class:'li-main'},[
+              el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
+              el('span',{class:'li-sub', text:s.studentId})
+            ]),
+            el('span',{class:'li-count', text:'ดูข้อมูล →'})
+          ]);
+          item.addEventListener('click', function(){
+            switchView('dashboard');
+            document.getElementById('lookupSearch').value = s.studentId;
+            renderLookupList();
+            selectLookupStudent(s.studentId);
+          });
+          listEl.appendChild(item);
         });
-        listEl.appendChild(item);
+        card.appendChild(listEl);
       });
-      card.appendChild(listEl);
     }
     wrap.appendChild(card);
   }

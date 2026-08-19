@@ -2645,8 +2645,6 @@ function kvFileLink(label, file){
    ของสิ่งที่ยังขาด (ไม่ใช่การบังคับกรอก แค่ช่วยเจ้าหน้าที่เช็คก่อนถือว่าเคสนี้เรียบร้อย) */
 function computeMissingItems(rec){
   var missing = [];
-  if(!rec.englishResult) missing.push('ยังไม่ระบุผลภาษาอังกฤษ');
-  if(!rec.computerResult) missing.push('ยังไม่ระบุผลคอมพิวเตอร์');
   if(!rec.mainAdvisor) missing.push('ยังไม่ระบุอาจารย์ที่ปรึกษาหลัก');
   if(!rec.titleTh) missing.push('ยังไม่ระบุหัวข้อวิทยานิพนธ์ (ภาษาไทย)');
   /* แผน ข = การค้นคว้าอิสระ ไม่มีขั้นตอนสอบเค้าโครง (3.1) แบบเป็นทางการเหมือนวิทยานิพนธ์ (ใช้แบบฟอร์ม บว.25 แทน ซึ่งไม่บังคับ)

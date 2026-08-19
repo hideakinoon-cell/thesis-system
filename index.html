@@ -736,14 +736,26 @@
     <h4>หมวดที่ 1.1: เกณฑ์สำเร็จการศึกษา</h4>
     <div class="grid">
       <div class="field full">
-        <label>ผลภาษาอังกฤษ <span class="req">*</span></label>
-        <div class="combo"><input type="text" id="f_englishResult" placeholder="พิมพ์ผลเอง เช่น สอบผ่าน, เรียนผ่าน, ไม่ผ่าน, ยกเว้น/เทียบเท่า"></div>
-        <div class="combo" style="margin-top:8px;"><input type="text" id="f_englishScore" placeholder="คะแนน (ถ้ามี)"></div>
+        <label>ผลภาษาอังกฤษ</label>
+        <div class="radio-group" id="g_englishResult">
+          <label><input type="radio" name="englishResult" value="สอบผ่าน"> สอบผ่าน</label>
+          <label><input type="radio" name="englishResult" value="เรียนผ่าน"> เรียนผ่าน</label>
+          <label><input type="radio" name="englishResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+          <label><input type="radio" name="englishResult" value="ยกเว้น/เทียบเท่า"> ยกเว้น/เทียบเท่า
+            <input type="text" id="f_englishScore" placeholder="คะแนน" disabled>
+          </label>
+        </div>
+        <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบภาษาอังกฤษ</div>
         <div class="combo" style="margin-top:8px;"><input type="text" id="f_englishDocLink" placeholder="ลิงก์เอกสารแนบผลภาษาอังกฤษ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
       </div>
       <div class="field full">
-        <label>ผลคอมพิวเตอร์ <span class="req">*</span></label>
-        <div class="combo"><input type="text" id="f_computerResult" placeholder="พิมพ์ผลเอง เช่น สอบผ่าน, เรียนผ่าน, ไม่ผ่าน"></div>
+        <label>ผลคอมพิวเตอร์</label>
+        <div class="radio-group" id="g_computerResult">
+          <label><input type="radio" name="computerResult" value="สอบผ่าน"> สอบผ่าน</label>
+          <label><input type="radio" name="computerResult" value="เรียนผ่าน"> เรียนผ่าน</label>
+          <label><input type="radio" name="computerResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+        </div>
+        <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบคอมพิวเตอร์</div>
         <div class="combo" style="margin-top:8px;"><input type="text" id="f_computerDocLink" placeholder="ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
       </div>
       <div class="field full">
@@ -3466,6 +3478,13 @@ function bindFormEvents(){
   document.getElementById('p_btnToggleBw25').addEventListener('click', function(){
     setBw25FieldsVisible(document.getElementById('p_bw25Fields').style.display==='none');
   });
+  document.getElementById('g_englishResult').addEventListener('change', function(e){
+    if(e.target && e.target.name==='englishResult'){
+      var scoreInput = document.getElementById('f_englishScore');
+      scoreInput.disabled = (e.target.value!=='ยกเว้น/เทียบเท่า');
+      if(scoreInput.disabled) scoreInput.value='';
+    }
+  });
 }
 /* บว.25 ใช้เฉพาะแผน ข (การค้นคว้าอิสระ) วิทยานิพนธ์ไม่ต้องใช้ — เก็บซ่อนไว้เป็นค่าเริ่มต้น เจ้าหน้าที่กด "+" เพื่อเปิดกรอกเองเมื่อจำเป็นเท่านั้น
    แต่ถ้าโหลดข้อมูลที่เคยกรอก บว.25 ไว้แล้ว (เช่น นศ. แผน ข ที่มีข้อมูลอยู่ก่อน) ให้เปิดให้เห็นอัตโนมัติ ไม่ซ่อนข้อมูลที่มีอยู่แล้ว */
@@ -3695,10 +3714,11 @@ function resetFormFields(){
   document.getElementById('f_plan').value='';
   document.getElementById('f_program').value='';
   document.getElementById('f_department').value='';
-  document.getElementById('f_englishResult').value='';
+  uncheckRadioGroup('englishResult');
   document.getElementById('f_englishScore').value='';
+  document.getElementById('f_englishScore').disabled=true;
   document.getElementById('f_englishDocLink').value='';
-  document.getElementById('f_computerResult').value='';
+  uncheckRadioGroup('computerResult');
   document.getElementById('f_computerDocLink').value='';
   uncheckRadioGroup('qualifyingExam');
   document.getElementById('f_qualifyingDocLink').value='';
@@ -3739,10 +3759,13 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_plan').value = rec.plan||'';
   setSelectValueWithFallback(document.getElementById('f_program'), rec.program||'');
   setSelectValueWithFallback(document.getElementById('f_department'), rec.department||'');
-  document.getElementById('f_englishResult').value = rec.englishResult||'';
+  uncheckRadioGroup('englishResult');
+  var er = document.querySelector('input[name=englishResult][value="'+rec.englishResult+'"]'); if(er) er.checked=true;
   document.getElementById('f_englishScore').value = rec.englishScore||'';
+  document.getElementById('f_englishScore').disabled = (rec.englishResult!=='ยกเว้น/เทียบเท่า');
   document.getElementById('f_englishDocLink').value = rec.englishDocLink||'';
-  document.getElementById('f_computerResult').value = rec.computerResult||'';
+  uncheckRadioGroup('computerResult');
+  var cr = document.querySelector('input[name=computerResult][value="'+rec.computerResult+'"]'); if(cr) cr.checked=true;
   document.getElementById('f_computerDocLink').value = rec.computerDocLink||'';
   uncheckRadioGroup('qualifyingExam');
   var qe = document.querySelector('input[name=qualifyingExam][value="'+rec.qualifyingExam+'"]'); if(qe) qe.checked=true;
@@ -3851,10 +3874,13 @@ function searchExistingStudent(){
     document.getElementById('f_plan').value = rec.plan||'';
     setSelectValueWithFallback(document.getElementById('f_program'), rec.program||'');
     setSelectValueWithFallback(document.getElementById('f_department'), rec.department||'');
-    document.getElementById('f_englishResult').value = rec.englishResult||'';
+    uncheckRadioGroup('englishResult');
+    var er = document.querySelector('input[name=englishResult][value="'+rec.englishResult+'"]'); if(er) er.checked=true;
     document.getElementById('f_englishScore').value = rec.englishScore||'';
+    document.getElementById('f_englishScore').disabled = (rec.englishResult!=='ยกเว้น/เทียบเท่า');
     document.getElementById('f_englishDocLink').value = rec.englishDocLink||'';
-    document.getElementById('f_computerResult').value = rec.computerResult||'';
+    uncheckRadioGroup('computerResult');
+    var cr = document.querySelector('input[name=computerResult][value="'+rec.computerResult+'"]'); if(cr) cr.checked=true;
     document.getElementById('f_computerDocLink').value = rec.computerDocLink||'';
     uncheckRadioGroup('qualifyingExam');
     var qe = document.querySelector('input[name=qualifyingExam][value="'+rec.qualifyingExam+'"]'); if(qe) qe.checked=true;
@@ -3902,8 +3928,6 @@ function validateForm(){
   if(!document.getElementById('f_studentName').value.trim()) return 'กรุณากรอกชื่อ-นามสกุล';
   if(!document.getElementById('f_program').value) return 'กรุณาเลือกหลักสูตร';
   if(!document.getElementById('f_department').value) return 'กรุณาเลือกสาขาวิชา';
-  if(!document.getElementById('f_englishResult').value.trim()) return 'กรุณากรอกผลภาษาอังกฤษ';
-  if(!document.getElementById('f_computerResult').value.trim()) return 'กรุณากรอกผลคอมพิวเตอร์';
   /* ตั้งแต่หมวดที่ 2 ลงไป (ที่ปรึกษาหลัก/หัวข้อ, หมวด 3.1/3.2, บว.25) ไม่บังคับกรอกก่อนบันทึกอีกต่อไป
      เพราะนักศึกษาบางคนยังไม่มีที่ปรึกษา/ยังไม่ถึงกำหนดสอบ แต่ผ่านเกณฑ์อื่น (เช่น คอมพิวเตอร์/ภาษาอังกฤษ) แล้ว
      จึงต้องบันทึกข้อมูลบางส่วนไว้ก่อนได้ แล้วค่อยกลับมาเติมส่วนที่เหลือทีหลัง
@@ -3940,10 +3964,10 @@ function collectFormData(){
     plan: document.getElementById('f_plan').value,
     program: document.getElementById('f_program').value,
     department: document.getElementById('f_department').value,
-    englishResult: document.getElementById('f_englishResult').value.trim(),
+    englishResult: (document.querySelector('input[name=englishResult]:checked')||{}).value||'',
     englishScore: document.getElementById('f_englishScore').value,
     englishDocLink: document.getElementById('f_englishDocLink').value.trim(),
-    computerResult: document.getElementById('f_computerResult').value.trim(),
+    computerResult: (document.querySelector('input[name=computerResult]:checked')||{}).value||'',
     computerDocLink: document.getElementById('f_computerDocLink').value.trim(),
     qualifyingExam: (document.querySelector('input[name=qualifyingExam]:checked')||{}).value||'',
     qualifyingDocLink: document.getElementById('f_qualifyingDocLink').value.trim(),

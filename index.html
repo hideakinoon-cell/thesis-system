@@ -2392,7 +2392,9 @@ function renderOrUpdateDonutChart(canvasId, chartKey, labels, values, colors, em
   });
 }
 function renderSummaryDashboard(){
-  return recordsGetAll().then(function(rows){
+  return Promise.all([recordsGetAll(), docIntakeGetAll().catch(function(){ return []; })]).then(function(results){
+    var rows = results[0];
+    var diRowsForAction = results[1];
     var latestByStudent = {};
     rows.forEach(function(r){
       if(!r.studentId) return;
@@ -2553,6 +2555,21 @@ function renderSummaryDashboard(){
         text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน)'
       });
     });
+
+    /* แถบเตือนเอกสารรับเข้า (บว.04/บว.25 ฯลฯ) ที่ยังไม่ดำเนินการเสร็จสิ้นนานเกิน STALE_DOC_INTAKE_DAYS —
+       ช่วยไม่ให้เรื่องที่รับไว้ตกหล่นค้างอยู่ในหน้าลงทะเบียนรับเอกสารโดยไม่มีใครติดตาม (ดึงข้อมูลมาพร้อมกับ records ด้านบนแล้ว) */
+    var STALE_DOC_INTAKE_DAYS = 5;
+    (diRowsForAction||[]).forEach(function(d){
+      if(d.deleted || d.status==='done' || !d.receivedDate) return;
+      var rd = new Date(d.receivedDate+'T00:00:00');
+      if(isNaN(rd.getTime())) return;
+      var daysSince = Math.floor((nowTs-rd.getTime())/86400000);
+      if(daysSince < STALE_DOC_INTAKE_DAYS) return;
+      actionItems.push({
+        doc:d, tier:4, sortKey: -daysSince, icon:'🟣',
+        text: (d.intakeNo?('เลขรับ '+d.intakeNo+' — '):'')+(d.studentName||d.studentId||'(ไม่ระบุชื่อ)')+' ('+(d.docType||'เอกสาร')+' • '+docStatusLabel(d.status)+' • รับเรื่องมาแล้ว '+daysSince+' วัน)'
+      });
+    });
     actionItems.sort(function(a,b){ return a.tier!==b.tier ? a.tier-b.tier : a.sortKey-b.sortKey; });
     renderTodayActionCard(actionItems);
 
@@ -2577,7 +2594,7 @@ function renderSummaryDashboard(){
   });
 }
 var lastTodayActionItems = []; /* เก็บลิสต์ล่าสุดที่แสดงในการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ใช้ตอนกดส่งออก Excel โดยไม่ต้องคำนวณซ้ำ */
-var TODAY_ACTION_TIER_LABELS = {0:'เลยกำหนดส่งเล่ม', 1:'ถอนที่ปรึกษายังไม่แต่งตั้งใหม่', 2:'รอผลสอบเกิน 7 วัน', 3:'ใกล้ครบกำหนดส่งเล่ม'};
+var TODAY_ACTION_TIER_LABELS = {0:'เลยกำหนดส่งเล่ม', 1:'ถอนที่ปรึกษายังไม่แต่งตั้งใหม่', 2:'รอผลสอบเกิน 7 วัน', 3:'ใกล้ครบกำหนดส่งเล่ม', 4:'เอกสารค้างดำเนินการ'};
 function renderTodayActionCard(list){
   var card = document.getElementById('todayActionCard');
   var box = document.getElementById('todayActionList');
@@ -2587,9 +2604,16 @@ function renderTodayActionCard(list){
   card.style.display='';
   list.forEach(function(item){
     var r = item.rec;
+    var d = item.doc;
     box.appendChild(el('div',{class:'attach-item'},[
       el('span',{class:'name', text:item.icon+' '+item.text}),
-      el('button',{type:'button', class:'link-btn', text:'ดูโปรไฟล์', onclick:function(){
+      el('button',{type:'button', class:'link-btn', text: d ? 'ดูรายการ' : 'ดูโปรไฟล์', onclick:function(){
+        if(d){
+          switchView('docintake');
+          document.getElementById('di_filterSearch').value = d.studentId || d.studentName || '';
+          renderDocIntakeList();
+          return;
+        }
         switchView('dashboard');
         document.getElementById('lookupSearch').value = r.studentId;
         selectLookupStudent(r.studentId);
@@ -2602,7 +2626,7 @@ function renderTodayActionCard(list){
 function exportTodayActionExcel(){
   if(!lastTodayActionItems.length){ toast('ไม่มีรายการให้ส่งออกในขณะนี้', true); return; }
   var aoa = [['ลำดับความสำคัญ','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','รายละเอียด']].concat(lastTodayActionItems.map(function(item){
-    var r = item.rec;
+    var r = item.rec || item.doc || {};
     return [TODAY_ACTION_TIER_LABELS[item.tier]||'', r.studentId||'', r.studentName||'', r.department||'', item.text];
   }));
   var wb = XLSX.utils.book_new();

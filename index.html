@@ -510,6 +510,11 @@
     <div id="dueDateWarningList"></div>
   </div>
 
+  <div class="card" id="pendingResultWarningCard" style="display:none;border-left:4px solid #F7B9C2;">
+    <h3>⏳ รอผลสอบ 3.1/3.2 เกิน 7 วัน</h3>
+    <div id="pendingResultWarningList"></div>
+  </div>
+
   <div class="card">
     <div class="dash-legend">
       <span>สัดส่วนในแต่ละหมวดด้านล่าง:</span>
@@ -1016,6 +1021,7 @@
         <option value="ผ่าน">ผ่าน</option>
         <option value="ผ่านแบบมีเงื่อนไข">ผ่านแบบมีเงื่อนไข</option>
         <option value="ไม่ผ่าน">ไม่ผ่าน</option>
+        <option value="รอผล">รอผล (สอบแล้วยังไม่มีผล)</option>
       </select>
       <div class="spacer"></div>
       <button class="btn btn-secondary btn-sm" id="btnExportCsv">⬇ CSV</button>
@@ -2287,6 +2293,29 @@ function renderSummaryDashboard(){
     }).sort(function(a,b){ return a.daysLeft-b.daysLeft; });
     renderDueDateWarningCard(dueSoonList);
 
+    /* แถบเตือนรอผลสอบ 3.1/3.2 — สอบไปแล้ว (มีวันที่สอบ) แต่ยังไม่มีผลสอบบันทึกไว้ เกินระยะเวลาผ่อนผัน PENDING_RESULT_GRACE_DAYS
+       ช่วยให้เจ้าหน้าที่ไม่ต้องไล่เช็คทีละคนเมื่อมีนักศึกษาสอบจำนวนมาก */
+    var PENDING_RESULT_GRACE_DAYS = 7;
+    var pendingResultList = [];
+    students.forEach(function(r){
+      if(recHasProposalData(r) && !r.proposalResult && r.proposalDate){
+        var pd = new Date(r.proposalDate+'T00:00:00');
+        if(!isNaN(pd.getTime())){
+          var daysSince = Math.floor((nowTs-pd.getTime())/86400000);
+          if(daysSince >= PENDING_RESULT_GRACE_DAYS) pendingResultList.push({rec:r, typeTxt:'สอบเค้าโครง (3.1)', date:r.proposalDate, daysSince:daysSince});
+        }
+      }
+      if(recHasDefenseData(r) && !r.defenseResult && r.defenseDate){
+        var dd = new Date(r.defenseDate+'T00:00:00');
+        if(!isNaN(dd.getTime())){
+          var daysSince2 = Math.floor((nowTs-dd.getTime())/86400000);
+          if(daysSince2 >= PENDING_RESULT_GRACE_DAYS) pendingResultList.push({rec:r, typeTxt:'สอบป้องกัน/IS (3.2)', date:r.defenseDate, daysSince:daysSince2});
+        }
+      }
+    });
+    pendingResultList.sort(function(a,b){ return b.daysSince-a.daysSince; });
+    renderPendingResultWarningCard(pendingResultList);
+
     /* กราฟสรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
     var proposalStats = {'ผ่าน':0, 'ไม่ผ่าน':0, 'รอผล':0};
     var defenseStats = {'ผ่าน':0, 'ผ่านแบบมีเงื่อนไข':0, 'ไม่ผ่าน':0, 'รอผล':0};
@@ -2319,6 +2348,24 @@ function renderDueDateWarningCard(list){
     var statusTxt = overdue ? ('เลยกำหนดแล้ว '+Math.abs(item.daysLeft)+' วัน') : (item.daysLeft===0 ? 'ครบกำหนดวันนี้' : 'เหลืออีก '+item.daysLeft+' วัน');
     box.appendChild(el('div',{class:'attach-item'},[
       el('span',{class:'name', text:(overdue?'🔴 ':'🟡 ')+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' (กำหนดส่งเล่ม '+toBuddhistDateStr(r.defenseDueDate)+' • '+statusTxt+')'}),
+      el('button',{type:'button', class:'link-btn', text:'ดูโปรไฟล์', onclick:function(){
+        switchView('dashboard');
+        document.getElementById('lookupSearch').value = r.studentId;
+        selectLookupStudent(r.studentId);
+      }})
+    ]));
+  });
+}
+function renderPendingResultWarningCard(list){
+  var card = document.getElementById('pendingResultWarningCard');
+  var box = document.getElementById('pendingResultWarningList');
+  box.innerHTML='';
+  if(!list.length){ card.style.display='none'; return; }
+  card.style.display='';
+  list.forEach(function(item){
+    var r = item.rec;
+    box.appendChild(el('div',{class:'attach-item'},[
+      el('span',{class:'name', text:'🔴 '+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน)'}),
       el('button',{type:'button', class:'link-btn', text:'ดูโปรไฟล์', onclick:function(){
         switchView('dashboard');
         document.getElementById('lookupSearch').value = r.studentId;
@@ -4302,7 +4349,10 @@ function getFilteredRecords(){
       var hasP = recHasProposalData(r), hasD = recHasDefenseData(r);
       if(typeF==='proposal' && !hasP) return false;
       if(typeF==='defense' && !hasD) return false;
-      if(resultF){
+      if(resultF==='รอผล'){
+        var matchesWait = (hasP && !r.proposalResult) || (hasD && !r.defenseResult);
+        if(!matchesWait) return false;
+      } else if(resultF){
         var matchesResult = (hasP && r.proposalResult===resultF) || (hasD && r.defenseResult===resultF);
         if(!matchesResult) return false;
       }

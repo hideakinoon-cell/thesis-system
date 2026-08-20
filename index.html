@@ -1027,6 +1027,7 @@
       <button class="btn btn-secondary btn-sm" id="btnExportCsv">⬇ CSV</button>
       <button class="btn btn-accent btn-sm" id="btnExportXlsx">⬇ Excel</button>
       <button class="btn btn-secondary btn-sm" id="btnImportBulk">📥 นำเข้าข้อมูล</button>
+      <button class="btn btn-secondary btn-sm" id="btnBulkAttachLink">📎 แนบลิงก์ประกาศ (กลุ่ม)</button>
       <button class="btn btn-primary btn-sm" id="btnNewFromList">＋ เพิ่มข้อมูลใหม่</button>
     </div>
     <div style="overflow-x:auto;">
@@ -1779,6 +1780,206 @@ function initDocLinkAutocompletes(){
   attachDocLinkAutocomplete('f_englishDocLink', 'englishDocLink');
   attachDocLinkAutocomplete('f_computerDocLink', 'computerDocLink');
   attachDocLinkAutocomplete('f_qualifyingDocLink', 'qualifyingDocLink');
+}
+
+/* ================= แนบลิงก์ประกาศแบบกลุ่ม (bulk attach) =================
+   ประกาศผลสอบ (อังกฤษ/คอมพิวเตอร์/ประมวลความรู้) แต่ละฉบับมักมี นศ. หลายสิบคนอยู่ในฉบับเดียวกัน
+   เครื่องมือนี้ให้เจ้าหน้าที่เลือก นศ. หลายคนพร้อมกัน แล้วแนบลิงก์ประกาศ (และตั้งผลสอบถ้าต้องการ) ให้ทุกคนในครั้งเดียว
+   แทนที่จะต้องเปิดฟอร์มแก้ไขทีละคน — ในโหมดกลาง (Google Sheets) ใช้ batchUpdate 1 คำขอเดียวเหมือนฟีเจอร์นำเข้าข้อมูล
+   เพื่อไม่ให้ชนโควตา 60 ครั้ง/นาที/ผู้ใช้ ของ Google Sheets API */
+var BULK_ATTACH_FIELD_MAP = {
+  englishDocLink: { resultField:'englishResult', label:'ผลภาษาอังกฤษ', resultOptions:['สอบผ่าน','เรียนผ่าน','อบรม','ไม่ผ่าน','ยกเว้น/เทียบเท่า'] },
+  computerDocLink: { resultField:'computerResult', label:'ผลคอมพิวเตอร์', resultOptions:['สอบผ่าน','เรียนผ่าน','อบรม','ไม่ผ่าน'] },
+  qualifyingDocLink: { resultField:'qualifyingExam', label:'การสอบวัดความรู้', resultOptions:['ผ่านสอบประมวลความรู้ (ป.โท)','ผ่านสอบวัดคุณสมบัติ (ป.เอก)','ยังไม่ผ่าน/อยู่ระหว่างรอผล'] }
+};
+function openBulkAttachModal(){
+  var root = document.getElementById('modalRoot');
+  var backdrop = el('div',{class:'modal-backdrop'});
+  var modal = el('div',{class:'modal', style:'width:min(720px,96vw);'});
+  modal.appendChild(el('h3',{text:'📎 แนบลิงก์ประกาศแบบกลุ่ม'}));
+  modal.appendChild(el('div',{class:'help', text:'เลือกประเภทผลสอบ ใส่ลิงก์ประกาศ แล้วเลือกนักศึกษาที่มีชื่ออยู่ในประกาศฉบับเดียวกัน เพื่อแนบลิงก์ (และตั้งผลสอบถ้าต้องการ) ให้ทุกคนพร้อมกันในครั้งเดียว'}));
+
+  var fieldSelect = el('select',{id:'bulkAttachField'});
+  DOC_LINK_FIELDS.forEach(function(f){ fieldSelect.appendChild(el('option',{value:f, text:DOC_LINK_FIELD_LABELS[f]})); });
+  modal.appendChild(el('div',{class:'field'},[el('label',{text:'ประเภทผลสอบ'}), fieldSelect]));
+
+  var linkInput = el('input',{type:'text', id:'bulkAttachLink', placeholder:'วางลิงก์ประกาศ (เช่น ลิงก์ Google Drive) ที่นี่', list:'bulkAttachLinkSuggestions'});
+  var linkDatalist = el('datalist',{id:'bulkAttachLinkSuggestions'});
+  modal.appendChild(el('div',{class:'field'},[el('label',{text:'ลิงก์ประกาศ'}), linkInput, linkDatalist]));
+
+  var resultSelect = el('select',{id:'bulkAttachResult'});
+  modal.appendChild(el('div',{class:'field'},[el('label',{text:'ตั้งผลสอบให้ทุกคนพร้อมกันด้วย (ไม่บังคับ)'}), resultSelect]));
+
+  var searchInput = el('input',{type:'text', id:'bulkAttachSearch', placeholder:'ค้นหา รหัส/ชื่อ/สาขา เพื่อกรองรายชื่อด้านล่าง'});
+  modal.appendChild(el('div',{class:'field'},[el('label',{text:'เลือกนักศึกษา'}), searchInput]));
+
+  var selectAllBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'เลือกทั้งหมดที่ค้นหาเจอ'});
+  var clearSelBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'ล้างรายการที่เลือก'});
+  modal.appendChild(el('div',{style:'display:flex;gap:8px;margin:8px 0;'},[selectAllBtn, clearSelBtn]));
+
+  var listBox = el('div',{class:'lookup-result-list', id:'bulkAttachList'});
+  modal.appendChild(listBox);
+
+  var selCountEl = el('div',{class:'help', style:'margin-top:8px;font-weight:600;'});
+  modal.appendChild(selCountEl);
+
+  var statusEl = el('div',{class:'help', style:'margin-top:8px;'});
+  modal.appendChild(statusEl);
+
+  var applyBtn = el('button',{class:'btn btn-primary', text:'แนบให้ทุกคนที่เลือก', id:'btnConfirmBulkAttach'});
+  modal.appendChild(el('div',{class:'form-footer'},[
+    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }}),
+    applyBtn
+  ]));
+
+  backdrop.appendChild(modal);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+  root.appendChild(backdrop);
+
+  var allRows = [];
+  var selectedIds = {}; /* studentId -> true */
+
+  function matchesQuery(r, q){
+    if(!q) return true;
+    var hay = [r.studentId,r.studentName,r.department,r.program].join(' ').toLowerCase();
+    return hay.indexOf(q)>-1;
+  }
+  function refreshResultOptions(){
+    var info = BULK_ATTACH_FIELD_MAP[fieldSelect.value];
+    resultSelect.innerHTML='';
+    resultSelect.appendChild(el('option',{value:'', text:'— ไม่เปลี่ยนผลสอบ —'}));
+    info.resultOptions.forEach(function(opt){ resultSelect.appendChild(el('option',{value:opt, text:opt})); });
+  }
+  function refreshLinkSuggestions(){
+    linkDatalist.innerHTML='';
+    var map = docLinkUsage[fieldSelect.value] || {};
+    Object.keys(map).sort(function(a,b){ return map[b].count-map[a].count; }).slice(0,30).forEach(function(k){
+      linkDatalist.appendChild(el('option',{value:k}));
+    });
+  }
+  function updateSelCount(){
+    selCountEl.textContent = 'เลือกแล้ว '+Object.keys(selectedIds).length+' คน';
+  }
+  function renderRows(){
+    var q = (searchInput.value||'').trim().toLowerCase();
+    var field = fieldSelect.value;
+    listBox.innerHTML='';
+    var filtered = allRows.filter(function(r){ return matchesQuery(r,q); });
+    if(filtered.length===0){
+      listBox.appendChild(el('div',{class:'help', text:'ไม่พบนักศึกษาที่ตรงกับคำค้นหา'}));
+      return;
+    }
+    filtered.forEach(function(r){
+      var hasLink = !!(r[field]||'').trim();
+      var cb = el('input',{type:'checkbox'});
+      cb.checked = !!selectedIds[r.studentId];
+      cb.addEventListener('change', function(){
+        if(cb.checked) selectedIds[r.studentId]=true; else delete selectedIds[r.studentId];
+        updateSelCount();
+      });
+      listBox.appendChild(el('label',{class:'lookup-item'},[
+        cb,
+        el('div',{class:'li-main'},[
+          el('span',{class:'li-name', text:r.studentId+' — '+(r.studentName||'-')}),
+          el('span',{class:'li-sub', text:(r.department||'-')+(hasLink?' • มีลิงก์อยู่แล้ว':'')})
+        ])
+      ]));
+    });
+  }
+  selectAllBtn.addEventListener('click', function(){
+    var q = (searchInput.value||'').trim().toLowerCase();
+    allRows.filter(function(r){ return matchesQuery(r,q); }).forEach(function(r){ selectedIds[r.studentId]=true; });
+    renderRows(); updateSelCount();
+  });
+  clearSelBtn.addEventListener('click', function(){ selectedIds={}; renderRows(); updateSelCount(); });
+  searchInput.addEventListener('input', renderRows);
+  fieldSelect.addEventListener('change', function(){ refreshResultOptions(); refreshLinkSuggestions(); renderRows(); });
+
+  applyBtn.addEventListener('click', function(){
+    var link = (linkInput.value||'').trim();
+    if(!link){ toast('กรุณาใส่ลิงก์ประกาศก่อน', true); return; }
+    var ids = Object.keys(selectedIds);
+    if(ids.length===0){ toast('กรุณาเลือกนักศึกษาอย่างน้อย 1 คน', true); return; }
+    var selectedRecs = allRows.filter(function(r){ return selectedIds[r.studentId]; });
+    runBulkAttach(fieldSelect.value, link, resultSelect.value, selectedRecs, applyBtn, statusEl);
+  });
+
+  statusEl.textContent = 'กำลังโหลดรายชื่อนักศึกษา...';
+  Promise.all([recordsGetAll(), refreshDocLinkSuggestions()]).then(function(results){
+    allRows = (results[0]||[]).filter(function(r){ return !r.deleted && r.studentId; }).sort(function(a,b){
+      return (a.studentName||'').localeCompare(b.studentName||'','th');
+    });
+    statusEl.textContent = '';
+    refreshResultOptions();
+    refreshLinkSuggestions();
+    renderRows();
+    updateSelCount();
+  }).catch(function(e){
+    statusEl.textContent = 'โหลดรายชื่อนักศึกษาไม่สำเร็จ: '+(e&&e.message?e.message:e);
+  });
+}
+function runBulkAttach(field, link, resultVal, selectedRecs, applyBtn, statusEl){
+  var resultField = BULK_ATTACH_FIELD_MAP[field].resultField;
+  var changeLabel = 'แนบลิงก์ประกาศ ('+BULK_ATTACH_FIELD_MAP[field].label+')'+(resultVal?' + ตั้งผลสอบ':'');
+  applyBtn.setAttribute('disabled','disabled');
+  statusEl.textContent = 'กำลังบันทึก...';
+  var auditEntries = [];
+
+  function finish(count){
+    statusEl.textContent = 'แนบลิงก์ให้ '+count+' คน เรียบร้อยแล้ว';
+    toast('แนบลิงก์ประกาศให้ '+count+' คนเรียบร้อยแล้ว');
+    refreshDocLinkSuggestions();
+    renderList();
+    applyBtn.textContent = 'แนบเรียบร้อยแล้ว';
+  }
+  function fail(e){
+    statusEl.textContent = 'เกิดข้อผิดพลาด: '+(e&&e.message?e.message:e);
+    applyBtn.removeAttribute('disabled');
+  }
+
+  if(!cloudModeEnabled){
+    /* โหมดเครื่องเดียว: ไม่มีโควตา เขียนทีละแถวตามเดิมได้ */
+    var chain = Promise.resolve();
+    var count=0;
+    selectedRecs.forEach(function(rec){
+      chain = chain.then(function(){
+        var updated = Object.assign({}, rec);
+        updated[field] = link;
+        if(resultVal) updated[resultField] = resultVal;
+        updated.updatedAt = Date.now();
+        return recordsPut(updated).then(function(){
+          count++;
+          auditEntries.push(makeAuditEntry(changeLabel, rec.studentId, rec.studentName));
+        });
+      });
+    });
+    chain.then(function(){ return logAuditMany(auditEntries); }).then(function(){ finish(count); }).catch(fail);
+    return;
+  }
+
+  /* โหมดกลาง (Google Sheets): รวมเป็น batchUpdate คำขอเดียว เหมือนฟีเจอร์นำเข้าข้อมูล กันชนโควตา */
+  ensureAuthed().then(ensureRecordsHeaderAligned).then(function(){
+    invalidateRecordsSheetCache();
+    return fetchRecordsSheet();
+  }).then(function(cache){
+    var byId = {};
+    cache.entries.forEach(function(e){ if(e.rec.id) byId[e.rec.id]=e; });
+    var updateOps = [];
+    selectedRecs.forEach(function(rec){
+      var entry = rec.id ? byId[rec.id] : null;
+      if(!entry) return;
+      var updated = Object.assign({}, entry.rec);
+      updated[field] = link;
+      if(resultVal) updated[resultField] = resultVal;
+      updated.updatedAt = Date.now();
+      updateOps.push({rowNumber:entry.rowNumber, rowArray:recordToRow(updated, cache.headers)});
+      auditEntries.push(makeAuditEntry(changeLabel, rec.studentId, rec.studentName));
+    });
+    return sheetsBatchUpdateRows('Records', updateOps).then(function(){ return updateOps.length; });
+  }).then(function(count){
+    invalidateRecordsSheetCache();
+    return logAuditMany(auditEntries).then(function(){ finish(count); });
+  }).catch(fail);
 }
 
 /* ================= LOCK SCREEN ================= */
@@ -4337,6 +4538,7 @@ function bindListEvents(){
   document.getElementById('btnListNext').addEventListener('click', function(){ listPage++; renderList(); });
   document.getElementById('btnNewFromList').addEventListener('click', function(){ newDraft(); switchView('form'); });
   document.getElementById('btnImportBulk').addEventListener('click', openImportModal);
+  document.getElementById('btnBulkAttachLink').addEventListener('click', openBulkAttachModal);
   document.getElementById('btnExportCsv').addEventListener('click', function(){ exportData('csv'); });
   document.getElementById('btnExportXlsx').addEventListener('click', function(){ exportData('xlsx'); });
 }

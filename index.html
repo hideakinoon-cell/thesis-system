@@ -6023,7 +6023,15 @@ function renderChipList(containerId, key){
         if(newVal===null) return;
         newVal = newVal.trim();
         if(!newVal || newVal===val) return;
-        if(masterData[key].indexOf(newVal)>-1){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
+        if(masterData[key].indexOf(newVal)>-1){
+          /* พิมพ์ชื่อที่ตรงกับรายการที่มีอยู่แล้วเป๊ะ (เช่น "แผน1 แบบวิชาการ(วิทยานิพนธ์)" -> "แผน 1 แบบวิชาการ (วิทยานิพนธ์)")
+             แทนที่จะบล็อกไว้เฉยๆ ให้ถือเป็นการ "รวมรายการซ้ำ" — ยกเว้นอาจารย์ เพราะชื่อซ้ำกันเป๊ะอาจเป็นคนละคนโดยบังเอิญ
+             จึงยังคงให้แก้ไขผ่านช่องแก้ไขชื่อทีละคน หรือลบ/เพิ่มเองแทน */
+          if(key==='advisors'){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
+          if(!confirm('มี "'+newVal+'" อยู่ในรายการอยู่แล้ว ต้องการรวม "'+val+'" เข้ากับ "'+newVal+'" หรือไม่?\nข้อมูลที่เคยบันทึกไว้ด้วยชื่อ "'+val+'" ทั้งหมดจะถูกเปลี่ยนเป็น "'+newVal+'" และรายการซ้ำจะถูกลบออก')) return;
+          mergeMasterItem(key, val, newVal);
+          return;
+        }
         renameMasterItem(key, val, newVal);
       }}),
       el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){
@@ -6054,13 +6062,45 @@ function renameMasterItem(key, oldVal, newVal){
   saveMasterData().then(function(){
     return deptPinRenameP;
   }).then(function(){
-    return cascadeRenameInRecords(key, oldVal, newVal);
+    return cascadeRenameEverywhere(key, oldVal, newVal);
   }).then(function(updatedCount){
     renderMasterLists();
     renderAllSelects();
     renderList();
     toast('แก้ไขชื่อเรียบร้อย'+(updatedCount>0?' และปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
   });
+}
+/* รวมรายการที่พิมพ์ชื่อซ้ำกับรายการที่มีอยู่แล้วในระบบ (เช่น รายชื่อ "แผนการเรียน" ที่สะกดต่างกันเล็กน้อยจากการนำเข้าข้อมูลหลายครั้ง
+   จนกลายเป็นหลายรายการทั้งที่จริงคืออันเดียวกัน) — ต่างจาก renameMasterItem ตรงที่ newVal มีอยู่แล้วในรายการหลัก จึงแค่ลบ
+   oldVal ออกจากรายการ (ไม่ต้องเพิ่ม/แก้ เพราะ newVal มีอยู่แล้ว) แล้ว cascade เปลี่ยนข้อมูลที่เคยบันทึกไว้ทั้งหมดจาก oldVal
+   เป็น newVal เพื่อไม่ให้ตกหล่น */
+function mergeMasterItem(key, oldVal, newVal){
+  masterData[key] = masterData[key].filter(function(v){ return v!==oldVal; });
+  saveMasterData().then(function(){
+    return cascadeRenameEverywhere(key, oldVal, newVal);
+  }).then(function(updatedCount){
+    renderMasterLists();
+    renderAllSelects();
+    renderList();
+    toast('รวมรายการเรียบร้อย'+(updatedCount>0?' และปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
+  });
+}
+/* เปลี่ยนค่าอ้างอิงในข้อมูลที่เคยบันทึกไว้ทุกที่ที่เกี่ยวข้องกับ master data key นั้นๆ — ครอบคลุมทั้งข้อมูลการสอบ (records)
+   สำหรับ programs/departments/plans/advisors และข้อมูลลงทะเบียนรับเอกสาร (docIntake) สำหรับ documentTypes โดยเฉพาะ
+   (ก่อนหน้านี้การแก้ไข/รวมประเภทเอกสารไม่ได้ปรับปรุงรายการที่เคยลงทะเบียนรับไว้แล้ว ทำให้ค้างชื่อเดิมอยู่) */
+function cascadeRenameEverywhere(key, oldVal, newVal){
+  if(key==='documentTypes'){
+    return docIntakeGetAll().then(function(rows){
+      var updates = [];
+      (rows||[]).forEach(function(d){
+        if(d.docType===oldVal){
+          updates.push(docIntakePut(Object.assign({}, d, {docType:newVal, updatedAt:Date.now()})));
+        }
+      });
+      return Promise.all(updates).then(function(){ return updates.length; });
+    });
+  }
+  return cascadeRenameInRecords(key, oldVal, newVal);
 }
 function cascadeRenameInRecords(key, oldVal, newVal){
   return recordsGetAll().then(function(rows){

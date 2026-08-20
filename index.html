@@ -506,7 +506,10 @@
   </div>
 
   <div class="card" id="todayActionCard" style="display:none;border-left:4px solid #FF9F7A;">
-    <h3>📋 สิ่งที่ต้องทำวันนี้</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h3 style="margin:0;">📋 สิ่งที่ต้องทำวันนี้</h3>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnExportTodayAction">📥 ส่งออก Excel</button>
+    </div>
     <div id="todayActionList"></div>
   </div>
 
@@ -2212,6 +2215,7 @@ function bindNav(){
     dashOverdueOnly = e.target.checked;
     applyDashOverdueToggle();
   });
+  document.getElementById('btnExportTodayAction').addEventListener('click', exportTodayActionExcel);
   /* แถบค้นหา/กรองข้อมูลด้านบนแดชบอร์ดสรุปข้อมูล */
   document.getElementById('dashSearchInput').addEventListener('input', onDashSearchInput);
   document.getElementById('dashSearchInput').addEventListener('blur', function(){
@@ -2572,9 +2576,12 @@ function renderSummaryDashboard(){
     renderOrUpdateDonutChart('chartDefense','defense', defenseLabels, defenseLabels.map(function(k){ return defenseStats[k]; }), defenseLabels.map(function(k){ return SUMMARY_CHART_COLORS.defense[k]; }));
   });
 }
+var lastTodayActionItems = []; /* เก็บลิสต์ล่าสุดที่แสดงในการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ใช้ตอนกดส่งออก Excel โดยไม่ต้องคำนวณซ้ำ */
+var TODAY_ACTION_TIER_LABELS = {0:'เลยกำหนดส่งเล่ม', 1:'ถอนที่ปรึกษายังไม่แต่งตั้งใหม่', 2:'รอผลสอบเกิน 7 วัน', 3:'ใกล้ครบกำหนดส่งเล่ม'};
 function renderTodayActionCard(list){
   var card = document.getElementById('todayActionCard');
   var box = document.getElementById('todayActionList');
+  lastTodayActionItems = list;
   box.innerHTML='';
   if(!list.length){ card.style.display='none'; return; }
   card.style.display='';
@@ -2589,6 +2596,20 @@ function renderTodayActionCard(list){
       }})
     ]));
   });
+}
+/* ส่งออกลิสต์ "สิ่งที่ต้องทำวันนี้" ที่กำลังแสดงอยู่เป็นไฟล์ Excel ไว้ใช้ในที่ประชุม/ส่งต่องานได้ทันที
+   โดยไม่ต้องพิมพ์หน้าจอหรือคัดลอกข้อความเอง */
+function exportTodayActionExcel(){
+  if(!lastTodayActionItems.length){ toast('ไม่มีรายการให้ส่งออกในขณะนี้', true); return; }
+  var aoa = [['ลำดับความสำคัญ','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','รายละเอียด']].concat(lastTodayActionItems.map(function(item){
+    var r = item.rec;
+    return [TODAY_ACTION_TIER_LABELS[item.tier]||'', r.studentId||'', r.studentName||'', r.department||'', item.text];
+  }));
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:26},{wch:14},{wch:26},{wch:22},{wch:60}];
+  XLSX.utils.book_append_sheet(wb, ws, 'สิ่งที่ต้องทำวันนี้');
+  XLSX.writeFile(wb, 'สิ่งที่ต้องทำวันนี้-'+dateStamp()+'.xlsx');
 }
 /* ================= DASHBOARD / STUDENT LOOKUP ================= */
 function renderDashboard(){

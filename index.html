@@ -36,6 +36,10 @@
   nav.tabs .drive-status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;padding:6px 10px;}
   nav.tabs .drive-status .dot{width:9px;height:9px;border-radius:50%;background:#c7ccd3;}
   nav.tabs .drive-status.on .dot{background:var(--accent);}
+  .global-search{position:relative;min-width:190px;max-width:230px;}
+  .global-search input{width:100%;padding:8px 14px;border-radius:20px;border:1px solid var(--border);background:#f4f6fa;font-family:inherit;font-size:13.5px;color:var(--text);}
+  .global-search input:focus{outline:none;border-color:var(--primary);background:#fff;}
+  .global-search .lookup-result-list{position:absolute;top:100%;right:0;width:300px;background:#fff;border:1px solid var(--border);border-radius:9px;box-shadow:var(--shadow-md);z-index:50;margin-top:6px;padding:8px;max-height:320px;}
   main{max-width:1100px;margin:0 auto;padding:20px;}
   /* หน้ารายการทั้งหมดมีคอลัมน์เยอะ (รหัส/ชื่อ/สาขา/ประเภท/วันที่/ผลสอบ/ไฟล์/จัดการ) จึงขยายกว้างขึ้นเฉพาะหน้านี้ ไม่กระทบหน้าอื่น */
   main.wide{max-width:1600px;}
@@ -437,6 +441,10 @@
   <button data-view="settings">⚙️ ตั้งค่า</button>
   <button data-view="auditlog">📜 ประวัติการแก้ไข</button>
   <div class="spacer"></div>
+  <div class="global-search" id="globalSearchWrap">
+    <input type="text" id="globalSearchInput" placeholder="🔍 ค้นหานักศึกษา...">
+    <div class="lookup-result-list" id="globalSearchResults" style="display:none;"></div>
+  </div>
   <div class="drive-status" id="driveStatus"><span class="dot"></span><span id="driveStatusText">ยังไม่เชื่อมต่อ Google Drive</span></div>
   <button type="button" class="btn-lock-nav" id="btnLockNow">🔒 ล็อกระบบ</button>
 </nav>
@@ -2224,6 +2232,11 @@ function bindNav(){
   document.getElementById('dashSearchInput').addEventListener('blur', function(){
     setTimeout(function(){ document.getElementById('dashSearchResults').style.display='none'; }, 150); /* ดีเลย์สั้นๆ ให้ทันกับ event click ของรายการก่อนถูกซ่อน */
   });
+  /* ช่องค้นหารวม (global search) บนแถบเมนู — อยู่ทุกหน้า ไม่ต้องสลับไปหน้าตรวจสอบข้อมูลก่อนถึงจะค้นหานักศึกษาได้ */
+  document.getElementById('globalSearchInput').addEventListener('input', onGlobalSearchInput);
+  document.getElementById('globalSearchInput').addEventListener('blur', function(){
+    setTimeout(function(){ document.getElementById('globalSearchResults').style.display='none'; }, 150);
+  });
   ['dashDeptFilter','dashProgramFilter','dashPlanFilter','dashYearFilter'].forEach(function(id){
     document.getElementById(id).addEventListener('change', renderSummaryDashboard);
   });
@@ -2263,6 +2276,44 @@ function onDashSearchInput(){
         ]);
         item.addEventListener('click', function(){
           resultsBox.style.display='none';
+          switchView('dashboard');
+          selectLookupStudent(s.studentId);
+        });
+        resultsBox.appendChild(item);
+      });
+      resultsBox.style.display='';
+    });
+  }, 300);
+}
+/* ช่องค้นหารวม (global search) บนแถบเมนูด้านบน — ใช้ค้นหานักศึกษาได้จากทุกหน้าในระบบโดยไม่ต้องสลับไปหน้าตรวจสอบข้อมูลก่อน
+   พิมพ์แล้วเลือกจากรายการเพื่อกระโดดไปหน้าโปรไฟล์นักศึกษาคนนั้นทันที (ใช้ตรรกะเดียวกับช่องค้นหาในแดชบอร์ดสรุปข้อมูล) */
+var globalSearchDebounceTimer = null;
+function onGlobalSearchInput(){
+  var q = (document.getElementById('globalSearchInput').value||'').trim().toLowerCase();
+  var resultsBox = document.getElementById('globalSearchResults');
+  if(globalSearchDebounceTimer) clearTimeout(globalSearchDebounceTimer);
+  if(!q){ resultsBox.style.display='none'; resultsBox.innerHTML=''; return; }
+  globalSearchDebounceTimer = setTimeout(function(){
+    getStudentSummaries().then(function(list){
+      var matches = list.filter(function(s){
+        return (s.studentId||'').toLowerCase().indexOf(q)>-1 || (s.studentName||'').toLowerCase().indexOf(q)>-1;
+      }).slice(0,8);
+      resultsBox.innerHTML='';
+      if(!matches.length){
+        resultsBox.appendChild(el('div',{class:'empty-state', style:'padding:16px;font-size:13px;', text:'ไม่พบนักศึกษาที่ตรงกับคำค้นหา'}));
+        resultsBox.style.display='';
+        return;
+      }
+      matches.forEach(function(s){
+        var item = el('div',{class:'lookup-item'},[
+          el('div',{class:'li-main'},[
+            el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
+            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||'ไม่ระบุสาขา')})
+          ])
+        ]);
+        item.addEventListener('click', function(){
+          resultsBox.style.display='none';
+          document.getElementById('globalSearchInput').value='';
           switchView('dashboard');
           selectLookupStudent(s.studentId);
         });

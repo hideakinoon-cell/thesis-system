@@ -604,7 +604,10 @@
 <!-- ============ ADVISOR LIST VIEW (รายชื่ออาจารย์ที่ปรึกษา/กรรมการ ทั้งหมด) ============ -->
 <section id="view-advisorlist" style="display:none;">
   <div class="card">
-    <h3>👥 รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h3 style="margin:0;">👥 รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h3>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorWorkloadReport">📊 สรุปภาระงานอาจารย์ทั้งหมด</button>
+    </div>
     <div class="help" style="margin-bottom:8px;">รายชื่ออาจารย์ทั้งหมดที่ใช้เลือกในช่องที่ปรึกษา/กรรมการสอบทั่วทั้งระบบ</div>
     <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor">เพิ่ม</button></div>
     <div id="m_advisor_dupWarning" style="display:none;color:#dc2626;font-size:13px;margin-top:4px;">⚠️ มีชื่อนี้อยู่แล้วในรายการ</div>
@@ -5376,6 +5379,7 @@ function bindSettingsEvents(){
   document.getElementById('m_advisor_search').addEventListener('input', function(){ advisorListPage=0; renderAdvisorList(); });
   document.getElementById('btnAdvisorListPrev').addEventListener('click', function(){ if(advisorListPage>0){ advisorListPage--; renderAdvisorList(); } });
   document.getElementById('btnAdvisorListNext').addEventListener('click', function(){ advisorListPage++; renderAdvisorList(); });
+  document.getElementById('btnAdvisorWorkloadReport').addEventListener('click', openAdvisorWorkloadReportModal);
   document.getElementById('btnAddPosition').addEventListener('click', function(){
     var input = document.getElementById('m_position_input');
     var name = input.value.trim();
@@ -5634,6 +5638,106 @@ function committeeWorkloadBadgeText(advisor){
   var count = committeeWorkloadCount(advisor);
   if(!count) return null;
   return 'กรรมการสอบ: '+count+' ครั้ง';
+}
+/* ตารางสรุปภาระงานอาจารย์รวม (โควตาที่ปรึกษาหลัก + จำนวนครั้งเป็นประธาน/กรรมการสอบ) ไว้ในที่เดียว
+   แทนที่จะต้องเปิดดูทีละคนในหน้ารายชื่ออาจารย์ — ช่วยให้เจ้าหน้าที่กระจายภาระงานได้เป็นธรรมขึ้น */
+var advisorWorkloadSort = {key:'name', dir:1};
+function advisorWorkloadRows(){
+  return (masterData.advisors||[]).map(function(advisor){
+    var max = ADVISOR_RANK_QUOTA[advisor.rank] || null;
+    var used = advisorUsedCount(advisor);
+    var committee = committeeWorkloadCount(advisor);
+    return {
+      name: advisor.name,
+      rank: advisor.rank || '',
+      used: used,
+      max: max,
+      over: max ? used > max : false,
+      committee: committee,
+      total: used + committee
+    };
+  });
+}
+function sortAdvisorWorkloadRows(rows){
+  var key = advisorWorkloadSort.key, dir = advisorWorkloadSort.dir;
+  rows.sort(function(a,b){
+    var av = a[key], bv = b[key];
+    if(typeof av==='string'){ return dir * (av||'').localeCompare(bv||'', 'th'); }
+    return dir * ((av||0)-(bv||0));
+  });
+  return rows;
+}
+function advisorWorkloadNumText(n){
+  return (Math.round(n*100)/100).toString().replace(/\.0+$/,'');
+}
+var ADVISOR_WORKLOAD_COLUMNS = [['name','ชื่ออาจารย์'],['rank','ตำแหน่ง'],['used','ที่ปรึกษา (ใช้/โควตา)'],['committee','กรรมการสอบ'],['total','รวม']];
+function renderAdvisorWorkloadTable(){
+  var wrap = document.getElementById('advisorWorkloadTableWrap');
+  if(!wrap) return;
+  var rows = sortAdvisorWorkloadRows(advisorWorkloadRows());
+  wrap.innerHTML = '';
+  var table = el('table',{style:'width:100%;border-collapse:collapse;font-size:13.5px;'});
+  var headRow = el('tr',{});
+  ADVISOR_WORKLOAD_COLUMNS.forEach(function(c){
+    var arrow = advisorWorkloadSort.key===c[0] ? (advisorWorkloadSort.dir===1?' ▲':' ▼') : '';
+    var th = el('th',{style:'text-align:left;padding:6px 8px;border-bottom:2px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;', text:c[1]+arrow});
+    th.addEventListener('click', function(){
+      if(advisorWorkloadSort.key===c[0]) advisorWorkloadSort.dir *= -1;
+      else { advisorWorkloadSort.key = c[0]; advisorWorkloadSort.dir = 1; }
+      renderAdvisorWorkloadTable();
+    });
+    headRow.appendChild(th);
+  });
+  table.appendChild(el('thead',{},[headRow]));
+  var tbody = el('tbody',{});
+  if(!rows.length){
+    tbody.appendChild(el('tr',{},[el('td',{colspan:'5', class:'help', style:'padding:10px 8px;', text:'ยังไม่มีรายชื่ออาจารย์'})]));
+  } else {
+    rows.forEach(function(r){
+      tbody.appendChild(el('tr',{},[
+        el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;', text:r.name}),
+        el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;', text:r.rank||'—'}),
+        el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;'+(r.over?'color:#dc2626;font-weight:600;':''), text: r.max ? (advisorWorkloadNumText(r.used)+'/'+r.max+(r.over?' ⚠️':'')) : '—'}),
+        el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;', text: r.committee ? (r.committee+' ครั้ง') : '—'}),
+        el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;font-weight:600;', text: advisorWorkloadNumText(r.total)})
+      ]));
+    });
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+/* ส่งออกตารางสรุปภาระงานอาจารย์ (ตามลำดับการเรียงที่กำลังแสดงอยู่) เป็นไฟล์ Excel */
+function exportAdvisorWorkloadExcel(){
+  var rows = sortAdvisorWorkloadRows(advisorWorkloadRows());
+  if(!rows.length){ toast('ไม่มีรายชื่ออาจารย์ให้ส่งออก', true); return; }
+  var aoa = [['ชื่ออาจารย์','ตำแหน่ง','ที่ปรึกษา (ใช้)','ที่ปรึกษา (โควตา)','เกินโควตา','กรรมการสอบ (ครั้ง)','รวมภาระงาน']].concat(rows.map(function(r){
+    return [r.name, r.rank||'', advisorWorkloadNumText(r.used), r.max||'', r.over?'ใช่':'', r.committee, advisorWorkloadNumText(r.total)];
+  }));
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:28},{wch:10},{wch:14},{wch:14},{wch:10},{wch:16},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'ภาระงานอาจารย์');
+  XLSX.writeFile(wb, 'สรุปภาระงานอาจารย์-'+dateStamp()+'.xlsx');
+}
+function openAdvisorWorkloadReportModal(){
+  computeAdvisorUsedCounts().then(function(){
+    var root = document.getElementById('modalRoot');
+    var backdrop = el('div',{class:'modal-backdrop'});
+    var modal = el('div',{class:'modal', style:'width:min(760px,94vw);'});
+    modal.appendChild(el('h3',{text:'📊 สรุปภาระงานอาจารย์ทั้งหมด'}));
+    modal.appendChild(el('div',{class:'help', style:'margin-bottom:10px;'}, [
+      document.createTextNode('รวมโควตาที่ปรึกษาหลักและจำนวนครั้งที่เป็นประธาน/กรรมการสอบของอาจารย์ทุกท่านไว้ในตารางเดียว คลิกหัวตารางเพื่อเรียงลำดับ')
+    ]));
+    modal.appendChild(el('div',{id:'advisorWorkloadTableWrap', style:'overflow-x:auto;'}));
+    modal.appendChild(el('div',{class:'form-footer'},[
+      el('button',{class:'btn btn-secondary', text:'📥 ส่งออก Excel', onclick:exportAdvisorWorkloadExcel}),
+      el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }})
+    ]));
+    backdrop.appendChild(modal);
+    backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+    root.appendChild(backdrop);
+    renderAdvisorWorkloadTable();
+  });
 }
 /* รายงานสรุปที่ปรึกษา: รายชื่อ นศ. ทั้งหมดที่อาจารย์ท่านนี้เป็น "ที่ปรึกษาหลัก" แบ่งเป็นจบการศึกษาแล้ว/ยังเป็นที่ปรึกษาอยู่
    ใช้ช่องติ๊ก "สำเร็จการศึกษาแล้ว" (rec.graduated) เป็นตัวแบ่งกลุ่ม */

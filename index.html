@@ -2758,10 +2758,14 @@ function renderAdvisorLookupResults(){
 
   pageItems.forEach(function(advisor){
     var quotaTxt = advisorQuotaBadgeText(advisor);
+    var cwTxt = committeeWorkloadBadgeText(advisor);
+    var subParts = [advisor.rank||'ยังไม่ระบุตำแหน่งทางวิชาการ'];
+    if(quotaTxt) subParts.push(quotaTxt);
+    if(cwTxt) subParts.push(cwTxt);
     var item = el('div',{class:'lookup-item'},[
       el('div',{class:'li-main'},[
         el('span',{class:'li-name', text:advisor.name}),
-        el('span',{class:'li-sub', text:(advisor.rank||'ยังไม่ระบุตำแหน่งทางวิชาการ')+(quotaTxt?' • '+quotaTxt:'')})
+        el('span',{class:'li-sub', text:subParts.join(' • ')})
       ]),
       el('span',{class:'li-count', text:'📋 รายงาน'})
     ]);
@@ -5515,17 +5519,32 @@ function renderBackupStatus(){
 var ADVISOR_RANK_QUOTA = {'ดร.':5, 'ผศ.':10, 'รศ.':10, 'ศ.':10};
 var ADVISOR_QUOTA_FREEING_DEFENSE_RESULTS = {'ผ่าน':true, 'ผ่านแบบมีเงื่อนไข':true};
 var advisorUsedMap = {};
+/* ภาระงานเป็นประธาน/กรรมการสอบ (แยกจากโควตาที่ปรึกษาหลักด้านบน) — นับทุกครั้งที่ชื่ออาจารย์ถูกระบุเป็นประธานกรรมการ
+   หรือกรรมการสอบ (นอกเหนือจากที่ปรึกษา) ในการสอบ 3.1/3.2 ปัจจุบันของนักศึกษาทุกคน ช่วยให้เจ้าหน้าที่เห็นว่าอาจารย์ท่านไหน
+   ถูกเชิญเป็นกรรมการบ่อยเกินไปหรือไม่ เพื่อกระจายงานให้เป็นธรรมขึ้น (ไม่มีโควตาบังคับ เป็นตัวเลขให้ดูประกอบการตัดสินใจเท่านั้น) */
+var committeeWorkloadMap = {};
 function computeAdvisorUsedCounts(){
   return recordsGetAll().then(function(rows){
     var map = {};
+    var cwMap = {};
+    function bump(nm){ if(!nm) return; cwMap[nm] = (cwMap[nm]||0)+1; }
     (rows||[]).forEach(function(r){
       if(r.deleted) return;
-      if(!r.mainAdvisor) return;
-      if(ADVISOR_QUOTA_FREEING_DEFENSE_RESULTS[r.defenseResult]) return; /* สอบป้องกันผ่านแล้ว (รวมผ่านแบบมีเงื่อนไข) ไม่นับเป็นโควตาที่ใช้อยู่ */
-      var weight = isIndependentStudyPlan(r.plan) ? (1/3) : 1;
-      map[r.mainAdvisor] = (map[r.mainAdvisor]||0) + weight;
+      if(r.mainAdvisor && !ADVISOR_QUOTA_FREEING_DEFENSE_RESULTS[r.defenseResult]){
+        var weight = isIndependentStudyPlan(r.plan) ? (1/3) : 1;
+        map[r.mainAdvisor] = (map[r.mainAdvisor]||0) + weight;
+      }
+      if(recHasProposalData(r)){
+        bump(r.proposalChair);
+        (r.proposalCommittee||[]).forEach(function(c){ bump(c.name); });
+      }
+      if(recHasDefenseData(r)){
+        bump(r.defenseChair);
+        (r.defenseCommittee||[]).forEach(function(c){ bump(c.name); });
+      }
     });
     advisorUsedMap = map;
+    committeeWorkloadMap = cwMap;
     return map;
   }).catch(function(){ return advisorUsedMap; });
 }
@@ -5547,6 +5566,14 @@ function advisorQuotaBadgeText(advisor){
   var used = advisorUsedCount(advisor);
   var usedTxt = (Math.round(used*100)/100).toString().replace(/\.0+$/,'');
   return 'ที่ปรึกษา: '+usedTxt+'/'+max+' คน';
+}
+function committeeWorkloadCount(advisor){
+  return advisorNameVariants(advisor).reduce(function(sum, nm){ return sum + (committeeWorkloadMap[nm]||0); }, 0);
+}
+function committeeWorkloadBadgeText(advisor){
+  var count = committeeWorkloadCount(advisor);
+  if(!count) return null;
+  return 'กรรมการสอบ: '+count+' ครั้ง';
 }
 /* รายงานสรุปที่ปรึกษา: รายชื่อ นศ. ทั้งหมดที่อาจารย์ท่านนี้เป็น "ที่ปรึกษาหลัก" แบ่งเป็นจบการศึกษาแล้ว/ยังเป็นที่ปรึกษาอยู่
    ใช้ช่องติ๊ก "สำเร็จการศึกษาแล้ว" (rec.graduated) เป็นตัวแบ่งกลุ่ม */
@@ -5655,6 +5682,10 @@ function renderAdvisorList(){
       var used = advisorUsedCount(advisor);
       var over = used > max;
       badges.push(el('span',{class:'role-badge', style:'background:'+(over?'#fee2e2':'#eef2ff')+';color:'+(over?'#dc2626':'#4338ca')+';', text:(over?'⚠️ ':'')+quotaTxt}));
+    }
+    var cwTxt = committeeWorkloadBadgeText(advisor);
+    if(cwTxt){
+      badges.push(el('span',{class:'role-badge', style:'background:#fef3c7;color:#92400e;', text:cwTxt}));
     }
     var chip = el('span',{class:'chip'}, [el('span',{text:advisor.name})].concat(badges).concat([
       el('button',{type:'button', text:'📋', title:'ดูรายงานที่ปรึกษา', onclick:function(){ openAdvisorReportModal(advisor); }}),

@@ -587,6 +587,11 @@
     <input type="text" id="advisorLookupSearch" placeholder="พิมพ์ชื่ออาจารย์ที่ปรึกษาเพื่อค้นหา...">
     <div class="lookup-result-list" id="advisorLookupResultList"></div>
     <div class="empty-state" id="advisorLookupEmpty" style="display:none;"></div>
+    <div id="advisorLookupPagination" style="display:none;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
+      <span id="advisorLookupPageInfo" class="help"></span>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorLookupPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorLookupNext">ถัดไป ›</button>
+    </div>
   </div>
   <div id="advisorLookupDetail">
     <div class="empty-state">เลือกอาจารย์จากรายการด้านบนเพื่อดูรายงานที่ปรึกษา</div>
@@ -1995,9 +2000,11 @@ function bindNav(){
   });
   document.getElementById('lookupSearch').addEventListener('input', onLookupSearchInput);
   document.getElementById('lookupDeptFilter').addEventListener('change', function(){ lookupListPage=0; renderLookupList(); });
-  document.getElementById('advisorLookupSearch').addEventListener('input', renderAdvisorLookupResults);
+  document.getElementById('advisorLookupSearch').addEventListener('input', function(){ advisorLookupListPage=0; renderAdvisorLookupResults(); });
   document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
   document.getElementById('btnLookupNext').addEventListener('click', function(){ lookupListPage++; renderLookupList(); });
+  document.getElementById('btnAdvisorLookupPrev').addEventListener('click', function(){ if(advisorLookupListPage>0){ advisorLookupListPage--; renderAdvisorLookupResults(); } });
+  document.getElementById('btnAdvisorLookupNext').addEventListener('click', function(){ advisorLookupListPage++; renderAdvisorLookupResults(); });
   document.getElementById('auditLogSearch').addEventListener('input', renderAuditLogFiltered);
   document.getElementById('dashOverdueToggle').addEventListener('change', function(e){
     dashOverdueOnly = e.target.checked;
@@ -2468,15 +2475,20 @@ function selectLookupAdvisor(advisor){
    (isRealAdvisorPerson) กรองได้ด้วยช่องค้นหา พร้อมโควตาที่ใช้อยู่ ณ ตอนนี้ กดที่ชื่อเพื่อดูรายงานที่ปรึกษาแบบละเอียด
    (renderAdvisorProfile ด้านล่าง) — คนที่มีแค่ตำแหน่งประธาน/กรรมการสอบ (เช่น กรรมการสอบจากภายนอก) จะไม่ขึ้นในแท็บนี้
    เพื่อไม่ให้ปนกับที่ปรึกษาจริง แก้ไข/ดูรายชื่อทั้งหมดรวมกรรมการสอบได้ที่หน้าตั้งค่า */
+var ADVISOR_LOOKUP_PAGE_SIZE = 10;
+var advisorLookupListPage = 0; /* หน้าปัจจุบันของผลค้นหาอาจารย์ที่ปรึกษา (เริ่มที่ 0) — แสดงทีละ ADVISOR_LOOKUP_PAGE_SIZE คน
+   กันรายชื่อทั้งหมดขึ้นมาเรียงยาวเดียวจนหายากเวลาสแกนหา (เหมือนหน้ารายการทั้งหมด/ค้นหานักศึกษา) */
 function renderAdvisorLookupResults(){
   var q = (document.getElementById('advisorLookupSearch').value||'').trim().toLowerCase();
   var container = document.getElementById('advisorLookupResultList');
   var emptyEl = document.getElementById('advisorLookupEmpty');
+  var pagerEl = document.getElementById('advisorLookupPagination');
   var allAdvisors = masterData.advisors||[];
   var realAdvisors = allAdvisors.filter(isRealAdvisorPerson);
   var all = realAdvisors.slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','th'); });
   var list = q ? all.filter(function(a){ return a.name.toLowerCase().indexOf(q)>-1; }) : all;
   container.innerHTML='';
+  pagerEl.style.display='none';
   if(allAdvisors.length===0){
     emptyEl.textContent = 'ยังไม่มีข้อมูลอาจารย์ในระบบ — เพิ่มได้ที่หน้าตั้งค่า';
     emptyEl.style.display='';
@@ -2489,7 +2501,14 @@ function renderAdvisorLookupResults(){
   }
   emptyEl.textContent = 'ไม่พบชื่อที่ตรงกับคำค้นหา';
   emptyEl.style.display = list.length===0 ? '' : 'none';
-  list.forEach(function(advisor){
+
+  var totalPages = Math.max(1, Math.ceil(list.length / ADVISOR_LOOKUP_PAGE_SIZE));
+  if(advisorLookupListPage >= totalPages) advisorLookupListPage = totalPages - 1;
+  if(advisorLookupListPage < 0) advisorLookupListPage = 0;
+  var startIdx = advisorLookupListPage * ADVISOR_LOOKUP_PAGE_SIZE;
+  var pageItems = list.slice(startIdx, startIdx + ADVISOR_LOOKUP_PAGE_SIZE);
+
+  pageItems.forEach(function(advisor){
     var quotaTxt = advisorQuotaBadgeText(advisor);
     var item = el('div',{class:'lookup-item'},[
       el('div',{class:'li-main'},[
@@ -2505,6 +2524,18 @@ function renderAdvisorLookupResults(){
     });
     container.appendChild(item);
   });
+
+  var pageInfoEl = document.getElementById('advisorLookupPageInfo');
+  var prevBtn = document.getElementById('btnAdvisorLookupPrev');
+  var nextBtn = document.getElementById('btnAdvisorLookupNext');
+  if(list.length===0){
+    pageInfoEl.textContent = '';
+  } else {
+    pageInfoEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+pageItems.length)+' จาก '+list.length+' คน (หน้า '+(advisorLookupListPage+1)+'/'+totalPages+')';
+  }
+  prevBtn.disabled = advisorLookupListPage<=0;
+  nextBtn.disabled = advisorLookupListPage>=totalPages-1;
+  pagerEl.style.display = list.length > ADVISOR_LOOKUP_PAGE_SIZE ? 'flex' : 'none';
 }
 function renderAdvisorProfile(advisor, rep){
   var wrap = document.getElementById('advisorLookupDetail');
@@ -2545,9 +2576,21 @@ function renderAdvisorProfile(advisor, rep){
     if(!list.length){
       card.appendChild(el('div',{class:'empty-state', text:'ไม่มีข้อมูล'}));
     } else {
+      /* กลุ่มรายชื่อแต่ละแผนพับ/ขยายได้ (เริ่มพับไว้ก่อน) — ลดการเลื่อนดูเวลามีรายชื่อ นศ. เยอะหลายแผน
+         ยังเห็นจำนวนคนต่อแผนได้ทันทีจากหัวข้อโดยไม่ต้องกดขยาย */
       groupByPlan(list).forEach(function(g){
-        card.appendChild(el('div',{style:'font-weight:600;font-size:13px;color:var(--muted);margin:10px 0 4px;', text:(g.plan||'ไม่ระบุแผน')+' ('+g.items.length+' คน)'}));
-        var listEl = el('div',{class:'lookup-result-list student-plan-list'});
+        var listEl = el('div',{class:'lookup-result-list student-plan-list', style:'display:none;'});
+        var arrow = el('span',{text:'▸', style:'display:inline-block;width:14px;'});
+        var groupHeader = el('div',{style:'font-weight:600;font-size:13px;color:var(--muted);margin:10px 0 4px;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;'},[
+          arrow,
+          el('span',{text:(g.plan||'ไม่ระบุแผน')+' ('+g.items.length+' คน)'})
+        ]);
+        groupHeader.addEventListener('click', function(){
+          var isOpen = listEl.style.display !== 'none';
+          listEl.style.display = isOpen ? 'none' : '';
+          arrow.textContent = isOpen ? '▸' : '▾';
+        });
+        card.appendChild(groupHeader);
         g.items.forEach(function(s){
           var item = el('div',{class:'lookup-item'},[
             el('div',{class:'li-main'},[

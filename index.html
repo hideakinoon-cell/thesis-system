@@ -2656,8 +2656,13 @@ function renderSummaryDashboard(){
     renderOrUpdateDonutChart('chartDefense','defense', defenseLabels, defenseLabels.map(function(k){ return defenseStats[k]; }), defenseLabels.map(function(k){ return SUMMARY_CHART_COLORS.defense[k]; }));
   });
 }
-var lastTodayActionItems = []; /* เก็บลิสต์ล่าสุดที่แสดงในการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ใช้ตอนกดส่งออก Excel โดยไม่ต้องคำนวณซ้ำ */
+var lastTodayActionItems = []; /* เก็บลิสต์ล่าสุดที่แสดงในการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ใช้ตอนกดส่งออก Excel โดยไม่ต้องคำนวณซ้ำ (เก็บรายการครบทุกรายการ ไม่ตัดตามที่ย่อแสดงบนการ์ด) */
 var TODAY_ACTION_TIER_LABELS = {0:'เลยกำหนดส่งเล่ม', 1:'ถอนที่ปรึกษายังไม่แต่งตั้งใหม่', 2:'รอผลสอบเกิน 7 วัน', 3:'ใกล้ครบกำหนดส่งเล่ม', 4:'เอกสารค้างดำเนินการ'};
+/* เดิมการ์ดนี้แสดงทุกรายการรวมกันเป็นลิสต์ยาวเดียว พอมีข้อมูลเยอะ (5 หมวดรวมกัน) การ์ดจะยาวมากจนดูยาก
+   จึงย่อแสดงเฉพาะ 10 รายการเร่งด่วนที่สุดก่อน (ลิสต์เรียงตามความเร่งด่วนอยู่แล้ว) แล้วมีปุ่ม "ดูทั้งหมด" ให้กดขยายดูครบ
+   ปุ่มส่งออก Excel ยังคงส่งออกครบทุกรายการเสมอไม่ว่าจะย่ออยู่หรือขยายอยู่ */
+var TODAY_ACTION_PREVIEW_COUNT = 10;
+var todayActionExpanded = false;
 function renderTodayActionCard(list){
   var card = document.getElementById('todayActionCard');
   var box = document.getElementById('todayActionList');
@@ -2665,7 +2670,9 @@ function renderTodayActionCard(list){
   box.innerHTML='';
   if(!list.length){ card.style.display='none'; return; }
   card.style.display='';
-  list.forEach(function(item){
+  var isExpanded = todayActionExpanded || list.length<=TODAY_ACTION_PREVIEW_COUNT;
+  var visibleList = isExpanded ? list : list.slice(0, TODAY_ACTION_PREVIEW_COUNT);
+  visibleList.forEach(function(item){
     var r = item.rec;
     var d = item.doc;
     box.appendChild(el('div',{class:'attach-item'},[
@@ -2683,6 +2690,12 @@ function renderTodayActionCard(list){
       }})
     ]));
   });
+  if(list.length>TODAY_ACTION_PREVIEW_COUNT){
+    box.appendChild(el('button',{type:'button', class:'link-btn', style:'margin-top:8px;font-weight:600;', id:'btnToggleTodayAction', text: isExpanded ? '▲ ย่อรายการ' : '▼ ดูทั้งหมด ('+list.length+' รายการ)', onclick:function(){
+      todayActionExpanded = !todayActionExpanded;
+      renderTodayActionCard(lastTodayActionItems);
+    }}));
+  }
 }
 /* ส่งออกลิสต์ "สิ่งที่ต้องทำวันนี้" ที่กำลังแสดงอยู่เป็นไฟล์ Excel ไว้ใช้ในที่ประชุม/ส่งต่องานได้ทันที
    โดยไม่ต้องพิมพ์หน้าจอหรือคัดลอกข้อความเอง */

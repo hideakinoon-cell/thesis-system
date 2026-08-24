@@ -3520,8 +3520,15 @@ function getFilteredDocIntake(){
       if(q && (r.studentId||'').toLowerCase().indexOf(q)===-1 && (r.studentName||'').toLowerCase().indexOf(q)===-1) return false;
       return true;
     });
+    /* เรียงตามเลขรับเอกสารล้วนๆ (มากไปน้อย = ล่าสุดขึ้นก่อน) ไม่จัดกลุ่มตาม นศ. คนเดียวกันให้อยู่ติดกันอีกต่อไป
+       (เดิมเรียงตามวันที่รับ+เวลาที่สร้าง ทำให้เอกสารหลายใบของ นศ. คนเดียวที่ลงทะเบียนพร้อมกันไปเรียงติดกัน
+       จนดูไม่ต่อเนื่องตามเลขที่รัน) รายการที่ไม่มีเลขรับ (ข้อมูลเก่าก่อนมีฟีเจอร์นี้) ให้ไปอยู่ท้ายสุด */
     list.sort(function(a,b){
-      if(a.receivedDate!==b.receivedDate) return (b.receivedDate||'').localeCompare(a.receivedDate||'');
+      var na = parseInt(a.intakeNo,10), nb = parseInt(b.intakeNo,10);
+      var aValid = !isNaN(na), bValid = !isNaN(nb);
+      if(aValid && bValid) return nb-na;
+      if(aValid) return -1;
+      if(bValid) return 1;
       return (b.createdAt||0)-(a.createdAt||0);
     });
     return list;
@@ -4696,10 +4703,21 @@ function getFilteredRecords(){
   });
 }
 function renderList(){
+  /* แสดง "กำลังโหลดข้อมูล..." ทันทีระหว่างรอ (โดยเฉพาะตอนแคชหมดอายุแล้วต้องอ่านชีททั้งชีทใหม่ ซึ่งช้าลงเรื่อยๆ
+     ตามจำนวนข้อมูลที่มี) กันความรู้สึกว่าหน้าเว็บค้าง ไม่ตอบสนอง */
+  var tbodyLoading = document.getElementById('listTbody');
+  var emptyElLoading = document.getElementById('listEmpty');
+  tbodyLoading.innerHTML='';
+  emptyElLoading.textContent = 'กำลังโหลดข้อมูล...';
+  emptyElLoading.classList.add('is-loading');
+  emptyElLoading.style.display = '';
   getFilteredRecords().then(function(allRows){
     var tbody = document.getElementById('listTbody');
     tbody.innerHTML='';
-    document.getElementById('listEmpty').style.display = allRows.length===0 ? '' : 'none';
+    var emptyEl = document.getElementById('listEmpty');
+    emptyEl.classList.remove('is-loading');
+    emptyEl.textContent = 'ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย';
+    emptyEl.style.display = allRows.length===0 ? '' : 'none';
 
     var totalPages = Math.max(1, Math.ceil(allRows.length / LIST_PAGE_SIZE));
     if(listPage >= totalPages) listPage = totalPages - 1;
@@ -6782,10 +6800,11 @@ function fileToRow(f, headers){
    ที่ยังโหลดไม่เสร็จ) แล้วระหว่างนั้นมีการเขียนข้อมูลใหม่ (เช่น แนบลิงก์ 3.1/3.2) ตามด้วยอ่านซ้ำทันที — ถ้าไม่มี epoch กัน
    การอ่านครั้งใหม่จะไปเจอ fetch เก่าที่ยังค้างอยู่ (ซึ่งขอข้อมูลไปตั้งแต่ก่อนเขียน) แล้วเอาผลลัพธ์เก่านั้นมาใช้/มาทับแคชที่เพิ่งล้างไป
    ทำให้สิ่งที่เพิ่งบันทึกไม่โผล่ขึ้นมาทันที ทั้งที่บันทึกลงชีทจริงสำเร็จแล้ว */
-/* ปรับจาก 4000 เป็น 10000 (10 วิ) — เดิมสั้นเกินไปจนหน้าตรวจสอบข้อมูลรู้สึกหน่วงเวลาพิมพ์ค้นหา เพราะพิมพ์แต่ละตัวอักษร
-   ห่างกันเกิน 4 วิบ่อยๆ ทำให้ต้องอ่านชีททั้งชีทซ้ำใหม่แทบทุกครั้ง ยืดเป็น 10 วิยังปลอดภัยกับการตรวจจับข้อมูลชนกัน
-   ตอนบันทึกอยู่ (เทียบเวลาเป็นนาทีตามที่อธิบายไว้ข้างบน) */
-var RECORDS_CACHE_TTL_MS = 10000;
+/* ปรับจาก 4000 เป็น 10000 เป็น 60000 (60 วิ) — เดิมสั้นเกินไปจนหน้ารายการทั้งหมด/ตรวจสอบข้อมูลรู้สึกช้าเวลามีข้อมูลเยอะ
+   เพราะต้องอ่านชีททั้งชีทซ้ำใหม่ทุกครั้งที่แคชหมดอายุ (สลับหน้า/พิมพ์ค้นหาห่างกันเกิน 10 วิ) ยืดเป็น 60 วิยังปลอดภัยกับ
+   การตรวจจับข้อมูลชนกันตอนบันทึกอยู่มาก (เทียบเวลาเป็นนาทีตามที่อธิบายไว้ข้างบน) และเขียนสำเร็จก็ล้างแคชทันทีอยู่แล้ว
+   จึงไม่มีทางเห็นข้อมูลเก่าค้างหลังบันทึกเสร็จ */
+var RECORDS_CACHE_TTL_MS = 60000;
 var recordsSheetCache = null;
 var recordsSheetCacheAt = 0;
 var recordsSheetFetchPromise = null; /* กันการยิง request ซ้ำซ้อนพร้อมกัน (เช่น renderList/selectLookupStudent ที่เรียกหลาย record พร้อมกันด้วย Promise.all) — ถ้ามี fetch ที่กำลังทำงานอยู่แล้ว ให้ใช้ผลลัพธ์เดียวกันแทนการยิงใหม่ทุกครั้ง */

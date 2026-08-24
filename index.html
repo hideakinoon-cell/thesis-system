@@ -721,6 +721,11 @@ if('serviceWorker' in navigator){
     </table>
     </div>
     <div class="empty-state" id="docIntakeEmpty" style="display:none;">ยังไม่มีรายการลงทะเบียน — เริ่มบันทึกรายการใหม่ได้ที่ด้านบน</div>
+    <div id="diListPagination" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
+      <span id="diListPageInfo" class="help"></span>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnDiListPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnDiListNext">ถัดไป ›</button>
+    </div>
   </div>
 </section>
 
@@ -3512,6 +3517,7 @@ function addDocIntakeEntry(){
     document.getElementById('di_department').value='';
     document.getElementById('di_note').value='';
     document.getElementById('di_status').value='received';
+    diListPage=0; /* กลับไปหน้าแรกเสมอหลังบันทึกใหม่ เพราะเรียงตามเลขรับมากไปน้อย รายการที่เพิ่งบันทึกจะมีเลขรับสูงสุดและอยู่หน้าแรก */
     renderDocIntakeList();
     refreshDocIntakeNextNo();
   }).catch(function(e){ toast('บันทึกไม่สำเร็จ: '+e, true); });
@@ -3547,11 +3553,32 @@ function getFilteredDocIntake(){
     return list;
   });
 }
+var diListPage = 0; /* หน้าปัจจุบันของหน้าลงทะเบียนรับเอกสาร (เริ่มที่ 0) — แสดงทีละ LIST_PAGE_SIZE รายการ เหมือนหน้ารายการทั้งหมด
+   กันหน้ายาวเกินไปเวลามีเอกสารเยอะ (เดิมแสดงทุกแถวรวดเดียวไม่มีแบ่งหน้า) ตัวกรอง/ค้นหา และ export Excel ยังทำงานกับข้อมูลที่ตรงเงื่อนไขทั้งหมดตามปกติ ไม่ถูกตัดตามหน้า */
 function renderDocIntakeList(){
-  getFilteredDocIntake().then(function(rows){
+  getFilteredDocIntake().then(function(allRows){
     var tbody = document.getElementById('docIntakeTbody');
     tbody.innerHTML='';
-    document.getElementById('docIntakeEmpty').style.display = rows.length===0 ? '' : 'none';
+    document.getElementById('docIntakeEmpty').style.display = allRows.length===0 ? '' : 'none';
+
+    var totalPages = Math.max(1, Math.ceil(allRows.length / LIST_PAGE_SIZE));
+    if(diListPage >= totalPages) diListPage = totalPages - 1;
+    if(diListPage < 0) diListPage = 0;
+    var startIdx = diListPage * LIST_PAGE_SIZE;
+    var rows = allRows.slice(startIdx, startIdx + LIST_PAGE_SIZE);
+
+    var pageInfoEl = document.getElementById('diListPageInfo');
+    var prevBtn = document.getElementById('btnDiListPrev');
+    var nextBtn = document.getElementById('btnDiListNext');
+    if(allRows.length===0){
+      pageInfoEl.textContent = '';
+    } else {
+      pageInfoEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+rows.length)+' จาก '+allRows.length+' รายการ (หน้า '+(diListPage+1)+'/'+totalPages+')';
+    }
+    prevBtn.disabled = diListPage<=0;
+    nextBtn.disabled = diListPage>=totalPages-1;
+    document.getElementById('diListPagination').style.display = allRows.length > LIST_PAGE_SIZE ? 'flex' : 'none';
+
     rows.forEach(function(r){
       var statusSel = el('select',{},[
         el('option',{value:'received', text:'🔵 รับเรื่องแล้ว'}),
@@ -3610,10 +3637,12 @@ function bindDocIntakeEvents(){
     if(ev.target!==input && !box.contains(ev.target)) { box.style.display='none'; }
   });
   ['di_filterFrom','di_filterTo','di_filterDocType','di_filterDept','di_filterStatus'].forEach(function(id){
-    document.getElementById(id).addEventListener('change', renderDocIntakeList);
+    document.getElementById(id).addEventListener('change', function(){ diListPage=0; renderDocIntakeList(); });
   });
-  document.getElementById('di_filterSearch').addEventListener('input', renderDocIntakeList);
+  document.getElementById('di_filterSearch').addEventListener('input', function(){ diListPage=0; renderDocIntakeList(); });
   document.getElementById('btnExportDocIntake').addEventListener('click', exportDocIntakeExcel);
+  document.getElementById('btnDiListPrev').addEventListener('click', function(){ if(diListPage>0){ diListPage--; renderDocIntakeList(); } });
+  document.getElementById('btnDiListNext').addEventListener('click', function(){ diListPage++; renderDocIntakeList(); });
 }
 
 /* ================= SELECT RENDERING ================= */

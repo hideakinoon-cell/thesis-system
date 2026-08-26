@@ -2782,7 +2782,7 @@ function renderAuditLogFiltered(){
   emptyBox.style.display='none';
   /* แสดงล่าสุด 300 รายการ กันหน้าอืดถ้า log สะสมมาก — ใช้ช่องค้นหาเพื่อกรองหารายนักศึกษาที่ต้องการแทน */
   entries.slice(0,300).forEach(function(e){
-    var actionIcon = e.action==='ลบข้อมูล' ? '🗑️' : (e.action==='สร้างข้อมูลใหม่' ? '🆕' : '✏️');
+    var actionIcon = (e.action==='ลบข้อมูล'||e.action==='ลบอาจารย์ที่ปรึกษา') ? '🗑️' : ((e.action==='สร้างข้อมูลใหม่'||e.action==='เพิ่มอาจารย์ที่ปรึกษา') ? '🆕' : '✏️');
     listBox.appendChild(el('div',{class:'attach-item'},[
       el('span',{class:'name', text: actionIcon+' '+formatAuditTs(e.ts)+' — '+e.action+': '+(e.studentId||'-')+' '+(e.studentName||'')+' (โดย '+e.role+')'})
     ]));
@@ -5512,6 +5512,7 @@ function bindSettingsEvents(){
     var rank = document.getElementById('m_advisor_rank').value;
     masterData.advisors.push({name:name, roles:roles, rank:rank});
     saveMasterData().then(function(){
+      logAudit('เพิ่มอาจารย์ที่ปรึกษา', '', name);
       renderMasterLists(); renderAllSelects(); input.value='';
       document.getElementById('m_advisor_rank').value='';
       document.getElementById('m_advisor_dupWarning').style.display='none';
@@ -6083,6 +6084,8 @@ function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
   advisor.roles = newRoles;
   advisor.rank = newRank||'';
   return saveMasterData().then(function(){
+    var detail = oldName + (newName!==oldName ? ' → '+newName : '') + ' | ตำแหน่ง: '+(newRoles.join(', ')||'-') + ' | วิทยฐานะ: '+(newRank||'-');
+    logAudit('แก้ไขข้อมูลอาจารย์ที่ปรึกษา', '', detail);
     if(newName!==oldName && doCascade) return cascadeRenameInRecords('advisors', oldName, newName);
     return 0;
   }).then(function(updatedCount){
@@ -6101,7 +6104,10 @@ function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
 function removeAdvisor(name){
   if(!confirm('ลบ "'+name+'" ออกจากรายชื่ออาจารย์หรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
   masterData.advisors = masterData.advisors.filter(function(a){ return a.name!==name; });
-  saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); });
+  saveMasterData().then(function(){
+    logAudit('ลบอาจารย์ที่ปรึกษา', '', name);
+    renderMasterLists(); renderAllSelects();
+  });
 }
 function renderChipList(containerId, key){
   var container = document.getElementById(containerId);

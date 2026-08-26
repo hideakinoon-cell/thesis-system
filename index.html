@@ -2210,15 +2210,37 @@ function seedDefaultsIfEmpty(){
   if(masterData.departments.length===0){ masterData.departments=['สาขาวิชาหลักสูตรและการสอน']; changed=true; }
   if(changed) saveMasterData();
 }
+/* บั๊กร้ายแรง: saveMasterData() กับ refreshCloudMasterData() ทำงานพร้อมกันแบบ async อิสระต่อกัน ถ้า refresh
+   แทรกกลางระหว่าง save ยังเขียนชีทกลางไม่เสร็จ (เช่น เพิ่มชื่ออาจารย์แล้วรีบสลับหน้า) refresh จะดึงข้อมูลเก่ามาทับ
+   masterData ก่อน แล้ว save ที่ค้างอยู่จะเขียนข้อมูลเก่านั้นทับชีทกลางซ้ำ ทำให้รายการที่เพิ่งเพิ่มหายไปเงียบๆ
+   แก้โดยให้ save/refresh เข้าคิวเดียวกัน (masterDataOpQueue) ทำงานทีละอย่างตามลำดับเสมอ ไม่ยิงพร้อมกัน */
+var masterDataOpQueue = Promise.resolve();
+/* กันคิวค้างตายถาวร ถ้าการเขียน/อ่านชีทกลางครั้งหนึ่งค้างนานผิดปกติ (เช่น รอสิทธิ์ Google ไม่มา) จะปล่อยรายการ
+   ถัดไปทำงานต่อได้หลังรอครบเวลานี้ แทนที่จะค้างตลอดไปจนบล็อกการบันทึก/รีเฟรชอื่นๆ ทั้งหมด (ผลลัพธ์จริงของรายการ
+   ที่ค้างยังส่งกลับตามปกติเมื่อเสร็จ ไม่ถูกยกเลิก แค่ไม่บล็อกคิวต่อจากนี้) */
+var MASTER_DATA_OP_TIMEOUT_MS = 20000;
+function queueMasterDataOp(taskFn){
+  var taskPromise = masterDataOpQueue.then(taskFn);
+  var advance = Promise.race([
+    taskPromise.then(function(){}, function(){}),
+    new Promise(function(resolve){ setTimeout(resolve, MASTER_DATA_OP_TIMEOUT_MS); })
+  ]);
+  masterDataOpQueue = advance;
+  return taskPromise;
+}
 function saveMasterData(){
-  var localSave = dbPut('meta',{key:'masterData', value:masterData});
-  if(cloudModeEnabled && sheetId){ return localSave.then(saveMasterDataToCloud); }
-  return localSave;
+  return queueMasterDataOp(function(){
+    var localSave = dbPut('meta',{key:'masterData', value:masterData});
+    if(cloudModeEnabled && sheetId){ return localSave.then(saveMasterDataToCloud); }
+    return localSave;
+  }).catch(function(e){ console.error('saveMasterData failed', e); throw e; });
 }
 function refreshCloudMasterData(){
   if(!cloudModeEnabled || !sheetId) return Promise.resolve();
-  return loadMasterDataFromCloud().then(function(cloudMd){
-    if(cloudMd){ masterData = Object.assign(masterData, cloudMd); renderAllSelects(); renderMasterLists(); }
+  return queueMasterDataOp(function(){
+    return loadMasterDataFromCloud().then(function(cloudMd){
+      if(cloudMd){ masterData = Object.assign(masterData, cloudMd); renderAllSelects(); renderMasterLists(); }
+    });
   }).catch(function(e){ console.warn('refresh masterData from cloud failed', e); });
 }
 function saveGoogleClientId(){ return dbPut('meta',{key:'googleClientId', value:googleClientId}); }

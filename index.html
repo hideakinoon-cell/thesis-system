@@ -1596,14 +1596,53 @@ function isRealAdvisorPerson(advisor){
   var advisorSlotNames = positionsBySlot('mainAdvisor').concat(positionsBySlot('coAdvisor'));
   return !!(advisor.roles && advisor.roles.some(function(r){ return advisorSlotNames.indexOf(r)>-1; }));
 }
-function setSelectValueWithFallback(selectEl, value){
+function setSelectValueWithFallback(selectEl, value, skipMismatchCheck){
   if(!value || !selectEl) return;
-  if(selectEl.setValueWithFallback){ selectEl.setValueWithFallback(value); return; }
+  if(selectEl.setValueWithFallback){
+    selectEl.setValueWithFallback(value);
+    if(!skipMismatchCheck) checkAdvisorNameMismatch(selectEl, value);
+    return;
+  }
   selectEl.value = value;
   if(selectEl.value !== value){
     selectEl.appendChild(el('option',{value:value, text:value+' (ไม่ได้ติดแท็กตำแหน่งนี้)'}));
     selectEl.value = value;
   }
+}
+/* ================= เตือนชื่ออาจารย์/กรรมการที่ล้าสมัย (เปลี่ยนชื่อ/ตำแหน่งทางวิชาการไปแล้ว) =================
+   ใช้ตอนโหลดข้อมูลนักศึกษาที่บันทึกไว้เดิมเข้าฟอร์ม — ถ้าชื่อที่บันทึกไว้ตรงกับ alias (ชื่อเก่า) ของอาจารย์ท่านใด
+   ในรายชื่อปัจจุบัน (masterData.advisors) ให้เตือนพร้อมเสนอชื่อ-ตำแหน่งปัจจุบันให้เลือกใช้แทนได้ทันที
+   ไม่ครอบคลุมอาจารย์ที่ปรึกษาร่วมภายนอก (isExternal) เพราะไม่จำเป็นต้องอยู่ในรายชื่อถาวร */
+function findAdvisorRename(name){
+  var v = (name||'').trim();
+  if(!v) return null;
+  var adv = (masterData.advisors||[]).find(function(a){
+    return (a.aliases||[]).some(function(al){ return (al||'').trim()===v; });
+  });
+  return (adv && adv.name!==v) ? adv.name : null;
+}
+function clearAdvisorMismatchWarning(hostEl){
+  if(hostEl && hostEl._mismatchWarningEl){ hostEl._mismatchWarningEl.remove(); hostEl._mismatchWarningEl=null; }
+}
+function showAdvisorMismatchWarning(hostEl, oldName, newName){
+  clearAdvisorMismatchWarning(hostEl);
+  if(!hostEl || !hostEl.parentNode) return;
+  var inMultiRow = hostEl.parentNode.classList && hostEl.parentNode.classList.contains('multi-row');
+  var box = el('div',{style:'color:#b45309;font-size:13px;margin-top:4px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 8px;'+(inMultiRow?'flex-basis:100%;':'')});
+  box.appendChild(document.createTextNode('⚠️ "'+oldName+'" มีการเปลี่ยนชื่อ/ตำแหน่งทางวิชาการเป็น "'+newName+'" แล้ว — '));
+  var btn = el('button',{type:'button', text:'ใช้ชื่อปัจจุบัน', style:'color:#2563eb;text-decoration:underline;background:none;border:none;cursor:pointer;font-size:13px;padding:0;font-family:inherit;'});
+  btn.addEventListener('click', function(){
+    if(hostEl.setValueWithFallback) hostEl.setValueWithFallback(newName);
+    clearAdvisorMismatchWarning(hostEl);
+  });
+  box.appendChild(btn);
+  hostEl._mismatchWarningEl = box;
+  hostEl.parentNode.insertBefore(box, hostEl.nextSibling);
+}
+function checkAdvisorNameMismatch(hostEl, value){
+  var suggested = findAdvisorRename(value);
+  if(suggested) showAdvisorMismatchWarning(hostEl, value, suggested);
+  else clearAdvisorMismatchWarning(hostEl);
 }
 
 /* ================= SEARCHABLE SELECT (พิมพ์ค้นหา-เลือกชื่ออาจารย์) ================= */
@@ -1634,6 +1673,7 @@ function buildSearchSelect(hostEl, list, placeholder){
     hostEl._value = name;
     input.value = name;
     closeDropdown();
+    clearAdvisorMismatchWarning(hostEl);
     input.dispatchEvent(new Event('change', {bubbles:true}));
   }
 
@@ -4261,7 +4301,7 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
   setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
   clearDynamicRows('coAdvisorList');
-  (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c)); });
+  (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c), !!(c && typeof c==='object' && c.isExternal)); });
   document.getElementById('f_titleTh').value = rec.titleTh||'';
   document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');
@@ -4376,7 +4416,7 @@ function searchExistingStudent(){
     document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
     setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
     clearDynamicRows('coAdvisorList');
-    (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c)); });
+    (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c), !!(c && typeof c==='object' && c.isExternal)); });
     document.getElementById('f_titleTh').value = rec.titleTh||'';
     document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');

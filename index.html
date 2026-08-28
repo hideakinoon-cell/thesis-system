@@ -2883,7 +2883,9 @@ function renderAuditLogFiltered(){
   emptyBox.style.display='none';
   /* แสดงล่าสุด 300 รายการ กันหน้าอืดถ้า log สะสมมาก — ใช้ช่องค้นหาเพื่อกรองหารายนักศึกษาที่ต้องการแทน */
   entries.slice(0,300).forEach(function(e){
-    var actionIcon = (e.action==='ลบข้อมูล'||e.action==='ลบอาจารย์ที่ปรึกษา') ? '🗑️' : ((e.action==='สร้างข้อมูลใหม่'||e.action==='เพิ่มอาจารย์ที่ปรึกษา') ? '🆕' : '✏️');
+    /* จับด้วยคำขึ้นต้น (ลบ.../เพิ่ม...) แทนการเทียบข้อความเป๊ะทีละแบบ เพื่อให้ครอบคลุมทั้งอาจารย์ที่ปรึกษาและ
+       master data อื่นๆ (หลักสูตร/สาขาวิชา/แผนการเรียน/ประเภทเอกสาร) โดยไม่ต้องแก้จุดนี้ซ้ำทุกครั้งที่เพิ่มรายการใหม่ */
+    var actionIcon = (e.action==='ลบข้อมูล'||e.action.indexOf('ลบ')===0) ? '🗑️' : ((e.action==='สร้างข้อมูลใหม่'||e.action.indexOf('เพิ่ม')===0) ? '🆕' : '✏️');
     listBox.appendChild(el('div',{class:'attach-item'},[
       el('span',{class:'name', text: actionIcon+' '+formatAuditTs(e.ts)+' — '+e.action+': '+(e.studentId||'-')+' '+(e.studentName||'')+' (โดย '+e.role+')'})
     ]));
@@ -5539,6 +5541,9 @@ function renderImportFailedList(container, details){
 }
 
 /* ================= SETTINGS: MASTER DATA ================= */
+/* ป้ายชื่อภาษาไทยของแต่ละรายการ master data (ใช้ทั้งในข้อความยืนยันก่อนลบ และบันทึกลง Audit Log) —
+   ครอบคลุม programs/departments/plans/documentTypes ที่ใช้ renderChipList ร่วมกัน (ไม่รวม advisors ซึ่งมี Audit Log ของตัวเองอยู่แล้ว) */
+var MASTER_LIST_LABELS = { programs:'หลักสูตร', departments:'สาขาวิชา', plans:'แผนการเรียน', documentTypes:'ประเภทเอกสาร' };
 function bindSettingsEvents(){
   document.querySelectorAll('#view-settings [data-add]').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -5547,7 +5552,13 @@ function bindSettingsEvents(){
       var input = document.getElementById(inputId);
       var val = input.value.trim();
       if(!val) return;
-      if(masterData[key].indexOf(val)===-1){ masterData[key].push(val); saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); }); }
+      if(masterData[key].indexOf(val)===-1){
+        masterData[key].push(val);
+        saveMasterData().then(function(){
+          logAudit('เพิ่ม'+(MASTER_LIST_LABELS[key]||key), '', val);
+          renderMasterLists(); renderAllSelects();
+        });
+      }
       input.value='';
     });
   });
@@ -6235,13 +6246,17 @@ function renderChipList(containerId, key){
         renameMasterItem(key, val, newVal);
       }}),
       el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){
+        if(!confirm('ลบ "'+val+'" ('+(MASTER_LIST_LABELS[key]||key)+') ออกจากรายการหรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
         masterData[key] = masterData[key].filter(function(v){ return v!==val; });
         var deptPinCleanupP = Promise.resolve();
         if(key==='departments' && (deptPins||[]).some(function(d){ return d.department===val; })){
           deptPins = deptPins.filter(function(d){ return d.department!==val; });
           deptPinCleanupP = dbPut('meta',{key:'deptPins', value:deptPins});
         }
-        saveMasterData().then(function(){ return deptPinCleanupP; }).then(function(){ renderMasterLists(); renderAllSelects(); });
+        saveMasterData().then(function(){
+          logAudit('ลบ'+(MASTER_LIST_LABELS[key]||key), '', val);
+          return deptPinCleanupP;
+        }).then(function(){ renderMasterLists(); renderAllSelects(); });
       }})
     ]);
     container.appendChild(chip);
@@ -6262,6 +6277,7 @@ function renameMasterItem(key, oldVal, newVal){
   saveMasterData().then(function(){
     return deptPinRenameP;
   }).then(function(){
+    logAudit('แก้ไข'+(MASTER_LIST_LABELS[key]||key), '', oldVal+' → '+newVal);
     return cascadeRenameEverywhere(key, oldVal, newVal);
   }).then(function(updatedCount){
     renderMasterLists();
@@ -6277,6 +6293,7 @@ function renameMasterItem(key, oldVal, newVal){
 function mergeMasterItem(key, oldVal, newVal){
   masterData[key] = masterData[key].filter(function(v){ return v!==oldVal; });
   saveMasterData().then(function(){
+    logAudit('รวม'+(MASTER_LIST_LABELS[key]||key), '', oldVal+' → '+newVal);
     return cascadeRenameEverywhere(key, oldVal, newVal);
   }).then(function(updatedCount){
     renderMasterLists();

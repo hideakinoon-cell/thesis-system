@@ -849,7 +849,7 @@ if('serviceWorker' in navigator){
       <div class="grid cols-3">
         <div class="field"><label>วันที่สอบเค้าโครง</label><input type="date" id="p_date"></div>
         <div class="field"><label>เวลาสอบ</label><input type="text" id="p_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
-        <div class="field"><label>สถานที่สอบ</label><input type="text" id="p_location" placeholder="เช่น ห้องประชุม 301"></div>
+        <div class="field"><label>สถานที่สอบ</label><div class="combo"><input type="text" id="p_location" placeholder="เช่น ห้องประชุม 301"></div></div>
         <div class="field"><label>ประธานกรรมการ</label><div id="p_chair" class="combo"></div></div>
         <div class="field full">
           <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
@@ -939,7 +939,7 @@ if('serviceWorker' in navigator){
       <div class="grid cols-3">
         <div class="field"><label>วันที่สอบป้องกัน</label><input type="date" id="d_date"></div>
         <div class="field"><label>เวลาสอบ</label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
-        <div class="field"><label>สถานที่สอบ</label><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div>
+        <div class="field"><label>สถานที่สอบ</label><div class="combo"><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div></div>
         <div class="field"><label>ประธานกรรมการ</label><div id="d_chair" class="combo"></div></div>
         <div class="field full">
           <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
@@ -1844,6 +1844,67 @@ function initDocLinkAutocompletes(){
   attachDocLinkAutocomplete('f_computerDocLink', 'computerDocLink');
   attachDocLinkAutocomplete('f_qualifyingDocLink', 'qualifyingDocLink');
 }
+/* ================= สถานที่สอบ (หมวด 3.1/3.2): แนะนำสถานที่ที่เคยใช้ซ้ำ พิมพ์เพื่อกรอง คลิกเพื่อเลือก
+   แต่ยังพิมพ์/กรอกสถานที่ใหม่ที่ไม่เคยมีได้ตามปกติ ไม่บังคับให้เลือกจากรายการ (รวมสถานที่จาก 3.1 และ 3.2 เข้าด้วยกัน
+   เพราะมักเป็นห้อง/สถานที่เดียวกันที่ใช้ซ้ำข้ามประเภทการสอบ) */
+var locationUsage = {};
+var LOCATION_FIELDS = ['proposalLocation','defenseLocation'];
+function refreshLocationUsage(){
+  return recordsGetAll().then(function(rows){
+    var usage = {};
+    (rows||[]).forEach(function(r){
+      if(r.deleted) return;
+      LOCATION_FIELDS.forEach(function(f){
+        var v = (r[f]||'').trim();
+        if(!v) return;
+        if(!usage[v]) usage[v] = {location:v, count:0};
+        usage[v].count++;
+      });
+    });
+    locationUsage = usage;
+    return usage;
+  }).catch(function(){ return locationUsage; });
+}
+function attachLocationAutocomplete(inputId){
+  var input = document.getElementById(inputId);
+  if(!input || input._locationAutoInit) return;
+  input._locationAutoInit = true;
+  input.classList.add('combo-input');
+  input.setAttribute('autocomplete','off');
+  var wrap = input.parentNode; /* ต้องเป็น <div class="combo"> ที่ครอบ input ไว้อยู่แล้วในหน้า HTML */
+  var dropdown = el('div',{class:'combo-dropdown'});
+  wrap.appendChild(dropdown);
+
+  function entries(){
+    return Object.keys(locationUsage).map(function(k){ return locationUsage[k]; }).sort(function(a,b){ return b.count-a.count; });
+  }
+  function closeDropdown(){ dropdown.innerHTML=''; dropdown.style.display='none'; }
+  function openDropdown(){
+    var q = (input.value||'').trim().toLowerCase();
+    var list = entries();
+    var matches = q ? list.filter(function(en){ return en.location.toLowerCase().indexOf(q)>-1; }) : list;
+    dropdown.innerHTML = '';
+    if(!matches.length){ closeDropdown(); return; }
+    matches.slice(0,20).forEach(function(en){
+      dropdown.appendChild(el('div',{
+        class:'combo-option',
+        onmousedown:function(ev){ ev.preventDefault(); },
+        onclick:function(){ input.value = en.location; closeDropdown(); input.dispatchEvent(new Event('change',{bubbles:true})); }
+      },[
+        el('div',{text:en.location}),
+        el('div',{class:'link-suggest-meta', text:'เคยใช้ '+en.count+' ครั้ง'})
+      ]));
+    });
+    dropdown.style.display='block';
+  }
+  input.addEventListener('focus', openDropdown);
+  input.addEventListener('input', openDropdown);
+  input.addEventListener('blur', function(){ setTimeout(closeDropdown, 180); });
+}
+function initLocationAutocompletes(){
+  attachLocationAutocomplete('p_location');
+  attachLocationAutocomplete('d_location');
+}
 
 /* ================= แนบลิงก์ประกาศแบบกลุ่ม (bulk attach) =================
    ประกาศผลสอบ (อังกฤษ/คอมพิวเตอร์/ประมวลความรู้) แต่ละฉบับมักมี นศ. หลายสิบคนอยู่ในฉบับเดียวกัน
@@ -2432,7 +2493,7 @@ function switchView(name){
   });
   document.querySelector('main').classList.toggle('wide', name==='list'); /* ขยายความกว้างเฉพาะหน้ารายการทั้งหมด */
   if(cloudModeEnabled && accessToken && (name==='form' || name==='settings')) refreshCloudMasterData();
-  if(name==='form') refreshDocLinkSuggestions();
+  if(name==='form'){ refreshDocLinkSuggestions(); refreshLocationUsage(); }
   if(name==='list') renderList();
   if(name==='settings'){
     renderMasterLists();
@@ -3728,6 +3789,7 @@ function ensureSearchSelect(id, list, placeholder){
 }
 function renderAllSelects(){
   initDocLinkAutocompletes();
+  initLocationAutocompletes();
   fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, 'ทุกสาขา');
   fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, 'ทุกสาขา');
   fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, 'ทุกหลักสูตร');
@@ -4643,6 +4705,7 @@ function saveRecord(){
     logAudit(wasExisting?'แก้ไขข้อมูล':'สร้างข้อมูลใหม่', rec.studentId, rec.studentName);
     toast('บันทึกข้อมูลเรียบร้อย');
     refreshDocLinkSuggestions(); /* ให้ลิงก์ที่เพิ่งบันทึกโผล่เป็นตัวเลือกแนะนำทันทีสำหรับ นศ. คนถัดไปในประกาศเดียวกัน */
+    refreshLocationUsage(); /* ให้สถานที่สอบที่เพิ่งบันทึกโผล่เป็นตัวเลือกแนะนำทันทีสำหรับ นศ. คนถัดไป */
     newDraft();
     switchView('list');
   }).catch(function(e){

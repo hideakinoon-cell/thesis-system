@@ -1221,6 +1221,15 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
+    <h3>🗑️ ล้างข้อมูลที่ถูกลบถาวร (ลดขนาดชีทกลาง)</h3>
+    <div class="help" style="margin-bottom:10px;">การกดปุ่ม "ลบ" ในหน้าต่างๆ ของระบบข้อมูลกลางเป็นการ "ซ่อน" รายการเท่านั้น (แถวเดิมยังค้างอยู่ในชีท Google Sheets เผื่อกู้คืน/ตรวจสอบย้อนหลังได้) เมื่อมีการลบ/นำเข้าข้อมูลบ่อยๆ แถวที่ซ่อนไว้จะสะสมมากขึ้นเรื่อยๆ ทำให้ทุกครั้งที่เปิดหน้ารายการต้องโหลดข้อมูลมากกว่าที่เห็นจริง และรู้สึกช้าลง เครื่องมือนี้จะลบแถวที่ถูกซ่อนไว้เหล่านั้นออกจากชีท (Records/Files/DocIntake) อย่างถาวร <strong>ไม่สามารถกู้คืนได้อีก</strong> ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ</div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnPurgeDeleted">🗑️ ล้างข้อมูลที่ถูกลบถาวร</button>
+    </div>
+    <div id="purgeDeletedResult" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
     <h3>ข้อมูลตั้งต้น (Master Data)</h3>
     <div class="master-grid">
       <div class="master-card">
@@ -4833,8 +4842,13 @@ function deleteFile(id, section){
 var LIST_PAGE_SIZE = 10;
 var listPage = 0; /* หน้าปัจจุบัน (เริ่มที่ 0) — แสดงทีละ LIST_PAGE_SIZE รายการ กันหน้ายาวเกินไปเวลามีข้อมูลเยอะ
    หมายเหตุ: การแบ่งหน้านี้มีผลแค่กับ "การแสดงผล" เท่านั้น ตัวกรอง/ค้นหา และ export CSV/Excel ยังทำงานกับข้อมูลที่ตรงเงื่อนไขทั้งหมดตามปกติ ไม่ถูกตัดตามหน้า */
+var listSearchDebounceTimer = null;
 function bindListEvents(){
-  document.getElementById('listSearch').addEventListener('input', function(){ listPage=0; renderList(); });
+  document.getElementById('listSearch').addEventListener('input', function(){
+    /* หน่วงเวลา 300ms ก่อนค้นหาจริง กันไม่ให้ renderList() (ซึ่งดึง/กรองข้อมูลใหม่ทุกครั้ง) ถูกเรียกรัวๆ ทุกตัวอักษรที่พิมพ์ */
+    clearTimeout(listSearchDebounceTimer);
+    listSearchDebounceTimer = setTimeout(function(){ listPage=0; renderList(); }, 300);
+  });
   document.getElementById('listFilterType').addEventListener('change', function(){ listPage=0; renderList(); });
   document.getElementById('listFilterResult').addEventListener('change', function(){ listPage=0; renderList(); });
   document.getElementById('btnListPrev').addEventListener('click', function(){ if(listPage>0){ listPage--; renderList(); } });
@@ -6424,6 +6438,54 @@ function bindGoogleButtons(){
   document.getElementById('btnScanBogusAdvisorHistory').addEventListener('click', scanBogusAdvisorHistory);
   document.getElementById('btnScanSwappedGradTerm').addEventListener('click', scanSwappedGradTermData);
   document.getElementById('btnScanWithdrawnAdvisor').addEventListener('click', scanWithdrawnAdvisorStudents);
+  document.getElementById('btnPurgeDeleted').addEventListener('click', purgeDeletedUI);
+}
+function purgeDeletedUI(){
+  var btn = document.getElementById('btnPurgeDeleted');
+  var resultBox = document.getElementById('purgeDeletedResult');
+  resultBox.innerHTML='';
+  if(!cloudModeEnabled){
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ฟีเจอร์นี้ใช้ได้เฉพาะตอนเปิดใช้งาน "ระบบข้อมูลกลาง" เท่านั้น เพราะโหมดในเครื่องนี้ลบข้อมูลจริงทันทีอยู่แล้ว ไม่มีข้อมูลสะสมให้ล้าง'}));
+    return;
+  }
+  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบจำนวนรายการที่ถูกลบไว้...'}));
+  var origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  ensureAuthed().then(function(){
+    return Promise.all([fetchRecordsSheet(), fetchFilesSheet(), fetchDocIntakeSheet()]);
+  }).then(function(results){
+    var counts = {
+      records: results[0].entries.filter(function(e){ return e.rec.deleted; }).length,
+      files: results[1].entries.filter(function(e){ return e.rec.deleted; }).length,
+      docIntake: results[2].entries.filter(function(e){ return e.rec.deleted; }).length
+    };
+    var total = counts.records + counts.files + counts.docIntake;
+    resultBox.innerHTML='';
+    btn.disabled=false; btn.textContent=origText;
+    if(total===0){
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบรายการที่ถูกลบค้างอยู่ ไม่ต้องล้างข้อมูล'}));
+      return;
+    }
+    resultBox.appendChild(el('div',{class:'help', text:'พบรายการที่ถูกลบไว้ค้างอยู่ในชีททั้งหมด '+total+' รายการ (รายการสอบ '+counts.records+', ไฟล์แนบ '+counts.files+', เอกสารรับเข้า '+counts.docIntake+')'}));
+    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;color:#c0392b;', text:'🗑️ ยืนยันล้างถาวร ('+total+' รายการ)'});
+    confirmBtn.addEventListener('click', function(){
+      if(!confirm('ยืนยันลบแถวที่ถูกลบไว้ '+total+' รายการออกจากชีทถาวร? การกระทำนี้ไม่สามารถกู้คืนได้อีก (ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ)')) return;
+      confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังล้างข้อมูล...';
+      purgeAllDeletedRecords().then(function(res){
+        resultBox.innerHTML='';
+        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว รวม '+res.total+' รายการ'}));
+        toast('ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว');
+      }).catch(function(e){
+        toast('ล้างข้อมูลไม่สำเร็จ: '+(e && e.message ? e.message : e), true);
+        confirmBtn.disabled=false; confirmBtn.textContent = '🗑️ ยืนยันล้างถาวร ('+total+' รายการ)';
+      });
+    });
+    resultBox.appendChild(confirmBtn);
+  }).catch(function(e){
+    resultBox.innerHTML='';
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    btn.disabled=false; btn.textContent=origText;
+  });
 }
 function ensureAuthed(){
   return new Promise(function(resolve, reject){
@@ -7237,6 +7299,58 @@ function docIntakeDelete(id){
     var d = Object.assign({}, existing.rec, {deleted:true, updatedAt:Date.now()});
     return sheetsUpdateRow('DocIntake', existing.rowNumber, docIntakeToRow(d, cache.headers));
   }).then(function(result){ invalidateDocIntakeSheetCache(); return result; });
+}
+/* ---- ล้างข้อมูลที่ถูกลบถาวร (purge soft-deleted rows) ----
+   การลบในระบบข้อมูลกลางเป็น soft delete เสมอ (ติดธง deleted:true ไม่ได้ลบแถวออกจากชีทจริง) เพื่อกันข้อมูลหายโดยไม่ตั้งใจ
+   และรองรับการตรวจสอบย้อนหลัง แต่ผลคือแถวที่ถูกซ่อนไว้จะสะสมอยู่ในชีทตลอดไป และทุกครั้งที่อ่านชีท (fetchXxxSheet) จะต้อง
+   ดึง+แปลงข้อมูลทุกแถวรวมแถวที่ซ่อนไว้ด้วยเสมอ ก่อนค่อยกรอง !deleted ออกทีหลัง ถ้ามีการลบ/นำเข้าข้อมูลบ่อยๆ จำนวนแถว
+   สะสมนี้จะโตขึ้นเรื่อยๆ จนกระทบความเร็วในการโหลดหน้าต่างๆ ได้ ฟังก์ชันกลุ่มนี้จึงเปิดทางให้แอดมิน "อัดชีทให้แน่น" โดยเขียน
+   ทับด้วยเฉพาะแถวที่ยังไม่ถูกลบเท่านั้น (ล้างช่วงข้อมูลทั้งหมดออกก่อน แล้วค่อยเขียนแถวที่เหลือกลับเข้าไปใหม่) */
+function sheetsClearRange(range){
+  return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+encodeURIComponent(range)+':clear', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({})
+  });
+}
+function sheetsWriteAll(tabName, rows2D){
+  var range = tabName+'!A1';
+  return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/'+encodeURIComponent(range)+'?valueInputOption=RAW', {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({values: rows2D})
+  });
+}
+/* purgeDeletedFromTab: อ่านชีทที่ระบุ (ใช้แคชปัจจุบันถ้ายังไม่หมดอายุ) กรองแถวที่ deleted:true ออก แล้วเขียนชีทใหม่ทั้งชีท
+   ด้วยเฉพาะ header + แถวที่เหลือ ถ้าไม่มีแถว deleted เลยจะไม่แตะชีทเลย (ไม่เสีย write request โดยไม่จำเป็น) */
+function purgeDeletedFromTab(tabName, fetchFn, invalidateFn, toRowFn){
+  return fetchFn().then(function(cache){
+    var kept = cache.entries.filter(function(e){ return !e.rec.deleted; });
+    var removedCount = cache.entries.length - kept.length;
+    if(removedCount === 0) return {removed:0, kept: kept.length};
+    var headers = cache.headers;
+    var rows2D = [headers].concat(kept.map(function(e){ return toRowFn(e.rec, headers); }));
+    return sheetsClearRange(tabName+'!A1:ZZ100000').then(function(){
+      return sheetsWriteAll(tabName, rows2D);
+    }).then(function(){
+      invalidateFn();
+      return {removed: removedCount, kept: kept.length};
+    });
+  });
+}
+/* ทำทีละชีทตามลำดับ (ไม่ทำพร้อมกันด้วย Promise.all) เพื่อไม่ยิง write request หลายตัวพร้อมกันเกินไป
+   (เคยเจอปัญหาชนโควตา Sheets API 60 ครั้ง/นาที/ผู้ใช้ ตอนนำเข้าข้อมูลจำนวนมากมาแล้วในอดีต) */
+function purgeAllDeletedRecords(){
+  return ensureAuthed().then(function(){
+    return purgeDeletedFromTab('Records', fetchRecordsSheet, invalidateRecordsSheetCache, recordToRow);
+  }).then(function(recordsResult){
+    return purgeDeletedFromTab('Files', fetchFilesSheet, invalidateFilesSheetCache, fileToRow).then(function(filesResult){
+      return purgeDeletedFromTab('DocIntake', fetchDocIntakeSheet, invalidateDocIntakeSheetCache, docIntakeToRow).then(function(docResult){
+        var total = recordsResult.removed + filesResult.removed + docResult.removed;
+        if(total > 0){
+          logAudit('ล้างข้อมูลที่ถูกลบถาวร', '', 'Records '+recordsResult.removed+' แถว, Files '+filesResult.removed+' แถว, DocIntake '+docResult.removed+' แถว (รวม '+total+' แถว)');
+        }
+        return {total:total, records:recordsResult, files:filesResult, docIntake:docResult};
+      });
+    });
+  });
 }
 /* ---- audit log adapter (บันทึกว่าใครสร้าง/แก้ไข/ลบข้อมูลนักศึกษาคนไหนเมื่อไหร่ — append-only, ไม่มีการแก้ไข/ลบย้อนหลัง) ---- */
 var AUDIT_COLUMNS = ['id','ts','action','studentId','studentName','role','department'];

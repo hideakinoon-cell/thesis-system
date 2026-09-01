@@ -1189,6 +1189,15 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
+    <h3>⚠️ นักศึกษาที่ไม่มีข้อมูลแผนการเรียน</h3>
+    <div class="help" style="margin-bottom:10px;">สแกนหานักศึกษาที่ช่อง "แผนการเรียน" ว่างเปล่าอยู่ในปัจจุบัน (เช่น เคยได้รับผลกระทบจากบั๊กที่ค่าแผนการเรียนหายไปเมื่อรายการนั้นถูกลบออกจาก master data) เครื่องมือนี้แค่ตรวจสอบและแสดงรายชื่อให้เท่านั้น ไม่แก้ไขข้อมูลให้อัตโนมัติ เพราะไม่ทราบว่าค่าที่ถูกต้องของแต่ละคนคืออะไร กดปุ่ม "แก้ไข" ข้างรายชื่อเพื่อเปิดระเบียนแล้วเลือกแผนการเรียนที่ถูกต้องกลับเข้าไปได้เลย</div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnScanMissingPlan">🔍 เริ่มตรวจสอบ</button>
+    </div>
+    <div id="missingPlanResult" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
     <h3>🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)</h3>
     <div class="help" style="margin-bottom:14px;">เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md</div>
     <div class="grid">
@@ -1614,7 +1623,9 @@ function setSelectValueWithFallback(selectEl, value, skipMismatchCheck){
   }
   selectEl.value = value;
   if(selectEl.value !== value){
-    selectEl.appendChild(el('option',{value:value, text:value+' (ไม่ได้ติดแท็กตำแหน่งนี้)'}));
+    /* ข้อความกลางๆ ครอบคลุมทุกช่องที่ใช้ฟังก์ชันนี้ (หลักสูตร/สาขาวิชา/แผนการเรียน) ไม่ใช่แค่ตำแหน่งกรรมการ
+       เดิมข้อความเฉพาะเจาะจงกับ "ตำแหน่ง" ทำให้สับสนตอนใช้กับช่องอื่น */
+    selectEl.appendChild(el('option',{value:value, text:value+' (ไม่มีในรายการหลักปัจจุบัน)'}));
     selectEl.value = value;
   }
 }
@@ -4358,7 +4369,7 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_studentId').value = rec.studentId||'';
   document.getElementById('f_studentName').value = rec.studentName||'';
   var dl = document.querySelector('input[name=degreeLevel][value="'+rec.degreeLevel+'"]'); if(dl) dl.checked=true;
-  document.getElementById('f_plan').value = rec.plan||'';
+  setSelectValueWithFallback(document.getElementById('f_plan'), rec.plan||'');
   setSelectValueWithFallback(document.getElementById('f_program'), rec.program||'');
   setSelectValueWithFallback(document.getElementById('f_department'), rec.department||'');
   uncheckRadioGroup('englishResult');
@@ -4473,7 +4484,7 @@ function searchExistingStudent(){
     var rec = rows[0];
     document.getElementById('f_studentName').value = rec.studentName||'';
     var dl = document.querySelector('input[name=degreeLevel][value="'+rec.degreeLevel+'"]'); if(dl) dl.checked=true;
-    document.getElementById('f_plan').value = rec.plan||'';
+    setSelectValueWithFallback(document.getElementById('f_plan'), rec.plan||'');
     setSelectValueWithFallback(document.getElementById('f_program'), rec.program||'');
     setSelectValueWithFallback(document.getElementById('f_department'), rec.department||'');
     uncheckRadioGroup('englishResult');
@@ -6439,6 +6450,7 @@ function bindGoogleButtons(){
   document.getElementById('btnScanSwappedGradTerm').addEventListener('click', scanSwappedGradTermData);
   document.getElementById('btnScanWithdrawnAdvisor').addEventListener('click', scanWithdrawnAdvisorStudents);
   document.getElementById('btnPurgeDeleted').addEventListener('click', purgeDeletedUI);
+  document.getElementById('btnScanMissingPlan').addEventListener('click', scanMissingPlanStudents);
 }
 function purgeDeletedUI(){
   var btn = document.getElementById('btnPurgeDeleted');
@@ -6829,6 +6841,44 @@ function scanWithdrawnAdvisorStudents(){
           switchView('dashboard');
           document.getElementById('lookupSearch').value = r.studentId;
           selectLookupStudent(r.studentId);
+        }})
+      ]));
+    });
+  }).catch(function(e){
+    resultBox.innerHTML='';
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    btn.disabled=false; btn.textContent=origText;
+  });
+}
+/* ================= นักศึกษาที่ไม่มีข้อมูลแผนการเรียน =================
+   สร้างขึ้นหลังพบบั๊ก: ช่อง f_plan เดิมตั้งค่าด้วย .value = rec.plan ตรงๆ (ไม่ผ่าน setSelectValueWithFallback เหมือนหลักสูตร/
+   สาขาวิชา) ถ้าค่าแผนการเรียนที่บันทึกไว้ถูกลบออกจาก master data ไปแล้ว ช่องนี้จะกลายเป็นค่าว่างทันทีที่เปิดระเบียนขึ้นมาดู
+   โดยไม่มีการเตือน และถ้ามีการบันทึกซ้ำ (แม้แก้ไขจุดอื่นที่ไม่เกี่ยวข้องเลย) ค่าว่างนั้นจะถูกเขียนทับข้อมูลจริงถาวร
+   เครื่องมือนี้แค่ตรวจสอบ+แสดงรายชื่อคนที่ได้รับผลกระทบ (ช่องแผนการเรียนว่างอยู่ตอนนี้) ไม่แก้ไขให้อัตโนมัติ เพราะไม่ทราบว่า
+   ค่าที่ถูกต้องของแต่ละคนคืออะไร ต้องให้เจ้าหน้าที่ตรวจสอบแล้วกรอกกลับเองทีละคน */
+function scanMissingPlanStudents(){
+  var btn = document.getElementById('btnScanMissingPlan');
+  var resultBox = document.getElementById('missingPlanResult');
+  resultBox.innerHTML='';
+  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  var origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  recordsGetAll().then(function(allRecords){
+    var affected = allRecords.filter(function(r){ return !r.plan; });
+    if(currentDeptRestriction) affected = affected.filter(function(r){ return r.department===currentDeptRestriction; });
+    resultBox.innerHTML='';
+    btn.disabled=false; btn.textContent=origText;
+    if(affected.length===0){
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบนักศึกษาที่ขาดข้อมูลแผนการเรียน'}));
+      return;
+    }
+    resultBox.appendChild(el('div',{class:'help', text:'พบนักศึกษาที่ไม่มีข้อมูลแผนการเรียน '+affected.length+' คน:'}));
+    affected.forEach(function(r){
+      resultBox.appendChild(el('div',{class:'attach-item'},[
+        el('span',{class:'name', text:'⚠️ '+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+(r.program||'-')+' / '+(r.department||'-')+')'}),
+        el('button',{type:'button', class:'link-btn', text:'แก้ไข', onclick:function(){
+          recordsGet(r.id).then(loadRecordIntoForm);
+          switchView('form');
         }})
       ]));
     });

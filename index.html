@@ -176,6 +176,7 @@ if('serviceWorker' in navigator){
   .exam-subsection.locked{opacity:.55;}
   .exam-subsection.locked .combo-input,.exam-subsection.locked input,.exam-subsection.locked select,.exam-subsection.locked textarea{background:#f2f4f7;cursor:not-allowed;}
   .locked-note{background:#fdf0e0;color:var(--warn);border:1px solid #f5dcb0;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:14px;}
+  .revision-track-box{margin-top:14px;padding:14px 16px;background:#fff8ea;border:1px solid #f3dfa8;border-radius:10px;}
   .conflict-note{background:#fdeceb;color:var(--danger);border:1px solid #f3c8c3;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:14px;}
   .conflict-note .cn-title{margin-bottom:4px;}
   .conflict-note .cn-row{font-weight:500;padding:2px 0;}
@@ -864,14 +865,6 @@ if('serviceWorker' in navigator){
             <label><input type="radio" name="proposalResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
           </div>
         </div>
-        <div class="field">
-          <label>ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์</label>
-          <div class="radio-group">
-            <label><input type="radio" name="proposalRevisionStatus" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
-            <label><input type="radio" name="proposalRevisionStatus" value="ส่งแล้ว"> ส่งแล้ว</label>
-          </div>
-        </div>
-        <div class="field"><label>วันที่ส่งแก้ไข</label><input type="date" id="p_revisionDate"></div>
         <div class="field full" id="p_bw25Wrap">
           <button type="button" class="link-btn" id="p_btnToggleBw25" style="text-align:left;">＋ เพิ่มข้อมูล บว.25 (สำหรับแผน ข — ไม่บังคับ)</button>
           <div id="p_bw25Fields" style="display:none;margin-top:10px;">
@@ -900,6 +893,22 @@ if('serviceWorker' in navigator){
         </div>
         <div class="attach-list" id="p_attachList"></div>
       </div>
+    </div>
+
+    <!-- ติดตามสถานะส่งแก้ไขเค้าโครง — ตั้งใจวางไว้นอก #sub-proposal เพื่อไม่ให้ถูกล็อก/จางลงไปกับข้อมูลสอบด้านบน
+         (แม้ข้อมูลสอบ 3.1 จะถูกล็อกเพราะบันทึกไปแล้ว เจ้าหน้าที่ยังต้องกลับมาติ๊กอัปเดตสถานะนี้ได้เรื่อยๆ ทีหลัง เมื่อนักศึกษาส่งแก้ไขจริง) -->
+    <div class="revision-track-box" id="p_revisionTrackBox">
+      <div class="grid cols-3">
+        <div class="field">
+          <label>ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์</label>
+          <div class="radio-group">
+            <label><input type="radio" name="proposalRevisionStatus" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
+            <label><input type="radio" name="proposalRevisionStatus" value="ส่งแล้ว"> ส่งแล้ว</label>
+          </div>
+        </div>
+        <div class="field"><label>วันที่ส่งแก้ไข</label><input type="date" id="p_revisionDate"></div>
+      </div>
+      <div class="help" style="margin-top:6px;">ติ๊กอัปเดตสถานะนี้ได้ตลอด แม้ข้อมูลการสอบ 3.1 ด้านบนจะถูกล็อกไว้แล้ว</div>
     </div>
 
     <div class="exam-subsection" id="sub-defense">

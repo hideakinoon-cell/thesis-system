@@ -4,12 +4,18 @@
    จำกัดขอบเขตเฉพาะไฟล์ของเว็บเอง (index.html, วิดีโอ/รูปพื้นหลัง) และสคริปต์ static จาก CDN ที่รู้จัก —
    ไม่แตะ/ไม่แคช Google Sheets, Google Drive, Google Sign-In (accounts.google.com) หรือ API อื่นใดของ Google
    เพื่อไม่ให้รบกวนระบบตรวจจับออฟไลน์ของแอปที่ทำงานอยู่แล้ว (initOfflineDetection ใน index.html) */
-var CACHE_NAME = 'thesis-app-v1';
+var CACHE_NAME = 'thesis-app-v2';
 var CORE_ASSETS = [
   './',
   './index.html',
   './hero-bg.mp4',
-  './hero-bg-poster.jpg'
+  './hero-bg-poster.jpg',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-192-maskable.png',
+  './icon-512-maskable.png',
+  './apple-touch-icon.png'
 ];
 var CDN_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'];
 

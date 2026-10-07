@@ -251,6 +251,30 @@ if('serviceWorker' in navigator){
   .attach-item{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13.5px;}
   .attach-item .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .attach-item .size{color:var(--muted);font-size:12px;}
+  /* การ์ด "สิ่งที่ต้องทำวันนี้" — จัดกลุ่มตามประเภทความเร่งด่วน แต่ละกลุ่มมีหัวข้อ+จำนวน และแถวแบบ 2 บรรทัด (ชื่อตัวหนา / รายละเอียดตัวเล็ก)
+     ขึ้นบรรทัดใหม่ได้เต็มที่แทนการตัดท้ายด้วย ... แบบเดิม เพื่อให้อ่านง่ายขึ้นแม้ชื่อนักศึกษาจะยาวหรือมีรายละเอียดเยอะ */
+  .today-action-groups{display:flex;flex-direction:column;gap:16px;margin-top:12px;}
+  .today-action-group{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+  .today-action-group-title{display:flex;align-items:center;gap:8px;padding:8px 12px;font-weight:700;font-size:13.5px;}
+  .today-action-group-title .count{margin-left:auto;font-weight:700;font-size:12px;padding:1px 9px;border-radius:999px;background:rgba(255,255,255,.65);}
+  .today-action-rows{display:flex;flex-direction:column;}
+  .today-action-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--card);border-top:1px solid var(--border);}
+  .today-action-row:first-child{border-top:none;}
+  .today-action-row .ta-icon{font-size:15px;line-height:1.5;flex-shrink:0;}
+  .today-action-row .ta-body{flex:1;min-width:0;}
+  .today-action-row .ta-label{font-weight:700;font-size:14px;color:var(--text);word-break:break-word;}
+  .today-action-row .ta-detail{font-size:12.5px;color:var(--muted);margin-top:2px;word-break:break-word;}
+  .today-action-row .ta-btn{flex-shrink:0;white-space:nowrap;}
+  .today-action-cat-book{background:#FFE3DA;}
+  .today-action-cat-book .ta-icon,.today-action-cat-book .count{color:#c2542f;}
+  .today-action-cat-proposal{background:#DCEBFA;}
+  .today-action-cat-proposal .ta-icon,.today-action-cat-proposal .count{color:var(--primary);}
+  .today-action-cat-defense{background:#DFF3E8;}
+  .today-action-cat-defense .ta-icon,.today-action-cat-defense .count{color:var(--accent);}
+  .today-action-cat-advisor{background:#FBE4EE;}
+  .today-action-cat-advisor .ta-icon,.today-action-cat-advisor .count{color:var(--accent3);}
+  .today-action-cat-doc{background:#F0E6FA;}
+  .today-action-cat-doc .ta-icon,.today-action-cat-doc .count{color:var(--accent2);}
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
   .toolbar input[type=text]{padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;min-width:220px;}
   .toolbar select{padding:9px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;}
@@ -2764,31 +2788,38 @@ function renderSummaryDashboard(){
       return {rec:r, daysSince:daysSince};
     });
 
-    /* รวมทุกรายการเตือนข้างต้นเป็นลิสต์เดียว "สิ่งที่ต้องทำวันนี้" เรียงตามความเร่งด่วน:
-       1) เลยกำหนดส่งเล่มแล้ว 2) ถอนที่ปรึกษายังไม่แต่งตั้งใหม่ 3) รอผลสอบเกิน 7 วัน 4) ใกล้ครบกำหนดส่งเล่ม (ยังไม่เลย)
-       ภายในแต่ละกลุ่มเรียงจากรุนแรง/ค้างนานที่สุดก่อน เพื่อไม่ต้องให้เจ้าหน้าที่ไล่ดูหลายการ์ดแยกกัน */
+    /* รวมทุกรายการเตือนข้างต้นเป็นลิสต์เดียว "สิ่งที่ต้องทำวันนี้" จัดกลุ่มตาม "ประเภทงาน" (cat) เพื่อให้เจ้าหน้าที่แยกประเภทงานได้ทันที
+       แทนที่จะไล่ดูทีละแถวปนกันหมด: 1) เล่มสมบูรณ์ 2) ผลสอบเค้าโครง (3.1) 3) ผลสอบป้องกัน/IS (3.2) 4) ถอนที่ปรึกษายังไม่แต่งตั้งใหม่ 5) เอกสารค้างดำเนินการ
+       ภายในแต่ละกลุ่มเรียงจากรุนแรง/ค้างนานที่สุดก่อน (catRank กำหนดลำดับกลุ่ม, sortKey กำหนดลำดับภายในกลุ่ม) */
     var actionItems = [];
     dueSoonList.forEach(function(item){
       var r = item.rec;
       var overdue = item.daysLeft < 0;
       var statusTxt = overdue ? ('เลยกำหนดแล้ว '+Math.abs(item.daysLeft)+' วัน') : (item.daysLeft===0 ? 'ครบกำหนดวันนี้' : 'เหลืออีก '+item.daysLeft+' วัน');
       actionItems.push({
-        rec:r, tier: overdue?0:3, sortKey: item.daysLeft, icon: overdue?'🔴':'🟡',
+        rec:r, cat:'book', catRank:0, sortKey: item.daysLeft, icon: overdue?'🔴':'🟡',
+        label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
+        detail: 'กำหนดส่งเล่ม '+toBuddhistDateStr(r.defenseDueDate)+' • '+statusTxt,
         text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' (กำหนดส่งเล่ม '+toBuddhistDateStr(r.defenseDueDate)+' • '+statusTxt+')'
+      });
+    });
+    pendingResultList.forEach(function(item){
+      var r = item.rec;
+      var isProposal = item.typeTxt.indexOf('เค้าโครง') > -1;
+      actionItems.push({
+        rec:r, cat: isProposal?'proposal':'defense', catRank: isProposal?1:2, sortKey: -item.daysSince, icon:'🔴',
+        label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
+        detail: item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน',
+        text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน)'
       });
     });
     withdrawnList.forEach(function(item){
       var r = item.rec;
       actionItems.push({
-        rec:r, tier:1, sortKey: -(item.daysSince||0), icon:'🟠',
+        rec:r, cat:'advisor', catRank:3, sortKey: -(item.daysSince||0), icon:'🟠',
+        label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
+        detail: 'ถอนที่ปรึกษาแล้ว'+(item.daysSince!=null?' • ผ่านมาแล้ว '+item.daysSince+' วัน':'')+' ยังไม่แต่งตั้งใหม่',
         text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' (ถอนที่ปรึกษาแล้ว'+(item.daysSince!=null?' • ผ่านมาแล้ว '+item.daysSince+' วัน':'')+' ยังไม่แต่งตั้งใหม่)'
-      });
-    });
-    pendingResultList.forEach(function(item){
-      var r = item.rec;
-      actionItems.push({
-        rec:r, tier:2, sortKey: -item.daysSince, icon:'🔴',
-        text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน)'
       });
     });
 
@@ -2802,11 +2833,13 @@ function renderSummaryDashboard(){
       var daysSince = Math.floor((nowTs-rd.getTime())/86400000);
       if(daysSince < STALE_DOC_INTAKE_DAYS) return;
       actionItems.push({
-        doc:d, tier:4, sortKey: -daysSince, icon:'🟣',
+        doc:d, cat:'doc', catRank:4, sortKey: -daysSince, icon:'🟣',
+        label: (d.intakeNo?('เลขรับ '+d.intakeNo+' — '):'')+(d.studentName||d.studentId||'(ไม่ระบุชื่อ)'),
+        detail: (d.docType||'เอกสาร')+' • '+docStatusLabel(d.status)+' • รับเรื่องมาแล้ว '+daysSince+' วัน',
         text: (d.intakeNo?('เลขรับ '+d.intakeNo+' — '):'')+(d.studentName||d.studentId||'(ไม่ระบุชื่อ)')+' ('+(d.docType||'เอกสาร')+' • '+docStatusLabel(d.status)+' • รับเรื่องมาแล้ว '+daysSince+' วัน)'
       });
     });
-    actionItems.sort(function(a,b){ return a.tier!==b.tier ? a.tier-b.tier : a.sortKey-b.sortKey; });
+    actionItems.sort(function(a,b){ return a.catRank!==b.catRank ? a.catRank-b.catRank : a.sortKey-b.sortKey; });
     renderTodayActionCard(actionItems);
 
     /* กราฟสรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
@@ -2830,12 +2863,23 @@ function renderSummaryDashboard(){
   });
 }
 var lastTodayActionItems = []; /* เก็บลิสต์ล่าสุดที่แสดงในการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ใช้ตอนกดส่งออก Excel โดยไม่ต้องคำนวณซ้ำ (เก็บรายการครบทุกรายการ ไม่ตัดตามที่ย่อแสดงบนการ์ด) */
-var TODAY_ACTION_TIER_LABELS = {0:'เลยกำหนดส่งเล่ม', 1:'ถอนที่ปรึกษายังไม่แต่งตั้งใหม่', 2:'รอผลสอบเกิน 7 วัน', 3:'ใกล้ครบกำหนดส่งเล่ม', 4:'เอกสารค้างดำเนินการ'};
+/* จัดกลุ่ม "สิ่งที่ต้องทำวันนี้" ตามประเภทงาน (cat) แทนความเร่งด่วนล้วนๆ เพื่อให้เจ้าหน้าที่แยกประเภทงาน (เล่ม/ผลสอบเค้าโครง/ผลสอบป้องกัน/ที่ปรึกษา/เอกสาร)
+   ได้ในแวบเดียว — ความเร่งด่วนยังคงแสดงต่อแถวด้วยไอคอนสี 🔴🟡🟠🟣 และเรียงลำดับรุนแรงที่สุดก่อนภายในแต่ละกลุ่มเหมือนเดิม */
+var TODAY_ACTION_CAT_META = {
+  book:     {icon:'📘', label:'เล่มสมบูรณ์'},
+  proposal: {icon:'📝', label:'ผลสอบเค้าโครงวิทยานิพนธ์/IS (3.1)'},
+  defense:  {icon:'🎓', label:'ผลสอบป้องกันวิทยานิพนธ์/IS (3.2)'},
+  advisor:  {icon:'🧑‍🏫', label:'ถอนที่ปรึกษายังไม่แต่งตั้งใหม่'},
+  doc:      {icon:'📄', label:'เอกสารค้างดำเนินการ'}
+};
 /* เดิมการ์ดนี้แสดงทุกรายการรวมกันเป็นลิสต์ยาวเดียว พอมีข้อมูลเยอะ (5 หมวดรวมกัน) การ์ดจะยาวมากจนดูยาก
    จึงย่อแสดงเฉพาะ 10 รายการเร่งด่วนที่สุดก่อน (ลิสต์เรียงตามความเร่งด่วนอยู่แล้ว) แล้วมีปุ่ม "ดูทั้งหมด" ให้กดขยายดูครบ
    ปุ่มส่งออก Excel ยังคงส่งออกครบทุกรายการเสมอไม่ว่าจะย่ออยู่หรือขยายอยู่ */
 var TODAY_ACTION_PREVIEW_COUNT = 10;
 var todayActionExpanded = false;
+/* แสดงผลแบบจัดกลุ่มตามความเร่งด่วน (tier) แทนลิสต์ยาวรวมกันแบบเดิม — แต่ละกลุ่มมีหัวข้อ+สีประจำกลุ่ม+จำนวน
+   และแต่ละแถวแบบ 2 บรรทัด (ชื่อตัวหนาบรรทัดบน / รายละเอียดตัวเล็กบรรทัดล่าง) ขึ้นบรรทัดใหม่ได้เต็มที่แทนการตัดท้ายด้วย ...
+   เพื่อให้อ่านง่ายและแยกความเร่งด่วนออกจากกันชัดเจนขึ้น (ก่อนหน้านี้ทุกรายการหน้าตาเหมือนกันหมด แยกยาก) */
 function renderTodayActionCard(list){
   var card = document.getElementById('todayActionCard');
   var box = document.getElementById('todayActionList');
@@ -2845,12 +2889,34 @@ function renderTodayActionCard(list){
   card.style.display='';
   var isExpanded = todayActionExpanded || list.length<=TODAY_ACTION_PREVIEW_COUNT;
   var visibleList = isExpanded ? list : list.slice(0, TODAY_ACTION_PREVIEW_COUNT);
+
+  /* list ถูกเรียงตาม cat (ประเภทงาน) มาก่อนแล้วจาก actionItems.sort(...) ด้านบน จึงจัดกลุ่มโดยไล่ทีละแถวแล้วขึ้นกลุ่มใหม่เมื่อ cat เปลี่ยนได้เลย
+     โดยไม่ต้องเรียงซ้ำ (คงลำดับกลุ่ม/ความเร่งด่วนภายในกลุ่มเดิมไว้) */
+  var groupsWrap = el('div',{class:'today-action-groups'});
+  var currentCat = null, currentRowsEl = null;
   visibleList.forEach(function(item){
+    if(item.cat !== currentCat){
+      currentCat = item.cat;
+      var meta = TODAY_ACTION_CAT_META[currentCat] || {icon:'•', label:currentCat};
+      var groupEl = el('div',{class:'today-action-group today-action-cat-'+currentCat});
+      groupEl.appendChild(el('div',{class:'today-action-group-title'},[
+        el('span',{text:meta.icon}),
+        el('span',{text:meta.label}),
+        el('span',{class:'count', text:String(list.filter(function(x){ return x.cat===currentCat; }).length)+' รายการ'})
+      ]));
+      currentRowsEl = el('div',{class:'today-action-rows'});
+      groupEl.appendChild(currentRowsEl);
+      groupsWrap.appendChild(groupEl);
+    }
     var r = item.rec;
     var d = item.doc;
-    box.appendChild(el('div',{class:'attach-item'},[
-      el('span',{class:'name', text:item.icon+' '+item.text}),
-      el('button',{type:'button', class:'link-btn', text: d ? 'ดูรายการ' : 'ดูโปรไฟล์', onclick:function(){
+    currentRowsEl.appendChild(el('div',{class:'today-action-row'},[
+      el('span',{class:'ta-icon', text:item.icon}),
+      el('div',{class:'ta-body'},[
+        el('div',{class:'ta-label', text:item.label||item.text}),
+        el('div',{class:'ta-detail', text:item.detail||''})
+      ]),
+      el('button',{type:'button', class:'btn btn-secondary btn-sm ta-btn', text: d ? 'ดูรายการ' : 'ดูโปรไฟล์', onclick:function(){
         if(d){
           switchView('docintake');
           document.getElementById('di_filterSearch').value = d.studentId || d.studentName || '';
@@ -2863,8 +2929,10 @@ function renderTodayActionCard(list){
       }})
     ]));
   });
+  box.appendChild(groupsWrap);
+
   if(list.length>TODAY_ACTION_PREVIEW_COUNT){
-    box.appendChild(el('button',{type:'button', class:'link-btn', style:'margin-top:8px;font-weight:600;', id:'btnToggleTodayAction', text: isExpanded ? '▲ ย่อรายการ' : '▼ ดูทั้งหมด ('+list.length+' รายการ)', onclick:function(){
+    box.appendChild(el('button',{type:'button', class:'link-btn', style:'margin-top:12px;font-weight:600;', id:'btnToggleTodayAction', text: isExpanded ? '▲ ย่อรายการ' : '▼ ดูทั้งหมด ('+list.length+' รายการ)', onclick:function(){
       todayActionExpanded = !todayActionExpanded;
       renderTodayActionCard(lastTodayActionItems);
     }}));
@@ -2876,7 +2944,7 @@ function exportTodayActionExcel(){
   if(!lastTodayActionItems.length){ toast('ไม่มีรายการให้ส่งออกในขณะนี้', true); return; }
   var aoa = [['ลำดับความสำคัญ','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','รายละเอียด']].concat(lastTodayActionItems.map(function(item){
     var r = item.rec || item.doc || {};
-    return [TODAY_ACTION_TIER_LABELS[item.tier]||'', r.studentId||'', r.studentName||'', r.department||'', item.text];
+    return [(TODAY_ACTION_CAT_META[item.cat]||{}).label||'', r.studentId||'', r.studentName||'', r.department||'', item.text];
   }));
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(aoa);

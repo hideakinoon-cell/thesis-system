@@ -477,6 +477,7 @@ if('serviceWorker' in navigator){
   <button data-view="summary" class="active">📊 แดชบอร์ด</button>
   <button data-view="docintake">📥 ลงทะเบียนรับเอกสาร</button>
   <button data-view="dashboard">🔍 ตรวจสอบข้อมูล</button>
+  <button data-view="bydept">🏫 ค้นหาตามสาขา</button>
   <button data-view="advisors">👨‍🏫 ที่ปรึกษา</button>
   <button data-view="advisorlist">👥 รายชื่ออาจารย์</button>
   <button data-view="form">📝 บันทึกข้อมูล</button>
@@ -630,6 +631,27 @@ if('serviceWorker' in navigator){
   </div>
   <div id="lookupDetail">
     <div class="empty-state">เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด</div>
+  </div>
+</section>
+
+<!-- ============ ค้นหาตามสาขาวิชา (ตารางรายชื่อนักศึกษาทั้งสาขา) ============ -->
+<section id="view-bydept" style="display:none;">
+  <div class="card">
+    <h3>🏫 ค้นหานักศึกษาตามสาขาวิชา</h3>
+    <div class="field" style="max-width:320px;">
+      <label>เลือกสาขาวิชา</label>
+      <select id="byDeptFilter"><option value="">ทุกสาขา</option></select>
+    </div>
+    <div class="help" id="byDeptCountText" style="margin-top:8px;"></div>
+    <div style="overflow-x:auto;margin-top:10px;">
+      <table>
+        <thead>
+          <tr><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>แผนการเรียน</th><th>หลักสูตร</th><th>อาจารย์ที่ปรึกษาหลัก</th><th>สถานะ</th><th>จัดการ</th></tr>
+        </thead>
+        <tbody id="byDeptTbody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="byDeptEmpty" style="display:none;">เลือกสาขาวิชาด้านบนเพื่อดูรายชื่อนักศึกษา</div>
   </div>
 </section>
 
@@ -2416,6 +2438,7 @@ function bindNav(){
   });
   document.getElementById('lookupSearch').addEventListener('input', onLookupSearchInput);
   document.getElementById('lookupDeptFilter').addEventListener('change', function(){ lookupListPage=0; renderLookupList(); });
+  document.getElementById('byDeptFilter').addEventListener('change', renderByDeptView);
   document.getElementById('advisorLookupSearch').addEventListener('input', function(){ advisorLookupListPage=0; renderAdvisorLookupResults(); });
   document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
   document.getElementById('btnLookupNext').addEventListener('click', function(){ lookupListPage++; renderLookupList(); });
@@ -2548,7 +2571,7 @@ function onLookupSearchInput(){
 function switchView(name){
   /* เจ้าหน้าที่ดูอย่างเดียว (viewer/dept-viewer) เข้าได้เฉพาะหน้าแดชบอร์ดสรุปข้อมูล กับหน้าตรวจสอบข้อมูลรายบุคคลเท่านั้น */
   if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard' && name!=='summary') name='dashboard';
-  ['summary','dashboard','advisors','advisorlist','docintake','form','list','settings','auditlog'].forEach(function(v){
+  ['summary','dashboard','bydept','advisors','advisorlist','docintake','form','list','settings','auditlog'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
@@ -2567,6 +2590,7 @@ function switchView(name){
   if(name==='auditlog') renderAuditLog();
   if(name==='advisors') computeAdvisorUsedCounts().then(renderAdvisorLookupResults);
   if(name==='docintake'){ renderDocIntakeSelects(); renderDocIntakeList(); }
+  if(name==='bydept') renderByDeptView();
 }
 
 /* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
@@ -3907,6 +3931,7 @@ function renderAllSelects(){
   initLocationAutocompletes();
   fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, 'ทุกสาขา');
   fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, 'ทุกสาขา');
+  fillSelect(document.getElementById('byDeptFilter'), masterData.departments, 'ทุกสาขา');
   fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, 'ทุกหลักสูตร');
   fillSelect(document.getElementById('dashPlanFilter'), masterData.plans, 'ทุกแผน');
   ensureSearchSelect('f_program', masterData.programs, 'พิมพ์เพื่อค้นหาหลักสูตร...');
@@ -4975,6 +5000,73 @@ function getFilteredRecords(){
     });
     rows.sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
     return rows;
+  });
+}
+/* สถานะโดยสรุปของนักศึกษา 1 คน ไว้ใช้แสดงในตาราง "ค้นหาตามสาขาวิชา" — อิงเกณฑ์เดียวกับการ์ดสถิติบนแดชบอร์ดสรุป
+   (statGraduated/statWithdrawnAdvisor/statOverdueBook/statActive) เพื่อให้ความหมายตรงกันทั้งระบบ */
+function studentStatusLabel(r){
+  if(r.graduated) return 'สำเร็จการศึกษาแล้ว';
+  if(isOverdueRec(r)) return 'เลยกำหนดส่งเล่มฉบับสมบูรณ์';
+  if(studentHasWithdrawnAdvisor(r)) return 'ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่';
+  return 'กำลังศึกษา';
+}
+/* หน้า "ค้นหาตามสาขาวิชา" — ตารางรายชื่อนักศึกษาทั้งหมดในสาขาที่เลือก (1 แถวต่อนักศึกษา 1 คน เอาข้อมูลล่าสุดตาม updatedAt
+   เหมือนวิธีที่ใช้ในแดชบอร์ดสรุป เพราะ records ดิบมีได้หลายแถวต่อนักศึกษาหนึ่งคน (หลายครั้งที่สอบ) ) */
+function renderByDeptView(){
+  var tbody = document.getElementById('byDeptTbody');
+  var emptyEl = document.getElementById('byDeptEmpty');
+  var countText = document.getElementById('byDeptCountText');
+  var fDept = document.getElementById('byDeptFilter').value||'';
+  tbody.innerHTML='';
+  countText.textContent='';
+  emptyEl.style.display='none';
+  if(!fDept){
+    emptyEl.textContent = 'เลือกสาขาวิชาด้านบนเพื่อดูรายชื่อนักศึกษา';
+    emptyEl.style.display='';
+    return;
+  }
+  countText.textContent = 'กำลังโหลดข้อมูล...';
+  recordsGetAll().then(function(rows){
+    var latestByStudent = {};
+    rows.forEach(function(r){
+      if(!r.studentId) return;
+      if(currentDeptRestriction && r.department!==currentDeptRestriction) return;
+      if(r.department!==fDept) return;
+      if(!latestByStudent[r.studentId] || (r.updatedAt||0) > (latestByStudent[r.studentId].updatedAt||0)){
+        latestByStudent[r.studentId] = r;
+      }
+    });
+    var students = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
+    students.sort(function(a,b){ return (a.studentId||'').localeCompare(b.studentId||''); });
+    tbody.innerHTML='';
+    if(!students.length){
+      countText.textContent='';
+      emptyEl.textContent = 'ไม่พบนักศึกษาในสาขานี้';
+      emptyEl.style.display='';
+      return;
+    }
+    countText.textContent = 'พบนักศึกษาทั้งหมด '+students.length+' คน';
+    students.forEach(function(r){
+      tbody.appendChild(el('tr',{},[
+        el('td',{text:r.studentId||''}),
+        el('td',{text:r.studentName||''}),
+        el('td',{text:r.plan||''}),
+        el('td',{text:r.program||''}),
+        el('td',{text:r.mainAdvisor||''}),
+        el('td',{text:studentStatusLabel(r)}),
+        el('td',{},[
+          el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'ดูโปรไฟล์', onclick:function(){
+            switchView('dashboard');
+            document.getElementById('lookupSearch').value = r.studentId;
+            selectLookupStudent(r.studentId);
+          }})
+        ])
+      ]));
+    });
+  }).catch(function(e){
+    countText.textContent='';
+    emptyEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: '+e;
+    emptyEl.style.display='';
   });
 }
 function renderList(){

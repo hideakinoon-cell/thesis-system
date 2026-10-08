@@ -44,21 +44,31 @@ if('serviceWorker' in navigator){
   header.topbar{background:linear-gradient(120deg,#1e4d8b,#2f6fc0 45%,#7c3aed);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 2px 12px rgba(30,20,90,.22);}
   header.topbar .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:18px;}
   header.topbar .brand .logo{width:34px;height:34px;border-radius:10px;background:#fff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.15);}
-  header.topbar .badge{background:rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:13px;backdrop-filter:blur(2px);}
-  nav.tabs{display:flex;gap:6px;background:#fff;padding:8px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;position:sticky;top:0;z-index:20;}
-  nav.tabs button{background:none;border:none;padding:10px 16px;border-radius:20px;cursor:pointer;font-family:inherit;font-size:15px;color:var(--muted);font-weight:600;transition:background-color .18s,color .18s,transform .12s;}
+  header.topbar .badge{background:rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:13px;backdrop-filter:blur(2px);white-space:nowrap;}
+  header.topbar .topbar-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  /* เมนูหลักย้ายจากแถบบนมาเป็นแถบด้านซ้าย (sidebar) เพื่อลดความแน่น/รกตาเมื่อเมนูมีหลายรายการ —
+     ส่วนช่องค้นหา/สถานะ Drive/ปุ่มล็อกระบบ ย้ายไปรวมไว้ในแถบบน (header) แทน เพราะไม่ใช่รายการเมนูหน้า */
+  .app-layout{display:flex;align-items:flex-start;}
+  nav.tabs{display:flex;flex-direction:column;gap:3px;background:#fff;padding:16px 10px;border-right:1px solid var(--border);width:230px;flex:0 0 230px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;z-index:20;}
+  nav.tabs button{background:none;border:none;width:100%;text-align:left;padding:10px 14px;border-radius:9px;cursor:pointer;font-family:inherit;font-size:14.5px;color:var(--muted);font-weight:600;transition:background-color .18s,color .18s;}
   nav.tabs button:hover{background:#f1f4f9;color:var(--primary-dark);}
   nav.tabs button.active{background:linear-gradient(120deg,var(--primary),var(--accent2));color:#fff;box-shadow:0 3px 10px rgba(80,60,180,.28);}
   nav.tabs button.active:hover{background:linear-gradient(120deg,var(--primary),var(--accent2));color:#fff;}
-  nav.tabs .spacer{flex:1;}
-  nav.tabs .drive-status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;padding:6px 10px;}
-  nav.tabs .drive-status .dot{width:9px;height:9px;border-radius:50%;background:#c7ccd3;}
-  nav.tabs .drive-status.on .dot{background:var(--accent);}
+  header.topbar .drive-status{font-size:13px;color:rgba(255,255,255,.9);display:flex;align-items:center;gap:6px;padding:6px 10px;white-space:nowrap;}
+  header.topbar .drive-status .dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.5);}
+  header.topbar .drive-status.on .dot{background:#8fe3b0;}
+  header.topbar .btn-lock-nav{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;}
+  header.topbar .btn-lock-nav:hover{background:rgba(255,255,255,.28);}
   .global-search{position:relative;min-width:190px;max-width:230px;}
   .global-search input{width:100%;padding:8px 14px;border-radius:20px;border:1px solid var(--border);background:#f4f6fa;font-family:inherit;font-size:13.5px;color:var(--text);}
   .global-search input:focus{outline:none;border-color:var(--primary);background:#fff;}
   .global-search .lookup-result-list{position:absolute;top:100%;right:0;width:300px;background:#fff;border:1px solid var(--border);border-radius:9px;box-shadow:var(--shadow-md);z-index:50;margin-top:6px;padding:8px;max-height:320px;}
-  main{max-width:1100px;margin:0 auto;padding:20px;}
+  main{flex:1;min-width:0;max-width:1100px;margin:20px auto;padding:0 20px 20px;}
+  @media(max-width:900px){
+    .app-layout{display:block;}
+    nav.tabs{flex-direction:row;flex-wrap:wrap;width:auto;flex:none;position:sticky;top:0;height:auto;overflow-y:visible;border-right:none;border-bottom:1px solid var(--border);gap:6px;}
+    nav.tabs button{width:auto;border-radius:20px;}
+  }
   /* หน้ารายการทั้งหมดมีคอลัมน์เยอะ (รหัส/ชื่อ/สาขา/ประเภท/วันที่/ผลสอบ/ไฟล์/จัดการ) จึงขยายกว้างขึ้นเฉพาะหน้านี้ ไม่กระทบหน้าอื่น */
   main.wide{max-width:1600px;}
   /* เอเฟกต์เปลี่ยนหน้า: ทุกครั้งที่สลับแท็บ (switchView ทำให้ section ที่ถูกเลือกเปลี่ยนจาก display:none เป็นแสดงผล) แอนิเมชันจะเล่นใหม่โดยอัตโนมัติ */
@@ -473,8 +483,22 @@ if('serviceWorker' in navigator){
 
 <header class="topbar">
   <div class="brand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
-  <div class="badge" id="roleBadge">เจ้าหน้าที่ (Admin)</div>
+  <div class="topbar-right">
+    <div class="global-search" id="globalSearchWrap">
+      <input type="text" id="globalSearchInput" placeholder="🔍 ค้นหานักศึกษา...">
+      <div class="lookup-result-list" id="globalSearchResults" style="display:none;"></div>
+    </div>
+    <div class="drive-status" id="driveStatus"><span class="dot"></span><span id="driveStatusText">ยังไม่เชื่อมต่อ Google Drive</span></div>
+    <div class="badge" id="roleBadge">เจ้าหน้าที่ (Admin)</div>
+    <button type="button" class="btn-lock-nav" id="btnLockNow">🔒 ล็อกระบบ</button>
+  </div>
 </header>
+<div id="offlineSyncBanner" style="display:none;background:#fef3c7;border-bottom:1px solid #f59e0b;padding:10px 20px;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;">
+  <span id="offlineSyncBannerText" style="color:#92400e;font-size:14px;"></span>
+  <button type="button" class="btn btn-primary btn-sm" id="btnSyncOfflineNow">🔄 ซิงค์ข้อมูลตอนนี้</button>
+  <button type="button" class="link-btn" id="btnDismissOfflineBanner">ปิด</button>
+</div>
+<div class="app-layout">
 <nav class="tabs">
   <button data-view="summary" class="active">📊 แดชบอร์ด</button>
   <button data-view="docintake">📥 ลงทะเบียนรับเอกสาร</button>
@@ -486,19 +510,7 @@ if('serviceWorker' in navigator){
   <button data-view="list">📋 รายการทั้งหมด</button>
   <button data-view="settings">⚙️ ตั้งค่า</button>
   <button data-view="auditlog">📜 ประวัติการแก้ไข</button>
-  <div class="spacer"></div>
-  <div class="global-search" id="globalSearchWrap">
-    <input type="text" id="globalSearchInput" placeholder="🔍 ค้นหานักศึกษา...">
-    <div class="lookup-result-list" id="globalSearchResults" style="display:none;"></div>
-  </div>
-  <div class="drive-status" id="driveStatus"><span class="dot"></span><span id="driveStatusText">ยังไม่เชื่อมต่อ Google Drive</span></div>
-  <button type="button" class="btn-lock-nav" id="btnLockNow">🔒 ล็อกระบบ</button>
 </nav>
-<div id="offlineSyncBanner" style="display:none;background:#fef3c7;border-bottom:1px solid #f59e0b;padding:10px 20px;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;">
-  <span id="offlineSyncBannerText" style="color:#92400e;font-size:14px;"></span>
-  <button type="button" class="btn btn-primary btn-sm" id="btnSyncOfflineNow">🔄 ซิงค์ข้อมูลตอนนี้</button>
-  <button type="button" class="link-btn" id="btnDismissOfflineBanner">ปิด</button>
-</div>
 <main>
 
 <!-- ============ SUMMARY DASHBOARD VIEW (แสดงทันทีหลังปลดล็อก) ============ -->
@@ -751,6 +763,12 @@ if('serviceWorker' in navigator){
       </div>
     </div>
     <div class="field" style="margin-top:6px;"><label>หมายเหตุ (ถ้ามี)</label><input type="text" id="di_note" placeholder="เช่น ชื่ออาจารย์ที่ขอแต่งตั้งเป็นที่ปรึกษา"></div>
+    <div class="field full" id="di_publicationSection" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">
+      <label>ผลงานตีพิมพ์ (แนบมากับคำร้องขอสำเร็จการศึกษา)</label>
+      <div class="help" style="margin-bottom:8px;">กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน — เมื่อบันทึกรายการ ระบบจะนำไปรวมกับหมวดที่ 5 ในประวัตินักศึกษาคนนี้ให้อัตโนมัติ ไม่ต้องไปกรอกซ้ำอีกที่หน้าบันทึกข้อมูล</div>
+      <div class="multi-row-list" id="di_publicationList"></div>
+      <button type="button" class="link-btn" id="btnAddDiPublication" style="margin-top:8px;text-align:left;">＋ เพิ่มผลงานตีพิมพ์</button>
+    </div>
     <div style="margin-top:14px;"><button type="button" class="btn btn-primary" id="btnAddDocIntake">➕ บันทึกรายการ</button></div>
   </div>
 
@@ -1373,6 +1391,7 @@ if('serviceWorker' in navigator){
 </section>
 
 </main>
+</div>
 
 <div id="toast" class="toast"></div>
 <div id="modalRoot"></div>
@@ -1588,8 +1607,13 @@ var DEFAULT_DOCUMENT_TYPES = [
   'บว.04 (ขอแต่งตั้งอาจารย์ที่ปรึกษา)',
   'บว.05 (ขอสอบเค้าโครงวิทยานิพนธ์/สารนิพนธ์)',
   'บว.25 (ขออนุมัติหัวข้อ/ขอสอบป้องกัน)',
+  'คำร้องขอสำเร็จการศึกษา',
   'อื่นๆ'
 ];
+/* ประเภทเอกสารพิเศษ: คำร้องขอสำเร็จการศึกษา — เมื่อเลือกประเภทนี้ในหน้าลงทะเบียนรับเอกสาร ระบบจะโชว์ช่องกรอก
+   ผลงานตีพิมพ์เพิ่มเติม แล้วนำไปรวมเข้ากับ "หมวดที่ 5: การเผยแพร่ผลงานวิจัย" ของประวัตินักศึกษาคนนั้นโดยอัตโนมัติ
+   (ดู syncGraduationRequestPublications) เพื่อไม่ต้องคีย์ข้อมูลผลงานตีพิมพ์ซ้ำสองที่ */
+var GRADUATION_REQUEST_DOC_TYPE = 'คำร้องขอสำเร็จการศึกษา';
 var OLD_ROLE_KEY_TO_NAME = {
   chair:'ประธานกรรมการ',
   mainAdvisor:'กรรมการอาจารย์ที่ปรึกษาหลัก',
@@ -3743,6 +3767,7 @@ function renderDocIntakeSelects(){
   fillSelect(docTypeSel, masterData.documentTypes||[], 'เลือกประเภทเอกสาร');
   fillSelect(document.getElementById('di_filterDocType'), masterData.documentTypes||[], 'ทุกประเภท');
   fillSelect(document.getElementById('di_filterDept'), masterData.departments||[], 'ทุกสาขา');
+  toggleDiPublicationSection();
   var deptList = document.getElementById('di_departmentList');
   if(deptList){
     deptList.innerHTML='';
@@ -3815,8 +3840,10 @@ function addDocIntakeEntry(){
   if(!receivedDate){ toast('กรุณาเลือกวันที่รับเอกสาร', true); return; }
   if(!docType){ toast('กรุณาเลือกประเภทเอกสาร', true); return; }
   if(!studentName){ toast('กรุณากรอกชื่อ-นามสกุลนักศึกษา', true); return; }
+  var isGradRequest = (docType===GRADUATION_REQUEST_DOC_TYPE);
+  var newPubs = isGradRequest ? getPublicationValues('di_publicationList') : [];
   var now = Date.now();
-  getNextDocIntakeNo().then(function(intakeNo){
+  return getNextDocIntakeNo().then(function(intakeNo){
     var entry = {
       id: 'doc_'+now+'_'+Math.random().toString(36).slice(2,8),
       intakeNo: intakeNo, receivedDate: receivedDate, docType: docType, status: status||'received',
@@ -3825,13 +3852,24 @@ function addDocIntakeEntry(){
     };
     return docIntakePut(entry);
   }).then(function(){
+    /* ถ้าเป็นคำร้องขอสำเร็จการศึกษาและมีการกรอกผลงานตีพิมพ์มาด้วย ให้รวมเข้าหมวดที่ 5 ของประวัตินักศึกษาอัตโนมัติ
+       (ไม่บล็อกการบันทึกเอกสารหลักแม้ขั้นตอนนี้จะพลาด — จะแจ้งเตือนแยกต่างหากแทน) */
+    if(newPubs.length){
+      return syncGraduationRequestPublications(studentId, studentName, department, newPubs)
+        .then(function(){ toast('บันทึกรายการลงทะเบียนแล้ว และเพิ่มผลงานตีพิมพ์เข้าประวัตินักศึกษาแล้ว'); })
+        .catch(function(e){ toast('บันทึกรายการลงทะเบียนแล้ว แต่เพิ่มผลงานตีพิมพ์เข้าประวัตินักศึกษาไม่สำเร็จ: '+e, true); });
+    }
     toast('บันทึกรายการลงทะเบียนแล้ว');
+  }).then(function(){
     document.getElementById('di_studentSearch').value='';
     document.getElementById('di_studentId').value='';
     document.getElementById('di_studentName').value='';
     document.getElementById('di_department').value='';
     document.getElementById('di_note').value='';
     document.getElementById('di_status').value='received';
+    document.getElementById('di_docType').value='';
+    clearDynamicRows('di_publicationList');
+    toggleDiPublicationSection();
     diListPage=0; /* กลับไปหน้าแรกเสมอหลังบันทึกใหม่ เพราะเรียงตามเลขรับมากไปน้อย รายการที่เพิ่งบันทึกจะมีเลขรับสูงสุดและอยู่หน้าแรก */
     renderDocIntakeList();
     refreshDocIntakeNextNo();
@@ -3941,8 +3979,17 @@ function exportDocIntakeExcel(){
     XLSX.writeFile(wb, 'ลงทะเบียนรับเอกสาร-'+dateStamp()+'.xlsx');
   });
 }
+/* โชว์/ซ่อนช่องกรอกผลงานตีพิมพ์ในหน้าลงทะเบียนรับเอกสาร เฉพาะตอนเลือกประเภทเอกสาร "คำร้องขอสำเร็จการศึกษา" เท่านั้น */
+function toggleDiPublicationSection(){
+  var docType = document.getElementById('di_docType').value;
+  var sec = document.getElementById('di_publicationSection');
+  if(!sec) return;
+  sec.style.display = (docType===GRADUATION_REQUEST_DOC_TYPE) ? '' : 'none';
+}
 function bindDocIntakeEvents(){
   document.getElementById('btnAddDocIntake').addEventListener('click', addDocIntakeEntry);
+  document.getElementById('di_docType').addEventListener('change', toggleDiPublicationSection);
+  document.getElementById('btnAddDiPublication').addEventListener('click', function(){ addPublicationRow(null, 'di_publicationList'); });
   document.getElementById('di_studentSearch').addEventListener('input', renderDocIntakeStudentSearchResults);
   document.getElementById('di_studentSearch').addEventListener('focus', renderDocIntakeStudentSearchResults);
   document.addEventListener('click', function(ev){
@@ -4195,9 +4242,11 @@ function debouncedCheckCommitteeScheduleConflict(prefix){
   examConflictCheckTimer[prefix] = setTimeout(function(){ checkCommitteeScheduleConflict(prefix); }, 350);
 }
 
-/* ================= PUBLICATIONS (หมวดที่ 5) ================= */
-function addPublicationRow(existing){
-  var container = document.getElementById('publicationList');
+/* ================= PUBLICATIONS (หมวดที่ 5) =================
+   containerId รับ parameter ได้เพื่อให้ใช้ร่วมกันได้ทั้งหน้าบันทึกข้อมูล (publicationList) และ
+   หน้าลงทะเบียนรับเอกสาร กรณีเลือกประเภท "คำร้องขอสำเร็จการศึกษา" (di_publicationList) */
+function addPublicationRow(existing, containerId){
+  var container = document.getElementById(containerId||'publicationList');
   var row = el('div',{class:'multi-row'});
   var venue = el('input',{type:'text', placeholder:'ชื่อวารสาร/การประชุมวิชาการ', value:(existing&&existing.venue)||''});
   var year = el('input',{type:'text', class:'pub-year', placeholder:'ปีที่ตีพิมพ์'});
@@ -4208,9 +4257,9 @@ function addPublicationRow(existing){
   container.appendChild(row);
   return row;
 }
-function getPublicationValues(){
+function getPublicationValues(containerId){
   var vals=[];
-  document.querySelectorAll('#publicationList .multi-row').forEach(function(row){
+  document.querySelectorAll('#'+(containerId||'publicationList')+' .multi-row').forEach(function(row){
     var inputs = row.querySelectorAll('input[type=text]');
     var venue = inputs[0] ? inputs[0].value.trim() : '';
     var year = inputs[1] ? inputs[1].value.trim() : '';
@@ -4218,6 +4267,44 @@ function getPublicationValues(){
     if(venue || year || link) vals.push({venue:venue, year:year, link:link});
   });
   return vals;
+}
+/* รวมผลงานตีพิมพ์ที่กรอกจากคำร้องขอสำเร็จการศึกษา (หน้าลงทะเบียนรับเอกสาร) เข้ากับหมวดที่ 5 ของประวัตินักศึกษา
+   - ถ้านักศึกษาคนนี้มีประวัติอยู่แล้ว (อาจมีหลายแถว เช่น แถวสอบ 3 บท/5 บท) จะรวมเข้ากับแถวที่อัปเดตล่าสุด (updatedAt มากสุด)
+   - ถ้ายังไม่มีประวัติเลย จะสร้างประวัตินักศึกษาใหม่ให้อัตโนมัติ พร้อมผลงานตีพิมพ์ชุดนี้
+   - ผลงานใหม่จะ "เพิ่มต่อท้าย" รายการเดิมเสมอ ไม่แทนที่ของเดิม แม้จะมีการลงทะเบียนคำร้องซ้ำหลายครั้งก็ตาม */
+function syncGraduationRequestPublications(studentId, studentName, department, newPubs){
+  if(!studentId || !newPubs || !newPubs.length) return Promise.resolve();
+  var now = Date.now();
+  return recordsGetByStudentId(studentId).then(function(rows){
+    var target = null;
+    (rows||[]).forEach(function(r){
+      if(r.deleted) return;
+      if(!target || (r.updatedAt||0) > (target.updatedAt||0)) target = r;
+    });
+    if(target){
+      var updated = Object.assign({}, target, {
+        publications: (target.publications||[]).concat(newPubs),
+        updatedAt: now
+      });
+      return recordsPut(updated);
+    }
+    var rec = {
+      id: uuid(), examType:'defense', studentId:studentId, studentName:studentName||'',
+      degreeLevel:'', plan:'', program:'', department:department||'',
+      englishResult:'', englishScore:'', englishDocLink:'',
+      computerResult:'', computerDocLink:'',
+      qualifyingExam:'', qualifyingDocLink:'',
+      mainAdvisor:'', coAdvisors:[],
+      titleTh:'', titleEn:'', publications:newPubs.slice(),
+      examTermStatus:'', examTerm:'',
+      bookSubmitStatus:'ยังไม่ส่ง', bookSubmitDate:'', bookDocLink:'',
+      graduated:false, graduatedTerm:'',
+      proposalAttempts:[], defenseAttempts:[],
+      proposalBw25Status:'ยังไม่ส่ง', proposalBw25Date:'',
+      advisorHistory:[], createdAt:now, updatedAt:now
+    };
+    return recordsPut(rec);
+  });
 }
 
 /* ================= FORM: EXAM TYPE ================= */

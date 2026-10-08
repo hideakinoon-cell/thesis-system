@@ -559,14 +559,6 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 
-  <div class="card" id="todayActionCard" style="display:none;border-left:4px solid #FF9F7A;">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;">📋 สิ่งที่ต้องทำวันนี้</h3>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnExportTodayAction">📥 ส่งออก Excel</button>
-    </div>
-    <div id="todayActionList"></div>
-  </div>
-
   <div class="card">
     <div class="dash-legend">
       <span>สัดส่วนในแต่ละหมวดด้านล่าง:</span>
@@ -640,12 +632,29 @@ if('serviceWorker' in navigator){
 <section id="view-bydept" style="display:none;">
   <div class="card">
     <h3>🏫 ค้นหานักศึกษาตามสาขาวิชา</h3>
-    <div class="field" style="max-width:320px;">
-      <label>เลือกสาขาวิชา</label>
-      <select id="byDeptFilter"><option value="">ทุกสาขา</option></select>
+    <div class="grid" style="max-width:680px;">
+      <div class="field">
+        <label>เลือกสาขาวิชา</label>
+        <select id="byDeptFilter"><option value="">ทุกสาขา</option></select>
+      </div>
+      <div class="field">
+        <label>เลือกขั้นตอน (ไม่บังคับ)</label>
+        <select id="byDeptStageFilter"><option value="">ทุกขั้นตอน</option></select>
+      </div>
     </div>
     <div class="help" id="byDeptCountText" style="margin-top:8px;"></div>
-    <div style="overflow-x:auto;margin-top:10px;">
+  </div>
+
+  <div class="card" id="todayActionCard" style="display:none;border-left:4px solid #FF9F7A;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h3 style="margin:0;">📋 สิ่งที่ต้องทำวันนี้ (เฉพาะสาขาที่เลือก)</h3>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnExportTodayAction">📥 ส่งออก Excel</button>
+    </div>
+    <div id="todayActionList"></div>
+  </div>
+
+  <div class="card">
+    <div style="overflow-x:auto;">
       <table>
         <thead>
           <tr><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>แผนการเรียน</th><th>หลักสูตร</th><th>อาจารย์ที่ปรึกษาหลัก</th><th>สถานะ</th><th>จัดการ</th></tr>
@@ -2441,6 +2450,12 @@ function bindNav(){
   document.getElementById('lookupSearch').addEventListener('input', onLookupSearchInput);
   document.getElementById('lookupDeptFilter').addEventListener('change', function(){ lookupListPage=0; renderLookupList(); });
   document.getElementById('byDeptFilter').addEventListener('change', renderByDeptView);
+  var stageSel = document.getElementById('byDeptStageFilter');
+  TODAY_ACTION_CAT_ORDER.forEach(function(cat){
+    var meta = TODAY_ACTION_CAT_META[cat];
+    stageSel.appendChild(el('option',{value:cat, text:meta.icon+' '+meta.label}));
+  });
+  stageSel.addEventListener('change', renderByDeptView);
   document.getElementById('advisorLookupSearch').addEventListener('input', function(){ advisorLookupListPage=0; renderAdvisorLookupResults(); });
   document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
   document.getElementById('btnLookupNext').addEventListener('click', function(){ lookupListPage++; renderLookupList(); });
@@ -2678,9 +2693,7 @@ function renderOrUpdateDonutChart(canvasId, chartKey, labels, values, colors, em
   });
 }
 function renderSummaryDashboard(){
-  return Promise.all([recordsGetAll(), docIntakeGetAll().catch(function(){ return []; })]).then(function(results){
-    var rows = results[0];
-    var diRowsForAction = results[1];
+  return recordsGetAll().then(function(rows){
     var latestByStudent = {};
     rows.forEach(function(r){
       if(!r.studentId) return;
@@ -2762,142 +2775,6 @@ function renderSummaryDashboard(){
     });
     renderOrUpdateDonutChart('chartGraduatedByYear','graduatedByYear', gradYearKeys, gradYearKeys.map(function(k){ return graduatedByYear[k]; }), SUMMARY_CHART_COLORS.year);
 
-    /* แถบเตือนยังไม่ส่งเล่มฉบับสมบูรณ์หลังสอบป้องกัน (3.2/5 บท) — แสดง "ทุกคน" ที่สอบป้องกันผ่านแล้ว (ผ่าน/ผ่านแบบมีเงื่อนไข),
-       ยังไม่ส่งเล่ม และยังไม่สำเร็จการศึกษา ไม่จำกัดเฉพาะช่วงใกล้/เลยกำหนดส่งอีกต่อไป (เดิมกรองเฉพาะ ≤30 วัน) —
-       ถ้ามีกำหนดส่งเล่ม (defenseDueDate) จะใช้เรียงลำดับ/แสดงสถานะใกล้-เลยกำหนด ถ้าไม่ได้ระบุกำหนดจะอยู่ท้ายกลุ่มพร้อมข้อความทั่วไป */
-    var nowTs = Date.now();
-    var bookPendingList = students.filter(function(r){
-      if(r.graduated) return false;
-      if((r.bookSubmitStatus||'ยังไม่ส่ง')==='ส่งแล้ว') return false;
-      return r.defenseResult==='ผ่าน' || r.defenseResult==='ผ่านแบบมีเงื่อนไข';
-    }).map(function(r){
-      var daysLeft = null;
-      if(r.defenseDueDate){
-        var due = new Date(r.defenseDueDate+'T00:00:00');
-        if(!isNaN(due.getTime())) daysLeft = Math.floor((due.getTime()-nowTs)/86400000);
-      }
-      return {rec:r, daysLeft:daysLeft};
-    }).sort(function(a,b){
-      if(a.daysLeft===null && b.daysLeft===null) return 0;
-      if(a.daysLeft===null) return 1;
-      if(b.daysLeft===null) return -1;
-      return a.daysLeft-b.daysLeft;
-    });
-
-    /* แถบเตือนยังไม่ส่งเล่มแก้ไขหลังสอบเค้าโครง (3.1/3 บท) — เฉพาะคนที่สอบเค้าโครงแล้วผลเป็น "ผ่าน" แต่ยังไม่ติ๊กว่าส่งแก้ไข
-       (ใช้ฟิลด์ proposalRevisionStatus ที่มีอยู่แล้วในฟอร์ม "ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์") */
-    var proposalRevisionList = students.filter(function(r){
-      if(r.graduated) return false;
-      if(!recHasProposalData(r)) return false;
-      if(r.proposalResult !== 'ผ่าน') return false;
-      return (r.proposalRevisionStatus||'ยังไม่ส่ง') !== 'ส่งแล้ว';
-    });
-
-    /* แถบเตือนรอผลสอบ 3.1/3.2 — สอบไปแล้ว (มีวันที่สอบ) แต่ยังไม่มีผลสอบบันทึกไว้ เกินระยะเวลาผ่อนผัน PENDING_RESULT_GRACE_DAYS
-       ช่วยให้เจ้าหน้าที่ไม่ต้องไล่เช็คทีละคนเมื่อมีนักศึกษาสอบจำนวนมาก */
-    var PENDING_RESULT_GRACE_DAYS = 7;
-    var pendingResultList = [];
-    students.forEach(function(r){
-      if(recHasProposalData(r) && !r.proposalResult && r.proposalDate){
-        var pd = new Date(r.proposalDate+'T00:00:00');
-        if(!isNaN(pd.getTime())){
-          var daysSince = Math.floor((nowTs-pd.getTime())/86400000);
-          if(daysSince >= PENDING_RESULT_GRACE_DAYS) pendingResultList.push({rec:r, typeTxt:'สอบเค้าโครง (3.1)', date:r.proposalDate, daysSince:daysSince});
-        }
-      }
-      if(recHasDefenseData(r) && !r.defenseResult && r.defenseDate){
-        var dd = new Date(r.defenseDate+'T00:00:00');
-        if(!isNaN(dd.getTime())){
-          var daysSince2 = Math.floor((nowTs-dd.getTime())/86400000);
-          if(daysSince2 >= PENDING_RESULT_GRACE_DAYS) pendingResultList.push({rec:r, typeTxt:'สอบป้องกัน/IS (3.2)', date:r.defenseDate, daysSince:daysSince2});
-        }
-      }
-    });
-    pendingResultList.sort(function(a,b){ return b.daysSince-a.daysSince; });
-
-    /* แถบเตือนถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่ — ใช้เหตุการณ์เปลี่ยนแปลงที่ปรึกษาหลักล่าสุดใน advisorHistory
-       เพื่อคำนวณว่าถูกถอนมานานเท่าไหร่แล้ว (เดิมมีแค่ตัวเลขสถิติ + เครื่องมือสแกนแบบกดเอง ย้ายมารวมในลิสต์อัตโนมัตินี้ด้วย) */
-    var withdrawnList = students.filter(studentHasWithdrawnAdvisor).map(function(r){
-      var mainChanges = (r.advisorHistory||[]).filter(function(h){
-        return (h.mainAdvisorFrom||'') !== '' && (h.mainAdvisorFrom||'') !== (h.mainAdvisorTo||'');
-      });
-      mainChanges.sort(function(a,b){ return (b.changedAt||0)-(a.changedAt||0); });
-      var changedAt = mainChanges.length ? mainChanges[0].changedAt : null;
-      var daysSince = changedAt ? Math.floor((nowTs-changedAt)/86400000) : null;
-      return {rec:r, daysSince:daysSince};
-    });
-
-    /* รวมทุกรายการเตือนข้างต้นเป็นลิสต์เดียว "สิ่งที่ต้องทำวันนี้" จัดกลุ่มตาม "ประเภทงาน" (cat) เพื่อให้เจ้าหน้าที่แยกประเภทงานได้ทันที
-       แทนที่จะไล่ดูทีละแถวปนกันหมด เรียงตามลำดับขั้นตอนจริง: 1) ยังไม่มีผลสอบเค้าโครง (3 บท) 2) ยังไม่ส่งเล่มแก้หลังสอบเค้าโครง (3 บท)
-       3) ยังไม่มีผลสอบป้องกัน (5 บท) 4) ยังไม่ส่งเล่มฉบับสมบูรณ์หลังสอบป้องกัน (5 บท) 5) ถอนที่ปรึกษายังไม่แต่งตั้งใหม่ 6) เอกสารค้างดำเนินการ
-       ภายในแต่ละกลุ่มเรียงจากรุนแรง/ค้างนานที่สุดก่อน (catRank กำหนดลำดับกลุ่ม, sortKey กำหนดลำดับภายในกลุ่ม) */
-    var actionItems = [];
-    pendingResultList.forEach(function(item){
-      var r = item.rec;
-      var isProposal = item.typeTxt.indexOf('เค้าโครง') > -1;
-      actionItems.push({
-        rec:r, cat: isProposal?'proposal':'defense', catRank: isProposal?0:2, sortKey: -item.daysSince, icon:'🔴',
-        label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
-        detail: item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน',
-        text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน)'
-      });
-    });
-    proposalRevisionList.forEach(function(r){
-      actionItems.push({
-        rec:r, cat:'proposalRevision', catRank:1, sortKey:0, icon:'🟡',
-        label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
-        detail: 'สอบเค้าโครงผ่านแล้ว ('+toBuddhistDateStr(r.proposalDate)+') • ยังไม่ส่งเล่มแก้ไข',
-        text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' (สอบเค้าโครงผ่านแล้ว '+toBuddhistDateStr(r.proposalDate)+' • ยังไม่ส่งเล่มแก้ไข)'
-      });
-    });
-    bookPendingList.forEach(function(item){
-      var r = item.rec;
-      var detailTxt, icon;
-      if(item.daysLeft===null){
-        detailTxt = 'สอบป้องกันผ่านแล้ว • ยังไม่ส่งเล่มฉบับสมบูรณ์ (ไม่ได้ระบุกำหนดส่งเล่ม)';
-        icon = '🔵';
-      } else {
-        var overdue = item.daysLeft < 0;
-        var statusTxt = overdue ? ('เลยกำหนดแล้ว '+Math.abs(item.daysLeft)+' วัน') : (item.daysLeft===0 ? 'ครบกำหนดวันนี้' : 'เหลืออีก '+item.daysLeft+' วัน');
-        detailTxt = 'กำหนดส่งเล่ม '+toBuddhistDateStr(r.defenseDueDate)+' • '+statusTxt;
-        icon = overdue ? '🔴' : '🟡';
-      }
-      actionItems.push({
-        rec:r, cat:'book', catRank:3, sortKey: item.daysLeft===null?999999:item.daysLeft, icon: icon,
-        label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
-        detail: detailTxt,
-        text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+detailTxt+')'
-      });
-    });
-    withdrawnList.forEach(function(item){
-      var r = item.rec;
-      actionItems.push({
-        rec:r, cat:'advisor', catRank:4, sortKey: -(item.daysSince||0), icon:'🟠',
-        label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
-        detail: 'ถอนที่ปรึกษาแล้ว'+(item.daysSince!=null?' • ผ่านมาแล้ว '+item.daysSince+' วัน':'')+' ยังไม่แต่งตั้งใหม่',
-        text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' (ถอนที่ปรึกษาแล้ว'+(item.daysSince!=null?' • ผ่านมาแล้ว '+item.daysSince+' วัน':'')+' ยังไม่แต่งตั้งใหม่)'
-      });
-    });
-
-    /* แถบเตือนเอกสารรับเข้า (บว.04/บว.25 ฯลฯ) ที่ยังไม่ดำเนินการเสร็จสิ้นนานเกิน STALE_DOC_INTAKE_DAYS —
-       ช่วยไม่ให้เรื่องที่รับไว้ตกหล่นค้างอยู่ในหน้าลงทะเบียนรับเอกสารโดยไม่มีใครติดตาม (ดึงข้อมูลมาพร้อมกับ records ด้านบนแล้ว) */
-    var STALE_DOC_INTAKE_DAYS = 5;
-    (diRowsForAction||[]).forEach(function(d){
-      if(d.deleted || d.status==='done' || !d.receivedDate) return;
-      var rd = new Date(d.receivedDate+'T00:00:00');
-      if(isNaN(rd.getTime())) return;
-      var daysSince = Math.floor((nowTs-rd.getTime())/86400000);
-      if(daysSince < STALE_DOC_INTAKE_DAYS) return;
-      actionItems.push({
-        doc:d, cat:'doc', catRank:5, sortKey: -daysSince, icon:'🟣',
-        label: (d.intakeNo?('เลขรับ '+d.intakeNo+' — '):'')+(d.studentName||d.studentId||'(ไม่ระบุชื่อ)'),
-        detail: (d.docType||'เอกสาร')+' • '+docStatusLabel(d.status)+' • รับเรื่องมาแล้ว '+daysSince+' วัน',
-        text: (d.intakeNo?('เลขรับ '+d.intakeNo+' — '):'')+(d.studentName||d.studentId||'(ไม่ระบุชื่อ)')+' ('+(d.docType||'เอกสาร')+' • '+docStatusLabel(d.status)+' • รับเรื่องมาแล้ว '+daysSince+' วัน)'
-      });
-    });
-    actionItems.sort(function(a,b){ return a.catRank!==b.catRank ? a.catRank-b.catRank : a.sortKey-b.sortKey; });
-    renderTodayActionCard(actionItems);
-
     /* กราฟสรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
     var proposalStats = {'ผ่าน':0, 'ไม่ผ่าน':0, 'รอผล':0};
     var defenseStats = {'ผ่าน':0, 'ผ่านแบบมีเงื่อนไข':0, 'ไม่ผ่าน':0, 'รอผล':0};
@@ -2918,6 +2795,146 @@ function renderSummaryDashboard(){
     renderOrUpdateDonutChart('chartDefense','defense', defenseLabels, defenseLabels.map(function(k){ return defenseStats[k]; }), defenseLabels.map(function(k){ return SUMMARY_CHART_COLORS.defense[k]; }));
   });
 }
+/* คำนวณลิสต์ "สิ่งที่ต้องทำวันนี้" จากชุดนักศึกษา (students) และเอกสารรับเข้า (diRows) ที่ส่งเข้ามา — แยกออกมาจาก renderSummaryDashboard
+   เพื่อให้เรียกใช้ซ้ำได้จากหน้า "ค้นหาตามสาขาวิชา" โดยส่งเฉพาะนักศึกษา/เอกสารของสาขาที่เลือกไว้เข้ามากรองได้ (การ์ดนี้ย้ายไปอยู่หน้านั้นแล้ว
+   ไม่แสดงในแดชบอร์ดสรุปอีกต่อไป) จัดกลุ่มตาม "ประเภทงาน" (cat) เรียงตามลำดับขั้นตอนจริง:
+   1) ยังไม่มีผลสอบเค้าโครง (3 บท) 2) ยังไม่ส่งเล่มแก้หลังสอบเค้าโครง (3 บท) 3) ยังไม่มีผลสอบป้องกัน (5 บท)
+   4) ยังไม่ส่งเล่มฉบับสมบูรณ์หลังสอบป้องกัน (5 บท) 5) ถอนที่ปรึกษายังไม่แต่งตั้งใหม่ 6) เอกสารค้างดำเนินการ
+   ภายในแต่ละกลุ่มเรียงจากรุนแรง/ค้างนานที่สุดก่อน (catRank กำหนดลำดับกลุ่ม, sortKey กำหนดลำดับภายในกลุ่ม) */
+function computeTodayActionItems(students, diRows){
+  var nowTs = Date.now();
+
+  /* แถบเตือนยังไม่ส่งเล่มฉบับสมบูรณ์หลังสอบป้องกัน (3.2/5 บท) — แสดง "ทุกคน" ที่สอบป้องกันผ่านแล้ว (ผ่าน/ผ่านแบบมีเงื่อนไข),
+     ยังไม่ส่งเล่ม และยังไม่สำเร็จการศึกษา ไม่จำกัดเฉพาะช่วงใกล้/เลยกำหนดส่งอีกต่อไป (เดิมกรองเฉพาะ ≤30 วัน) —
+     ถ้ามีกำหนดส่งเล่ม (defenseDueDate) จะใช้เรียงลำดับ/แสดงสถานะใกล้-เลยกำหนด ถ้าไม่ได้ระบุกำหนดจะอยู่ท้ายกลุ่มพร้อมข้อความทั่วไป */
+  var bookPendingList = students.filter(function(r){
+    if(r.graduated) return false;
+    if((r.bookSubmitStatus||'ยังไม่ส่ง')==='ส่งแล้ว') return false;
+    return r.defenseResult==='ผ่าน' || r.defenseResult==='ผ่านแบบมีเงื่อนไข';
+  }).map(function(r){
+    var daysLeft = null;
+    if(r.defenseDueDate){
+      var due = new Date(r.defenseDueDate+'T00:00:00');
+      if(!isNaN(due.getTime())) daysLeft = Math.floor((due.getTime()-nowTs)/86400000);
+    }
+    return {rec:r, daysLeft:daysLeft};
+  }).sort(function(a,b){
+    if(a.daysLeft===null && b.daysLeft===null) return 0;
+    if(a.daysLeft===null) return 1;
+    if(b.daysLeft===null) return -1;
+    return a.daysLeft-b.daysLeft;
+  });
+
+  /* แถบเตือนยังไม่ส่งเล่มแก้ไขหลังสอบเค้าโครง (3.1/3 บท) — เฉพาะคนที่สอบเค้าโครงแล้วผลเป็น "ผ่าน" แต่ยังไม่ติ๊กว่าส่งแก้ไข
+     (ใช้ฟิลด์ proposalRevisionStatus ที่มีอยู่แล้วในฟอร์ม "ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์") */
+  var proposalRevisionList = students.filter(function(r){
+    if(r.graduated) return false;
+    if(!recHasProposalData(r)) return false;
+    if(r.proposalResult !== 'ผ่าน') return false;
+    return (r.proposalRevisionStatus||'ยังไม่ส่ง') !== 'ส่งแล้ว';
+  });
+
+  /* แถบเตือนรอผลสอบ 3.1/3.2 — สอบไปแล้ว (มีวันที่สอบ) แต่ยังไม่มีผลสอบบันทึกไว้ เกินระยะเวลาผ่อนผัน PENDING_RESULT_GRACE_DAYS
+     ช่วยให้เจ้าหน้าที่ไม่ต้องไล่เช็คทีละคนเมื่อมีนักศึกษาสอบจำนวนมาก */
+  var PENDING_RESULT_GRACE_DAYS = 7;
+  var pendingResultList = [];
+  students.forEach(function(r){
+    if(recHasProposalData(r) && !r.proposalResult && r.proposalDate){
+      var pd = new Date(r.proposalDate+'T00:00:00');
+      if(!isNaN(pd.getTime())){
+        var daysSince = Math.floor((nowTs-pd.getTime())/86400000);
+        if(daysSince >= PENDING_RESULT_GRACE_DAYS) pendingResultList.push({rec:r, typeTxt:'สอบเค้าโครง (3.1)', date:r.proposalDate, daysSince:daysSince});
+      }
+    }
+    if(recHasDefenseData(r) && !r.defenseResult && r.defenseDate){
+      var dd = new Date(r.defenseDate+'T00:00:00');
+      if(!isNaN(dd.getTime())){
+        var daysSince2 = Math.floor((nowTs-dd.getTime())/86400000);
+        if(daysSince2 >= PENDING_RESULT_GRACE_DAYS) pendingResultList.push({rec:r, typeTxt:'สอบป้องกัน/IS (3.2)', date:r.defenseDate, daysSince:daysSince2});
+      }
+    }
+  });
+  pendingResultList.sort(function(a,b){ return b.daysSince-a.daysSince; });
+
+  /* แถบเตือนถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่ — ใช้เหตุการณ์เปลี่ยนแปลงที่ปรึกษาหลักล่าสุดใน advisorHistory
+     เพื่อคำนวณว่าถูกถอนมานานเท่าไหร่แล้ว (เดิมมีแค่ตัวเลขสถิติ + เครื่องมือสแกนแบบกดเอง ย้ายมารวมในลิสต์อัตโนมัตินี้ด้วย) */
+  var withdrawnList = students.filter(studentHasWithdrawnAdvisor).map(function(r){
+    var mainChanges = (r.advisorHistory||[]).filter(function(h){
+      return (h.mainAdvisorFrom||'') !== '' && (h.mainAdvisorFrom||'') !== (h.mainAdvisorTo||'');
+    });
+    mainChanges.sort(function(a,b){ return (b.changedAt||0)-(a.changedAt||0); });
+    var changedAt = mainChanges.length ? mainChanges[0].changedAt : null;
+    var daysSince = changedAt ? Math.floor((nowTs-changedAt)/86400000) : null;
+    return {rec:r, daysSince:daysSince};
+  });
+
+  var actionItems = [];
+  pendingResultList.forEach(function(item){
+    var r = item.rec;
+    var isProposal = item.typeTxt.indexOf('เค้าโครง') > -1;
+    actionItems.push({
+      rec:r, cat: isProposal?'proposal':'defense', catRank: isProposal?0:2, sortKey: -item.daysSince, icon:'🔴',
+      label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
+      detail: item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน',
+      text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+item.typeTxt+' • สอบเมื่อ '+toBuddhistDateStr(item.date)+' • รอผลมาแล้ว '+item.daysSince+' วัน)'
+    });
+  });
+  proposalRevisionList.forEach(function(r){
+    actionItems.push({
+      rec:r, cat:'proposalRevision', catRank:1, sortKey:0, icon:'🟡',
+      label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
+      detail: 'สอบเค้าโครงผ่านแล้ว ('+toBuddhistDateStr(r.proposalDate)+') • ยังไม่ส่งเล่มแก้ไข',
+      text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' (สอบเค้าโครงผ่านแล้ว '+toBuddhistDateStr(r.proposalDate)+' • ยังไม่ส่งเล่มแก้ไข)'
+    });
+  });
+  bookPendingList.forEach(function(item){
+    var r = item.rec;
+    var detailTxt, icon;
+    if(item.daysLeft===null){
+      detailTxt = 'สอบป้องกันผ่านแล้ว • ยังไม่ส่งเล่มฉบับสมบูรณ์ (ไม่ได้ระบุกำหนดส่งเล่ม)';
+      icon = '🔵';
+    } else {
+      var overdue = item.daysLeft < 0;
+      var statusTxt = overdue ? ('เลยกำหนดแล้ว '+Math.abs(item.daysLeft)+' วัน') : (item.daysLeft===0 ? 'ครบกำหนดวันนี้' : 'เหลืออีก '+item.daysLeft+' วัน');
+      detailTxt = 'กำหนดส่งเล่ม '+toBuddhistDateStr(r.defenseDueDate)+' • '+statusTxt;
+      icon = overdue ? '🔴' : '🟡';
+    }
+    actionItems.push({
+      rec:r, cat:'book', catRank:3, sortKey: item.daysLeft===null?999999:item.daysLeft, icon: icon,
+      label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
+      detail: detailTxt,
+      text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+detailTxt+')'
+    });
+  });
+  withdrawnList.forEach(function(item){
+    var r = item.rec;
+    actionItems.push({
+      rec:r, cat:'advisor', catRank:4, sortKey: -(item.daysSince||0), icon:'🟠',
+      label: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)'),
+      detail: 'ถอนที่ปรึกษาแล้ว'+(item.daysSince!=null?' • ผ่านมาแล้ว '+item.daysSince+' วัน':'')+' ยังไม่แต่งตั้งใหม่',
+      text: r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' (ถอนที่ปรึกษาแล้ว'+(item.daysSince!=null?' • ผ่านมาแล้ว '+item.daysSince+' วัน':'')+' ยังไม่แต่งตั้งใหม่)'
+    });
+  });
+
+  /* แถบเตือนเอกสารรับเข้า (บว.04/บว.25 ฯลฯ) ที่ยังไม่ดำเนินการเสร็จสิ้นนานเกิน STALE_DOC_INTAKE_DAYS —
+     ช่วยไม่ให้เรื่องที่รับไว้ตกหล่นค้างอยู่ในหน้าลงทะเบียนรับเอกสารโดยไม่มีใครติดตาม */
+  var STALE_DOC_INTAKE_DAYS = 5;
+  (diRows||[]).forEach(function(d){
+    if(d.deleted || d.status==='done' || !d.receivedDate) return;
+    var rd = new Date(d.receivedDate+'T00:00:00');
+    if(isNaN(rd.getTime())) return;
+    var daysSince = Math.floor((nowTs-rd.getTime())/86400000);
+    if(daysSince < STALE_DOC_INTAKE_DAYS) return;
+    actionItems.push({
+      doc:d, cat:'doc', catRank:5, sortKey: -daysSince, icon:'🟣',
+      label: (d.intakeNo?('เลขรับ '+d.intakeNo+' — '):'')+(d.studentName||d.studentId||'(ไม่ระบุชื่อ)'),
+      detail: (d.docType||'เอกสาร')+' • '+docStatusLabel(d.status)+' • รับเรื่องมาแล้ว '+daysSince+' วัน',
+      text: (d.intakeNo?('เลขรับ '+d.intakeNo+' — '):'')+(d.studentName||d.studentId||'(ไม่ระบุชื่อ)')+' ('+(d.docType||'เอกสาร')+' • '+docStatusLabel(d.status)+' • รับเรื่องมาแล้ว '+daysSince+' วัน)'
+    });
+  });
+  actionItems.sort(function(a,b){ return a.catRank!==b.catRank ? a.catRank-b.catRank : a.sortKey-b.sortKey; });
+  return actionItems;
+}
 var lastTodayActionItems = []; /* เก็บลิสต์ล่าสุดที่แสดงในการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ใช้ตอนกดส่งออก Excel โดยไม่ต้องคำนวณซ้ำ (เก็บรายการครบทุกรายการ ไม่ตัดตามที่ย่อแสดงบนการ์ด) */
 /* จัดกลุ่ม "สิ่งที่ต้องทำวันนี้" ตามประเภทงาน (cat) แทนความเร่งด่วนล้วนๆ เพื่อให้เจ้าหน้าที่แยกประเภทงาน (เล่ม/ผลสอบเค้าโครง/ผลสอบป้องกัน/ที่ปรึกษา/เอกสาร)
    ได้ในแวบเดียว — ความเร่งด่วนยังคงแสดงต่อแถวด้วยไอคอนสี 🔴🟡🟠🟣 และเรียงลำดับรุนแรงที่สุดก่อนภายในแต่ละกลุ่มเหมือนเดิม */
@@ -2929,6 +2946,9 @@ var TODAY_ACTION_CAT_META = {
   advisor:          {icon:'🧑‍🏫', label:'ถอนที่ปรึกษายังไม่แต่งตั้งใหม่'},
   doc:              {icon:'📄', label:'เอกสารค้างดำเนินการ'}
 };
+/* ลำดับหมวดคงที่ (แยกจากคีย์ของ TODAY_ACTION_CAT_META เพื่อไม่พึ่งพาลำดับคีย์ของ object) — ใช้ทั้งตอนจัดกลุ่มการ์ด
+   และตอนสร้างตัวเลือกเมนู "เลือกขั้นตอน" ในหน้าค้นหาตามสาขาวิชา ให้เรียงตรงกันทุกจุด */
+var TODAY_ACTION_CAT_ORDER = ['proposal','proposalRevision','defense','book','advisor','doc'];
 /* เดิมการ์ดนี้แสดงทุกรายการรวมกันเป็นลิสต์ยาวเดียว พอมีข้อมูลเยอะ (5 หมวดรวมกัน) การ์ดจะยาวมากจนดูยาก
    จึงย่อแสดงเฉพาะ 10 รายการเร่งด่วนที่สุดก่อน (ลิสต์เรียงตามความเร่งด่วนอยู่แล้ว) แล้วมีปุ่ม "ดูทั้งหมด" ให้กดขยายดูครบ
    ปุ่มส่งออก Excel ยังคงส่งออกครบทุกรายการเสมอไม่ว่าจะย่ออยู่หรือขยายอยู่ */
@@ -5050,16 +5070,22 @@ function renderByDeptView(){
   var emptyEl = document.getElementById('byDeptEmpty');
   var countText = document.getElementById('byDeptCountText');
   var fDept = document.getElementById('byDeptFilter').value||'';
+  var actionCard = document.getElementById('todayActionCard');
   tbody.innerHTML='';
   countText.textContent='';
   emptyEl.style.display='none';
   if(!fDept){
     emptyEl.textContent = 'เลือกสาขาวิชาด้านบนเพื่อดูรายชื่อนักศึกษา';
     emptyEl.style.display='';
+    if(actionCard) actionCard.style.display='none'; /* ยังไม่เลือกสาขา — ซ่อนการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ก่อน */
     return;
   }
   countText.textContent = 'กำลังโหลดข้อมูล...';
-  recordsGetAll().then(function(rows){
+  /* การ์ด "สิ่งที่ต้องทำวันนี้" ย้ายมาอยู่หน้านี้แล้ว (เดิมอยู่แดชบอร์ดสรุป) และกรองตามสาขาที่เลือกไว้ด้านบนเสมอ
+     จึงต้องดึงทั้ง records และเอกสารรับเข้า (docIntake) มาด้วยเพื่อคำนวณผ่าน computeTodayActionItems() */
+  return Promise.all([recordsGetAll(), docIntakeGetAll().catch(function(){ return []; })]).then(function(results){
+    var rows = results[0];
+    var diRows = results[1];
     var latestByStudent = {};
     rows.forEach(function(r){
       if(!r.studentId) return;
@@ -5071,6 +5097,25 @@ function renderByDeptView(){
     });
     var students = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
     students.sort(function(a,b){ return (a.studentId||'').localeCompare(b.studentId||''); });
+
+    var diRowsForDept = (diRows||[]).filter(function(d){ return d.department===fDept; });
+    var actionItems = computeTodayActionItems(students, diRowsForDept);
+    renderTodayActionCard(actionItems); /* การ์ดแสดงครบทุกขั้นตอนเสมอ ไม่ขึ้นกับตัวกรอง "เลือกขั้นตอน" ด้านล่าง (ตัวกรองนั้นกรองเฉพาะตารางรายชื่อ) */
+
+    /* ตัวกรอง "เลือกขั้นตอน" — กรองตารางรายชื่อให้เหลือเฉพาะนักศึกษาที่อยู่ในหมวดนั้นของการ์ด "สิ่งที่ต้องทำวันนี้" ด้านบน
+       (ใช้ studentId ที่ปรากฏใน actionItems ของหมวดนั้นเป็นตัวจับคู่ ให้ตรงกับเกณฑ์เดียวกันทุกจุด ไม่ต้องคำนวณซ้ำ) */
+    var fStage = document.getElementById('byDeptStageFilter').value||'';
+    var studentsToShow = students;
+    if(fStage){
+      var matchIds = {};
+      actionItems.forEach(function(item){
+        if(item.cat !== fStage) return;
+        var sid = item.rec ? item.rec.studentId : (item.doc ? item.doc.studentId : null);
+        if(sid) matchIds[sid] = true;
+      });
+      studentsToShow = students.filter(function(r){ return matchIds[r.studentId]; });
+    }
+
     tbody.innerHTML='';
     if(!students.length){
       countText.textContent='';
@@ -5078,8 +5123,16 @@ function renderByDeptView(){
       emptyEl.style.display='';
       return;
     }
-    countText.textContent = 'พบนักศึกษาทั้งหมด '+students.length+' คน';
-    students.forEach(function(r){
+    if(!studentsToShow.length){
+      countText.textContent='';
+      emptyEl.textContent = 'ไม่พบนักศึกษาในสาขานี้ที่ตรงกับขั้นตอนที่เลือก';
+      emptyEl.style.display='';
+      return;
+    }
+    countText.textContent = fStage
+      ? 'พบนักศึกษา '+studentsToShow.length+' คน (จากทั้งหมด '+students.length+' คนในสาขานี้)'
+      : 'พบนักศึกษาทั้งหมด '+students.length+' คน';
+    studentsToShow.forEach(function(r){
       tbody.appendChild(el('tr',{},[
         el('td',{text:r.studentId||''}),
         el('td',{text:r.studentName||''}),
@@ -5100,6 +5153,7 @@ function renderByDeptView(){
     countText.textContent='';
     emptyEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: '+e;
     emptyEl.style.display='';
+    if(actionCard) actionCard.style.display='none';
   });
 }
 function renderList(){

@@ -503,7 +503,6 @@ if('serviceWorker' in navigator){
   <button data-view="summary" class="active">📊 แดชบอร์ด</button>
   <button data-view="docintake">📥 ลงทะเบียนรับเอกสาร</button>
   <button data-view="dashboard">🔍 ตรวจสอบข้อมูล</button>
-  <button data-view="bydept">🏫 ค้นหาตามสาขา</button>
   <button data-view="advisors">👨‍🏫 ที่ปรึกษา</button>
   <button data-view="advisorlist">👥 รายชื่ออาจารย์</button>
   <button data-view="form">📝 บันทึกข้อมูล</button>
@@ -618,14 +617,20 @@ if('serviceWorker' in navigator){
   </div>
 </section>
 
-<!-- ============ DASHBOARD / LOOKUP VIEW ============ -->
+<!-- ============ DASHBOARD / LOOKUP VIEW (รวมหน้า "ค้นหาตามสาขา" เดิมเข้ามาไว้ที่นี่ทั้งหมดแล้ว เพื่อไม่ให้ซ้ำซ้อนกัน) ============ -->
 <section id="view-dashboard" style="display:none;">
   <div class="card">
     <h3>🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
     <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา...">
-    <div class="field" style="max-width:320px;margin-top:10px;">
-      <label>หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด</label>
-      <select id="lookupDeptFilter"><option value="">ทุกสาขา</option></select>
+    <div class="grid" style="max-width:680px;margin-top:10px;">
+      <div class="field">
+        <label>หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด</label>
+        <select id="lookupDeptFilter"><option value="">ทุกสาขา</option></select>
+      </div>
+      <div class="field">
+        <label>เลือกขั้นตอน (ไม่บังคับ — ต้องเลือกสาขาก่อน)</label>
+        <select id="byDeptStageFilter" disabled><option value="">ทุกขั้นตอน</option></select>
+      </div>
     </div>
     <div class="lookup-result-list" id="lookupResultList"></div>
     <div class="empty-state" id="lookupEmpty" style="display:none;">ไม่พบนักศึกษาที่ตรงกับคำค้นหา</div>
@@ -634,27 +639,6 @@ if('serviceWorker' in navigator){
       <button type="button" class="btn btn-secondary btn-sm" id="btnLookupPrev">‹ ก่อนหน้า</button>
       <button type="button" class="btn btn-secondary btn-sm" id="btnLookupNext">ถัดไป ›</button>
     </div>
-  </div>
-  <div id="lookupDetail">
-    <div class="empty-state">เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด</div>
-  </div>
-</section>
-
-<!-- ============ ค้นหาตามสาขาวิชา (ตารางรายชื่อนักศึกษาทั้งสาขา) ============ -->
-<section id="view-bydept" style="display:none;">
-  <div class="card">
-    <h3>🏫 ค้นหานักศึกษาตามสาขาวิชา</h3>
-    <div class="grid" style="max-width:680px;">
-      <div class="field">
-        <label>เลือกสาขาวิชา</label>
-        <select id="byDeptFilter"><option value="">ทุกสาขา</option></select>
-      </div>
-      <div class="field">
-        <label>เลือกขั้นตอน (ไม่บังคับ)</label>
-        <select id="byDeptStageFilter"><option value="">ทุกขั้นตอน</option></select>
-      </div>
-    </div>
-    <div class="help" id="byDeptCountText" style="margin-top:8px;"></div>
   </div>
 
   <div class="card" id="todayActionCard" style="display:none;border-left:4px solid #FF9F7A;">
@@ -665,16 +649,8 @@ if('serviceWorker' in navigator){
     <div id="todayActionList"></div>
   </div>
 
-  <div class="card">
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>แผนการเรียน</th><th>หลักสูตร</th><th>อาจารย์ที่ปรึกษาหลัก</th><th>สถานะ</th><th>จัดการ</th></tr>
-        </thead>
-        <tbody id="byDeptTbody"></tbody>
-      </table>
-    </div>
-    <div class="empty-state" id="byDeptEmpty" style="display:none;">เลือกสาขาวิชาด้านบนเพื่อดูรายชื่อนักศึกษา</div>
+  <div id="lookupDetail">
+    <div class="empty-state">เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด</div>
   </div>
 </section>
 
@@ -2480,14 +2456,18 @@ function bindNav(){
     btn.addEventListener('click', function(){ switchView(btn.getAttribute('data-view')); });
   });
   document.getElementById('lookupSearch').addEventListener('input', onLookupSearchInput);
-  document.getElementById('lookupDeptFilter').addEventListener('change', function(){ lookupListPage=0; renderLookupList(); });
-  document.getElementById('byDeptFilter').addEventListener('change', renderByDeptView);
+  document.getElementById('lookupDeptFilter').addEventListener('change', function(){
+    lookupListPage=0;
+    var stageSelEl = document.getElementById('byDeptStageFilter');
+    stageSelEl.value=''; /* เปลี่ยนสาขาแล้วล้างตัวกรองขั้นตอนเดิมทิ้งเสมอ กันค้างหมวดของสาขาก่อนหน้า */
+    refreshDeptActionCard().then(renderLookupList);
+  });
   var stageSel = document.getElementById('byDeptStageFilter');
   TODAY_ACTION_CAT_ORDER.forEach(function(cat){
     var meta = TODAY_ACTION_CAT_META[cat];
     stageSel.appendChild(el('option',{value:cat, text:meta.icon+' '+meta.label}));
   });
-  stageSel.addEventListener('change', renderByDeptView);
+  stageSel.addEventListener('change', function(){ lookupListPage=0; renderLookupList(); });
   document.getElementById('advisorLookupSearch').addEventListener('input', function(){ advisorLookupListPage=0; renderAdvisorLookupResults(); });
   document.getElementById('examDateSearchInput').addEventListener('change', renderExamDateSearchResult);
   document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
@@ -2621,7 +2601,7 @@ function onLookupSearchInput(){
 function switchView(name){
   /* เจ้าหน้าที่ดูอย่างเดียว (viewer/dept-viewer) เข้าได้เฉพาะหน้าแดชบอร์ดสรุปข้อมูล กับหน้าตรวจสอบข้อมูลรายบุคคลเท่านั้น */
   if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard' && name!=='summary') name='dashboard';
-  ['summary','dashboard','bydept','advisors','advisorlist','docintake','form','list','settings','auditlog'].forEach(function(v){
+  ['summary','dashboard','advisors','advisorlist','docintake','form','list','settings','auditlog'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
@@ -2640,7 +2620,6 @@ function switchView(name){
   if(name==='auditlog') renderAuditLog();
   if(name==='advisors') computeAdvisorUsedCounts().then(renderAdvisorLookupResults);
   if(name==='docintake'){ renderDocIntakeSelects(); renderDocIntakeList(); }
-  if(name==='bydept') renderByDeptView();
 }
 
 /* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
@@ -3064,7 +3043,7 @@ function exportTodayActionExcel(){
 }
 /* ================= DASHBOARD / STUDENT LOOKUP ================= */
 function renderDashboard(){
-  renderLookupList();
+  return refreshDeptActionCard().then(renderLookupList);
 }
 /* ================= AUDIT LOG VIEW (เฉพาะ Admin — ดูได้จาก switchView ที่บังคับ redirect role อื่นออกไปแล้ว) ================= */
 var auditLogCache = null;
@@ -3129,7 +3108,10 @@ function getStudentSummaries(){
     });
     return Object.keys(latestByStudent).map(function(sid){
       var r = latestByStudent[sid];
-      return { studentId:sid, studentName:r.studentName, program:r.program, department:r.department, count:counts[sid] };
+      /* รวม plan/mainAdvisor/status เข้ามาด้วย (เดิมมีแค่ studentId/studentName/program/department/count) เพื่อให้หน้า
+         "ตรวจสอบข้อมูลนักศึกษา" แสดงข้อมูลสรุปได้ครบเหมือนตารางของหน้า "ค้นหาตามสาขา" เดิม หลังรวมสองหน้าเป็นหน้าเดียว */
+      return { studentId:sid, studentName:r.studentName, program:r.program, department:r.department, count:counts[sid],
+        plan:r.plan, mainAdvisor:r.mainAdvisor, status:studentStatusLabel(r) };
     }).sort(function(a,b){ return (a.studentName||'').localeCompare(b.studentName||'', 'th'); });
   });
 }
@@ -3138,6 +3120,7 @@ var lookupListPage = 0; /* หน้าปัจจุบันของรา�
 function renderLookupList(){
   var q = (document.getElementById('lookupSearch').value||'').trim().toLowerCase();
   var deptFilter = document.getElementById('lookupDeptFilter').value||'';
+  var stageFilter = document.getElementById('byDeptStageFilter').value||'';
   var container = document.getElementById('lookupResultList');
   var emptyEl = document.getElementById('lookupEmpty');
   var pagerEl = document.getElementById('lookupPagination');
@@ -3164,8 +3147,19 @@ function renderLookupList(){
     if(deptFilter){
       list = list.filter(function(s){ return (s.department||'')===deptFilter; });
     }
+    /* ตัวกรอง "เลือกขั้นตอน" — ใช้ได้ก็ต่อเมื่อเลือกสาขาไว้แล้ว และ currentDeptActionItems เป็นของสาขาเดียวกันที่กำลังกรองอยู่
+       (กันเคสค้างข้อมูลสาขาก่อนหน้าตอนสลับสาขาเร็วๆ) กรองรายชื่อให้เหลือเฉพาะคนที่อยู่ในหมวดนั้นของการ์ด "สิ่งที่ต้องทำวันนี้" */
+    if(stageFilter && deptFilter && currentDeptActionItemsDept===deptFilter){
+      var matchIds = {};
+      currentDeptActionItems.forEach(function(item){
+        if(item.cat !== stageFilter) return;
+        var sid = item.rec ? item.rec.studentId : (item.doc ? item.doc.studentId : null);
+        if(sid) matchIds[sid] = true;
+      });
+      list = list.filter(function(s){ return matchIds[s.studentId]; });
+    }
     container.innerHTML='';
-    emptyEl.textContent = 'ไม่พบนักศึกษาที่ตรงกับคำค้นหา';
+    emptyEl.textContent = stageFilter ? 'ไม่พบนักศึกษาที่ตรงกับขั้นตอนที่เลือก' : 'ไม่พบนักศึกษาที่ตรงกับคำค้นหา';
     emptyEl.classList.remove('is-loading');
     emptyEl.style.display = (list.length===0) ? '' : 'none';
 
@@ -3180,7 +3174,7 @@ function renderLookupList(){
       var item = el('div',{class:'lookup-item'},[
         el('div',{class:'li-main'},[
           el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
-          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program||'-')+' / '+(s.department||'-')})
+          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program||'-')+' / '+(s.department||'-')+(s.plan?' ('+s.plan+')':'')+' • '+s.status+(s.mainAdvisor?' • ที่ปรึกษา: '+s.mainAdvisor:'')})
         ]),
         el('span',{class:'li-count', text:s.count+' รายการสอบ'})
       ]);
@@ -4125,7 +4119,6 @@ function renderAllSelects(){
   initLocationAutocompletes();
   fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, 'ทุกสาขา');
   fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, 'ทุกสาขา');
-  fillSelect(document.getElementById('byDeptFilter'), masterData.departments, 'ทุกสาขา');
   fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, 'ทุกหลักสูตร');
   fillSelect(document.getElementById('dashPlanFilter'), masterData.plans, 'ทุกแผน');
   ensureSearchSelect('f_program', masterData.programs, 'พิมพ์เพื่อค้นหาหลักสูตร...');
@@ -5248,26 +5241,25 @@ function studentStatusLabel(r){
   if(studentHasWithdrawnAdvisor(r)) return 'ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่';
   return 'กำลังศึกษา';
 }
-/* หน้า "ค้นหาตามสาขาวิชา" — ตารางรายชื่อนักศึกษาทั้งหมดในสาขาที่เลือก (1 แถวต่อนักศึกษา 1 คน เอาข้อมูลล่าสุดตาม updatedAt
-   เหมือนวิธีที่ใช้ในแดชบอร์ดสรุป เพราะ records ดิบมีได้หลายแถวต่อนักศึกษาหนึ่งคน (หลายครั้งที่สอบ) ) */
-function renderByDeptView(){
-  var tbody = document.getElementById('byDeptTbody');
-  var emptyEl = document.getElementById('byDeptEmpty');
-  var countText = document.getElementById('byDeptCountText');
-  var fDept = document.getElementById('byDeptFilter').value||'';
+/* การ์ด "สิ่งที่ต้องทำวันนี้" + ตัวกรอง "เลือกขั้นตอน" ในหน้า "ตรวจสอบข้อมูลนักศึกษา" — เดิมเคยแยกเป็นหน้า
+   "ค้นหาตามสาขา" ต่างหาก แต่ซ้ำซ้อนกับหน้านี้ (ทั้งคู่ค้นหา/เลือกดูรายชื่อนักศึกษาตามสาขาได้เหมือนกัน) จึงรวมมาไว้
+   หน้าเดียว — ฟังก์ชันนี้คำนวณรายการ "สิ่งที่ต้องทำวันนี้" ของสาขาที่เลือกไว้ (ถ้ามี) เก็บผลไว้ใน currentDeptActionItems
+   เพื่อให้ renderLookupList() เอาไปกรองตาม "เลือกขั้นตอน" ต่อได้โดยไม่ต้องคำนวณซ้ำ */
+var currentDeptActionItems = [];
+var currentDeptActionItemsDept = '';
+function refreshDeptActionCard(){
+  var fDept = document.getElementById('lookupDeptFilter').value||'';
   var actionCard = document.getElementById('todayActionCard');
-  tbody.innerHTML='';
-  countText.textContent='';
-  emptyEl.style.display='none';
+  var stageSel = document.getElementById('byDeptStageFilter');
   if(!fDept){
-    emptyEl.textContent = 'เลือกสาขาวิชาด้านบนเพื่อดูรายชื่อนักศึกษา';
-    emptyEl.style.display='';
+    currentDeptActionItems = [];
+    currentDeptActionItemsDept = '';
     if(actionCard) actionCard.style.display='none'; /* ยังไม่เลือกสาขา — ซ่อนการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ก่อน */
-    return;
+    if(stageSel){ stageSel.value=''; stageSel.disabled = true; }
+    return Promise.resolve();
   }
-  countText.textContent = 'กำลังโหลดข้อมูล...';
-  /* การ์ด "สิ่งที่ต้องทำวันนี้" ย้ายมาอยู่หน้านี้แล้ว (เดิมอยู่แดชบอร์ดสรุป) และกรองตามสาขาที่เลือกไว้ด้านบนเสมอ
-     จึงต้องดึงทั้ง records และเอกสารรับเข้า (docIntake) มาด้วยเพื่อคำนวณผ่าน computeTodayActionItems() */
+  if(stageSel) stageSel.disabled = false;
+  /* ต้องดึงทั้ง records และเอกสารรับเข้า (docIntake) มาด้วยเพื่อคำนวณผ่าน computeTodayActionItems() */
   return Promise.all([recordsGetAll(), docIntakeGetAll().catch(function(){ return []; })]).then(function(results){
     var rows = results[0];
     var diRows = results[1];
@@ -5281,64 +5273,15 @@ function renderByDeptView(){
       }
     });
     var students = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
-    students.sort(function(a,b){ return (a.studentId||'').localeCompare(b.studentId||''); });
-
     var diRowsForDept = (diRows||[]).filter(function(d){ return d.department===fDept; });
-    var actionItems = computeTodayActionItems(students, diRowsForDept);
-    renderTodayActionCard(actionItems); /* การ์ดแสดงครบทุกขั้นตอนเสมอ ไม่ขึ้นกับตัวกรอง "เลือกขั้นตอน" ด้านล่าง (ตัวกรองนั้นกรองเฉพาะตารางรายชื่อ) */
-
-    /* ตัวกรอง "เลือกขั้นตอน" — กรองตารางรายชื่อให้เหลือเฉพาะนักศึกษาที่อยู่ในหมวดนั้นของการ์ด "สิ่งที่ต้องทำวันนี้" ด้านบน
-       (ใช้ studentId ที่ปรากฏใน actionItems ของหมวดนั้นเป็นตัวจับคู่ ให้ตรงกับเกณฑ์เดียวกันทุกจุด ไม่ต้องคำนวณซ้ำ) */
-    var fStage = document.getElementById('byDeptStageFilter').value||'';
-    var studentsToShow = students;
-    if(fStage){
-      var matchIds = {};
-      actionItems.forEach(function(item){
-        if(item.cat !== fStage) return;
-        var sid = item.rec ? item.rec.studentId : (item.doc ? item.doc.studentId : null);
-        if(sid) matchIds[sid] = true;
-      });
-      studentsToShow = students.filter(function(r){ return matchIds[r.studentId]; });
-    }
-
-    tbody.innerHTML='';
-    if(!students.length){
-      countText.textContent='';
-      emptyEl.textContent = 'ไม่พบนักศึกษาในสาขานี้';
-      emptyEl.style.display='';
-      return;
-    }
-    if(!studentsToShow.length){
-      countText.textContent='';
-      emptyEl.textContent = 'ไม่พบนักศึกษาในสาขานี้ที่ตรงกับขั้นตอนที่เลือก';
-      emptyEl.style.display='';
-      return;
-    }
-    countText.textContent = fStage
-      ? 'พบนักศึกษา '+studentsToShow.length+' คน (จากทั้งหมด '+students.length+' คนในสาขานี้)'
-      : 'พบนักศึกษาทั้งหมด '+students.length+' คน';
-    studentsToShow.forEach(function(r){
-      tbody.appendChild(el('tr',{},[
-        el('td',{text:r.studentId||''}),
-        el('td',{text:r.studentName||''}),
-        el('td',{text:r.plan||''}),
-        el('td',{text:r.program||''}),
-        el('td',{text:r.mainAdvisor||''}),
-        el('td',{text:studentStatusLabel(r)}),
-        el('td',{},[
-          el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'ดูโปรไฟล์', onclick:function(){
-            switchView('dashboard');
-            document.getElementById('lookupSearch').value = r.studentId;
-            selectLookupStudent(r.studentId);
-          }})
-        ])
-      ]));
-    });
+    currentDeptActionItems = computeTodayActionItems(students, diRowsForDept);
+    currentDeptActionItemsDept = fDept;
+    renderTodayActionCard(currentDeptActionItems); /* การ์ดแสดงครบทุกขั้นตอนเสมอ ไม่ขึ้นกับตัวกรอง "เลือกขั้นตอน" (ตัวกรองนั้นกรองเฉพาะรายชื่อด้านล่าง) */
   }).catch(function(e){
-    countText.textContent='';
-    emptyEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: '+e;
-    emptyEl.style.display='';
+    currentDeptActionItems = [];
+    currentDeptActionItemsDept = '';
     if(actionCard) actionCard.style.display='none';
+    toast('โหลดข้อมูล "สิ่งที่ต้องทำวันนี้" ไม่สำเร็จ: '+e, true);
   });
 }
 function renderList(){

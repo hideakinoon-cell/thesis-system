@@ -695,6 +695,13 @@ if('serviceWorker' in navigator){
   <div id="advisorLookupDetail">
     <div class="empty-state">เลือกอาจารย์จากรายการด้านบนเพื่อดูรายงานที่ปรึกษา</div>
   </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3>📅 ค้นหาตามวันที่สอบ (ทุกสาขา)</h3>
+    <div class="help" style="margin-bottom:10px;">เลือกวันที่เพื่อดูว่าวันนั้นมีการสอบของสาขาใดบ้าง ใครเป็นประธาน/กรรมการสอบบ้าง — ดึงจากทุกสาขาวิชาในระบบ ไม่จำกัดเฉพาะสาขาที่กำลังดู ใช้เช็คก่อนออกคำสั่งแต่งตั้งกรรมการ เพื่อกันกรรมการท่านเดียวกันถูกเชิญไปสอบซ้อนกันในวันเดียวกันโดยไม่รู้ตัว</div>
+    <div class="field" style="max-width:260px;"><label>วันที่สอบ</label><input type="date" id="examDateSearchInput"></div>
+    <div id="examDateSearchResult" style="margin-top:14px;"></div>
+  </div>
 </section>
 
 <!-- ============ ADVISOR LIST VIEW (รายชื่ออาจารย์ที่ปรึกษา/กรรมการ ทั้งหมด) ============ -->
@@ -2481,6 +2488,7 @@ function bindNav(){
   });
   stageSel.addEventListener('change', renderByDeptView);
   document.getElementById('advisorLookupSearch').addEventListener('input', function(){ advisorLookupListPage=0; renderAdvisorLookupResults(); });
+  document.getElementById('examDateSearchInput').addEventListener('change', renderExamDateSearchResult);
   document.getElementById('btnLookupPrev').addEventListener('click', function(){ if(lookupListPage>0){ lookupListPage--; renderLookupList(); } });
   document.getElementById('btnLookupNext').addEventListener('click', function(){ lookupListPage++; renderLookupList(); });
   document.getElementById('btnAdvisorLookupPrev').addEventListener('click', function(){ if(advisorLookupListPage>0){ advisorLookupListPage--; renderAdvisorLookupResults(); } });
@@ -3346,6 +3354,91 @@ function renderAdvisorProfile(advisor, rep){
   }
   studentSection('ยังเป็นที่ปรึกษาอยู่', rep.active);
   studentSection('สอบผ่านแล้ว (ปลดโควต้า)', rep.graduated);
+}
+/* ================= ค้นหาตามวันที่สอบ (ทุกสาขา) =================
+   ใช้เช็คก่อนออกคำสั่งแต่งตั้งกรรมการสอบ — กรรมการ 1 ท่านไปสอบได้หลายสาขา แต่เจ้าหน้าที่ไม่มีทางรู้ว่าวันนั้นมีสาขาอื่น
+   เชิญท่านไปสอบแล้วหรือยัง (ระบบของหน่วยงานเดิมสืบค้นแบบนี้ไม่ได้) ฟังก์ชันนี้จึงสแกนทุกแถว ทุกสาขา ทั้งข้อมูลการสอบ
+   ครั้งล่าสุดและประวัติการสอบซ้ำ (proposalAttempts/defenseAttempts) หาทุก "นัดสอบ" ที่ตรงกับวันที่เลือก ไม่ยึดตาม
+   currentDeptRestriction เพราะจุดประสงค์คือดูข้ามสาขาโดยเฉพาะ */
+function getExamSessionsByDate(dateStr){
+  return recordsGetAll().then(function(rows){
+    var sessions = [];
+    function pushIfDate(type, typeTxt, date, time, location, chair, committee, r){
+      if(date !== dateStr) return;
+      sessions.push({
+        type:type, typeTxt:typeTxt, time:time||'', location:location||'',
+        studentId:r.studentId, studentName:r.studentName||'(ไม่ระบุชื่อ)', department:r.department||'',
+        chair:chair||'', committee:(committee||[]).map(function(c){ return {name:c.name, position:c.position||'กรรมการ'}; })
+      });
+    }
+    (rows||[]).forEach(function(r){
+      if(r.deleted) return;
+      (r.proposalAttempts||[]).forEach(function(a){ pushIfDate('proposal','สอบเค้าโครง (3.1)', a.date, a.time, a.location, a.chair, a.committee, r); });
+      if(recHasProposalData(r)) pushIfDate('proposal','สอบเค้าโครง (3.1)', r.proposalDate, r.proposalTime, r.proposalLocation, r.proposalChair, r.proposalCommittee, r);
+      (r.defenseAttempts||[]).forEach(function(a){ pushIfDate('defense','สอบป้องกัน/IS (3.2)', a.date, a.time, a.location, a.chair, a.committee, r); });
+      if(recHasDefenseData(r)) pushIfDate('defense','สอบป้องกัน/IS (3.2)', r.defenseDate, r.defenseTime, r.defenseLocation, r.defenseChair, r.defenseCommittee, r);
+    });
+    /* นับจำนวนครั้งที่แต่ละชื่อ (ประธาน/กรรมการ) ปรากฏในวันนี้ เพื่อตีตรา ⚠️ ให้ชื่อที่ถูกเชิญมากกว่า 1 ครั้งในวันเดียวกัน
+       (สัญญาณเสี่ยงคำสั่งซ้ำ/สอบชนกัน ให้เจ้าหน้าที่ไปตรวจสอบเวลา/สถานที่ต่อว่าชนจริงหรือแค่คนละช่วงเวลา) */
+    var nameCounts = {};
+    function bump(nm){ if(!nm) return; nameCounts[nm] = (nameCounts[nm]||0)+1; }
+    sessions.forEach(function(s){
+      bump(s.chair);
+      s.committee.forEach(function(c){ bump(c.name); });
+    });
+    sessions.forEach(function(s){
+      s.chairDup = s.chair ? nameCounts[s.chair]>1 : false;
+      s.committee.forEach(function(c){ c.dup = nameCounts[c.name]>1; });
+    });
+    sessions.sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); });
+    return sessions;
+  });
+}
+function renderExamDateSearchResult(){
+  var dateStr = document.getElementById('examDateSearchInput').value;
+  var box = document.getElementById('examDateSearchResult');
+  box.innerHTML = '';
+  if(!dateStr){ return; }
+  box.appendChild(el('div',{class:'help', text:'กำลังค้นหา...'}));
+  return getExamSessionsByDate(dateStr).then(function(sessions){
+    box.innerHTML = '';
+    if(!sessions.length){
+      box.appendChild(el('div',{class:'empty-state', text:'ไม่พบการสอบที่ตรงกับวันที่ '+(toBuddhistDateStr(dateStr)||dateStr)+' ในทุกสาขา'}));
+      return;
+    }
+    var hasDup = sessions.some(function(s){ return s.chairDup || s.committee.some(function(c){ return c.dup; }); });
+    if(hasDup){
+      box.appendChild(el('div',{class:'help', style:'color:#dc2626;font-weight:600;margin-bottom:8px;',
+        text:'⚠️ พบชื่อประธาน/กรรมการสอบที่ถูกเชิญมากกว่า 1 ครั้งในวันนี้ (ไฮไลต์สีแดงด้านล่าง) — กรุณาตรวจสอบเวลา/สถานที่อีกครั้งก่อนออกคำสั่งแต่งตั้ง'}));
+    }
+    box.appendChild(el('div',{class:'help', style:'margin-bottom:8px;', text:'พบทั้งหมด '+sessions.length+' นัดสอบ วันที่ '+(toBuddhistDateStr(dateStr)||dateStr)+' (ทุกสาขา)'}));
+    var wrapTable = el('div',{style:'overflow-x:auto;'});
+    var table = el('table');
+    var theadTr = el('tr',{},['เวลา','ประเภท','นักศึกษา','สาขาวิชา','สถานที่','ประธาน/กรรมการสอบ'].map(function(h){ return el('th',{text:h}); }));
+    table.appendChild(el('thead',{},[theadTr]));
+    var tbody = el('tbody');
+    sessions.forEach(function(s){
+      var peopleWrap = el('div',{style:'display:flex;flex-direction:column;gap:3px;'});
+      if(s.chair){
+        peopleWrap.appendChild(el('div',{style:'font-weight:600;'+(s.chairDup?'color:#dc2626;':''), text:(s.chairDup?'⚠️ ':'')+s.chair+' (ประธาน)'}));
+      }
+      s.committee.forEach(function(c){
+        peopleWrap.appendChild(el('div',{style:c.dup?'color:#dc2626;':'', text:(c.dup?'⚠️ ':'')+c.name+' ('+c.position+')'}));
+      });
+      if(!s.chair && !s.committee.length) peopleWrap.appendChild(el('div',{class:'help', text:'—'}));
+      tbody.appendChild(el('tr',{},[
+        el('td',{text:s.time||'-'}),
+        el('td',{text:s.typeTxt}),
+        el('td',{text:s.studentName+' ('+s.studentId+')'}),
+        el('td',{text:s.department||'-'}),
+        el('td',{text:s.location||'-'}),
+        el('td',{},[peopleWrap])
+      ]));
+    });
+    table.appendChild(tbody);
+    wrapTable.appendChild(table);
+    box.appendChild(wrapTable);
+  });
 }
 function selectLookupStudent(studentId){
   recordsGetByStudentId(studentId).then(function(rows){

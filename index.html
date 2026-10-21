@@ -620,7 +620,10 @@ if('serviceWorker' in navigator){
 <!-- ============ DASHBOARD / LOOKUP VIEW (รวมหน้า "ค้นหาตามสาขา" เดิมเข้ามาไว้ที่นี่ทั้งหมดแล้ว เพื่อไม่ให้ซ้ำซ้อนกัน) ============ -->
 <section id="view-dashboard" style="display:none;">
   <div class="card">
-    <h3>🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h3 style="margin:0;">🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnExportLookupList">📥 ส่งออก Excel</button>
+    </div>
     <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา...">
     <div class="grid" style="max-width:680px;margin-top:10px;">
       <div class="field">
@@ -2480,6 +2483,7 @@ function bindNav(){
     applyDashOverdueToggle();
   });
   document.getElementById('btnExportTodayAction').addEventListener('click', exportTodayActionExcel);
+  document.getElementById('btnExportLookupList').addEventListener('click', exportLookupListExcel);
   /* แถบค้นหา/กรองข้อมูลด้านบนแดชบอร์ดสรุปข้อมูล */
   document.getElementById('dashSearchInput').addEventListener('input', onDashSearchInput);
   document.getElementById('dashSearchInput').addEventListener('blur', function(){
@@ -3117,6 +3121,22 @@ function getStudentSummaries(){
 }
 var lookupSearchResultToken = 0;
 var lookupListPage = 0; /* หน้าปัจจุบันของรายชื่อ นศ. เวลาเลือกดูทั้งสาขา (เริ่มที่ 0) แสดงทีละ LIST_PAGE_SIZE คน */
+var lastLookupFilteredList = []; /* เก็บรายชื่อ นศ. ที่ตรงกับตัวกรอง/คำค้นหาล่าสุดไว้ทั้งหมด (ไม่ตัดตามหน้า) ใช้ตอนกดส่งออก Excel
+   เพื่อให้ส่งออกครบทุกรายการที่ตรงเงื่อนไข ไม่ใช่แค่ที่แสดงอยู่ในหน้าปัจจุบัน */
+/* ส่งออกรายชื่อนักศึกษาที่กำลังแสดงอยู่ (ตามคำค้นหา/สาขา/ขั้นตอนที่เลือกไว้) เป็นไฟล์ Excel */
+function exportLookupListExcel(){
+  if(!lastLookupFilteredList.length){ toast('ไม่มีรายชื่อให้ส่งออกในขณะนี้ — ลองค้นหาหรือเลือกสาขา/ขั้นตอนก่อน', true); return; }
+  var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','หลักสูตร','สาขาวิชา','แผนการเรียน','สถานะ','ที่ปรึกษาหลัก','จำนวนรายการสอบ']].concat(
+    lastLookupFilteredList.map(function(s){
+      return [s.studentId||'', s.studentName||'', s.program||'', s.department||'', s.plan||'', s.status||'', s.mainAdvisor||'', s.count||0];
+    })
+  );
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:14},{wch:26},{wch:16},{wch:28},{wch:12},{wch:28},{wch:22},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'รายชื่อนักศึกษา');
+  XLSX.writeFile(wb, 'รายชื่อนักศึกษา-'+dateStamp()+'.xlsx');
+}
 function renderLookupList(){
   var q = (document.getElementById('lookupSearch').value||'').trim().toLowerCase();
   var deptFilter = document.getElementById('lookupDeptFilter').value||'';
@@ -3133,6 +3153,7 @@ function renderLookupList(){
     emptyEl.classList.remove('is-loading');
     emptyEl.style.display='';
     pagerEl.style.display='none';
+    lastLookupFilteredList = [];
     return;
   }
   /* กันผลลัพธ์เก่ามาทับผลลัพธ์ใหม่ — ถ้าพิมพ์เร็วจนมีการค้นหาซ้อนกัน (คำค้นก่อนหน้ายังโหลดไม่เสร็จ) แล้วคำค้นก่อนหน้า
@@ -3160,6 +3181,7 @@ function renderLookupList(){
       });
       list = list.filter(function(s){ return matchIds[s.studentId]; });
     }
+    lastLookupFilteredList = list;
     container.innerHTML='';
     emptyEl.textContent = stageFilter ? 'ไม่พบนักศึกษาที่ตรงกับขั้นตอนที่เลือก' : 'ไม่พบนักศึกษาที่ตรงกับคำค้นหา';
     emptyEl.classList.remove('is-loading');
@@ -3842,6 +3864,13 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     ])
   ]);
   wrap.appendChild(sec6);
+
+  /* เลื่อนหน้าจอมาที่โปรไฟล์ที่เพิ่งเปิดโดยอัตโนมัติ — หลังรวมหน้า "ค้นหาตามสาขา" เข้ามาแล้ว การ์ด "สิ่งที่ต้องทำวันนี้"
+     ด้านบนอาจสูงมาก ทำให้โปรไฟล์ที่เพิ่งคลิกเปิดอยู่นอกจอ เหมือนกดแล้ว "ไม่ไปไหน" ทั้งที่จริงๆ เปิดแล้วแค่ต้องเลื่อนลงไปดู
+     ใช้ requestAnimationFrame ให้แน่ใจว่า DOM ถูก paint ก่อนค่อยเลื่อน (กัน scrollIntoView คำนวณตำแหน่งผิดตอน layout ยังไม่นิ่ง) */
+  requestAnimationFrame(function(){
+    wrap.scrollIntoView({behavior:'smooth', block:'start'});
+  });
 }
 
 /* ================= DOC INTAKE VIEW (ลงทะเบียนรับเอกสาร บว.04/บว.25 ฯลฯ) =================

@@ -904,6 +904,7 @@ if('serviceWorker' in navigator){
       <div class="field full">
         <label>อาจารย์ที่ปรึกษาหลัก</label>
         <div id="f_mainAdvisor" class="combo"></div>
+        <div class="help" id="f_mainAdvisorQuotaHint" style="margin-top:4px;"></div>
       </div>
       <div class="field">
         <label>อาจารย์ที่ปรึกษาร่วม</label>
@@ -2628,7 +2629,7 @@ function switchView(name){
   });
   document.querySelector('main').classList.toggle('wide', name==='list'); /* ขยายความกว้างเฉพาะหน้ารายการทั้งหมด */
   if(cloudModeEnabled && accessToken && (name==='form' || name==='settings')) refreshCloudMasterData();
-  if(name==='form'){ refreshDocLinkSuggestions(); refreshLocationUsage(); }
+  if(name==='form'){ refreshDocLinkSuggestions(); refreshLocationUsage(); updateMainAdvisorQuotaHint(); }
   if(name==='list') renderList();
   if(name==='settings'){
     renderMasterLists();
@@ -4403,6 +4404,7 @@ function syncGraduationRequestPublications(studentId, studentName, department, n
 /* ================= FORM: EXAM TYPE ================= */
 function bindFormEvents(){
   document.getElementById('btnAddCoAdvisor').addEventListener('click', function(){ addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); });
+  document.getElementById('f_mainAdvisor').addEventListener('change', updateMainAdvisorQuotaHint);
   document.getElementById('p_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('p_committeeList'); });
   document.getElementById('d_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('d_committeeList'); });
   document.getElementById('sub-proposal').addEventListener('change', function(e){
@@ -4676,6 +4678,7 @@ function resetFormFields(){
   uncheckRadioGroup('qualifyingExam');
   document.getElementById('f_qualifyingDocLink').value='';
   document.getElementById('f_mainAdvisor').value='';
+  updateMainAdvisorQuotaHint();
   clearDynamicRows('coAdvisorList');
   document.getElementById('f_advisorChangeNote').value='';
   document.getElementById('f_titleTh').value='';
@@ -4724,6 +4727,7 @@ function loadRecordIntoForm(rec){
   var qe = document.querySelector('input[name=qualifyingExam][value="'+rec.qualifyingExam+'"]'); if(qe) qe.checked=true;
   document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
   setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
+  updateMainAdvisorQuotaHint();
   clearDynamicRows('coAdvisorList');
   (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c), !!(c && typeof c==='object' && c.isExternal)); });
   document.getElementById('f_titleTh').value = rec.titleTh||'';
@@ -4838,6 +4842,7 @@ function searchExistingStudent(){
     var qe = document.querySelector('input[name=qualifyingExam][value="'+rec.qualifyingExam+'"]'); if(qe) qe.checked=true;
     document.getElementById('f_qualifyingDocLink').value = rec.qualifyingDocLink||'';
     setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
+    updateMainAdvisorQuotaHint();
     clearDynamicRows('coAdvisorList');
     (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c), !!(c && typeof c==='object' && c.isExternal)); });
     document.getElementById('f_titleTh').value = rec.titleTh||'';
@@ -6352,6 +6357,32 @@ function advisorQuotaBadgeText(advisor){
   var used = advisorUsedCount(advisor);
   var usedTxt = (Math.round(used*100)/100).toString().replace(/\.0+$/,'');
   return 'ที่ปรึกษา: '+usedTxt+'/'+max+' คน';
+}
+/* ข้อความบอกจำนวนนักศึกษาที่อาจารย์ท่านนี้เป็น "ที่ปรึกษาหลัก" อยู่ตอนนี้ (ก่อนบันทึกแถวที่กำลังกรอก) โชว์ไว้ใต้ช่องเลือก
+   อาจารย์ที่ปรึกษาหลักในหน้าบันทึกข้อมูล เพื่อให้เจ้าหน้าที่เห็นภาระงานทันทีตอนกำลังมอบหมาย ไม่ต้องสลับไปเช็คหน้า
+   "ที่ปรึกษา" แยกต่างหาก — ใช้ advisorUsedMap ตัวเดียวกับหน้ารายงานที่ปรึกษา (ต้องเรียก computeAdvisorUsedCounts() ให้
+   สดก่อนเสมอ ดู updateMainAdvisorQuotaHint) */
+function mainAdvisorQuotaHintText(advisorName){
+  if(!advisorName) return '';
+  var advisor = (masterData.advisors||[]).filter(function(a){ return advisorNameVariants(a).indexOf(advisorName)>-1; })[0];
+  if(!advisor) return '';
+  var used = advisorUsedCount(advisor);
+  var usedTxt = (Math.round(used*100)/100).toString().replace(/\.0+$/,'');
+  var max = ADVISOR_RANK_QUOTA[advisor.rank];
+  if(max){
+    var over = used>max;
+    return (over?'⚠️ ':'')+'ขณะนี้ '+advisor.name+' เป็นที่ปรึกษาหลักอยู่ '+usedTxt+'/'+max+' คน'+(over?' (เกินโควตา)':'');
+  }
+  return 'ขณะนี้ '+advisor.name+' เป็นที่ปรึกษาหลักอยู่ '+usedTxt+' คน (ยังไม่ระบุตำแหน่งทางวิชาการ จึงยังไม่คำนวณโควตาสูงสุด)';
+}
+function updateMainAdvisorQuotaHint(){
+  var hintEl = document.getElementById('f_mainAdvisorQuotaHint');
+  if(!hintEl) return;
+  var name = document.getElementById('f_mainAdvisor').value;
+  if(!name){ hintEl.textContent=''; return; }
+  computeAdvisorUsedCounts().then(function(){
+    hintEl.textContent = mainAdvisorQuotaHintText(name);
+  });
 }
 function committeeWorkloadCount(advisor){
   return advisorNameVariants(advisor).reduce(function(sum, nm){ return sum + (committeeWorkloadMap[nm]||0); }, 0);

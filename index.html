@@ -628,8 +628,8 @@ if('serviceWorker' in navigator){
         <select id="lookupDeptFilter"><option value="">ทุกสาขา</option></select>
       </div>
       <div class="field">
-        <label>เลือกขั้นตอน (ไม่บังคับ — ต้องเลือกสาขาก่อน)</label>
-        <select id="byDeptStageFilter" disabled><option value="">ทุกขั้นตอน</option></select>
+        <label>เลือกขั้นตอน (ไม่บังคับ)</label>
+        <select id="byDeptStageFilter"><option value="">ทุกขั้นตอน</option></select>
       </div>
     </div>
     <div class="lookup-result-list" id="lookupResultList"></div>
@@ -643,7 +643,7 @@ if('serviceWorker' in navigator){
 
   <div class="card" id="todayActionCard" style="display:none;border-left:4px solid #FF9F7A;">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;">📋 สิ่งที่ต้องทำวันนี้ (เฉพาะสาขาที่เลือก)</h3>
+      <h3 style="margin:0;" id="todayActionCardTitle">📋 สิ่งที่ต้องทำวันนี้ (ทุกสาขา)</h3>
       <button type="button" class="btn btn-secondary btn-sm" id="btnExportTodayAction">📥 ส่งออก Excel</button>
     </div>
     <div id="todayActionList"></div>
@@ -3124,11 +3124,12 @@ function renderLookupList(){
   var container = document.getElementById('lookupResultList');
   var emptyEl = document.getElementById('lookupEmpty');
   var pagerEl = document.getElementById('lookupPagination');
-  /* ไม่แสดงรายชื่อ นศ. ทั้งหมดตั้งแต่แรก — ให้พิมพ์ค้นหาหรือเลือกสาขาก่อนถึงจะขึ้นผลลัพธ์ (กันหน้ายาวเกินไปเวลามี นศ. เยอะ
-     และยังช่วยลดการอ่านข้อมูลทั้งชีทโดยไม่จำเป็นทุกครั้งที่เปิดหน้านี้ด้วย) */
-  if(!q && !deptFilter){
+  /* ไม่แสดงรายชื่อ นศ. ทั้งหมดตั้งแต่แรก — ให้พิมพ์ค้นหา เลือกสาขา หรือเลือกขั้นตอนก่อนถึงจะขึ้นผลลัพธ์ (กันหน้ายาวเกินไป
+     เวลามี นศ. เยอะ และยังช่วยลดการอ่านข้อมูลทั้งชีทโดยไม่จำเป็นทุกครั้งที่เปิดหน้านี้ด้วย) — เลือกขั้นตอนอย่างเดียวโดยไม่
+     เลือกสาขาก็ดูได้ เพื่อให้เห็นของค้างทุกสาขารวมกันในคราวเดียว ไม่ต้องไล่เลือกทีละสาขา */
+  if(!q && !deptFilter && !stageFilter){
     container.innerHTML='';
-    emptyEl.textContent = 'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด';
+    emptyEl.textContent = 'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา หรือเลือกสาขาวิชา/ขั้นตอนเพื่อดูรายชื่อ';
     emptyEl.classList.remove('is-loading');
     emptyEl.style.display='';
     pagerEl.style.display='none';
@@ -3147,9 +3148,10 @@ function renderLookupList(){
     if(deptFilter){
       list = list.filter(function(s){ return (s.department||'')===deptFilter; });
     }
-    /* ตัวกรอง "เลือกขั้นตอน" — ใช้ได้ก็ต่อเมื่อเลือกสาขาไว้แล้ว และ currentDeptActionItems เป็นของสาขาเดียวกันที่กำลังกรองอยู่
-       (กันเคสค้างข้อมูลสาขาก่อนหน้าตอนสลับสาขาเร็วๆ) กรองรายชื่อให้เหลือเฉพาะคนที่อยู่ในหมวดนั้นของการ์ด "สิ่งที่ต้องทำวันนี้" */
-    if(stageFilter && deptFilter && currentDeptActionItemsDept===deptFilter){
+    /* ตัวกรอง "เลือกขั้นตอน" — ใช้ได้ทั้งแบบเลือกสาขาแล้ว (กรองเฉพาะสาขานั้น) หรือไม่เลือกสาขาเลย (กรองทุกสาขารวมกัน)
+       เงื่อนไข currentDeptActionItemsDept===deptFilter กันเคสค้างข้อมูลสาขา/ทุกสาขาก่อนหน้าตอนสลับตัวกรองเร็วๆ
+       (ทั้งคู่เป็น '' พร้อมกันได้ ตอนดูทุกสาขารวมกัน) กรองรายชื่อให้เหลือเฉพาะคนที่อยู่ในหมวดนั้นของการ์ด "สิ่งที่ต้องทำวันนี้" */
+    if(stageFilter && currentDeptActionItemsDept===deptFilter){
       var matchIds = {};
       currentDeptActionItems.forEach(function(item){
         if(item.cat !== stageFilter) return;
@@ -5243,22 +5245,17 @@ function studentStatusLabel(r){
 }
 /* การ์ด "สิ่งที่ต้องทำวันนี้" + ตัวกรอง "เลือกขั้นตอน" ในหน้า "ตรวจสอบข้อมูลนักศึกษา" — เดิมเคยแยกเป็นหน้า
    "ค้นหาตามสาขา" ต่างหาก แต่ซ้ำซ้อนกับหน้านี้ (ทั้งคู่ค้นหา/เลือกดูรายชื่อนักศึกษาตามสาขาได้เหมือนกัน) จึงรวมมาไว้
-   หน้าเดียว — ฟังก์ชันนี้คำนวณรายการ "สิ่งที่ต้องทำวันนี้" ของสาขาที่เลือกไว้ (ถ้ามี) เก็บผลไว้ใน currentDeptActionItems
-   เพื่อให้ renderLookupList() เอาไปกรองตาม "เลือกขั้นตอน" ต่อได้โดยไม่ต้องคำนวณซ้ำ */
+   หน้าเดียว — ฟังก์ชันนี้คำนวณรายการ "สิ่งที่ต้องทำวันนี้" เก็บผลไว้ใน currentDeptActionItems เพื่อให้ renderLookupList()
+   เอาไปกรองตาม "เลือกขั้นตอน" ต่อได้โดยไม่ต้องคำนวณซ้ำ — ไม่บังคับต้องเลือกสาขาก่อนอีกต่อไป (ถ้าไม่เลือกสาขา จะคำนวณ
+   ของทุกสาขารวมกัน ยังคงเคารพ currentDeptRestriction ของเจ้าหน้าที่สาขาที่ถูกจำกัดสิทธิ์อยู่ดี) เพื่อให้เจ้าหน้าที่ส่วนกลาง
+   ดูของค้างทั้งหมดทุกสาขาพร้อมกันได้ในคราวเดียว ไม่ต้องไล่เลือกทีละสาขา */
 var currentDeptActionItems = [];
 var currentDeptActionItemsDept = '';
 function refreshDeptActionCard(){
   var fDept = document.getElementById('lookupDeptFilter').value||'';
   var actionCard = document.getElementById('todayActionCard');
-  var stageSel = document.getElementById('byDeptStageFilter');
-  if(!fDept){
-    currentDeptActionItems = [];
-    currentDeptActionItemsDept = '';
-    if(actionCard) actionCard.style.display='none'; /* ยังไม่เลือกสาขา — ซ่อนการ์ด "สิ่งที่ต้องทำวันนี้" ไว้ก่อน */
-    if(stageSel){ stageSel.value=''; stageSel.disabled = true; }
-    return Promise.resolve();
-  }
-  if(stageSel) stageSel.disabled = false;
+  var titleEl = document.getElementById('todayActionCardTitle');
+  if(titleEl) titleEl.textContent = '📋 สิ่งที่ต้องทำวันนี้ ('+(fDept ? ('เฉพาะสาขา: '+fDept) : 'ทุกสาขา')+')';
   /* ต้องดึงทั้ง records และเอกสารรับเข้า (docIntake) มาด้วยเพื่อคำนวณผ่าน computeTodayActionItems() */
   return Promise.all([recordsGetAll(), docIntakeGetAll().catch(function(){ return []; })]).then(function(results){
     var rows = results[0];
@@ -5267,13 +5264,13 @@ function refreshDeptActionCard(){
     rows.forEach(function(r){
       if(!r.studentId) return;
       if(currentDeptRestriction && r.department!==currentDeptRestriction) return;
-      if(r.department!==fDept) return;
+      if(fDept && r.department!==fDept) return;
       if(!latestByStudent[r.studentId] || (r.updatedAt||0) > (latestByStudent[r.studentId].updatedAt||0)){
         latestByStudent[r.studentId] = r;
       }
     });
     var students = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
-    var diRowsForDept = (diRows||[]).filter(function(d){ return d.department===fDept; });
+    var diRowsForDept = (diRows||[]).filter(function(d){ return !fDept || d.department===fDept; });
     currentDeptActionItems = computeTodayActionItems(students, diRowsForDept);
     currentDeptActionItemsDept = fDept;
     renderTodayActionCard(currentDeptActionItems); /* การ์ดแสดงครบทุกขั้นตอนเสมอ ไม่ขึ้นกับตัวกรอง "เลือกขั้นตอน" (ตัวกรองนั้นกรองเฉพาะรายชื่อด้านล่าง) */

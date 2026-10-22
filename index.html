@@ -852,6 +852,15 @@ if('serviceWorker' in navigator){
         </div>
         <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบภาษาอังกฤษ</div>
         <div class="combo" style="margin-top:8px;"><input type="text" id="f_englishDocLink" placeholder="ลิงก์เอกสารแนบผลภาษาอังกฤษ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
+        <div class="attach-box" style="margin-top:8px;">
+          <input type="file" id="eng_fileInput" multiple>
+          <div class="attach-link-row">
+            <input type="url" id="eng_linkInput" placeholder="วางลิงก์เอกสาร (เช่น Google Drive)">
+            <input type="text" id="eng_linkName" placeholder="ชื่อเอกสาร (ไม่บังคับ)">
+            <button type="button" class="link-btn" id="eng_btnAddLink">🔗 แนบลิงก์</button>
+          </div>
+          <div class="attach-list" id="eng_attachList"></div>
+        </div>
       </div>
       <div class="field full">
         <label>ผลคอมพิวเตอร์</label>
@@ -863,6 +872,15 @@ if('serviceWorker' in navigator){
         </div>
         <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบคอมพิวเตอร์</div>
         <div class="combo" style="margin-top:8px;"><input type="text" id="f_computerDocLink" placeholder="ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
+        <div class="attach-box" style="margin-top:8px;">
+          <input type="file" id="comp_fileInput" multiple>
+          <div class="attach-link-row">
+            <input type="url" id="comp_linkInput" placeholder="วางลิงก์เอกสาร (เช่น Google Drive)">
+            <input type="text" id="comp_linkName" placeholder="ชื่อเอกสาร (ไม่บังคับ)">
+            <button type="button" class="link-btn" id="comp_btnAddLink">🔗 แนบลิงก์</button>
+          </div>
+          <div class="attach-list" id="comp_attachList"></div>
+        </div>
       </div>
       <div class="field full">
         <label>การสอบวัดความรู้</label>
@@ -873,6 +891,15 @@ if('serviceWorker' in navigator){
         </div>
         <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบวัดความรู้</div>
         <div class="combo" style="margin-top:8px;"><input type="text" id="f_qualifyingDocLink" placeholder="ลิงก์เอกสารแนบการสอบวัดความรู้ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
+        <div class="attach-box" style="margin-top:8px;">
+          <input type="file" id="qual_fileInput" multiple>
+          <div class="attach-link-row">
+            <input type="url" id="qual_linkInput" placeholder="วางลิงก์เอกสาร (เช่น Google Drive)">
+            <input type="text" id="qual_linkName" placeholder="ชื่อเอกสาร (ไม่บังคับ)">
+            <button type="button" class="link-btn" id="qual_btnAddLink">🔗 แนบลิงก์</button>
+          </div>
+          <div class="attach-list" id="qual_attachList"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1060,6 +1087,16 @@ if('serviceWorker' in navigator){
       <div class="multi-row-list" id="publicationList"></div>
       <button type="button" class="link-btn" id="btnAddPublication" style="margin-top:8px;text-align:left;">＋ เพิ่มผลงานตีพิมพ์</button>
     </div>
+    <h4>แนบไฟล์ผลงาน (เช่น บทความที่ตีพิมพ์แล้ว, เล่มประชุมวิชาการ)</h4>
+    <div class="attach-box">
+      <input type="file" id="pub_fileInput" multiple>
+      <div class="attach-link-row">
+        <input type="url" id="pub_linkInput" placeholder="วางลิงก์เอกสาร (เช่น Google Drive)">
+        <input type="text" id="pub_linkName" placeholder="ชื่อเอกสาร (ไม่บังคับ)">
+        <button type="button" class="link-btn" id="pub_btnAddLink">🔗 แนบลิงก์</button>
+      </div>
+      <div class="attach-list" id="pub_attachList"></div>
+    </div>
   </div>
 
   <div class="card" id="formSec6">
@@ -1076,6 +1113,15 @@ if('serviceWorker' in navigator){
       <div class="field full">
         <label>ไฟล์เล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</label>
         <input type="text" id="f_bookDocLink" placeholder="ลิงก์เอกสารแนบเล่มฉบับสมบูรณ์ (เช่น ลิงก์ Google Drive) — ถ้ามี">
+        <div class="attach-box" style="margin-top:8px;">
+          <input type="file" id="book_fileInput" multiple>
+          <div class="attach-link-row">
+            <input type="url" id="book_linkInput" placeholder="วางลิงก์เอกสาร (เช่น Google Drive)">
+            <input type="text" id="book_linkName" placeholder="ชื่อเอกสาร (ไม่บังคับ)">
+            <button type="button" class="link-btn" id="book_btnAddLink">🔗 แนบลิงก์</button>
+          </div>
+          <div class="attach-list" id="book_attachList"></div>
+        </div>
       </div>
       <div class="field">
         <label><input type="checkbox" id="f_graduated" style="width:auto;margin-right:6px;"> สำเร็จการศึกษาแล้ว</label>
@@ -4456,6 +4502,16 @@ function bindFormEvents(){
   document.getElementById('d_fileInput').addEventListener('change', function(e){ handleFileInput('defense', e.target.files); e.target.value=''; });
   document.getElementById('p_btnAddLink').addEventListener('click', function(){ handleLinkAdd('proposal'); });
   document.getElementById('d_btnAddLink').addEventListener('click', function(){ handleLinkAdd('defense'); });
+  document.getElementById('pub_fileInput').addEventListener('change', function(e){ handleFileInput('publication', e.target.files); e.target.value=''; });
+  document.getElementById('pub_btnAddLink').addEventListener('click', function(){ handleLinkAdd('publication'); });
+  document.getElementById('eng_fileInput').addEventListener('change', function(e){ handleFileInput('english', e.target.files); e.target.value=''; });
+  document.getElementById('eng_btnAddLink').addEventListener('click', function(){ handleLinkAdd('english'); });
+  document.getElementById('comp_fileInput').addEventListener('change', function(e){ handleFileInput('computer', e.target.files); e.target.value=''; });
+  document.getElementById('comp_btnAddLink').addEventListener('click', function(){ handleLinkAdd('computer'); });
+  document.getElementById('qual_fileInput').addEventListener('change', function(e){ handleFileInput('qualifying', e.target.files); e.target.value=''; });
+  document.getElementById('qual_btnAddLink').addEventListener('click', function(){ handleLinkAdd('qualifying'); });
+  document.getElementById('book_fileInput').addEventListener('change', function(e){ handleFileInput('book', e.target.files); e.target.value=''; });
+  document.getElementById('book_btnAddLink').addEventListener('click', function(){ handleLinkAdd('book'); });
 
   /* กรอกวันที่อนุมัติหัวข้อ บว.25 แล้วมักลืมกดปุ่ม "ส่งแล้ว" แยกต่างหาก ทำให้บันทึกวันที่ไว้แต่สถานะยังค้างเป็น "ยังไม่ส่ง"
      — ให้ติ๊ก "ส่งแล้ว" ให้อัตโนมัติทันทีที่มีการกรอกวันที่ (มีวันที่อนุมัติ = ส่งแล้วโดยนัย) */
@@ -4638,6 +4694,11 @@ function newDraft(){
   resetFormFields();
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
+  renderAttachmentList('publication');
+  renderAttachmentList('english');
+  renderAttachmentList('computer');
+  renderAttachmentList('qualifying');
+  renderAttachmentList('book');
 }
 /* กด "เพิ่มการสอบใหม่ / เพิ่มข้อมูล" ให้ นศ. คนหนึ่ง — ถ้ามีแถวเดิมอยู่แล้ว (1 แถวขึ้นไป) ให้เปิดแถวเดิมมาแก้ไข/เติมข้อมูลทันที
    (รวมแถวซ้ำให้อัตโนมัติถ้าพบมากกว่า 1 แถว — จะลบแถวซ้ำจริงตอนกดบันทึกสำเร็จเท่านั้น) ถ้าไม่พบเลยจึงสร้างแถวใหม่ */
@@ -4821,6 +4882,11 @@ function loadRecordIntoForm(rec){
   setSectionLocked('d', recHasDefenseData(rec), 'ส่วน 3.2 (การสอบป้องกัน/IS) มีข้อมูลบันทึกไว้แล้ว');
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
+  renderAttachmentList('publication');
+  renderAttachmentList('english');
+  renderAttachmentList('computer');
+  renderAttachmentList('qualifying');
+  renderAttachmentList('book');
   renderExamHistory(rec.studentId);
   /* เช็คทันทีที่เปิดข้อมูลเดิมมาแก้ไข เผื่อกรรมการที่เคยเลือกไว้เกิดชนกับข้อมูลนักศึกษาคนอื่นที่กรอกเพิ่มเข้ามาทีหลัง */
   checkCommitteeScheduleConflict('p');
@@ -5144,8 +5210,12 @@ function handleFileInput(section, fileList){
     });
   })).then(function(){ renderAttachmentList(section); });
 }
+var ATTACH_SECTION_PREFIX = { proposal:'p_', defense:'d_', publication:'pub_',
+  english:'eng_', computer:'comp_', qualifying:'qual_', book:'book_' }; /* ใช้ร่วมกันทั้ง handleLinkAdd/renderAttachmentList
+   เพื่อรองรับหมวดแนบไฟล์ใหม่ (หมวด 1.1 ผลภาษาอังกฤษ/คอมพิวเตอร์/สอบวัดความรู้, หมวดที่ 5 ผลงานตีพิมพ์, หมวดที่ 6 เล่มฉบับสมบูรณ์)
+   โดยไม่ต้องแก้ if/else เดิมทุกจุด */
 function handleLinkAdd(section){
-  var prefix = section==='proposal' ? 'p_' : 'd_';
+  var prefix = ATTACH_SECTION_PREFIX[section] || 'p_';
   var urlInput = document.getElementById(prefix+'linkInput');
   var nameInput = document.getElementById(prefix+'linkName');
   var url = urlInput.value.trim();
@@ -5163,7 +5233,7 @@ function handleLinkAdd(section){
   }).catch(function(e){ toast('แนบลิงก์ไม่สำเร็จ: '+e, true); });
 }
 function renderAttachmentList(section){
-  var containerId = section==='proposal' ? 'p_attachList' : 'd_attachList';
+  var containerId = (ATTACH_SECTION_PREFIX[section] || 'p_')+'attachList';
   var container = document.getElementById(containerId);
   if(!container) return;
   container.innerHTML='';
@@ -7100,7 +7170,10 @@ function checkBrokenDriveFiles(){
       broken.forEach(function(f){
         var rec = recordById[f.recordId];
         var studentTxt = rec ? (rec.studentId+' — '+rec.studentName) : ('(ไม่พบข้อมูลนักศึกษาที่เชื่อมกับไฟล์นี้ — เรคคอร์ด '+f.recordId+')');
-        var sectionTxt = f.section==='proposal' ? '3.1 เค้าโครง' : (f.section==='defense' ? '3.2 ป้องกัน/IS' : 'หมวดที่ 6 เล่มฉบับสมบูรณ์');
+        var SECTION_LABELS = { proposal:'3.1 เค้าโครง', defense:'3.2 ป้องกัน/IS', publication:'หมวดที่ 5 ผลงานตีพิมพ์',
+          english:'หมวดที่ 1.1 ผลภาษาอังกฤษ', computer:'หมวดที่ 1.1 ผลคอมพิวเตอร์', qualifying:'หมวดที่ 1.1 สอบวัดความรู้',
+          book:'หมวดที่ 6 เล่มฉบับสมบูรณ์' };
+        var sectionTxt = SECTION_LABELS[f.section] || 'หมวดที่ 6 เล่มฉบับสมบูรณ์';
         var row = el('div',{class:'attach-item'},[
           el('span',{class:'name', text:'⚠️ '+f.name+' — '+studentTxt+' ('+sectionTxt+') — '+f.reason}),
           el('button',{type:'button', class:'link-btn', style:'color:#c0392b', text:'ลบรายการนี้ออกจากระบบ', onclick:function(){

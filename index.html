@@ -1180,6 +1180,7 @@ if('serviceWorker' in navigator){
       <button class="btn btn-secondary btn-sm" id="btnExportCsv">⬇ CSV</button>
       <button class="btn btn-accent btn-sm" id="btnExportXlsx">⬇ Excel</button>
       <button class="btn btn-secondary btn-sm" id="btnImportBulk">📥 นำเข้าข้อมูล</button>
+      <button class="btn btn-secondary btn-sm" id="btnImportProposal">📥 นำเข้าหัวข้อ/เค้าโครง (เติมช่องว่าง)</button>
       <button class="btn btn-secondary btn-sm" id="btnBulkAttachLink">📎 แนบลิงก์ประกาศ (กลุ่ม)</button>
       <button class="btn btn-primary btn-sm" id="btnNewFromList">＋ เพิ่มข้อมูลใหม่</button>
     </div>
@@ -5307,6 +5308,7 @@ function bindListEvents(){
   document.getElementById('btnListNext').addEventListener('click', function(){ listPage++; renderList(); });
   document.getElementById('btnNewFromList').addEventListener('click', function(){ newDraft(); switchView('form'); });
   document.getElementById('btnImportBulk').addEventListener('click', openImportModal);
+  document.getElementById('btnImportProposal').addEventListener('click', openProposalImportModal);
   document.getElementById('btnBulkAttachLink').addEventListener('click', openBulkAttachModal);
   document.getElementById('btnExportCsv').addEventListener('click', function(){ exportData('csv'); });
   document.getElementById('btnExportXlsx').addEventListener('click', function(){ exportData('xlsx'); });
@@ -6003,6 +6005,262 @@ function runImport(importBtn){
     progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า (บันทึกสำเร็จแล้ว: สร้างใหม่ '+created+', อัปเดต '+updated
       +') — '+reasonMsg+' ลองกดนำเข้าอีกครั้ง (รายการที่บันทึกไปแล้วจะถูกตรวจพบว่ามีอยู่แล้ว ไม่ซ้ำ)';
     if(failedDetails.length>0) renderImportFailedList(progressBox, failedDetails);
+  });
+}
+/* ================= นำเข้าหัวข้อวิทยานิพนธ์ / ข้อมูลสอบเค้าโครง (3.1) จากไฟล์ภายนอก =================
+   ต่างจาก "นำเข้าข้อมูล" ด้านบน (ซึ่งสร้าง/อัปเดตเฉพาะหมวด 1) ตัวนี้:
+   - อัปเดตเฉพาะนักศึกษาที่ "มีอยู่แล้ว" ในระบบเท่านั้น ไม่สร้างแถวใหม่
+   - เติมเฉพาะ "ช่องที่ว่างอยู่" เท่านั้น ไม่เขียนทับข้อมูลที่กรอกไว้แล้ว (กันข้อมูลที่เจ้าหน้าที่คีย์เองหายไป)
+   ใช้สำหรับกรณีนำข้อมูลหัวข้อวิจัย/วันที่-กรรมการ-สอบเค้าโครงจากไฟล์ของมหาวิทยาลัยมาเติมให้ครบ */
+var PROPOSAL_IMPORT_COLUMNS = [
+  {key:'studentId', labels:['รหัสนักศึกษา','รหัส นศ.','รหัส นศ','รหัสนศ','รหัส','studentid','student id']},
+  {key:'titleTh', labels:['หัวข้อวิทยานิพนธ์ (TH)','หัวข้อวิทยานิพนธ์','ชื่องานวิจัย','titleth']},
+  {key:'titleEn', labels:['หัวข้อวิทยานิพนธ์ (EN)','ชื่องานวิจัยภาษาอังกฤษ','titleen']},
+  {key:'proposalDate', labels:['วันที่สอบเค้าโครง','วันสอบเค้าโครง','proposaldate']},
+  {key:'proposalTime', labels:['เวลาสอบเค้าโครง','proposaltime']},
+  {key:'proposalLocation', labels:['สถานที่สอบเค้าโครง','proposallocation']},
+  {key:'proposalChair', labels:['ประธานสอบเค้าโครง','proposalchair']},
+  {key:'proposalCommittee', labels:['กรรมการสอบเค้าโครง','proposalcommittee']},
+  {key:'proposalRevisionDate', labels:['วันที่ส่งเค้าโครงแก้ไข','proposalrevisiondate']},
+  {key:'proposalNote', labels:['หมายเหตุสอบเค้าโครง','proposalnote']}
+];
+var proposalImportParsedRows = [];
+/* แปลงวันที่ dd/mm/BEyear (เช่น "17/12/2566") เป็น ISO Gregorian "YYYY-MM-DD" ให้ตรงกับ <input type=date> ของระบบ
+   ถ้ามีเครื่องหมาย ⚠️ กำกับ (จากไฟล์สรุปที่ให้ตรวจสอบก่อน) หรือรูปแบบไม่ตรง จะถือว่าแปลงไม่ได้ ข้ามไป ไม่เดาข้อมูลเอง */
+function parseThaiDateToISO(raw){
+  if(!raw) return '';
+  var s = String(raw).trim();
+  if(s.indexOf('⚠️')>-1) return '';
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) return '';
+  var day = parseInt(m[1],10), month = parseInt(m[2],10), beYear = parseInt(m[3],10);
+  var ceYear = beYear - 543;
+  if(ceYear < 2000 || ceYear > 2100) return '';
+  return ceYear + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+}
+/* แปลงช่อง "กรรมการสอบเค้าโครง" รูปแบบ "ชื่อ (ตำแหน่ง); ชื่อ (ตำแหน่ง)" เป็น array {name,position} */
+function parseCommitteeField(raw){
+  if(!raw) return [];
+  return String(raw).split(';').map(function(piece){
+    piece = piece.trim();
+    if(!piece) return null;
+    var m = piece.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+    if(m) return {name:m[1].trim(), position:m[2].trim()||'กรรมการ'};
+    return {name:piece, position:'กรรมการ'};
+  }).filter(Boolean);
+}
+function openProposalImportModal(){
+  proposalImportParsedRows = [];
+  var root = document.getElementById('modalRoot');
+  var backdrop = el('div',{class:'modal-backdrop'});
+  var modal = el('div',{class:'modal', style:'width:min(1040px,96vw);'});
+  modal.appendChild(el('h3',{text:'📥 นำเข้าหัวข้อวิทยานิพนธ์ / ข้อมูลสอบเค้าโครง (เติมเฉพาะช่องว่าง)'}));
+  modal.appendChild(el('div',{class:'help', text:'อัปเดตเฉพาะนักศึกษาที่มีอยู่แล้วในระบบ (จับคู่ด้วยรหัสนักศึกษา) และเติมเฉพาะช่องที่ยังว่างอยู่เท่านั้น — จะไม่เขียนทับข้อมูลที่กรอกไว้แล้ว คอลัมน์ที่ต้องมี: รหัสนักศึกษา, หัวข้อวิทยานิพนธ์ (TH), หัวข้อวิทยานิพนธ์ (EN), วันที่สอบเค้าโครง, เวลาสอบเค้าโครง, สถานที่สอบเค้าโครง, ประธานสอบเค้าโครง, กรรมการสอบเค้าโครง (รูปแบบ "ชื่อ (ตำแหน่ง); ชื่อ (ตำแหน่ง)"), วันที่ส่งเค้าโครงแก้ไข, หมายเหตุสอบเค้าโครง'}));
+
+  var fileInput = el('input',{type:'file', id:'proposalImportFileInput', accept:'.xlsx,.xls,.csv'});
+  modal.appendChild(el('div',{class:'field'},[el('label',{text:'เลือกไฟล์'}), fileInput]));
+
+  var previewBox = el('div',{id:'proposalImportPreviewBox', style:'margin-top:14px;'});
+  modal.appendChild(previewBox);
+
+  var importBtn = el('button',{class:'btn btn-primary', text:'เริ่มนำเข้า', id:'btnConfirmProposalImport', disabled:'disabled'});
+  importBtn.addEventListener('click', function(){ runProposalImport(importBtn); });
+  modal.appendChild(el('div',{class:'form-footer'},[
+    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }}),
+    importBtn
+  ]));
+
+  fileInput.addEventListener('change', function(){
+    var f = fileInput.files[0];
+    if(!f) return;
+    previewBox.innerHTML='';
+    previewBox.appendChild(el('div',{class:'help', text:'กำลังอ่านไฟล์...'}));
+    importBtn.setAttribute('disabled','disabled');
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var wb = XLSX.read(e.target.result, {type:'array'});
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
+        processProposalImportAoa(aoa, previewBox, importBtn);
+      }catch(ex){
+        previewBox.innerHTML='';
+        previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'อ่านไฟล์ไม่สำเร็จ: '+(ex && ex.message ? ex.message : ex)}));
+      }
+    };
+    reader.onerror = function(){
+      previewBox.innerHTML='';
+      previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'อ่านไฟล์ไม่สำเร็จ'}));
+    };
+    reader.readAsArrayBuffer(f);
+  });
+
+  backdrop.appendChild(modal);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
+  root.appendChild(backdrop);
+}
+var PROPOSAL_IMPORT_FIELD_LABELS = {
+  titleTh:'หัวข้อ (TH)', titleEn:'หัวข้อ (EN)', proposalDate:'วันที่สอบเค้าโครง', proposalTime:'เวลาสอบ',
+  proposalLocation:'สถานที่สอบ', proposalChair:'ประธานกรรมการ', proposalCommittee:'กรรมการสอบ',
+  proposalRevisionDate:'วันที่ส่งแก้ไข', proposalNote:'หมายเหตุ'
+};
+function processProposalImportAoa(aoa, previewBox, importBtn){
+  if(!aoa || aoa.length===0){
+    previewBox.innerHTML='';
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไฟล์นี้ไม่มีข้อมูล'}));
+    return;
+  }
+  var headerRow = aoa[0];
+  var colMap = {};
+  headerRow.forEach(function(h, idx){
+    var norm = normalizeHeaderText(h);
+    PROPOSAL_IMPORT_COLUMNS.forEach(function(col){
+      if(colMap[col.key]!==undefined) return;
+      if(col.labels.some(function(lbl){ return normalizeHeaderText(lbl)===norm; })) colMap[col.key]=idx;
+    });
+  });
+  if(colMap.studentId===undefined){
+    previewBox.innerHTML='';
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไม่พบคอลัมน์ "รหัสนักศึกษา" ในไฟล์ (แถวแรกต้องเป็นหัวตาราง)'}));
+    return;
+  }
+  previewBox.innerHTML='';
+  previewBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบข้อมูล...'}));
+  recordsGetAll().then(function(existingRows){
+    var latestByStudentId = {};
+    existingRows.forEach(function(r){
+      if(r.deleted || !r.studentId) return;
+      if(!latestByStudentId[r.studentId] || (r.updatedAt||0) > (latestByStudentId[r.studentId].updatedAt||0)) latestByStudentId[r.studentId] = r;
+    });
+    var rows = [];
+    for(var i=1;i<aoa.length;i++){
+      var raw = aoa[i];
+      if(!raw || raw.every(function(c){ return String(c||'').trim()===''; })) continue;
+      var get = function(key){ var idx=colMap[key]; return idx!==undefined ? String(raw[idx]||'').trim() : ''; };
+      var studentId = get('studentId');
+      if(!studentId) continue;
+      var existing = latestByStudentId[studentId];
+      var fieldsToFill = {};
+      if(existing){
+        var candidates = {
+          titleTh: get('titleTh'), titleEn: get('titleEn'),
+          proposalDate: parseThaiDateToISO(get('proposalDate')), proposalTime: get('proposalTime'),
+          proposalLocation: get('proposalLocation'), proposalChair: get('proposalChair'),
+          proposalCommittee: parseCommitteeField(get('proposalCommittee')),
+          proposalRevisionDate: parseThaiDateToISO(get('proposalRevisionDate')), proposalNote: get('proposalNote')
+        };
+        Object.keys(candidates).forEach(function(key){
+          var newVal = candidates[key];
+          var curVal = existing[key];
+          var curEmpty = (curVal===undefined || curVal===null || curVal==='' || (Array.isArray(curVal) && curVal.length===0));
+          var newHasValue = Array.isArray(newVal) ? newVal.length>0 : !!newVal;
+          if(curEmpty && newHasValue) fieldsToFill[key] = newVal;
+        });
+      }
+      rows.push({rowNum:i+1, studentId:studentId, studentName:existing?existing.studentName:'', existing:existing||null, fieldsToFill:fieldsToFill});
+    }
+    proposalImportParsedRows = rows;
+    renderProposalImportPreview(previewBox, importBtn);
+  }).catch(function(e){
+    previewBox.innerHTML='';
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบข้อมูลไม่สำเร็จ: '+(e&&e.message?e.message:e)}));
+  });
+}
+function renderProposalImportPreview(previewBox, importBtn){
+  var rows = proposalImportParsedRows;
+  previewBox.innerHTML='';
+  if(rows.length===0){
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไม่พบแถวข้อมูลในไฟล์ (นอกเหนือจากหัวตาราง)'}));
+    importBtn.setAttribute('disabled','disabled');
+    return;
+  }
+  var willFill = rows.filter(function(r){ return r.existing && Object.keys(r.fieldsToFill).length>0; });
+  var noNewData = rows.filter(function(r){ return r.existing && Object.keys(r.fieldsToFill).length===0; });
+  var notFound = rows.filter(function(r){ return !r.existing; });
+  previewBox.appendChild(el('div',{class:'help', style:'font-weight:600;margin-bottom:8px;',
+    text:'พบทั้งหมด '+rows.length+' แถว — จะเติมข้อมูลให้ '+willFill.length+' คน, ข้าม '+noNewData.length+' คน (มีข้อมูลครบอยู่แล้วทุกช่อง), ไม่พบรหัสในระบบ '+notFound.length+' คน'}));
+  var wrap = el('div',{style:'max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:8px;'});
+  var table = el('table',{style:'font-size:12px;'});
+  var theadTr = el('tr');
+  ['แถว','รหัส นศ.','ชื่อ-นามสกุล','สถานะ'].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
+  table.appendChild(el('thead',{},[theadTr]));
+  var tbody = el('tbody');
+  rows.forEach(function(r){
+    var statusText, statusColor;
+    if(!r.existing){ statusText='❌ ไม่พบรหัสนักศึกษานี้ในระบบ — ข้าม'; statusColor='#c0392b'; }
+    else if(Object.keys(r.fieldsToFill).length===0){ statusText='⏭ มีข้อมูลครบอยู่แล้วทุกช่อง — ข้าม'; statusColor='#6b7280'; }
+    else {
+      var labels = Object.keys(r.fieldsToFill).map(function(k){ return PROPOSAL_IMPORT_FIELD_LABELS[k]||k; });
+      statusText='✅ จะเติม: '+labels.join(', '); statusColor='#1f8a4c';
+    }
+    tbody.appendChild(el('tr',{},[
+      el('td',{text:String(r.rowNum)}), el('td',{text:r.studentId}), el('td',{text:r.studentName||'-'}),
+      el('td',{text:statusText, style:'color:'+statusColor+';'})
+    ]));
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  previewBox.appendChild(wrap);
+  if(willFill.length>0){ importBtn.removeAttribute('disabled'); importBtn.textContent='เริ่มนำเข้า ('+willFill.length+' คน)'; }
+  else { importBtn.setAttribute('disabled','disabled'); importBtn.textContent='เริ่มนำเข้า'; }
+}
+function runProposalImport(importBtn){
+  var rows = proposalImportParsedRows.filter(function(r){ return r.existing && Object.keys(r.fieldsToFill).length>0; });
+  if(rows.length===0) return;
+  importBtn.setAttribute('disabled','disabled');
+  var progressBox = document.getElementById('proposalImportPreviewBox');
+  var progressEl = el('div',{class:'help', style:'margin-top:10px;font-weight:600;'});
+  progressBox.appendChild(progressEl);
+  progressEl.textContent = 'กำลังเตรียมนำเข้า...';
+
+  var auditEntries = rows.map(function(r){ return makeAuditEntry('นำเข้าหัวข้อ/ข้อมูลสอบเค้าโครง (เติมช่องว่าง)', r.studentId, r.studentName); });
+
+  function finishImport(updatedCount){
+    return logAuditMany(auditEntries).then(function(){
+      renderList();
+      progressEl.textContent = 'นำเข้าเสร็จสิ้น: เติมข้อมูลให้ '+updatedCount+' คน';
+      toast('นำเข้าข้อมูลเสร็จสิ้น');
+      importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
+    });
+  }
+
+  if(!cloudModeEnabled){
+    var chain = Promise.resolve();
+    var done = 0;
+    rows.forEach(function(r, idx){
+      chain = chain.then(function(){
+        progressEl.textContent = 'กำลังนำเข้า '+(idx+1)+' / '+rows.length+' ('+r.studentId+')';
+        var rec = Object.assign({}, r.existing, r.fieldsToFill, {updatedAt: Date.now()});
+        return recordsPut(rec).then(function(){ done++; })
+          .catch(function(e){ console.error('proposal import failed', r.studentId, e); });
+      });
+    });
+    chain.then(function(){ return finishImport(done); });
+    return;
+  }
+
+  ensureAuthed().then(ensureRecordsHeaderAligned).then(function(){
+    invalidateRecordsSheetCache();
+    return fetchRecordsSheet();
+  }).then(function(cache){
+    var byId = {};
+    cache.entries.forEach(function(e){ if(!e.rec.deleted && e.rec.id) byId[e.rec.id]=e; });
+    var updateOps = [];
+    rows.forEach(function(r){
+      var entry = byId[r.existing.id];
+      if(!entry) return;
+      var rec = Object.assign({}, entry.rec, r.fieldsToFill, {updatedAt: Date.now()});
+      updateOps.push({rowNumber:entry.rowNumber, rowArray:recordToRow(rec, cache.headers)});
+    });
+    progressEl.textContent = 'กำลังบันทึกลง Google Sheets ('+updateOps.length+' รายการ)...';
+    if(updateOps.length===0) return Promise.resolve();
+    return sheetsBatchUpdateRows('Records', updateOps);
+  }).then(function(){
+    invalidateRecordsSheetCache();
+    return finishImport(rows.length);
+  }).catch(function(e){
+    var reasonMsg = (e&&e.message?e.message:String(e));
+    progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า: '+reasonMsg+' — ลองกดนำเข้าอีกครั้ง (ระบบเติมเฉพาะช่องว่าง จึงนำเข้าซ้ำได้โดยไม่ซ้ำซ้อน)';
   });
 }
 /* แสดงรายการนำเข้าที่บันทึกไม่สำเร็จ (รหัส/ชื่อ/สาเหตุ) พร้อมปุ่มดูรายละเอียดและดาวน์โหลดเป็น Excel

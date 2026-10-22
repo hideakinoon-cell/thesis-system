@@ -688,7 +688,10 @@ if('serviceWorker' in navigator){
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <h3 style="margin:0;">👥 รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h3>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorWorkloadReport">📊 สรุปภาระงานอาจารย์ทั้งหมด</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnExportAdvisorList">📥 ส่งออกรายชื่อ Excel</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorWorkloadReport">📊 สรุปภาระงานอาจารย์ทั้งหมด</button>
+      </div>
     </div>
     <div class="help" style="margin-bottom:8px;">รายชื่ออาจารย์ทั้งหมดที่ใช้เลือกในช่องที่ปรึกษา/กรรมการสอบทั่วทั้งระบบ</div>
     <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor">เพิ่ม</button></div>
@@ -6146,6 +6149,7 @@ function bindSettingsEvents(){
   document.getElementById('btnAdvisorListPrev').addEventListener('click', function(){ if(advisorListPage>0){ advisorListPage--; renderAdvisorList(); } });
   document.getElementById('btnAdvisorListNext').addEventListener('click', function(){ advisorListPage++; renderAdvisorList(); });
   document.getElementById('btnAdvisorWorkloadReport').addEventListener('click', openAdvisorWorkloadReportModal);
+  document.getElementById('btnExportAdvisorList').addEventListener('click', exportAdvisorListExcel);
   document.getElementById('btnAddPosition').addEventListener('click', function(){
     var input = document.getElementById('m_position_input');
     var name = input.value.trim();
@@ -6499,6 +6503,21 @@ function renderAdvisorWorkloadTable(){
   wrap.appendChild(table);
 }
 /* ส่งออกตารางสรุปภาระงานอาจารย์ (ตามลำดับการเรียงที่กำลังแสดงอยู่) เป็นไฟล์ Excel */
+/* ส่งออกรายชื่ออาจารย์/กรรมการทั้งหมดในระบบ (ชื่อปัจจุบัน + ชื่อเก่า/alias ที่เคยใช้) เป็นไฟล์ Excel
+   ใช้เทียบกับไฟล์ภายนอก (เช่น ไฟล์รายชื่ออาจารย์ของมหาวิทยาลัย) เพื่อตรวจว่าชื่อ/ตำแหน่งในไฟล์ภายนอกตรงกับ
+   ชื่อปัจจุบันในระบบหรือยัง หรือควรเพิ่มเป็นชื่อเก่า (alias) แทน */
+function exportAdvisorListExcel(){
+  var all = masterData.advisors || [];
+  if(!all.length){ toast('ไม่มีรายชื่ออาจารย์ให้ส่งออก', true); return; }
+  var aoa = [['ชื่อปัจจุบัน','ตำแหน่งทางวิชาการ','บทบาท','ชื่อเก่า/alias']].concat(all.map(function(a){
+    return [a.name||'', a.rank||'', (a.roles||[]).join(', '), (a.aliases||[]).join(', ')];
+  }));
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:30},{wch:14},{wch:30},{wch:40}];
+  XLSX.utils.book_append_sheet(wb, ws, 'รายชื่ออาจารย์');
+  XLSX.writeFile(wb, 'รายชื่ออาจารย์-'+dateStamp()+'.xlsx');
+}
 function exportAdvisorWorkloadExcel(){
   var rows = sortAdvisorWorkloadRows(advisorWorkloadRows());
   if(!rows.length){ toast('ไม่มีรายชื่ออาจารย์ให้ส่งออก', true); return; }

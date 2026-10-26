@@ -2501,6 +2501,35 @@ function refreshCloudMasterData(){
     });
   }).catch(function(e){ console.warn('refresh masterData from cloud failed', e); });
 }
+/* บั๊กร้ายแรง (อีกจุดหนึ่งของปัญหาเดียวกับที่อธิบายไว้ข้างบน): ฟังก์ชันเพิ่ม/แก้/ลบ/รวม/เปลี่ยนชื่อข้อมูลหลัก
+   (อาจารย์ที่ปรึกษา, ตำแหน่ง, หลักสูตร, สาขาวิชา, แผนการเรียน, ประเภทเอกสาร) ทุกตัวแก้ไข masterData ที่อยู่ใน
+   หน่วยความจำของแท็บ/เครื่องนี้โดยตรง แล้ว saveMasterData() จะเขียนทับข้อมูลทั้งชุดกลับไปที่ชีทกลาง — ถ้าแท็บนี้เปิดค้างไว้นาน
+   (ไม่ได้รีเฟรชจากชีทกลางมาสักระยะ เพราะ refreshCloudMasterData() ไม่ได้ถูกเรียกทุกครั้งที่มีการโต้ตอบ) ข้อมูลที่แท็บ/เครื่อง
+   อื่นเพิ่งเพิ่ม/แก้ไปจะยังไม่อยู่ใน masterData ของแท็บนี้ พอแท็บนี้บันทึก ก็จะเขียนทับข้อมูลที่แท็บ/เครื่องอื่นเพิ่งเพิ่มไปให้
+   หายไปเงียบๆ โดยไม่มี error ใดๆ ขึ้นเลย (ตรงกับอาการที่เคยพบจริง: เพิ่มชื่ออาจารย์ไว้แล้ว ต่อมารายชื่อหายไปอีก)
+   แก้โดย: ให้การแก้ไข master data ทุกจุดเรียกผ่าน withFreshMasterData() ซึ่งจะ refresh จากชีทกลางมาก่อนเสมอ (อยู่ในคิวเดียว
+   กับ save อยู่แล้ว queueMasterDataOp จึงกันการชนกันระหว่าง op ของแท็บนี้เองได้ด้วย) แล้วค่อยใช้ masterData ชุดล่าสุดนั้น
+   เป็นฐานในการแก้ไขก่อน save ทับกลับไป — mutatorFn รับ masterData ที่รีเฟรชแล้วเป็นพารามิเตอร์ (เผื่อกรณีต้องอ้างอิงใหม่
+   หลัง refresh) และสามารถคืนค่า {__skip:true} เพื่อยกเลิกไม่ต้อง save (เช่น ตรวจพบว่าชื่อซ้ำ/ไม่พบรายการที่จะแก้ไขแล้ว
+   หลังข้อมูลล่าสุดมาถึง) หมายเหตุ: ห้ามเรียก saveMasterData() ซ้อนภายใน mutatorFn เพราะจะเข้าคิวซ้อนคิวจนค้างตาย
+   (deadlock) — ฟังก์ชันนี้ทำหน้าที่ save เองในตัวอยู่แล้ว ไม่ได้แก้บั๊กเรื่อง "สองแท็บบันทึกพร้อมกันเป๊ะๆ ในเวลาเดียวกัน"
+   ได้ 100% (ต้องมี lock ฝั่งเซิร์ฟเวอร์จริงๆ ถึงจะกันได้สมบูรณ์) แต่ลดช่วงเวลาที่ข้อมูลจะหายจาก "นานเท่าที่แท็บเปิดค้างไว้
+   โดยไม่ได้รีเฟรช" ให้เหลือแค่ "ช่วงเวลาสั้นๆ ระหว่าง refresh กับ save ของอีกแท็บพอดี" ซึ่งเกิดขึ้นยากกว่ามากในทางปฏิบัติ */
+function withFreshMasterData(mutatorFn){
+  return queueMasterDataOp(function(){
+    var refreshP = (cloudModeEnabled && sheetId) ? loadMasterDataFromCloud().then(function(cloudMd){
+      if(cloudMd) masterData = Object.assign(masterData, cloudMd);
+    }) : Promise.resolve();
+    return refreshP.then(function(){
+      return mutatorFn(masterData);
+    }).then(function(result){
+      if(result && result.__skip) return result;
+      var localSave = dbPut('meta',{key:'masterData', value:masterData});
+      var cloudSave = (cloudModeEnabled && sheetId) ? localSave.then(saveMasterDataToCloud) : localSave;
+      return cloudSave.then(function(){ return result; });
+    });
+  }).catch(function(e){ console.error('withFreshMasterData failed', e); throw e; });
+}
 function saveGoogleClientId(){ return dbPut('meta',{key:'googleClientId', value:googleClientId}); }
 
 /* ================= NAV ================= */
@@ -5894,10 +5923,17 @@ function runImport(importBtn){
   function finishImport(){
     var chainMaster = Promise.resolve();
     if(newPrograms.length>0 || newDepartments.length>0 || newPlans.length>0){
-      masterData.programs = masterData.programs.concat(newPrograms);
-      masterData.departments = masterData.departments.concat(newDepartments);
-      masterData.plans = masterData.plans.concat(newPlans);
-      chainMaster = saveMasterData();
+      chainMaster = withFreshMasterData(function(){
+        /* กรองซ้ำอีกครั้งด้วยข้อมูลล่าสุดหลัง refresh เผื่อมีคนอื่นเพิ่งเพิ่มหลักสูตร/สาขา/แผนตัวเดียวกันไปแล้ว
+           ระหว่างที่หน้านี้กำลังเตรียมนำเข้าอยู่ (กันไม่ให้ซ้ำ และกันไม่ให้ทับของใหม่กว่าโดยไม่ได้ตั้งใจ) */
+        var p2 = newPrograms.filter(function(v){ return masterData.programs.indexOf(v)===-1; });
+        var d2 = newDepartments.filter(function(v){ return masterData.departments.indexOf(v)===-1; });
+        var pl2 = newPlans.filter(function(v){ return masterData.plans.indexOf(v)===-1; });
+        masterData.programs = masterData.programs.concat(p2);
+        masterData.departments = masterData.departments.concat(d2);
+        masterData.plans = masterData.plans.concat(pl2);
+        return Promise.resolve();
+      });
     }
     return chainMaster.then(function(){
       return logAuditMany(auditEntries);
@@ -6322,13 +6358,15 @@ function bindSettingsEvents(){
       var input = document.getElementById(inputId);
       var val = input.value.trim();
       if(!val) return;
-      if(masterData[key].indexOf(val)===-1){
+      withFreshMasterData(function(){
+        if(masterData[key].indexOf(val)>-1) return {__skip:true};
         masterData[key].push(val);
-        saveMasterData().then(function(){
-          logAudit('เพิ่ม'+(MASTER_LIST_LABELS[key]||key), '', val);
-          renderMasterLists(); renderAllSelects();
-        });
-      }
+        return Promise.resolve();
+      }).then(function(result){
+        if(result && result.__skip) return;
+        logAudit('เพิ่ม'+(MASTER_LIST_LABELS[key]||key), '', val);
+        renderMasterLists(); renderAllSelects();
+      });
       input.value='';
     });
   });
@@ -6392,10 +6430,13 @@ function bindSettingsEvents(){
     if(!name) return;
     var roles = Array.prototype.slice.call(document.querySelectorAll('#m_advisor_roles input:checked')).map(function(c){ return c.value; });
     if(roles.length===0){ toast('กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
-    if(masterData.advisors.some(function(a){ return a.name===name; })){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
     var rank = document.getElementById('m_advisor_rank').value;
-    masterData.advisors.push({name:name, roles:roles, rank:rank});
-    saveMasterData().then(function(){
+    withFreshMasterData(function(){
+      if(masterData.advisors.some(function(a){ return a.name===name; })){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return {__skip:true}; }
+      masterData.advisors.push({name:name, roles:roles, rank:rank});
+      return Promise.resolve();
+    }).then(function(result){
+      if(result && result.__skip) return;
       logAudit('เพิ่มอาจารย์ที่ปรึกษา', '', name);
       renderMasterLists(); renderAllSelects(); input.value='';
       document.getElementById('m_advisor_rank').value='';
@@ -6413,9 +6454,14 @@ function bindSettingsEvents(){
     var name = input.value.trim();
     var slot = document.getElementById('m_position_slot').value;
     if(!name) return;
-    if(masterData.positions.some(function(p){ return p.name===name; })){ toast('มีตำแหน่งนี้อยู่แล้วในรายการ', true); return; }
-    masterData.positions.push({name:name, slot:slot});
-    saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); input.value=''; });
+    withFreshMasterData(function(){
+      if(masterData.positions.some(function(p){ return p.name===name; })){ toast('มีตำแหน่งนี้อยู่แล้วในรายการ', true); return {__skip:true}; }
+      masterData.positions.push({name:name, slot:slot});
+      return Promise.resolve();
+    }).then(function(result){
+      if(result && result.__skip) return;
+      renderMasterLists(); renderAllSelects(); input.value='';
+    });
   });
 }
 function renderMasterLists(){
@@ -6540,15 +6586,15 @@ function openPositionEditModal(pos){
   root.appendChild(backdrop);
 }
 function updatePosition(oldName, newName, newSlot){
-  var pos = masterData.positions.filter(function(p){ return p.name===oldName; })[0];
-  if(!pos) return;
-  pos.name = newName;
-  pos.slot = newSlot;
   var nameChanged = newName!==oldName;
-  (nameChanged ? renamePositionCascade(oldName, newName) : Promise.resolve(0)).then(function(){
-    return saveMasterData();
-  }).then(function(){
-    return nameChanged ? cascadeCommitteePositionRename(oldName, newName) : 0;
+  withFreshMasterData(function(){
+    var pos = masterData.positions.filter(function(p){ return p.name===oldName; })[0];
+    if(!pos) return {__skip:true};
+    pos.name = newName;
+    pos.slot = newSlot;
+    return (nameChanged ? renamePositionCascade(oldName, newName) : Promise.resolve(0));
+  }).then(function(result){
+    return (result && result.__skip) ? 0 : (nameChanged ? cascadeCommitteePositionRename(oldName, newName) : 0);
   }).then(function(updatedCount){
     renderMasterLists();
     renderAllSelects();
@@ -6585,11 +6631,13 @@ function cascadeCommitteePositionRename(oldName, newName){
 }
 function removePosition(name){
   if(!confirm('ลบตำแหน่ง "'+name+'" หรือไม่? (จะเอาออกจากอาจารย์ทุกคนที่เคยติ๊กตำแหน่งนี้ด้วย แต่ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
-  masterData.positions = masterData.positions.filter(function(p){ return p.name!==name; });
-  masterData.advisors.forEach(function(a){
-    if(a.roles) a.roles = a.roles.filter(function(r){ return r!==name; });
-  });
-  saveMasterData().then(function(){ renderMasterLists(); renderAllSelects(); });
+  withFreshMasterData(function(){
+    masterData.positions = masterData.positions.filter(function(p){ return p.name!==name; });
+    masterData.advisors.forEach(function(a){
+      if(a.roles) a.roles = a.roles.filter(function(r){ return r!==name; });
+    });
+    return Promise.resolve();
+  }).then(function(){ renderMasterLists(); renderAllSelects(); });
 }
 function renderBackupStatus(){
   document.getElementById('s_autoBackup').checked = !!autoBackupEnabled;
@@ -6999,21 +7047,24 @@ function openAdvisorEditModal(advisor){
   root.appendChild(backdrop);
 }
 function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
-  var advisor = masterData.advisors.filter(function(a){ return a.name===oldName; })[0];
-  if(!advisor) return;
-  /* เก็บชื่อเดิมไว้เป็น alias เสมอเมื่อชื่อ/ตำแหน่งทางวิชาการเปลี่ยน (ไม่ว่าจะติ๊ก "ปรับปรุงข้อมูลเก่า" หรือไม่ก็ตาม)
-     เพื่อให้การคำนวณโควตาที่ปรึกษาและรายงานที่ปรึกษา (getAdvisorReport) ยังรวมนักศึกษาที่เคยบันทึกไว้ด้วยชื่อเดิม
-     ของอาจารย์ท่านนี้ได้ถูกต้อง แม้ข้อมูลนักศึกษาเก่าจะยังคงเป็นชื่อเดิมอยู่ (ไม่ได้ถูกแก้ไขย้อนหลัง) — แก้บั๊กที่เคยพบว่า
-     เปลี่ยนตำแหน่งทางวิชาการ (เช่น ผศ. -> รศ.) แล้วนักศึกษาที่บันทึกไว้ก่อนหน้าไม่ถูกนับรวมในโควตา ทั้งที่เป็นคนเดียวกัน */
-  if(newName!==oldName){
-    advisor.aliases = (advisor.aliases||[]).slice();
-    if(advisor.aliases.indexOf(oldName)===-1) advisor.aliases.push(oldName);
-    advisor.aliases = advisor.aliases.filter(function(a){ return a!==newName; });
-  }
-  advisor.name = newName;
-  advisor.roles = newRoles;
-  advisor.rank = newRank||'';
-  return saveMasterData().then(function(){
+  return withFreshMasterData(function(){
+    var advisor = masterData.advisors.filter(function(a){ return a.name===oldName; })[0];
+    if(!advisor) return {__skip:true};
+    /* เก็บชื่อเดิมไว้เป็น alias เสมอเมื่อชื่อ/ตำแหน่งทางวิชาการเปลี่ยน (ไม่ว่าจะติ๊ก "ปรับปรุงข้อมูลเก่า" หรือไม่ก็ตาม)
+       เพื่อให้การคำนวณโควตาที่ปรึกษาและรายงานที่ปรึกษา (getAdvisorReport) ยังรวมนักศึกษาที่เคยบันทึกไว้ด้วยชื่อเดิม
+       ของอาจารย์ท่านนี้ได้ถูกต้อง แม้ข้อมูลนักศึกษาเก่าจะยังคงเป็นชื่อเดิมอยู่ (ไม่ได้ถูกแก้ไขย้อนหลัง) — แก้บั๊กที่เคยพบว่า
+       เปลี่ยนตำแหน่งทางวิชาการ (เช่น ผศ. -> รศ.) แล้วนักศึกษาที่บันทึกไว้ก่อนหน้าไม่ถูกนับรวมในโควตา ทั้งที่เป็นคนเดียวกัน */
+    if(newName!==oldName){
+      advisor.aliases = (advisor.aliases||[]).slice();
+      if(advisor.aliases.indexOf(oldName)===-1) advisor.aliases.push(oldName);
+      advisor.aliases = advisor.aliases.filter(function(a){ return a!==newName; });
+    }
+    advisor.name = newName;
+    advisor.roles = newRoles;
+    advisor.rank = newRank||'';
+    return Promise.resolve();
+  }).then(function(result){
+    if(result && result.__skip) return 0;
     var detail = oldName + (newName!==oldName ? ' → '+newName : '') + ' | ตำแหน่ง: '+(newRoles.join(', ')||'-') + ' | วิทยฐานะ: '+(newRank||'-');
     logAudit('แก้ไขข้อมูลอาจารย์ที่ปรึกษา', '', detail);
     if(newName!==oldName && doCascade) return cascadeRenameInRecords('advisors', oldName, newName);
@@ -7033,8 +7084,10 @@ function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
 }
 function removeAdvisor(name){
   if(!confirm('ลบ "'+name+'" ออกจากรายชื่ออาจารย์หรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
-  masterData.advisors = masterData.advisors.filter(function(a){ return a.name!==name; });
-  saveMasterData().then(function(){
+  withFreshMasterData(function(){
+    masterData.advisors = masterData.advisors.filter(function(a){ return a.name!==name; });
+    return Promise.resolve();
+  }).then(function(){
     logAudit('ลบอาจารย์ที่ปรึกษา', '', name);
     renderMasterLists(); renderAllSelects();
   });
@@ -7063,13 +7116,15 @@ function renderChipList(containerId, key){
       }}),
       el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){
         if(!confirm('ลบ "'+val+'" ('+(MASTER_LIST_LABELS[key]||key)+') ออกจากรายการหรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
-        masterData[key] = masterData[key].filter(function(v){ return v!==val; });
         var deptPinCleanupP = Promise.resolve();
-        if(key==='departments' && (deptPins||[]).some(function(d){ return d.department===val; })){
-          deptPins = deptPins.filter(function(d){ return d.department!==val; });
-          deptPinCleanupP = dbPut('meta',{key:'deptPins', value:deptPins});
-        }
-        saveMasterData().then(function(){
+        withFreshMasterData(function(){
+          masterData[key] = masterData[key].filter(function(v){ return v!==val; });
+          if(key==='departments' && (deptPins||[]).some(function(d){ return d.department===val; })){
+            deptPins = deptPins.filter(function(d){ return d.department!==val; });
+            deptPinCleanupP = dbPut('meta',{key:'deptPins', value:deptPins});
+          }
+          return Promise.resolve();
+        }).then(function(){
           logAudit('ลบ'+(MASTER_LIST_LABELS[key]||key), '', val);
           return deptPinCleanupP;
         }).then(function(){ renderMasterLists(); renderAllSelects(); });
@@ -7079,18 +7134,21 @@ function renderChipList(containerId, key){
   });
 }
 function renameMasterItem(key, oldVal, newVal){
-  var idx = masterData[key].indexOf(oldVal);
-  if(idx===-1) return;
-  masterData[key][idx] = newVal;
   var deptPinRenameP = Promise.resolve();
-  if(key==='departments'){
-    var deptPinEntry = (deptPins||[]).filter(function(d){ return d.department===oldVal; })[0];
-    if(deptPinEntry){
-      deptPinEntry.department = newVal;
-      deptPinRenameP = dbPut('meta',{key:'deptPins', value:deptPins});
+  withFreshMasterData(function(){
+    var idx = masterData[key].indexOf(oldVal);
+    if(idx===-1) return {__skip:true};
+    masterData[key][idx] = newVal;
+    if(key==='departments'){
+      var deptPinEntry = (deptPins||[]).filter(function(d){ return d.department===oldVal; })[0];
+      if(deptPinEntry){
+        deptPinEntry.department = newVal;
+        deptPinRenameP = dbPut('meta',{key:'deptPins', value:deptPins});
+      }
     }
-  }
-  saveMasterData().then(function(){
+    return Promise.resolve();
+  }).then(function(result){
+    if(result && result.__skip) return;
     return deptPinRenameP;
   }).then(function(){
     logAudit('แก้ไข'+(MASTER_LIST_LABELS[key]||key), '', oldVal+' → '+newVal);
@@ -7107,8 +7165,10 @@ function renameMasterItem(key, oldVal, newVal){
    oldVal ออกจากรายการ (ไม่ต้องเพิ่ม/แก้ เพราะ newVal มีอยู่แล้ว) แล้ว cascade เปลี่ยนข้อมูลที่เคยบันทึกไว้ทั้งหมดจาก oldVal
    เป็น newVal เพื่อไม่ให้ตกหล่น */
 function mergeMasterItem(key, oldVal, newVal){
-  masterData[key] = masterData[key].filter(function(v){ return v!==oldVal; });
-  saveMasterData().then(function(){
+  withFreshMasterData(function(){
+    masterData[key] = masterData[key].filter(function(v){ return v!==oldVal; });
+    return Promise.resolve();
+  }).then(function(){
     logAudit('รวม'+(MASTER_LIST_LABELS[key]||key), '', oldVal+' → '+newVal);
     return cascadeRenameEverywhere(key, oldVal, newVal);
   }).then(function(updatedCount){

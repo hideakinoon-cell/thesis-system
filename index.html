@@ -4142,9 +4142,20 @@ function renderDocIntakeList(){
           toast('อัปเดตสถานะแล้ว'); renderDocIntakeList();
         });
       });
+      /* แก้ไข "วันที่รับ" ได้โดยตรงจากตาราง โดยไม่กระทบ "เลขรับ" (intakeNo) — ใช้ input type=date ในเซลล์แทนข้อความล้วน
+         ตอนบันทึกจะ Object.assign ทับเฉพาะ receivedDate/updatedAt บนข้อมูลเดิมทั้งก้อน (r) เลขรับเดิมจึงยังคงอยู่เหมือนเดิมเสมอ
+         ไม่ได้ขอเลขรับใหม่หรือคำนวณเลขรับใหม่แต่อย่างใด (ดู docIntakePut/getNextDocIntakeNo — เลขรับคำนวณเฉพาะตอนสร้างรายการใหม่เท่านั้น) */
+      var dateInput = el('input',{type:'date', value:r.receivedDate||'', style:'min-width:140px;'});
+      dateInput.addEventListener('change', function(){
+        var newDate = dateInput.value;
+        if(!newDate){ toast('กรุณาเลือกวันที่', true); dateInput.value = r.receivedDate||''; return; }
+        docIntakePut(Object.assign({}, r, {receivedDate:newDate, updatedAt:Date.now()})).then(function(){
+          toast('แก้ไขวันที่รับแล้ว (เลขรับเดิมไม่เปลี่ยนแปลง)'); renderDocIntakeList();
+        });
+      });
       var tr = el('tr',{},[
         el('td',{text: r.intakeNo||'-'}),
-        el('td',{text: toBuddhistDateStr(r.receivedDate)||'-'}),
+        el('td',{}, [dateInput]),
         el('td',{text: r.docType||'-'}),
         el('td',{text: r.studentId||'-'}),
         el('td',{text: r.studentName||'-'}),

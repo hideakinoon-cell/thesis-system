@@ -1693,6 +1693,10 @@ function loadMeta(){
     migrateAdvisorFormat();
   });
 }
+/* กันไม่ให้ migrateAdvisorFormat() (ด้านล่าง) บันทึกทับชีทกลางก่อนที่จะได้ดึงข้อมูลจริงมาสักครั้งในเซสชันนี้ — ดูคำอธิบาย
+   เต็มในคอมเมนต์ของฟังก์ชันนั้น ตั้งเป็น true ได้ที่เดียวคือใน refreshCloudMasterData() หลัง merge ข้อมูลจริงจากชีทกลาง
+   สำเร็จแล้วเท่านั้น (รีเซ็ตกลับเป็น false ทุกครั้งที่โหลดหน้าใหม่ เพราะเป็นข้อมูลของเซสชันนี้เท่านั้น ไม่ได้เก็บถาวร) */
+var cloudMasterDataLoadedOnce = false;
 function migrateAdvisorFormat(){
   var changed = false;
   if(!masterData.positions || masterData.positions.length===0){
@@ -1733,7 +1737,19 @@ function migrateAdvisorFormat(){
     });
     a.roles = newRoles;
   });
-  if(changed) saveMasterData();
+  /* บั๊กร้ายแรงเดียวกับที่เคยพบและแก้ไว้ใน seedDefaultsIfEmpty() ข้างล่าง แต่เป็นอีกจุดหนึ่งที่ยังไม่เคยแก้: ฟังก์ชันนี้รัน
+     ทันทีหลังโหลด masterData จาก IndexedDB ในเครื่อง (ตอน loadMeta()) ซึ่งเกิดขึ้น "ก่อน" refreshCloudMasterData() จะได้
+     ดึงข้อมูลจริงจากชีทกลางมาเลยเสมอ ถ้าเครื่องนี้เพิ่งเปิดใช้งานครั้งแรก/เป็นเบราว์เซอร์ใหม่/โหมดไม่ระบุตัวตน (cache ใน
+     เครื่องว่างเปล่า) การ "แปลงรูปแบบ" ตรงนี้ (เช่น masterData.positions.length===0 แล้วเติมตำแหน่งเริ่มต้น 7 รายการ) จะ
+     เข้าเงื่อนไข changed=true แล้ว saveMasterData() เขียนทับข้อมูลจริงทั้งชุดในชีทกลาง (ตำแหน่ง/อาจารย์ที่ตั้งเองไว้)
+     ด้วยค่าเริ่มต้น/ข้อมูลว่างเปล่า ก่อนที่จะทันได้ดึงของจริงมาเทียบด้วยซ้ำ — อันตรายพอๆ กับที่ seedDefaultsIfEmpty เคยเป็น
+     แก้โดย: ถ้าเปิดใช้งานโหมดข้อมูลกลางอยู่ และเซสชันนี้ยังไม่เคยดึงข้อมูลจริงจากชีทกลางมาสักครั้งเลย (cloudMasterDataLoadedOnce
+     ยังเป็น false) ห้าม saveMasterData() ตรงนี้เด็ดขาด แค่แปลงรูปแบบในหน่วยความจำไปก่อน (กัน UI พังระหว่างรอ) แล้วรอให้
+     refreshCloudMasterData() เรียกฟังก์ชันนี้ซ้ำอีกครั้งหลัง merge ข้อมูลจริงเข้ามาแล้ว ซึ่งตอนนั้น cloudMasterDataLoadedOnce
+     จะเป็น true แล้ว จึงบันทึกได้อย่างปลอดภัย (ไม่งั้นค่าเริ่มต้น/รูปแบบที่แปลงจากของว่างเปล่าจะไม่ถูกบันทึกค้างไว้เลย) */
+  var mustWaitForRealCloudData = cloudModeEnabled && sheetId && !cloudMasterDataLoadedOnce;
+  if(changed && !mustWaitForRealCloudData) saveMasterData();
+  return changed;
 }
 function positionsBySlot(slot){
   return masterData.positions.filter(function(p){ return p.slot===slot; }).map(function(p){ return p.name; });
@@ -2497,7 +2513,16 @@ function refreshCloudMasterData(){
   if(!cloudModeEnabled || !sheetId) return Promise.resolve();
   return queueMasterDataOp(function(){
     return loadMasterDataFromCloud().then(function(cloudMd){
-      if(cloudMd){ masterData = Object.assign(masterData, cloudMd); renderAllSelects(); renderMasterLists(); }
+      if(cloudMd){
+        masterData = Object.assign(masterData, cloudMd);
+        cloudMasterDataLoadedOnce = true;
+        /* ตอนนี้ masterData เป็นข้อมูลจริงจากชีทกลางแล้ว (ไม่ใช่ cache เครื่องที่อาจว่างเปล่า/ล้าสมัยอีกต่อไป) จึงเรียก
+           migrateAdvisorFormat() ซ้ำอีกครั้งตรงนี้ เผื่อข้อมูลจริงที่เพิ่งได้มายังเป็นรูปแบบเก่า/ขาดฟิลด์ที่ต้องแปลง —
+           รอบนี้ cloudMasterDataLoadedOnce เป็น true แล้วจึงบันทึกกลับได้อย่างปลอดภัยถ้ามีการแปลงจริง (ดูคอมเมนต์เต็มใน
+           migrateAdvisorFormat) */
+        migrateAdvisorFormat();
+        renderAllSelects(); renderMasterLists();
+      }
     });
   }).catch(function(e){ console.warn('refresh masterData from cloud failed', e); });
 }

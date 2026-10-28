@@ -507,6 +507,7 @@ if('serviceWorker' in navigator){
   <button data-view="advisorlist">👥 รายชื่ออาจารย์</button>
   <button data-view="form">📝 บันทึกข้อมูล</button>
   <button data-view="list">📋 รายการทั้งหมด</button>
+  <button data-view="gradlist">📤 รายชื่อรอส่ง</button>
   <button data-view="settings">⚙️ ตั้งค่า</button>
   <button data-view="auditlog">📜 ประวัติการแก้ไข</button>
 </nav>
@@ -800,6 +801,35 @@ if('serviceWorker' in navigator){
       <button type="button" class="btn btn-secondary btn-sm" id="btnDiListPrev">‹ ก่อนหน้า</button>
       <button type="button" class="btn btn-secondary btn-sm" id="btnDiListNext">ถัดไป ›</button>
     </div>
+  </div>
+</section>
+
+<!-- ============ GRAD LIST VIEW (รายชื่อนักศึกษาสอบป้องกันผ่านแล้ว รอส่งหน่วยงานอื่น) ============ -->
+<section id="view-gradlist" style="display:none;">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <h3 style="margin:0;">📤 รายชื่อนักศึกษาสอบป้องกันผ่านแล้ว</h3>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabPending">🕓 รอส่ง</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabSent">✅ ส่งแล้ว</button>
+      </div>
+    </div>
+    <div class="help" style="margin-top:8px;">รวมนักศึกษาที่ผลสอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2) เป็น "ผ่าน" หรือ "ผ่านแบบมีเงื่อนไข" — เลือกรายชื่อที่ต้องการแล้วกด "ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว" เพื่อดาวน์โหลดไฟล์และกันไม่ให้ส่งซ้ำรอบถัดไป</div>
+    <div id="gradListPendingActions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListSelectAll">☑️ เลือกทั้งหมด</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListClearSel">☐ ยกเลิกเลือกทั้งหมด</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListExportOnly">⬇ ส่งออก Excel อย่างเดียว</button>
+      <button type="button" class="btn btn-primary btn-sm" id="btnGradListExportAndMark">✅ ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว</button>
+    </div>
+    <div style="overflow-x:auto;margin-top:12px;">
+    <table>
+      <thead id="gradListThead">
+        <tr><th></th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>วันที่สอบ</th><th>ผลสอบ</th><th>จัดการ</th></tr>
+      </thead>
+      <tbody id="gradListTbody"></tbody>
+    </table>
+    </div>
+    <div class="empty-state" id="gradListEmpty" style="display:none;">ยังไม่มีรายชื่อในหมวดนี้</div>
   </div>
 </section>
 
@@ -1608,6 +1638,7 @@ window.addEventListener('DOMContentLoaded', function(){
     bindListEvents();
     bindSettingsEvents();
     bindDocIntakeEvents();
+    bindGradListEvents();
     bindLockEvents();
     bindLandingPageEvents();
     renderLockForm();
@@ -2724,7 +2755,7 @@ function onLookupSearchInput(){
 function switchView(name){
   /* เจ้าหน้าที่ดูอย่างเดียว (viewer/dept-viewer) เข้าได้เฉพาะหน้าแดชบอร์ดสรุปข้อมูล กับหน้าตรวจสอบข้อมูลรายบุคคลเท่านั้น */
   if((currentRole==='viewer' || currentRole==='dept-viewer') && name!=='dashboard' && name!=='summary') name='dashboard';
-  ['summary','dashboard','advisors','advisorlist','docintake','form','list','settings','auditlog'].forEach(function(v){
+  ['summary','dashboard','advisors','advisorlist','docintake','form','list','gradlist','settings','auditlog'].forEach(function(v){
     document.getElementById('view-'+v).style.display = (v===name)?'':'none';
   });
   document.querySelectorAll('nav.tabs button[data-view]').forEach(function(btn){
@@ -2743,6 +2774,7 @@ function switchView(name){
   if(name==='auditlog') renderAuditLog();
   if(name==='advisors') computeAdvisorUsedCounts().then(renderAdvisorLookupResults);
   if(name==='docintake'){ renderDocIntakeSelects(); renderDocIntakeList(); }
+  if(name==='gradlist') renderGradList();
 }
 
 /* ================= SUMMARY DASHBOARD (แสดงทันทีหลังปลดล็อกรหัสผ่านทุกสิทธิ์) ================= */
@@ -4228,6 +4260,129 @@ function exportDocIntakeExcel(){
     XLSX.writeFile(wb, 'ลงทะเบียนรับเอกสาร-'+dateStamp()+'.xlsx');
   });
 }
+
+/* ================= รายชื่อรอส่งหน่วยงาน (นักศึกษาสอบป้องกันผ่านแล้ว) =================
+   นับเป็น "ผ่าน" ที่ต้องส่งเมื่อ defenseResult เป็น "ผ่าน" หรือ "ผ่านแบบมีเงื่อนไข" — ทำเครื่องหมาย "ส่งแล้ว" ด้วยการเติม
+   gradListSentAt (เวลาที่ทำเครื่องหมาย) ลงใน record โดยตรง (เขียนทีละแถวผ่าน recordsPut เหมือนฟิลด์อื่นๆ ของ record
+   ไม่ใช่ masterData บล็อบเดียวทั้งก้อน จึงไม่มีความเสี่ยงเขียนทับข้ามอุปกรณ์แบบที่เคยแก้ไปก่อนหน้านี้) ยกเลิกเครื่องหมายได้
+   โดยล้างฟิลด์นี้กลับเป็นค่าว่าง เผื่อทำเครื่องหมายผิดคน */
+var gradListTab = 'pending'; /* 'pending' = รอส่ง, 'sent' = ส่งแล้ว (ประวัติ) */
+var gradListSelected = {}; /* { [record.id]: true } รายการที่ติ๊กเลือกไว้ในแท็บปัจจุบัน */
+function gradListEligible(r){
+  return r.defenseResult==='ผ่าน' || r.defenseResult==='ผ่านแบบมีเงื่อนไข';
+}
+function getGradListRows(){
+  return recordsGetAll().then(function(rows){
+    return (rows||[]).filter(gradListEligible).filter(function(r){
+      return gradListTab==='pending' ? !r.gradListSentAt : !!r.gradListSentAt;
+    }).sort(function(a,b){
+      if(gradListTab==='sent') return (b.gradListSentAt||0)-(a.gradListSentAt||0); /* ส่งล่าสุดอยู่บนสุด */
+      return (a.defenseDate||'').localeCompare(b.defenseDate||''); /* รอส่ง: เรียงตามวันที่สอบ เก่าสุดก่อน */
+    });
+  });
+}
+function renderGradList(){
+  document.getElementById('btnGradListTabPending').classList.toggle('btn-primary', gradListTab==='pending');
+  document.getElementById('btnGradListTabSent').classList.toggle('btn-primary', gradListTab==='sent');
+  document.getElementById('gradListPendingActions').style.display = gradListTab==='pending' ? 'flex' : 'none';
+  var thead = document.getElementById('gradListThead');
+  thead.innerHTML = '';
+  var headCells = gradListTab==='pending'
+    ? ['', 'รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบ','ผลสอบ','จัดการ']
+    : ['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบ','ผลสอบ','ส่งเมื่อ','จัดการ'];
+  var headRow = el('tr',{}, headCells.map(function(t){ return el('th',{text:t}); }));
+  thead.appendChild(headRow);
+
+  getGradListRows().then(function(rows){
+    var tbody = document.getElementById('gradListTbody');
+    tbody.innerHTML='';
+    document.getElementById('gradListEmpty').style.display = rows.length===0 ? '' : 'none';
+    rows.forEach(function(r){
+      var cells = [];
+      if(gradListTab==='pending'){
+        var cb = el('input',{type:'checkbox'});
+        cb.checked = !!gradListSelected[r.id];
+        cb.addEventListener('change', function(){
+          if(cb.checked) gradListSelected[r.id]=true; else delete gradListSelected[r.id];
+        });
+        cells.push(el('td',{},[cb]));
+      }
+      cells.push(el('td',{text:r.studentId||'-'}));
+      cells.push(el('td',{text:r.studentName||'-'}));
+      cells.push(el('td',{text:r.department||'-'}));
+      cells.push(el('td',{text:toBuddhistDateStr(r.defenseDate)||'-'}));
+      cells.push(el('td',{text:r.defenseResult||'-'}));
+      if(gradListTab==='sent'){
+        cells.push(el('td',{text: r.gradListSentAt ? toBuddhistDateStr(new Date(r.gradListSentAt).toISOString().slice(0,10)) : '-'}));
+      }
+      cells.push(el('td',{},[
+        gradListTab==='pending'
+          ? el('span',{class:'help', text:''})
+          : el('button',{class:'link-btn', style:'color:#c0392b', text:'↩️ ยกเลิกเครื่องหมาย', onclick:function(){ gradListUnmark(r); }})
+      ]));
+      tbody.appendChild(el('tr',{}, cells));
+    });
+  });
+}
+function gradListUnmark(r){
+  if(!confirm('ยกเลิกเครื่องหมาย "ส่งแล้ว" ของ '+(r.studentName||r.studentId)+' หรือไม่? (รายชื่อนี้จะกลับไปอยู่ในแท็บ "รอส่ง" อีกครั้ง)')) return;
+  recordsPut(Object.assign({}, r, {gradListSentAt:null, updatedAt:Date.now()})).then(function(){
+    toast('ยกเลิกเครื่องหมายแล้ว'); renderGradList();
+  });
+}
+function gradListExportRows(rows){
+  var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบจบ']]
+    .concat(rows.map(function(r){
+      return [r.studentId||'', r.studentName||'', r.department||'', toBuddhistDateStr(r.defenseDate)||''];
+    }));
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:14},{wch:28},{wch:26},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws, 'รายชื่อสอบป้องกันผ่าน');
+  XLSX.writeFile(wb, 'รายชื่อส่งหน่วยงาน-'+dateStamp()+'.xlsx');
+}
+function getGradListSelectedRows(){
+  return getGradListRows().then(function(rows){
+    var selected = rows.filter(function(r){ return gradListSelected[r.id]; });
+    return {all:rows, selected:selected};
+  });
+}
+function gradListExportOnly(){
+  getGradListSelectedRows().then(function(res){
+    var rows = res.selected.length>0 ? res.selected : res.all;
+    if(rows.length===0){ toast('ไม่มีรายชื่อให้ส่งออกในขณะนี้', true); return; }
+    gradListExportRows(rows);
+  });
+}
+function gradListExportAndMark(){
+  getGradListSelectedRows().then(function(res){
+    var rows = res.selected.length>0 ? res.selected : res.all;
+    if(rows.length===0){ toast('ไม่มีรายชื่อให้ส่งออกในขณะนี้', true); return; }
+    if(!confirm('ส่งออก Excel '+rows.length+' รายชื่อ และทำเครื่องหมายว่า "ส่งแล้ว" เลยหรือไม่?\n(รายชื่อเหล่านี้จะไม่ขึ้นในแท็บ "รอส่ง" อีก จนกว่าจะยกเลิกเครื่องหมายในแท็บ "ส่งแล้ว")')) return;
+    gradListExportRows(rows);
+    var now = Date.now();
+    var updates = rows.map(function(r){ return recordsPut(Object.assign({}, r, {gradListSentAt:now, updatedAt:now})); });
+    Promise.all(updates).then(function(){
+      gradListSelected = {};
+      toast('ทำเครื่องหมายว่าส่งแล้ว '+rows.length+' รายชื่อ');
+      renderGradList();
+    });
+  });
+}
+function bindGradListEvents(){
+  document.getElementById('btnGradListTabPending').addEventListener('click', function(){ gradListTab='pending'; gradListSelected={}; renderGradList(); });
+  document.getElementById('btnGradListTabSent').addEventListener('click', function(){ gradListTab='sent'; gradListSelected={}; renderGradList(); });
+  document.getElementById('btnGradListSelectAll').addEventListener('click', function(){
+    getGradListRows().then(function(rows){
+      rows.forEach(function(r){ gradListSelected[r.id]=true; });
+      renderGradList();
+    });
+  });
+  document.getElementById('btnGradListClearSel').addEventListener('click', function(){ gradListSelected={}; renderGradList(); });
+  document.getElementById('btnGradListExportOnly').addEventListener('click', gradListExportOnly);
+  document.getElementById('btnGradListExportAndMark').addEventListener('click', gradListExportAndMark);
+}
+
 /* โชว์/ซ่อนช่องกรอกผลงานตีพิมพ์ในหน้าลงทะเบียนรับเอกสาร เฉพาะตอนเลือกประเภทเอกสาร "คำร้องขอสำเร็จการศึกษา" เท่านั้น */
 function toggleDiPublicationSection(){
   var docType = document.getElementById('di_docType').value;

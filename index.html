@@ -814,7 +814,7 @@ if('serviceWorker' in navigator){
         <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabSent">✅ ส่งแล้ว</button>
       </div>
     </div>
-    <div class="help" style="margin-top:8px;">รวมนักศึกษาที่ผลสอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2) เป็น "ผ่าน" หรือ "ผ่านแบบมีเงื่อนไข" — เลือกรายชื่อที่ต้องการแล้วกด "ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว" เพื่อดาวน์โหลดไฟล์และกันไม่ให้ส่งซ้ำรอบถัดไป</div>
+    <div class="help" style="margin-top:8px;">รวมนักศึกษาที่มีการลงวันที่สอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2) ไว้แล้ว (ไม่รอผลสอบ เพราะบางสาขาส่งผลช้า) — เลือกรายชื่อที่ต้องการแล้วกด "ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว" เพื่อดาวน์โหลดไฟล์และกันไม่ให้ส่งซ้ำรอบถัดไป</div>
     <div id="gradListPendingActions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
       <button type="button" class="btn btn-secondary btn-sm" id="btnGradListSelectAll">☑️ เลือกทั้งหมด</button>
       <button type="button" class="btn btn-secondary btn-sm" id="btnGradListClearSel">☐ ยกเลิกเลือกทั้งหมด</button>
@@ -1079,6 +1079,27 @@ if('serviceWorker' in navigator){
       </div>
       <div class="grid cols-3">
         <div class="field"><label>วันที่สอบป้องกัน</label><input type="date" id="d_date"></div>
+        <div class="field">
+          <label>ภาคเรียนที่สอบจบ</label>
+          <div style="display:flex;gap:8px;">
+            <select id="d_defenseTermSemester" style="flex:1;">
+              <option value="">ภาคเรียน</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">ฤดูร้อน</option>
+            </select>
+            <select id="d_defenseTermYear" style="flex:1.3;">
+              <option value="">ปีการศึกษา (พ.ศ.)</option>
+              <option value="2555">2555</option><option value="2556">2556</option><option value="2557">2557</option>
+              <option value="2558">2558</option><option value="2559">2559</option><option value="2560">2560</option>
+              <option value="2561">2561</option><option value="2562">2562</option><option value="2563">2563</option>
+              <option value="2564">2564</option><option value="2565">2565</option><option value="2566">2566</option>
+              <option value="2567">2567</option><option value="2568">2568</option><option value="2569">2569</option>
+              <option value="2570">2570</option><option value="2571">2571</option><option value="2572">2572</option>
+              <option value="2573">2573</option><option value="2574">2574</option><option value="2575">2575</option>
+            </select>
+          </div>
+        </div>
         <div class="field"><label>เวลาสอบ</label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
         <div class="field"><label>สถานที่สอบ</label><div class="combo"><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div></div>
         <div class="field"><label>ประธานกรรมการ</label><div id="d_chair" class="combo"></div></div>
@@ -4261,15 +4282,26 @@ function exportDocIntakeExcel(){
   });
 }
 
-/* ================= รายชื่อรอส่งหน่วยงาน (นักศึกษาสอบป้องกันผ่านแล้ว) =================
-   นับเป็น "ผ่าน" ที่ต้องส่งเมื่อ defenseResult เป็น "ผ่าน" หรือ "ผ่านแบบมีเงื่อนไข" — ทำเครื่องหมาย "ส่งแล้ว" ด้วยการเติม
-   gradListSentAt (เวลาที่ทำเครื่องหมาย) ลงใน record โดยตรง (เขียนทีละแถวผ่าน recordsPut เหมือนฟิลด์อื่นๆ ของ record
-   ไม่ใช่ masterData บล็อบเดียวทั้งก้อน จึงไม่มีความเสี่ยงเขียนทับข้ามอุปกรณ์แบบที่เคยแก้ไปก่อนหน้านี้) ยกเลิกเครื่องหมายได้
-   โดยล้างฟิลด์นี้กลับเป็นค่าว่าง เผื่อทำเครื่องหมายผิดคน */
+/* ================= รายชื่อรอส่งหน่วยงาน (นักศึกษาสอบป้องกันเสร็จแล้ว) =================
+   เดิมกรองจาก defenseResult เป็น "ผ่าน"/"ผ่านแบบมีเงื่อนไข" แต่บางสาขาส่งผลสอบช้า (ผลยังไม่ถูกกรอกเข้าระบบ) ทำให้
+   นักศึกษาที่สอบจบไปแล้วจริงไม่ขึ้นในรายการรอส่ง — เปลี่ยนมากรองจาก "มีการลงวันที่สอบป้องกัน" (defenseDate) อย่างเดียว
+   แทน ไม่สนใจว่าผลสอบจะถูกกรอกแล้วหรือยัง เพื่อไม่ให้ตกหล่นคนที่สอบจบไปแล้วแต่ผลยังไม่เข้าระบบ (คอลัมน์ผลสอบยังคงแสดง
+   ไว้ในตารางเพื่อดูประกอบ แต่ไม่ใช้กรองอีกต่อไป) — ทำเครื่องหมาย "ส่งแล้ว" ด้วยการเติม gradListSentAt (เวลาที่ทำเครื่องหมาย)
+   ลงใน record โดยตรง (เขียนทีละแถวผ่าน recordsPut เหมือนฟิลด์อื่นๆ ของ record ไม่ใช่ masterData บล็อบเดียวทั้งก้อน จึงไม่มี
+   ความเสี่ยงเขียนทับข้ามอุปกรณ์แบบที่เคยแก้ไปก่อนหน้านี้) ยกเลิกเครื่องหมายได้โดยล้างฟิลด์นี้กลับเป็นค่าว่าง เผื่อทำเครื่องหมายผิดคน */
 var gradListTab = 'pending'; /* 'pending' = รอส่ง, 'sent' = ส่งแล้ว (ประวัติ) */
 var gradListSelected = {}; /* { [record.id]: true } รายการที่ติ๊กเลือกไว้ในแท็บปัจจุบัน */
 function gradListEligible(r){
-  return r.defenseResult==='ผ่าน' || r.defenseResult==='ผ่านแบบมีเงื่อนไข';
+  return !!r.defenseDate;
+}
+/* แสดงภาคเรียนที่สอบจบในรูปแบบอ่านง่าย เช่น "1/2569" หรือ "ฤดูร้อน/2568" (เก็บในฟิลด์ defenseTerm เป็น "1/2569" เสมอ
+   โดย "3" หมายถึงภาคฤดูร้อน — แปลงเป็นคำว่า "ฤดูร้อน" ตอนแสดงผล/ส่งออกเท่านั้น ไม่กระทบค่าที่เก็บจริง) */
+function gradListTermLabel(term){
+  if(!term) return '-';
+  var parts = String(term).split('/');
+  if(parts.length!==2) return term;
+  var semLabel = parts[0]==='3' ? 'ฤดูร้อน' : parts[0];
+  return semLabel+'/'+parts[1];
 }
 function getGradListRows(){
   return recordsGetAll().then(function(rows){
@@ -4288,8 +4320,8 @@ function renderGradList(){
   var thead = document.getElementById('gradListThead');
   thead.innerHTML = '';
   var headCells = gradListTab==='pending'
-    ? ['', 'รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบ','ผลสอบ','จัดการ']
-    : ['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบ','ผลสอบ','ส่งเมื่อ','จัดการ'];
+    ? ['', 'รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบ','ภาคเรียนที่สอบจบ','ผลสอบ (ถ้ามี)','จัดการ']
+    : ['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบ','ภาคเรียนที่สอบจบ','ผลสอบ (ถ้ามี)','ส่งเมื่อ','จัดการ'];
   var headRow = el('tr',{}, headCells.map(function(t){ return el('th',{text:t}); }));
   thead.appendChild(headRow);
 
@@ -4311,7 +4343,8 @@ function renderGradList(){
       cells.push(el('td',{text:r.studentName||'-'}));
       cells.push(el('td',{text:r.department||'-'}));
       cells.push(el('td',{text:toBuddhistDateStr(r.defenseDate)||'-'}));
-      cells.push(el('td',{text:r.defenseResult||'-'}));
+      cells.push(el('td',{text:gradListTermLabel(r.defenseTerm)}));
+      cells.push(el('td',{text:r.defenseResult||'(ยังไม่มีผล)'}));
       if(gradListTab==='sent'){
         cells.push(el('td',{text: r.gradListSentAt ? toBuddhistDateStr(new Date(r.gradListSentAt).toISOString().slice(0,10)) : '-'}));
       }
@@ -4331,13 +4364,13 @@ function gradListUnmark(r){
   });
 }
 function gradListExportRows(rows){
-  var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบจบ']]
+  var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบจบ','ภาคเรียนที่สอบจบ']]
     .concat(rows.map(function(r){
-      return [r.studentId||'', r.studentName||'', r.department||'', toBuddhistDateStr(r.defenseDate)||''];
+      return [r.studentId||'', r.studentName||'', r.department||'', toBuddhistDateStr(r.defenseDate)||'', gradListTermLabel(r.defenseTerm)];
     }));
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:14},{wch:28},{wch:26},{wch:16}];
+  ws['!cols'] = [{wch:14},{wch:28},{wch:26},{wch:16},{wch:16}];
   XLSX.utils.book_append_sheet(wb, ws, 'รายชื่อสอบป้องกันผ่าน');
   XLSX.writeFile(wb, 'รายชื่อส่งหน่วยงาน-'+dateStamp()+'.xlsx');
 }
@@ -4836,11 +4869,13 @@ function startNewAttempt(prefix){
       result: (document.querySelector('input[name=defenseResult]:checked')||{}).value||'',
       fullScore: document.getElementById('d_fullScore').value,
       obtainedScore: document.getElementById('d_obtainedScore').value,
-      dueDate: document.getElementById('d_dueDate').value
+      dueDate: document.getElementById('d_dueDate').value,
+      term: (function(){ var s=document.getElementById('d_defenseTermSemester').value, y=document.getElementById('d_defenseTermYear').value; return (s&&y) ? (s+'/'+y) : ''; })()
     });
     document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
     document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
     document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
+    document.getElementById('d_defenseTermSemester').value=''; document.getElementById('d_defenseTermYear').value='';
     uncheckRadioGroup('defenseResult');
     renderAttachmentList('defense');
   }
@@ -4976,6 +5011,7 @@ function clearExamSectionFields(){
   document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
   document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
   document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
+  document.getElementById('d_defenseTermSemester').value=''; document.getElementById('d_defenseTermYear').value='';
   uncheckRadioGroup('defenseResult');
 
   /* ล้างข้อความเตือนวันเวลาสอบซ้ำซ้อนของกรรมการที่อาจค้างจากรายการก่อนหน้า */
@@ -5116,6 +5152,14 @@ function loadRecordIntoForm(rec){
     document.getElementById('d_obtainedScore').value = rec.defenseObtainedScore||'';
     document.getElementById('d_dueDate').value = rec.defenseDueDate||'';
     var dr = document.querySelector('input[name=defenseResult][value="'+rec.defenseResult+'"]'); if(dr) dr.checked=true;
+    (function(){
+      var term = rec.defenseTerm||'';
+      var parts = String(term).split('/');
+      var sem = parts.length===2 ? parts[0].trim() : '';
+      var yr = parts.length===2 ? parts[1].trim() : '';
+      document.getElementById('d_defenseTermSemester').value = ['1','2','3'].indexOf(sem)>-1 ? sem : '';
+      document.getElementById('d_defenseTermYear').value = /^\d{4}$/.test(yr) ? yr : '';
+    })();
   }
   setSectionLocked('p', recHasProposalData(rec), 'ส่วน 3.1 (การสอบเค้าโครง) มีข้อมูลบันทึกไว้แล้ว');
   setSectionLocked('d', recHasDefenseData(rec), 'ส่วน 3.2 (การสอบป้องกัน/IS) มีข้อมูลบันทึกไว้แล้ว');
@@ -5304,6 +5348,7 @@ function collectFormData(){
     rec.defenseObtainedScore = document.getElementById('d_obtainedScore').value;
     rec.defenseDueDate = document.getElementById('d_dueDate').value;
     rec.defenseResult = (document.querySelector('input[name=defenseResult]:checked')||{}).value||'';
+    rec.defenseTerm = (function(){ var s=document.getElementById('d_defenseTermSemester').value, y=document.getElementById('d_defenseTermYear').value; return (s&&y) ? (s+'/'+y) : ''; })();
   }
   return rec;
 }
@@ -8000,7 +8045,7 @@ var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','p
   'mainAdvisor','coAdvisorsJson','titleTh','titleEn','examDate','examTime','location','chair','committeeJson',
   'result','fullScore','obtainedScore','dueDate','createdAt','updatedAt','publicationsJson','proposalRevisionStatus','proposalRevisionDate',
   'proposalDate','proposalTime','proposalLocation','proposalChair','proposalCommitteeJson','proposalResult',
-  'defenseDate','defenseTime','defenseLocation','defenseChair','defenseCommitteeJson','defenseResult','defenseFullScore','defenseObtainedScore','defenseDueDate',
+  'defenseDate','defenseTime','defenseLocation','defenseChair','defenseCommitteeJson','defenseResult','defenseFullScore','defenseObtainedScore','defenseDueDate','defenseTerm',
   'bookSubmitStatus','bookSubmitDate','bookDocLink',
   'proposalAttemptsJson','defenseAttemptsJson',
   'proposalBw25Status','proposalBw25Date',

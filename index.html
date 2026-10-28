@@ -2509,6 +2509,15 @@ function saveMasterData(){
     return localSave;
   }).catch(function(e){ console.error('saveMasterData failed', e); throw e; });
 }
+/* เวลาที่ทราบแน่ชัดว่า masterData ในหน่วยความจำตรงกับชีทกลาง "ล่าสุดเท่าที่เคยเช็ค" — อัปเดตทั้งตอนดึงข้อมูลจริงมาสำเร็จ
+   (refreshCloudMasterData/withFreshMasterData) และตอนบันทึกสำเร็จ (เพราะหลังบันทึกแล้ว เราเพิ่งเป็นคนเขียนล่าสุดเอง จึง
+   ถือว่า "สด" ไปอีกช่วงหนึ่งได้เหมือนกัน) ใช้คู่กับ MASTER_DATA_FRESH_MS ด้านล่างเพื่อข้ามการดึงข้อมูลซ้ำถ้าเพิ่งเช็คมาไม่นาน */
+var masterDataLastSyncedAt = 0;
+/* ระยะเวลาที่ถือว่า masterData ยัง "สดพอ" ไม่ต้องดึงจากชีทกลางซ้ำก่อนบันทึกรอบถัดไป — ถ้ากำลังกดเพิ่ม/แก้ไขหลายรายการ
+   ติดกันเร็วๆ ภายในไม่กี่วินาที (เช่น เพิ่มชื่ออาจารย์ทีละคนหลายคนรวด) จะดึงข้อมูลจากชีทกลางแค่ครั้งแรกครั้งเดียว ไม่ต้องรอ
+   โหลดซ้ำทุกคลิกจนรู้สึกช้า ส่วนกรณีที่เป็นความเสี่ยงจริง (แท็บเปิดค้างนาน/เพิ่งสลับมาจากเครื่องอื่น) ยังคงถูกดักจับอยู่ตามปกติ
+   เพราะช่วงเวลานี้สั้นกว่าความเสี่ยงจริงมาก (วินาที เทียบกับ ชั่วโมง/วัน ที่แท็บมักเปิดค้างไว้) */
+var MASTER_DATA_FRESH_MS = 8000;
 function refreshCloudMasterData(){
   if(!cloudModeEnabled || !sheetId) return Promise.resolve();
   return queueMasterDataOp(function(){
@@ -2516,6 +2525,7 @@ function refreshCloudMasterData(){
       if(cloudMd){
         masterData = Object.assign(masterData, cloudMd);
         cloudMasterDataLoadedOnce = true;
+        masterDataLastSyncedAt = Date.now();
         /* ตอนนี้ masterData เป็นข้อมูลจริงจากชีทกลางแล้ว (ไม่ใช่ cache เครื่องที่อาจว่างเปล่า/ล้าสมัยอีกต่อไป) จึงเรียก
            migrateAdvisorFormat() ซ้ำอีกครั้งตรงนี้ เผื่อข้อมูลจริงที่เพิ่งได้มายังเป็นรูปแบบเก่า/ขาดฟิลด์ที่ต้องแปลง —
            รอบนี้ cloudMasterDataLoadedOnce เป็น true แล้วจึงบันทึกกลับได้อย่างปลอดภัยถ้ามีการแปลงจริง (ดูคอมเมนต์เต็มใน
@@ -2542,8 +2552,10 @@ function refreshCloudMasterData(){
    โดยไม่ได้รีเฟรช" ให้เหลือแค่ "ช่วงเวลาสั้นๆ ระหว่าง refresh กับ save ของอีกแท็บพอดี" ซึ่งเกิดขึ้นยากกว่ามากในทางปฏิบัติ */
 function withFreshMasterData(mutatorFn){
   return queueMasterDataOp(function(){
-    var refreshP = (cloudModeEnabled && sheetId) ? loadMasterDataFromCloud().then(function(cloudMd){
+    var needsFetch = (cloudModeEnabled && sheetId) && (Date.now() - masterDataLastSyncedAt >= MASTER_DATA_FRESH_MS);
+    var refreshP = needsFetch ? loadMasterDataFromCloud().then(function(cloudMd){
       if(cloudMd) masterData = Object.assign(masterData, cloudMd);
+      masterDataLastSyncedAt = Date.now();
     }) : Promise.resolve();
     return refreshP.then(function(){
       return mutatorFn(masterData);
@@ -2551,7 +2563,10 @@ function withFreshMasterData(mutatorFn){
       if(result && result.__skip) return result;
       var localSave = dbPut('meta',{key:'masterData', value:masterData});
       var cloudSave = (cloudModeEnabled && sheetId) ? localSave.then(saveMasterDataToCloud) : localSave;
-      return cloudSave.then(function(){ return result; });
+      return cloudSave.then(function(){
+        masterDataLastSyncedAt = Date.now(); /* เราเพิ่งเขียนล่าสุดเอง จึงถือว่าข้อมูลสดอีกช่วงหนึ่งด้วย */
+        return result;
+      });
     });
   }).catch(function(e){ console.error('withFreshMasterData failed', e); throw e; });
 }

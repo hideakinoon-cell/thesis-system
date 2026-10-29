@@ -3781,6 +3781,30 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     kv('หัวข้อวิทยานิพนธ์ (TH)', latest.titleTh, true),
     kv('หัวข้อวิทยานิพนธ์ (EN)', latest.titleEn, true)
   ]));
+  /* ไฟล์แนบ "คำสั่งแต่งตั้งอาจารย์ที่ปรึกษา" ผูกกับหมวดที่ 2 ไม่ใช่การ์ดสอบ (หมวด 3) จึงต้องดึง/แสดงแยกต่างหากที่นี่
+     รวมไฟล์จากทุกแถวข้อมูล (filesByRecord) เพราะกรณี นศ. มีหลายแถว/รวมแถวชั่วคราว ไม่ควรให้ไฟล์ที่เคยแนบไว้หายไปจากหน้าจอ */
+  var advisorAppointFiles = [].concat.apply([], filesByRecord).filter(function(f){ return f.section==='advisorAppoint'; });
+  if(advisorAppointFiles.length){
+    var advisorAppointList = el('div',{class:'attach-list', style:'margin-top:8px;'});
+    advisorAppointFiles.forEach(function(f){
+      if(f.isLink){
+        advisorAppointList.appendChild(el('div',{class:'attach-item'},[
+          el('span',{class:'name', text:'🔗 '+f.name}),
+          el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'🔗 เปิดลิงก์'})
+        ]));
+      } else {
+        advisorAppointList.appendChild(el('div',{class:'attach-item'},[
+          el('span',{class:'name', text:'📄 '+f.name}),
+          el('span',{class:'size', text:fmtBytes(f.size)}),
+          el('button',{type:'button', class:'link-btn', text:'⬇ ดาวน์โหลด', onclick:function(){ downloadFile(f.id); }})
+        ]));
+      }
+    });
+    sec2Children.push(el('div',{style:'margin-top:14px;'},[
+      el('span',{class:'k', style:'font-size:12px;color:var(--muted);', text:'ไฟล์แนบคำสั่งแต่งตั้งอาจารย์ที่ปรึกษา'}),
+      advisorAppointList
+    ]));
+  }
   var sec2 = el('div',{class:'card section-card sec-green'}, sec2Children);
   if((latest.advisorHistory||[]).length){
     var histBox = el('div',{style:'margin-top:12px;border-top:1px solid #e5e7eb;padding-top:10px;'});

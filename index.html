@@ -955,6 +955,18 @@ if('serviceWorker' in navigator){
         <input type="text" id="f_advisorChangeNote" placeholder="เช่น อาจารย์เดิมลาศึกษาต่อ, เปลี่ยนหัวข้อวิจัย — กรอกเฉพาะกรณีที่กำลังเปลี่ยน/ถอนที่ปรึกษาในการบันทึกครั้งนี้">
       </div>
       <div class="field full">
+        <h4>แนบเอกสาร (เช่น คำสั่งแต่งตั้งอาจารย์ที่ปรึกษา)</h4>
+        <div class="attach-box">
+          <input type="file" id="advapt_fileInput" multiple>
+          <div class="attach-link-row">
+            <input type="url" id="advapt_linkInput" placeholder="วางลิงก์เอกสาร (เช่น Google Drive)">
+            <input type="text" id="advapt_linkName" placeholder="ชื่อเอกสาร (ไม่บังคับ)">
+            <button type="button" class="link-btn" id="advapt_btnAddLink">🔗 แนบลิงก์</button>
+          </div>
+          <div class="attach-list" id="advapt_attachList"></div>
+        </div>
+      </div>
+      <div class="field full">
         <label>หัวข้อวิทยานิพนธ์ (TH)</label>
         <textarea id="f_titleTh" placeholder="การพัฒนาแอปพลิเคชันระบบจัดการข้อมูล..."></textarea>
       </div>
@@ -4765,6 +4777,8 @@ function bindFormEvents(){
   document.getElementById('qual_btnAddLink').addEventListener('click', function(){ handleLinkAdd('qualifying'); });
   document.getElementById('book_fileInput').addEventListener('change', function(e){ handleFileInput('book', e.target.files); e.target.value=''; });
   document.getElementById('book_btnAddLink').addEventListener('click', function(){ handleLinkAdd('book'); });
+  document.getElementById('advapt_fileInput').addEventListener('change', function(e){ handleFileInput('advisorAppoint', e.target.files); e.target.value=''; });
+  document.getElementById('advapt_btnAddLink').addEventListener('click', function(){ handleLinkAdd('advisorAppoint'); });
 
   /* กรอกวันที่อนุมัติหัวข้อ บว.25 แล้วมักลืมกดปุ่ม "ส่งแล้ว" แยกต่างหาก ทำให้บันทึกวันที่ไว้แต่สถานะยังค้างเป็น "ยังไม่ส่ง"
      — ให้ติ๊ก "ส่งแล้ว" ให้อัตโนมัติทันทีที่มีการกรอกวันที่ (มีวันที่อนุมัติ = ส่งแล้วโดยนัย) */
@@ -4952,6 +4966,7 @@ function newDraft(){
   renderAttachmentList('computer');
   renderAttachmentList('qualifying');
   renderAttachmentList('book');
+  renderAttachmentList('advisorAppoint');
 }
 /* กด "เพิ่มการสอบใหม่ / เพิ่มข้อมูล" ให้ นศ. คนหนึ่ง — ถ้ามีแถวเดิมอยู่แล้ว (1 แถวขึ้นไป) ให้เปิดแถวเดิมมาแก้ไข/เติมข้อมูลทันที
    (รวมแถวซ้ำให้อัตโนมัติถ้าพบมากกว่า 1 แถว — จะลบแถวซ้ำจริงตอนกดบันทึกสำเร็จเท่านั้น) ถ้าไม่พบเลยจึงสร้างแถวใหม่ */
@@ -5140,6 +5155,7 @@ function loadRecordIntoForm(rec){
   renderAttachmentList('computer');
   renderAttachmentList('qualifying');
   renderAttachmentList('book');
+  renderAttachmentList('advisorAppoint');
   renderExamHistory(rec.studentId);
   /* เช็คทันทีที่เปิดข้อมูลเดิมมาแก้ไข เผื่อกรรมการที่เคยเลือกไว้เกิดชนกับข้อมูลนักศึกษาคนอื่นที่กรอกเพิ่มเข้ามาทีหลัง */
   checkCommitteeScheduleConflict('p');
@@ -5464,7 +5480,7 @@ function handleFileInput(section, fileList){
   })).then(function(){ renderAttachmentList(section); });
 }
 var ATTACH_SECTION_PREFIX = { proposal:'p_', defense:'d_', publication:'pub_',
-  english:'eng_', computer:'comp_', qualifying:'qual_', book:'book_' }; /* ใช้ร่วมกันทั้ง handleLinkAdd/renderAttachmentList
+  english:'eng_', computer:'comp_', qualifying:'qual_', book:'book_', advisorAppoint:'advapt_' }; /* ใช้ร่วมกันทั้ง handleLinkAdd/renderAttachmentList
    เพื่อรองรับหมวดแนบไฟล์ใหม่ (หมวด 1.1 ผลภาษาอังกฤษ/คอมพิวเตอร์/สอบวัดความรู้, หมวดที่ 5 ผลงานตีพิมพ์, หมวดที่ 6 เล่มฉบับสมบูรณ์)
    โดยไม่ต้องแก้ if/else เดิมทุกจุด */
 function handleLinkAdd(section){
@@ -7729,7 +7745,7 @@ function checkBrokenDriveFiles(){
         var studentTxt = rec ? (rec.studentId+' — '+rec.studentName) : ('(ไม่พบข้อมูลนักศึกษาที่เชื่อมกับไฟล์นี้ — เรคคอร์ด '+f.recordId+')');
         var SECTION_LABELS = { proposal:'3.1 เค้าโครง', defense:'3.2 ป้องกัน/IS', publication:'หมวดที่ 5 ผลงานตีพิมพ์',
           english:'หมวดที่ 1.1 ผลภาษาอังกฤษ', computer:'หมวดที่ 1.1 ผลคอมพิวเตอร์', qualifying:'หมวดที่ 1.1 สอบวัดความรู้',
-          book:'หมวดที่ 6 เล่มฉบับสมบูรณ์' };
+          book:'หมวดที่ 6 เล่มฉบับสมบูรณ์', advisorAppoint:'หมวดที่ 2 คำสั่งแต่งตั้งที่ปรึกษา' };
         var sectionTxt = SECTION_LABELS[f.section] || 'หมวดที่ 6 เล่มฉบับสมบูรณ์';
         var row = el('div',{class:'attach-item'},[
           el('span',{class:'name', text:'⚠️ '+f.name+' — '+studentTxt+' ('+sectionTxt+') — '+f.reason}),

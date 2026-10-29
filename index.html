@@ -1049,14 +1049,14 @@ if('serviceWorker' in navigator){
       <div class="conflict-note" id="sub-defense-conflictMsg" style="display:none;"></div>
       <div class="grid cols-3" style="margin-bottom:14px;">
         <div class="field full">
-          <label>สถานะการลงทะเบียน/รักษาสภาพในภาคเรียนที่ขอสอบ</label>
+          <label>สถานะการลงทะเบียน/รักษาสภาพในภาคเรียนที่สอบจบ</label>
           <div class="radio-group">
             <label><input type="radio" name="examTermStatus" value="ลงทะเบียน" checked> ลงทะเบียน</label>
             <label><input type="radio" name="examTermStatus" value="รักษาสภาพ"> รักษาสภาพการเป็นนักศึกษา</label>
           </div>
         </div>
         <div class="field">
-          <label>ภาคเรียนที่ขอสอบ</label>
+          <label>ภาคเรียนที่สอบจบ</label>
           <div style="display:flex;gap:8px;">
             <select id="f_examTermSemester" style="flex:1;">
               <option value="">ภาคเรียน</option>
@@ -1079,27 +1079,6 @@ if('serviceWorker' in navigator){
       </div>
       <div class="grid cols-3">
         <div class="field"><label>วันที่สอบป้องกัน</label><input type="date" id="d_date"></div>
-        <div class="field">
-          <label>ภาคเรียนที่สอบจบ</label>
-          <div style="display:flex;gap:8px;">
-            <select id="d_defenseTermSemester" style="flex:1;">
-              <option value="">ภาคเรียน</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">ฤดูร้อน</option>
-            </select>
-            <select id="d_defenseTermYear" style="flex:1.3;">
-              <option value="">ปีการศึกษา (พ.ศ.)</option>
-              <option value="2555">2555</option><option value="2556">2556</option><option value="2557">2557</option>
-              <option value="2558">2558</option><option value="2559">2559</option><option value="2560">2560</option>
-              <option value="2561">2561</option><option value="2562">2562</option><option value="2563">2563</option>
-              <option value="2564">2564</option><option value="2565">2565</option><option value="2566">2566</option>
-              <option value="2567">2567</option><option value="2568">2568</option><option value="2569">2569</option>
-              <option value="2570">2570</option><option value="2571">2571</option><option value="2572">2572</option>
-              <option value="2573">2573</option><option value="2574">2574</option><option value="2575">2575</option>
-            </select>
-          </div>
-        </div>
         <div class="field"><label>เวลาสอบ</label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
         <div class="field"><label>สถานที่สอบ</label><div class="combo"><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div></div>
         <div class="field"><label>ประธานกรรมการ</label><div id="d_chair" class="combo"></div></div>
@@ -3888,7 +3867,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
   if(!hasDefenseBlock && (latest.examTerm || latest.examTermStatus)){
     wrap.appendChild(el('div',{class:'card section-card', style:'padding:12px 16px;margin-bottom:12px;'},[
       el('div',{class:'kv-grid'},[
-        kv((latest.examTermStatus||'ลงทะเบียน')+'ในภาคเรียนที่ขอสอบ (3.2)', latest.examTerm ? ('ภาคเรียนที่ '+latest.examTerm.split('/')[0]+' ปีการศึกษา '+latest.examTerm.split('/')[1]) : '')
+        kv((latest.examTermStatus||'ลงทะเบียน')+'ในภาคเรียนที่สอบจบ (3.2)', latest.examTerm ? ('ภาคเรียนที่ '+latest.examTerm.split('/')[0]+' ปีการศึกษา '+latest.examTerm.split('/')[1]) : '')
       ])
     ]));
   }
@@ -3944,7 +3923,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       /* สถานะลงทะเบียน/รักษาสภาพภาคเรียนที่ขอสอบ เป็นข้อมูลระดับแถว (ไม่แยกตามครั้งที่สอบ) — แสดงเฉพาะการ์ดล่าสุดของ 3.2 เท่านั้น
          เพื่อไม่ให้ข้อมูลซ้ำๆ กันโผล่ในการ์ดประวัติการสอบซ้ำ (retake) ทุกครั้ง */
       if(r.isLatest && (latest.examTerm || latest.examTermStatus)){
-        defenseKvs.push(kv((latest.examTermStatus||'ลงทะเบียน')+'ในภาคเรียนที่ขอสอบ', latest.examTerm ? ('ภาคเรียนที่ '+latest.examTerm.split('/')[0]+' ปีการศึกษา '+latest.examTerm.split('/')[1]) : ''));
+        defenseKvs.push(kv((latest.examTermStatus||'ลงทะเบียน')+'ในภาคเรียนที่สอบจบ', latest.examTerm ? ('ภาคเรียนที่ '+latest.examTerm.split('/')[0]+' ปีการศึกษา '+latest.examTerm.split('/')[1]) : ''));
       }
       body.push(el('div',{class:'kv-grid', style:'margin-top:14px;'}, defenseKvs));
     }
@@ -4294,8 +4273,10 @@ var gradListSelected = {}; /* { [record.id]: true } รายการที่�
 function gradListEligible(r){
   return !!r.defenseDate;
 }
-/* แสดงภาคเรียนที่สอบจบในรูปแบบอ่านง่าย เช่น "1/2569" หรือ "ฤดูร้อน/2568" (เก็บในฟิลด์ defenseTerm เป็น "1/2569" เสมอ
-   โดย "3" หมายถึงภาคฤดูร้อน — แปลงเป็นคำว่า "ฤดูร้อน" ตอนแสดงผล/ส่งออกเท่านั้น ไม่กระทบค่าที่เก็บจริง) */
+/* แสดงภาคเรียนที่สอบจบในรูปแบบอ่านง่าย เช่น "1/2569" หรือ "ฤดูร้อน/2568" — ใช้ฟิลด์ examTerm เดิมที่มีอยู่แล้ว (ช่องเดียวกับ
+   ที่เคยเรียกว่า "ภาคเรียนที่ขอสอบ" เปลี่ยนป้ายกำกับเป็น "ภาคเรียนที่สอบจบ" เท่านั้น ไม่ได้เพิ่มฟิลด์ใหม่ จึงไม่กระทบข้อมูล
+   เดิมที่เคยกรอกไว้แล้วแม้แต่น้อย) เก็บเป็น "1/2569" เสมอ โดย "3" หมายถึงภาคฤดูร้อน — แปลงเป็นคำว่า "ฤดูร้อน" ตอนแสดงผล/
+   ส่งออกเท่านั้น ไม่กระทบค่าที่เก็บจริง */
 function gradListTermLabel(term){
   if(!term) return '-';
   var parts = String(term).split('/');
@@ -4343,7 +4324,7 @@ function renderGradList(){
       cells.push(el('td',{text:r.studentName||'-'}));
       cells.push(el('td',{text:r.department||'-'}));
       cells.push(el('td',{text:toBuddhistDateStr(r.defenseDate)||'-'}));
-      cells.push(el('td',{text:gradListTermLabel(r.defenseTerm)}));
+      cells.push(el('td',{text:gradListTermLabel(r.examTerm)}));
       cells.push(el('td',{text:r.defenseResult||'(ยังไม่มีผล)'}));
       if(gradListTab==='sent'){
         cells.push(el('td',{text: r.gradListSentAt ? toBuddhistDateStr(new Date(r.gradListSentAt).toISOString().slice(0,10)) : '-'}));
@@ -4366,7 +4347,7 @@ function gradListUnmark(r){
 function gradListExportRows(rows){
   var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบจบ','ภาคเรียนที่สอบจบ']]
     .concat(rows.map(function(r){
-      return [r.studentId||'', r.studentName||'', r.department||'', toBuddhistDateStr(r.defenseDate)||'', gradListTermLabel(r.defenseTerm)];
+      return [r.studentId||'', r.studentName||'', r.department||'', toBuddhistDateStr(r.defenseDate)||'', gradListTermLabel(r.examTerm)];
     }));
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -4869,13 +4850,11 @@ function startNewAttempt(prefix){
       result: (document.querySelector('input[name=defenseResult]:checked')||{}).value||'',
       fullScore: document.getElementById('d_fullScore').value,
       obtainedScore: document.getElementById('d_obtainedScore').value,
-      dueDate: document.getElementById('d_dueDate').value,
-      term: (function(){ var s=document.getElementById('d_defenseTermSemester').value, y=document.getElementById('d_defenseTermYear').value; return (s&&y) ? (s+'/'+y) : ''; })()
+      dueDate: document.getElementById('d_dueDate').value
     });
     document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
     document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
     document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
-    document.getElementById('d_defenseTermSemester').value=''; document.getElementById('d_defenseTermYear').value='';
     uncheckRadioGroup('defenseResult');
     renderAttachmentList('defense');
   }
@@ -5011,7 +4990,6 @@ function clearExamSectionFields(){
   document.getElementById('d_date').value=''; document.getElementById('d_examTime').value=''; document.getElementById('d_location').value='';
   document.getElementById('d_chair').value=''; clearDynamicRows('d_committeeList');
   document.getElementById('d_fullScore').value=''; document.getElementById('d_obtainedScore').value=''; document.getElementById('d_dueDate').value='';
-  document.getElementById('d_defenseTermSemester').value=''; document.getElementById('d_defenseTermYear').value='';
   uncheckRadioGroup('defenseResult');
 
   /* ล้างข้อความเตือนวันเวลาสอบซ้ำซ้อนของกรรมการที่อาจค้างจากรายการก่อนหน้า */
@@ -5152,14 +5130,6 @@ function loadRecordIntoForm(rec){
     document.getElementById('d_obtainedScore').value = rec.defenseObtainedScore||'';
     document.getElementById('d_dueDate').value = rec.defenseDueDate||'';
     var dr = document.querySelector('input[name=defenseResult][value="'+rec.defenseResult+'"]'); if(dr) dr.checked=true;
-    (function(){
-      var term = rec.defenseTerm||'';
-      var parts = String(term).split('/');
-      var sem = parts.length===2 ? parts[0].trim() : '';
-      var yr = parts.length===2 ? parts[1].trim() : '';
-      document.getElementById('d_defenseTermSemester').value = ['1','2','3'].indexOf(sem)>-1 ? sem : '';
-      document.getElementById('d_defenseTermYear').value = /^\d{4}$/.test(yr) ? yr : '';
-    })();
   }
   setSectionLocked('p', recHasProposalData(rec), 'ส่วน 3.1 (การสอบเค้าโครง) มีข้อมูลบันทึกไว้แล้ว');
   setSectionLocked('d', recHasDefenseData(rec), 'ส่วน 3.2 (การสอบป้องกัน/IS) มีข้อมูลบันทึกไว้แล้ว');
@@ -5348,7 +5318,6 @@ function collectFormData(){
     rec.defenseObtainedScore = document.getElementById('d_obtainedScore').value;
     rec.defenseDueDate = document.getElementById('d_dueDate').value;
     rec.defenseResult = (document.querySelector('input[name=defenseResult]:checked')||{}).value||'';
-    rec.defenseTerm = (function(){ var s=document.getElementById('d_defenseTermSemester').value, y=document.getElementById('d_defenseTermYear').value; return (s&&y) ? (s+'/'+y) : ''; })();
   }
   return rec;
 }
@@ -5759,7 +5728,7 @@ var EXPORT_COLUMNS = [
   ['mainAdvisor','อาจารย์ที่ปรึกษาหลัก'],['coAdvisorsStr','อาจารย์ที่ปรึกษาร่วม'],
   ['titleTh','หัวข้อวิทยานิพนธ์ (TH)'],['titleEn','หัวข้อวิทยานิพนธ์ (EN)'],
   ['publicationsStr','การเผยแพร่ผลงานวิจัย'],
-  ['examTermStatus','สถานะการลงทะเบียน/รักษาสภาพ'],['examTerm','ภาคเรียนที่ขอสอบ'],
+  ['examTermStatus','สถานะการลงทะเบียน/รักษาสภาพ'],['examTerm','ภาคเรียนที่สอบจบ'],
   ['examTypeStr','ประเภทการสอบ'],['attemptNo','ครั้งที่'],['examDate','วันที่สอบ'],['examTime','เวลาสอบ'],['location','สถานที่สอบ'],
   ['chair','ประธานกรรมการ'],['committeeStr','กรรมการสอบ'],
   ['fullScore','คะแนนเต็ม'],['obtainedScore','คะแนนที่สอบได้'],['dueDate','กำหนดส่งเล่ม'],
@@ -8045,7 +8014,7 @@ var RECORD_COLUMNS = ['id','examType','studentId','studentName','degreeLevel','p
   'mainAdvisor','coAdvisorsJson','titleTh','titleEn','examDate','examTime','location','chair','committeeJson',
   'result','fullScore','obtainedScore','dueDate','createdAt','updatedAt','publicationsJson','proposalRevisionStatus','proposalRevisionDate',
   'proposalDate','proposalTime','proposalLocation','proposalChair','proposalCommitteeJson','proposalResult',
-  'defenseDate','defenseTime','defenseLocation','defenseChair','defenseCommitteeJson','defenseResult','defenseFullScore','defenseObtainedScore','defenseDueDate','defenseTerm',
+  'defenseDate','defenseTime','defenseLocation','defenseChair','defenseCommitteeJson','defenseResult','defenseFullScore','defenseObtainedScore','defenseDueDate',
   'bookSubmitStatus','bookSubmitDate','bookDocLink',
   'proposalAttemptsJson','defenseAttemptsJson',
   'proposalBw25Status','proposalBw25Date',

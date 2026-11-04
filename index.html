@@ -2613,6 +2613,23 @@ function withFreshMasterData(mutatorFn){
     });
   }).catch(function(e){ console.error('withFreshMasterData failed', e); throw e; });
 }
+/* บั๊กที่พบจริง (ตรงกับอาการ "เพิ่มชื่ออาจารย์ไว้แล้ว ต่อมาหายไปอีก" แม้ไม่มีแท็บ/เครื่องอื่นเปิดพร้อมกันเลย):
+   จุดเรียก withFreshMasterData() ทุกจุด (เพิ่ม/แก้/ลบ/รวม/เปลี่ยนชื่อ อาจารย์/ตำแหน่ง/หลักสูตร/สาขา/แผน/ประเภทเอกสาร)
+   เดิมไม่มี .catch() เลย ถ้าบันทึกขึ้นชีทกลางไม่สำเร็จ (เช่น อินเทอร์เน็ตขัดข้องชั่วขณะ หรือ token Google หมดอายุแล้วขอ
+   token ใหม่แบบเงียบ (silent reconnect) ไม่สำเร็จ — ดูคอมเมนต์ที่ ensureAuthed/attemptSilentReconnect) ระบบจะไม่แจ้ง
+   อะไรให้ผู้ใช้ทราบเลย (error เงียบ ไม่มี toast ขึ้น) และเนื่องจากการแก้ไขนั้นได้ถูกเขียนลงหน่วยความจำ (masterData) ของ
+   แท็บนี้ไปแล้วตั้งแต่ก่อนขั้นตอนบันทึกขึ้นชีทกลาง ผู้ใช้จะยังเห็นชื่อที่เพิ่ง เพิ่ม/แก้ ค้างอยู่ในหน้าจอ เข้าใจว่าบันทึกสำเร็จแล้ว
+   ทั้งที่จริงยังไม่เคยไปถึงชีทกลางเลย — พอมีการ refresh ข้อมูลจากชีทกลางครั้งถัดไป (เปิดแท็บใหม่ หรือแม้แต่ภายในเซสชันเดิม
+   ผ่าน refreshCloudMasterData()) ข้อมูลเก่าจากชีทกลางจะเข้ามาทับ masterData ในหน่วยความจำ ทำให้รายการที่ไม่เคยซิงก์สำเร็จ
+   หายไปเงียบๆ โดยไม่มีร่องรอยใดๆ (ไม่มีรายการ "ลบ" ใน Audit Log ด้วย เพราะไม่เคยมีใครสั่งลบจริง)
+   แก้โดย: ให้ทุกจุดที่เรียก withFreshMasterData() ดัก .catch() แล้วแจ้งเตือนผู้ใช้ด้วย alert() (ไม่ใช่ toast ที่หายไปเองใน
+   3.2 วิ เพราะผู้ใช้อาจไม่ทันเห็น) เพื่อให้แน่ใจว่าผู้ใช้รู้ทันทีว่าการบันทึกไม่สำเร็จ และต้องตรวจสอบอินเทอร์เน็ต/เข้าสู่ระบบ
+   Google ใหม่ แล้วลองทำรายการนั้นซ้ำอีกครั้ง (ไม่ปล่อยให้เข้าใจผิดว่าสำเร็จแล้วทั้งที่จริงยังไม่ได้ซิงก์ขึ้นชีทกลาง) */
+function alertMasterDataSaveFailed(e, actionLabel){
+  console.error('withFreshMasterData failed: '+actionLabel, e);
+  var reason = (e && e.message) ? e.message : String(e);
+  alert('⚠️ บันทึก "'+actionLabel+'" ไปยังระบบกลางไม่สำเร็จ\n\nสาเหตุที่เป็นไปได้: อินเทอร์เน็ตขัดข้อง หรือ ต้องเข้าสู่ระบบ Google ใหม่ (เซสชันหมดอายุ)\n\nกรุณาตรวจสอบอินเทอร์เน็ต หรือกดปุ่ม "เข้าสู่ระบบ Google" ใหม่ในหน้าตั้งค่า แล้วลองทำรายการนี้ซ้ำอีกครั้ง — ข้อมูลนี้ยังไม่ถูกบันทึกขึ้นระบบกลาง\n\nรายละเอียด: '+reason);
+}
 function saveGoogleClientId(){ return dbPut('meta',{key:'googleClientId', value:googleClientId}); }
 
 /* ================= NAV ================= */
@@ -6626,7 +6643,7 @@ function bindSettingsEvents(){
         if(result && result.__skip) return;
         logAudit('เพิ่ม'+(MASTER_LIST_LABELS[key]||key), '', val);
         renderMasterLists(); renderAllSelects();
-      });
+      }).catch(function(e){ alertMasterDataSaveFailed(e, 'เพิ่ม'+(MASTER_LIST_LABELS[key]||key)); });
       input.value='';
     });
   });
@@ -6702,7 +6719,7 @@ function bindSettingsEvents(){
       document.getElementById('m_advisor_rank').value='';
       document.getElementById('m_advisor_dupWarning').style.display='none';
       document.getElementById('btnAddAdvisor').disabled=false;
-    });
+    }).catch(function(e){ alertMasterDataSaveFailed(e, 'เพิ่มอาจารย์ที่ปรึกษา'); });
   });
   document.getElementById('m_advisor_search').addEventListener('input', function(){ advisorListPage=0; renderAdvisorList(); });
   document.getElementById('btnAdvisorListPrev').addEventListener('click', function(){ if(advisorListPage>0){ advisorListPage--; renderAdvisorList(); } });
@@ -6721,7 +6738,7 @@ function bindSettingsEvents(){
     }).then(function(result){
       if(result && result.__skip) return;
       renderMasterLists(); renderAllSelects(); input.value='';
-    });
+    }).catch(function(e){ alertMasterDataSaveFailed(e, 'เพิ่มตำแหน่งทางวิชาการ'); });
   });
 }
 function renderMasterLists(){
@@ -6860,7 +6877,7 @@ function updatePosition(oldName, newName, newSlot){
     renderAllSelects();
     renderList();
     toast('บันทึกตำแหน่งเรียบร้อย'+(updatedCount>0?' ปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
-  });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, 'แก้ไขตำแหน่งทางวิชาการ'); });
 }
 function renamePositionCascade(oldName, newName){
   masterData.advisors.forEach(function(a){
@@ -6897,7 +6914,7 @@ function removePosition(name){
       if(a.roles) a.roles = a.roles.filter(function(r){ return r!==name; });
     });
     return Promise.resolve();
-  }).then(function(){ renderMasterLists(); renderAllSelects(); });
+  }).then(function(){ renderMasterLists(); renderAllSelects(); }).catch(function(e){ alertMasterDataSaveFailed(e, 'ลบตำแหน่งทางวิชาการ'); });
 }
 function renderBackupStatus(){
   document.getElementById('s_autoBackup').checked = !!autoBackupEnabled;
@@ -7340,7 +7357,7 @@ function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
       else if(newName!==oldName) msg += ' (ข้อมูลนักศึกษาที่เคยบันทึกชื่อเดิมไว้จะยังคงเป็นชื่อเดิม แต่ยังนับรวมในโควตา/รายงานของชื่อใหม่ให้อัตโนมัติ)';
       toast(msg);
     });
-  });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, 'แก้ไขข้อมูลอาจารย์ที่ปรึกษา'); });
 }
 function removeAdvisor(name){
   if(!confirm('ลบ "'+name+'" ออกจากรายชื่ออาจารย์หรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
@@ -7350,7 +7367,7 @@ function removeAdvisor(name){
   }).then(function(){
     logAudit('ลบอาจารย์ที่ปรึกษา', '', name);
     renderMasterLists(); renderAllSelects();
-  });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, 'ลบอาจารย์ที่ปรึกษา'); });
 }
 function renderChipList(containerId, key){
   var container = document.getElementById(containerId);
@@ -7387,7 +7404,7 @@ function renderChipList(containerId, key){
         }).then(function(){
           logAudit('ลบ'+(MASTER_LIST_LABELS[key]||key), '', val);
           return deptPinCleanupP;
-        }).then(function(){ renderMasterLists(); renderAllSelects(); });
+        }).then(function(){ renderMasterLists(); renderAllSelects(); }).catch(function(e){ alertMasterDataSaveFailed(e, 'ลบ'+(MASTER_LIST_LABELS[key]||key)); });
       }})
     ]);
     container.appendChild(chip);
@@ -7418,7 +7435,7 @@ function renameMasterItem(key, oldVal, newVal){
     renderAllSelects();
     renderList();
     toast('แก้ไขชื่อเรียบร้อย'+(updatedCount>0?' และปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
-  });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, 'แก้ไข'+(MASTER_LIST_LABELS[key]||key)); });
 }
 /* รวมรายการที่พิมพ์ชื่อซ้ำกับรายการที่มีอยู่แล้วในระบบ (เช่น รายชื่อ "แผนการเรียน" ที่สะกดต่างกันเล็กน้อยจากการนำเข้าข้อมูลหลายครั้ง
    จนกลายเป็นหลายรายการทั้งที่จริงคืออันเดียวกัน) — ต่างจาก renameMasterItem ตรงที่ newVal มีอยู่แล้วในรายการหลัก จึงแค่ลบ
@@ -7436,7 +7453,7 @@ function mergeMasterItem(key, oldVal, newVal){
     renderAllSelects();
     renderList();
     toast('รวมรายการเรียบร้อย'+(updatedCount>0?' และปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว '+updatedCount+' รายการ':''));
-  });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, 'รวม'+(MASTER_LIST_LABELS[key]||key)); });
 }
 /* เปลี่ยนค่าอ้างอิงในข้อมูลที่เคยบันทึกไว้ทุกที่ที่เกี่ยวข้องกับ master data key นั้นๆ — ครอบคลุมทั้งข้อมูลการสอบ (records)
    สำหรับ programs/departments/plans/advisors และข้อมูลลงทะเบียนรับเอกสาร (docIntake) สำหรับ documentTypes โดยเฉพาะ

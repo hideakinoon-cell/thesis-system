@@ -134,6 +134,15 @@ if('serviceWorker' in navigator){
   .stat-card.stat-amber{background:#FDEEDC;color:#a06414;}
   .stat-card.stat-pink{background:#FBE4EE;color:#c23e79;}
   .stat-card.stat-coral{background:#FFE3DA;color:#c2542f;}
+  .stat-card.stat-teal{background:#D7F0EC;color:#1b7a6e;}
+  .stat-card.stat-purple{background:#EAE3FA;color:#5d3fa8;}
+  /* การ์ด KPI สไตล์แดชบอร์ดการตลาด — มีป้าย "เทียบกับภาคเรียนก่อนหน้า" ต่อท้ายตัวเลขหลัก */
+  .stat-card .stat-trend{display:inline-flex;align-items:center;gap:3px;font-size:12.5px;font-weight:700;margin-top:8px;padding:2px 8px;border-radius:999px;width:fit-content;}
+  .stat-card .stat-trend.up{background:rgba(47,143,91,.16);color:#2f8f5b;}
+  .stat-card .stat-trend.down{background:rgba(194,62,89,.16);color:#c23e59;}
+  .stat-card .stat-trend.flat{background:rgba(100,116,139,.14);color:#64748b;}
+  .stat-card .stat-subtext{font-size:12px;opacity:.8;margin-top:6px;}
+  .dash-term-caption{font-size:13px;color:var(--muted);margin:-8px 0 14px;}
   .summary-charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:18px;}
   .chart-card{padding:20px 22px 12px;transition:transform .2s ease,box-shadow .2s ease;}
   .chart-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
@@ -568,6 +577,59 @@ if('serviceWorker' in navigator){
       <div class="stat-icon">⏰</div>
       <div class="stat-value" id="statOverdueBook">0</div>
       <div class="stat-label">เลยกำหนดส่งเล่มฉบับสมบูรณ์</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:2px;">📊 เปรียบเทียบภาคเรียนนี้กับภาคเรียนก่อนหน้า</h3>
+    <div class="dash-term-caption" id="dashTermCaption">กำลังคำนวณภาคเรียนปัจจุบันจากข้อมูล...</div>
+    <div class="summary-stats-row" style="margin-bottom:0;">
+      <div class="stat-card stat-teal">
+        <div class="stat-icon">📝</div>
+        <div class="stat-value" id="statExamThisTerm">0</div>
+        <div class="stat-label">นักศึกษาสอบป้องกัน/IS (ภาคเรียนนี้)</div>
+        <div class="stat-trend flat" id="statExamThisTermTrend" style="display:none;"></div>
+      </div>
+      <div class="stat-card stat-purple">
+        <div class="stat-icon">🎓</div>
+        <div class="stat-value" id="statGradThisTerm">0</div>
+        <div class="stat-label">สำเร็จการศึกษา (ภาคเรียนนี้)</div>
+        <div class="stat-trend flat" id="statGradThisTermTrend" style="display:none;"></div>
+      </div>
+      <div class="stat-card stat-green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="statPassRateThisTerm">-</div>
+        <div class="stat-label">อัตราการสอบผ่าน 3.2 (ภาคเรียนนี้)</div>
+        <div class="stat-trend flat" id="statPassRateThisTermTrend" style="display:none;"></div>
+      </div>
+      <div class="stat-card stat-amber">
+        <div class="stat-icon">🧾</div>
+        <div class="stat-value" id="statRegVsLeaveThisTerm">0 / 0</div>
+        <div class="stat-label">ลงทะเบียน / รักษาสภาพ (ภาคเรียนนี้)</div>
+        <div class="stat-subtext" id="statRegVsLeaveThisTermSub"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-charts-row">
+    <div class="card chart-card">
+      <h3>📈 แนวโน้มจำนวนสอบป้องกัน/IS และสำเร็จการศึกษา รายภาคเรียน</h3>
+      <div class="chart-card-body"><canvas id="chartTrendCounts"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>📉 แนวโน้มอัตราการสอบผ่าน 3.2 รายภาคเรียน</h3>
+      <div class="chart-card-body"><canvas id="chartTrendPassRate"></canvas></div>
+    </div>
+  </div>
+
+  <div class="summary-charts-row">
+    <div class="card chart-card">
+      <h3>🏫 สอบป้องกัน/IS แยกตามสาขาวิชา (ภาคเรียนนี้)</h3>
+      <div class="chart-card-body"><canvas id="chartExamByDeptTerm"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>🧾 ลงทะเบียน vs รักษาสภาพ (ภาคเรียนนี้)</h3>
+      <div class="chart-card-body"><canvas id="chartRegStatusTerm"></canvas></div>
     </div>
   </div>
 
@@ -2899,6 +2961,124 @@ function renderOrUpdateDonutChart(canvasId, chartKey, labels, values, colors, em
     options:{ maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ boxWidth:13, font:{ family:'Sarabun', size:12.5 } } } } }
   });
 }
+function renderOrUpdateLineChart(canvasId, chartKey, labels, datasets){
+  var canvas = document.getElementById(canvasId);
+  var wrap = canvas.parentElement;
+  var total = datasets.reduce(function(sum,ds){ return sum + ds.data.reduce(function(a,b){ return a+(b||0); },0); },0);
+  if(summaryCharts[chartKey]){ summaryCharts[chartKey].destroy(); delete summaryCharts[chartKey]; }
+  var existingEmpty = wrap.querySelector('.chart-empty-msg');
+  if(existingEmpty) existingEmpty.remove();
+  if(total===0 || typeof Chart==='undefined'){
+    canvas.style.display='none';
+    wrap.appendChild(el('div',{class:'chart-empty-msg', text: typeof Chart==='undefined' ? 'ไม่สามารถโหลดกราฟได้ (ไม่มีอินเทอร์เน็ต) — แสดงเฉพาะตัวเลข' : 'ยังไม่มีข้อมูล'}));
+    return;
+  }
+  canvas.style.display='';
+  summaryCharts[chartKey] = new Chart(canvas, {
+    type:'line',
+    data:{ labels:labels, datasets: datasets },
+    options:{ maintainAspectRatio:false, spanGaps:false,
+      scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } },
+      plugins:{ legend:{ position:'top', labels:{ boxWidth:13, font:{ family:'Sarabun', size:12 } } } } }
+  });
+}
+function renderOrUpdateBarChart(canvasId, chartKey, labels, values, colors){
+  var canvas = document.getElementById(canvasId);
+  var wrap = canvas.parentElement;
+  var total = values.reduce(function(a,b){ return a+b; }, 0);
+  if(summaryCharts[chartKey]){ summaryCharts[chartKey].destroy(); delete summaryCharts[chartKey]; }
+  var existingEmpty = wrap.querySelector('.chart-empty-msg');
+  if(existingEmpty) existingEmpty.remove();
+  if(total===0 || typeof Chart==='undefined'){
+    canvas.style.display='none';
+    wrap.appendChild(el('div',{class:'chart-empty-msg', text: typeof Chart==='undefined' ? 'ไม่สามารถโหลดกราฟได้ (ไม่มีอินเทอร์เน็ต) — แสดงเฉพาะตัวเลข' : 'ยังไม่มีข้อมูล'}));
+    return;
+  }
+  canvas.style.display='';
+  summaryCharts[chartKey] = new Chart(canvas, {
+    type:'bar',
+    data:{ labels:labels, datasets:[{ data:values, backgroundColor:colors }] },
+    options:{ maintainAspectRatio:false, indexAxis:'y',
+      scales:{ x:{ beginAtZero:true, ticks:{ precision:0 } } },
+      plugins:{ legend:{ display:false } } }
+  });
+}
+/* ===== ตัวช่วยเปรียบเทียบ/เรียงลำดับภาคเรียน (รูปแบบ "ภาค/ปี" เช่น "1/2569", ภาค 3 = ฤดูร้อน) =====
+   ใช้สำหรับการ์ด KPI สไตล์แดชบอร์ดการตลาด (เทียบภาคเรียนนี้กับภาคเรียนก่อนหน้า) และกราฟแนวโน้มรายภาคเรียน
+   ในหน้าแดชบอร์ดสรุปข้อมูล — อ้างอิงจากฟิลด์ examTerm/graduatedTerm ที่มีอยู่แล้วในระบบ ไม่ได้เพิ่มฟิลด์ข้อมูลใหม่ */
+function parseTermParts(term){
+  if(!term) return null;
+  var parts = String(term).split('/');
+  if(parts.length!==2) return null;
+  var sem = parseInt(parts[0],10), year = parseInt(parts[1],10);
+  if(!(sem>=1 && sem<=3) || !year) return null;
+  return {sem:sem, year:year};
+}
+function termSortKey(term){
+  var p = parseTermParts(term);
+  return p ? (p.year*10+p.sem) : null;
+}
+function prevTermOf(term){
+  var p = parseTermParts(term);
+  if(!p) return null;
+  return p.sem>1 ? (p.sem-1)+'/'+p.year : '3/'+(p.year-1);
+}
+/* สร้างลำดับภาคเรียนต่อเนื่อง (ไม่ข้ามภาคที่ไม่มีข้อมูล) ย้อนหลัง n ภาค นับจาก endTerm (รวม endTerm) เรียงเก่า->ใหม่
+   — ใช้วาดกราฟแนวโน้มให้เห็นภาคที่ไม่มีข้อมูลเป็น 0 ด้วย แทนที่จะข้ามไปเฉพาะภาคที่มีข้อมูลจริงซึ่งจะทำให้แนวโน้มดูเพี้ยน */
+function lastNTermsEndingAt(endTerm, n){
+  var out = [endTerm], cur = endTerm;
+  for(var i=1;i<n;i++){ cur = prevTermOf(cur); out.unshift(cur); }
+  return out;
+}
+/* รวบรวมสถิติตามภาคเรียน จากชุดนักศึกษา (รายการล่าสุดต่อคนที่กรองตามตัวกรองแดชบอร์ดแล้ว) — คืนเป็น {term: stats} */
+function computeTermKpiStats(students){
+  var byTerm = {};
+  function bucket(term){
+    if(!byTerm[term]) byTerm[term] = {examCount:0, passCount:0, gradCount:0, regCount:0, leaveCount:0, deptCounts:{}};
+    return byTerm[term];
+  }
+  students.forEach(function(r){
+    if(r.examTerm && termSortKey(r.examTerm)){
+      var b = bucket(r.examTerm);
+      /* ลงทะเบียน/รักษาสภาพ ผูกกับภาคเรียนที่สอบจบ (examTerm) นับทุกคนที่ระบุภาคเรียนนี้ไว้ ไม่จำกัดเฉพาะคนที่มีผลสอบแล้ว */
+      if(r.examTermStatus==='รักษาสภาพ') b.leaveCount++; else b.regCount++;
+      if(recHasDefenseData(r)){
+        b.examCount++;
+        if(r.defenseResult==='ผ่าน' || r.defenseResult==='ผ่านแบบมีเงื่อนไข') b.passCount++;
+        var dept = r.department || 'ไม่ระบุสาขา';
+        b.deptCounts[dept] = (b.deptCounts[dept]||0)+1;
+      }
+    }
+    if(r.graduated && r.graduatedTerm && termSortKey(r.graduatedTerm)){
+      bucket(r.graduatedTerm).gradCount++;
+    }
+  });
+  return byTerm;
+}
+function emptyTermBucket(){ return {examCount:0, passCount:0, gradCount:0, regCount:0, leaveCount:0, deptCounts:{}}; }
+function termPassRate(stats){ return stats.examCount>0 ? (stats.passCount/stats.examCount*100) : null; }
+/* แสดงป้ายเทียบกับภาคก่อนหน้า (▲/▼ สีเขียว/แดง) ใต้ตัวเลขหลักของการ์ด KPI — pointMode ใช้กับค่าที่เป็น % อยู่แล้ว
+   (เช่น อัตราการสอบผ่าน) เพื่อแสดงผลต่างเป็น "จุด" แทนที่จะคำนวณ % ของ % ซึ่งจะอ่านเข้าใจยากและทำให้เข้าใจผิดได้ */
+function renderTermTrendBadge(elId, curVal, prevVal, opts){
+  var elTrend = document.getElementById(elId);
+  opts = opts||{};
+  if(curVal==null || prevVal==null){ elTrend.style.display='none'; return; }
+  var diff = curVal - prevVal;
+  var dirClass = diff>0 ? 'up' : (diff<0 ? 'down' : 'flat');
+  var arrow = diff>0 ? '▲' : (diff<0 ? '▼' : '—');
+  var text;
+  if(opts.pointMode){
+    text = diff===0 ? '— เท่ากับภาคก่อน' : (arrow+' '+(diff>0?'+':'')+diff.toFixed(1)+' จุด จากภาคก่อน');
+  } else if(prevVal===0){
+    text = curVal>0 ? ('▲ เพิ่มขึ้น '+curVal+' คน (ภาคก่อนไม่มีข้อมูล)') : '— ไม่มีการเปลี่ยนแปลง';
+  } else {
+    var pct = Math.round((diff/prevVal)*100);
+    text = pct===0 ? '— เท่ากับภาคก่อน' : (arrow+' '+(pct>0?'+':'')+pct+'% จากภาคก่อน');
+  }
+  elTrend.className = 'stat-trend '+dirClass;
+  elTrend.textContent = text;
+  elTrend.style.display='';
+}
 function renderSummaryDashboard(){
   return recordsGetAll().then(function(rows){
     var latestByStudent = {};
@@ -3000,6 +3180,72 @@ function renderSummaryDashboard(){
 
     var defenseLabels = ['ผ่าน','ผ่านแบบมีเงื่อนไข','ไม่ผ่าน','รอผล'];
     renderOrUpdateDonutChart('chartDefense','defense', defenseLabels, defenseLabels.map(function(k){ return defenseStats[k]; }), defenseLabels.map(function(k){ return SUMMARY_CHART_COLORS.defense[k]; }));
+
+    /* ===== การ์ด KPI สไตล์แดชบอร์ดการตลาด: เทียบ "ภาคเรียนนี้" กับ "ภาคเรียนก่อนหน้า" + กราฟแนวโน้มรายภาคเรียน =====
+       "ภาคเรียนนี้" หมายถึงภาคเรียนล่าสุดที่มีข้อมูลสอบป้องกัน/IS จริง (ไม่ใช่ภาคเรียนปัจจุบันตามปฏิทิน เพราะระบบนี้ไม่ได้
+       ผูกกับปฏิทินภาคการศึกษาจริงของมหาวิทยาลัย) — ถ้าไม่มีข้อมูลสอบป้องกันเลยแต่มีข้อมูลสำเร็จการศึกษา จะใช้ภาคที่สำเร็จ
+       การศึกษาล่าสุดแทน เพื่อให้ยังเห็นอะไรบ้างแทนที่จะว่างเปล่าทั้งหมด */
+    var termStats = computeTermKpiStats(students);
+    var termsWithExam = Object.keys(termStats).filter(function(t){ return termStats[t].examCount>0; });
+    var currentTerm = termsWithExam.length
+      ? termsWithExam.sort(function(a,b){ return termSortKey(b)-termSortKey(a); })[0]
+      : (Object.keys(termStats).length ? Object.keys(termStats).sort(function(a,b){ return termSortKey(b)-termSortKey(a); })[0] : null);
+
+    var dashTermCaption = document.getElementById('dashTermCaption');
+    if(!currentTerm){
+      dashTermCaption.textContent = 'ยังไม่มีข้อมูลภาคเรียนให้เปรียบเทียบ (ยังไม่มีการกรอกภาคเรียนที่สอบจบ/สำเร็จการศึกษา)';
+      ['statExamThisTerm','statGradThisTerm'].forEach(function(id){ document.getElementById(id).textContent='0'; });
+      document.getElementById('statPassRateThisTerm').textContent='-';
+      document.getElementById('statRegVsLeaveThisTerm').textContent='0 / 0';
+      document.getElementById('statRegVsLeaveThisTermSub').textContent='';
+      ['statExamThisTermTrend','statGradThisTermTrend','statPassRateThisTermTrend'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+      renderOrUpdateLineChart('chartTrendCounts','trendCounts', [], []);
+      renderOrUpdateLineChart('chartTrendPassRate','trendPassRate', [], []);
+      renderOrUpdateBarChart('chartExamByDeptTerm','examByDeptTerm', [], [], []);
+      renderOrUpdateDonutChart('chartRegStatusTerm','regStatusTerm', [], [], []);
+    } else {
+      var prevTerm = prevTermOf(currentTerm);
+      var curStats = termStats[currentTerm] || emptyTermBucket();
+      var prevStats = termStats[prevTerm] || emptyTermBucket();
+
+      dashTermCaption.textContent = 'ภาคเรียนนี้: '+gradListTermLabel(currentTerm)+' — เทียบกับภาคเรียนก่อนหน้า ('+gradListTermLabel(prevTerm)+')';
+
+      document.getElementById('statExamThisTerm').textContent = curStats.examCount;
+      renderTermTrendBadge('statExamThisTermTrend', curStats.examCount, prevStats.examCount);
+
+      document.getElementById('statGradThisTerm').textContent = curStats.gradCount;
+      renderTermTrendBadge('statGradThisTermTrend', curStats.gradCount, prevStats.gradCount);
+
+      var curRate = termPassRate(curStats), prevRate = termPassRate(prevStats);
+      document.getElementById('statPassRateThisTerm').textContent = curRate==null ? '-' : (Math.round(curRate)+'%');
+      if(curRate==null || prevRate==null){
+        document.getElementById('statPassRateThisTermTrend').style.display='none';
+      } else {
+        renderTermTrendBadge('statPassRateThisTermTrend', curRate, prevRate, {pointMode:true});
+      }
+
+      document.getElementById('statRegVsLeaveThisTerm').textContent = curStats.regCount+' / '+curStats.leaveCount;
+      document.getElementById('statRegVsLeaveThisTermSub').textContent = 'ลงทะเบียน '+curStats.regCount+' คน · รักษาสภาพ '+curStats.leaveCount+' คน';
+
+      /* กราฟแนวโน้ม 8 ภาคเรียนล่าสุด (ต่อเนื่องไม่ข้ามภาคที่ไม่มีข้อมูล) นับถึงภาคเรียนนี้ */
+      var trendTerms = lastNTermsEndingAt(currentTerm, 8);
+      var trendLabels = trendTerms.map(function(t){ return gradListTermLabel(t); });
+      var examSeries = trendTerms.map(function(t){ return (termStats[t]||emptyTermBucket()).examCount; });
+      var gradSeries = trendTerms.map(function(t){ return (termStats[t]||emptyTermBucket()).gradCount; });
+      var rateSeries = trendTerms.map(function(t){ return termPassRate(termStats[t]||emptyTermBucket()); });
+      renderOrUpdateLineChart('chartTrendCounts','trendCounts', trendLabels, [
+        {label:'สอบป้องกัน/IS', data:examSeries, borderColor:'#1b7a6e', backgroundColor:'rgba(215,240,236,.5)', tension:.3, fill:true},
+        {label:'สำเร็จการศึกษา', data:gradSeries, borderColor:'#5d3fa8', backgroundColor:'rgba(234,227,250,.5)', tension:.3, fill:true}
+      ]);
+      renderOrUpdateLineChart('chartTrendPassRate','trendPassRate', trendLabels, [
+        {label:'อัตราการสอบผ่าน (%)', data:rateSeries, borderColor:'#2f8f5b', backgroundColor:'rgba(184,224,210,.35)', tension:.3, fill:true}
+      ]);
+
+      /* กราฟแยกตามสาขาวิชา + สัดส่วนลงทะเบียน/รักษาสภาพ เฉพาะ "ภาคเรียนนี้" เท่านั้น */
+      var deptKeysTerm = Object.keys(curStats.deptCounts).sort(function(a,b){ return curStats.deptCounts[b]-curStats.deptCounts[a]; });
+      renderOrUpdateBarChart('chartExamByDeptTerm','examByDeptTerm', deptKeysTerm, deptKeysTerm.map(function(k){ return curStats.deptCounts[k]; }), SUMMARY_CHART_COLORS.dept);
+      renderOrUpdateDonutChart('chartRegStatusTerm','regStatusTerm', ['ลงทะเบียน','รักษาสภาพ'], [curStats.regCount, curStats.leaveCount], ['#AFCBE8','#FDD9A0']);
+    }
   });
 }
 /* คำนวณลิสต์ "สิ่งที่ต้องทำวันนี้" จากชุดนักศึกษา (students) และเอกสารรับเข้า (diRows) ที่ส่งเข้ามา — แยกออกมาจาก renderSummaryDashboard

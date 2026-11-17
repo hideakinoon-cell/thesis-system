@@ -3142,19 +3142,24 @@ function renderSummaryDashboard(){
       return true;
     });
 
-    /* ===== ตัวเลือกภาคเรียน (dashTermSelect) — รวมภาคเรียนจากทั้ง examTerm และ graduatedTerm ที่พบในข้อมูล (หลังกรองแล้ว)
-       เรียงใหม่ไปเก่า ค่าเริ่มต้นเลือกภาคล่าสุดที่มีข้อมูลสอบป้องกัน/IS จริง (ถ้าไม่มีเลยใช้ภาคล่าสุดที่พบ) —
-       คงค่าที่เลือกไว้เดิมถ้ายังอยู่ในตัวเลือก (กันไม่ให้ตัวเลือกกระโดดกลับทุกครั้งที่มีการ render ใหม่) */
-    var termStats = computeTermKpiStats(students);
-    var allTermKeys = Object.keys(termStats).sort(function(a,b){ return termSortKey(b)-termSortKey(a); });
+    /* ===== ตัวเลือกภาคเรียน (dashTermSelect) — รวมภาคเรียนจากทั้ง examTerm และ graduatedTerm ที่พบในข้อมูล "ทั้งระบบ"
+       (ไม่ใช่เฉพาะหลังกรองสาขา/หลักสูตร/แผน/ปี) เพื่อไม่ให้รายการภาคเรียนหายไปเวลาเลือกสาขาที่ยังไม่มีใครสอบในภาคนั้นเลย —
+       ตัวกรองด้านบนมีผลแค่กับ "จำนวน/รายชื่อ" ที่แสดงในแต่ละภาคเรียนเท่านั้น เรียงใหม่ไปเก่า ค่าเริ่มต้นเลือกภาคล่าสุดที่มีข้อมูล
+       สอบป้องกัน/IS จริง (ถ้าไม่มีเลยใช้ภาคล่าสุดที่พบ) — คงค่าที่เลือกไว้เดิมถ้ายังอยู่ในตัวเลือก (กันไม่ให้ตัวเลือกกระโดดกลับ
+       ทุกครั้งที่มีการ render ใหม่) */
+    var termStatsGlobal = computeTermKpiStats(studentsAll);
+    var allTermKeys = Object.keys(termStatsGlobal).sort(function(a,b){ return termSortKey(b)-termSortKey(a); });
     var termSelectEl = document.getElementById('dashTermSelect');
     var prevSelection = termSelectEl.value;
     termSelectEl.innerHTML = '';
     allTermKeys.forEach(function(t){ termSelectEl.appendChild(el('option',{value:t, text:gradListTermLabel(t)})); });
-    var termsWithExam = allTermKeys.filter(function(t){ return termStats[t].examCount>0; });
+    var termsWithExam = allTermKeys.filter(function(t){ return termStatsGlobal[t].examCount>0; });
     var defaultTerm = termsWithExam[0] || allTermKeys[0] || null;
     var selectedTerm = (prevSelection && allTermKeys.indexOf(prevSelection)>-1) ? prevSelection : defaultTerm;
     if(selectedTerm) termSelectEl.value = selectedTerm;
+
+    /* ตัวเลข/กราฟของแต่ละภาคเรียนคำนวณจาก "students" ที่ผ่านตัวกรองด้านบนแล้ว (อาจได้ 0 ถ้าสาขาที่เลือกยังไม่มีใครสอบภาคนี้ — ถูกต้องแล้ว) */
+    var termStats = computeTermKpiStats(students);
 
     var onlyLeave = document.getElementById('dashShowOnlyLeaveToggle').checked;
     var dashTermCaption = document.getElementById('dashTermCaption');

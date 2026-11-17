@@ -143,6 +143,39 @@ if('serviceWorker' in navigator){
   .stat-card .stat-trend.flat{background:rgba(100,116,139,.14);color:#64748b;}
   .stat-card .stat-subtext{font-size:12px;opacity:.8;margin-top:6px;}
   .dash-term-caption{font-size:13px;color:var(--muted);margin:-8px 0 14px;}
+  /* แผงภาพรวมภาคเรียนแบบแดชบอร์ดการตลาด (ปรับใหม่ทั้งหน้าตามตัวอย่างที่ผู้ใช้ส่งมา) — ทุกอย่างอยู่ในแผงใหญ่แผงเดียว
+     แบ่งเป็นแผงย่อยข้างใน แทนการ์ดแยกกระจัดกระจายแบบเดิม */
+  .dash-panel-wrap{padding:22px 24px 26px;}
+  .dash-panel-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px;}
+  .dash-panel-header h3{margin:0;}
+  .dash-panel-header-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13.5px;}
+  .dash-panel-header-controls select{padding:6px 10px;border-radius:8px;border:1px solid #dde3ec;font-family:inherit;font-size:13.5px;}
+  .dash-overview-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:16px 0 22px;}
+  .dash-mini-stat{background:#f7f9fc;border:1px solid #eaeef4;border-radius:14px;padding:16px 18px;}
+  .dash-mini-stat .icon{font-size:24px;margin-bottom:4px;}
+  .dash-mini-stat .val{font-size:28px;font-weight:800;color:var(--text);line-height:1.1;}
+  .dash-mini-stat .lbl{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:2px;}
+  .dash-panel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;margin-bottom:18px;}
+  .dash-subpanel{background:#fbfcfe;border:1px solid #eef1f6;border-radius:14px;padding:18px 20px;}
+  .dash-subpanel h4{margin:0 0 12px;font-size:14.5px;}
+  .dash-subpanel-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;align-items:start;}
+  .dash-mini-chart-body{position:relative;height:150px;}
+  .dash-dept-mini-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;}
+  .dash-dept-mini-card{text-align:center;}
+  .dash-dept-mini-card .dash-mini-chart-body{height:110px;}
+  .dash-dept-mini-card .name{font-size:12.5px;font-weight:600;margin-top:6px;}
+  .dash-dept-mini-card .total{font-size:12px;color:var(--muted);}
+  .dash-trend-callout{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;padding:5px 12px;border-radius:999px;margin-bottom:10px;}
+  .dash-trend-callout.up{background:rgba(47,143,91,.14);color:#2f8f5b;}
+  .dash-trend-callout.down{background:rgba(194,62,89,.14);color:#c23e59;}
+  .dash-trend-callout.flat{background:rgba(100,116,139,.12);color:#64748b;}
+  .dash-rank-table, .dash-recent-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .dash-rank-table th, .dash-recent-table th{text-align:left;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;padding:0 10px 8px;border-bottom:1px solid #eef1f6;}
+  .dash-rank-table td, .dash-recent-table td{padding:9px 10px;border-bottom:1px solid #f2f4f8;vertical-align:middle;}
+  .dash-rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#EAE3FA;color:#5d3fa8;font-weight:700;font-size:12px;}
+  .dash-status-pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;}
+  .dash-status-pill.reg{background:rgba(175,203,232,.35);color:#1e4d8b;}
+  .dash-status-pill.leave{background:rgba(253,217,160,.4);color:#a06414;}
   .summary-charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:18px;}
   .chart-card{padding:20px 22px 12px;transition:transform .2s ease,box-shadow .2s ease;}
   .chart-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
@@ -552,130 +585,69 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 
-  <div class="summary-stats-row">
-    <div class="stat-card stat-blue">
-      <div class="stat-icon">🎓</div>
-      <div class="stat-value" id="statTotalStudents">0</div>
-      <div class="stat-label">นักศึกษาทั้งหมด</div>
+  <div class="card dash-panel-wrap">
+    <div class="dash-panel-header">
+      <h3>📊 ภาพรวมภาคเรียน</h3>
+      <div class="dash-panel-header-controls">
+        <label>ภาคเรียน: <select id="dashTermSelect"></select></label>
+        <label><input type="checkbox" id="dashShowOnlyLeaveToggle"> แสดงเฉพาะที่รักษาสภาพ</label>
+      </div>
     </div>
-    <div class="stat-card stat-green">
-      <div class="stat-icon">🎉</div>
-      <div class="stat-value" id="statGraduated">0</div>
-      <div class="stat-label">สำเร็จการศึกษาแล้ว</div>
-    </div>
-    <div class="stat-card stat-amber">
-      <div class="stat-icon">📖</div>
-      <div class="stat-value" id="statActive">0</div>
-      <div class="stat-label">กำลังศึกษา</div>
-    </div>
-    <div class="stat-card stat-pink">
-      <div class="stat-icon">⚠️</div>
-      <div class="stat-value" id="statWithdrawnAdvisor">0</div>
-      <div class="stat-label">ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่</div>
-    </div>
-    <div class="stat-card stat-coral">
-      <div class="stat-icon">⏰</div>
-      <div class="stat-value" id="statOverdueBook">0</div>
-      <div class="stat-label">เลยกำหนดส่งเล่มฉบับสมบูรณ์</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3 style="margin-bottom:2px;">📊 เปรียบเทียบภาคเรียนนี้กับภาคเรียนก่อนหน้า</h3>
     <div class="dash-term-caption" id="dashTermCaption">กำลังคำนวณภาคเรียนปัจจุบันจากข้อมูล...</div>
-    <div class="summary-stats-row" style="margin-bottom:0;">
-      <div class="stat-card stat-teal">
-        <div class="stat-icon">📝</div>
-        <div class="stat-value" id="statExamThisTerm">0</div>
-        <div class="stat-label">นักศึกษาสอบป้องกัน/IS (ภาคเรียนนี้)</div>
-        <div class="stat-trend flat" id="statExamThisTermTrend" style="display:none;"></div>
+
+    <div class="dash-overview-row">
+      <div class="dash-mini-stat">
+        <div class="icon">📝</div>
+        <div class="val" id="miniRegCount">0</div>
+        <div class="lbl">ลงทะเบียนภาคนี้</div>
       </div>
-      <div class="stat-card stat-purple">
-        <div class="stat-icon">🎓</div>
-        <div class="stat-value" id="statGradThisTerm">0</div>
-        <div class="stat-label">สำเร็จการศึกษา (ภาคเรียนนี้)</div>
-        <div class="stat-trend flat" id="statGradThisTermTrend" style="display:none;"></div>
+      <div class="dash-mini-stat">
+        <div class="icon">🛟</div>
+        <div class="val" id="miniLeaveCount">0</div>
+        <div class="lbl">รักษาสภาพภาคนี้</div>
       </div>
-      <div class="stat-card stat-green">
-        <div class="stat-icon">✅</div>
-        <div class="stat-value" id="statPassRateThisTerm">-</div>
-        <div class="stat-label">อัตราการสอบผ่าน 3.2 (ภาคเรียนนี้)</div>
-        <div class="stat-trend flat" id="statPassRateThisTermTrend" style="display:none;"></div>
-      </div>
-      <div class="stat-card stat-amber">
-        <div class="stat-icon">🧾</div>
-        <div class="stat-value" id="statRegVsLeaveThisTerm">0 / 0</div>
-        <div class="stat-label">ลงทะเบียน / รักษาสภาพ (ภาคเรียนนี้)</div>
-        <div class="stat-subtext" id="statRegVsLeaveThisTermSub"></div>
+      <div class="dash-mini-stat">
+        <div class="icon">🎯</div>
+        <div class="val" id="miniExamCount">0</div>
+        <div class="lbl">สอบป้องกัน/IS ภาคนี้</div>
       </div>
     </div>
-  </div>
 
-  <div class="summary-charts-row">
-    <div class="card chart-card">
-      <h3>📈 แนวโน้มจำนวนสอบป้องกัน/IS และสำเร็จการศึกษา รายภาคเรียน</h3>
-      <div class="chart-card-body"><canvas id="chartTrendCounts"></canvas></div>
+    <div class="dash-panel-grid">
+      <div class="dash-subpanel">
+        <h4>👥 ข้อมูลนักศึกษา (ตามตัวกรองด้านบน)</h4>
+        <div class="dash-subpanel-cols">
+          <div class="dash-mini-chart-body"><canvas id="chartDemoProgram"></canvas></div>
+          <div id="barDemoDept"></div>
+          <div id="barDemoPlan"></div>
+        </div>
+      </div>
+      <div class="dash-subpanel">
+        <h4>🏫 แยกตามสาขา (ผลสอบป้องกัน/IS ภาคเรียนนี้)</h4>
+        <div class="dash-dept-mini-grid" id="deptMiniDonutsWrap"></div>
+      </div>
     </div>
-    <div class="card chart-card">
-      <h3>📉 แนวโน้มอัตราการสอบผ่าน 3.2 รายภาคเรียน</h3>
-      <div class="chart-card-body"><canvas id="chartTrendPassRate"></canvas></div>
-    </div>
-  </div>
 
-  <div class="summary-charts-row">
-    <div class="card chart-card">
-      <h3>🏫 สอบป้องกัน/IS แยกตามสาขาวิชา (ภาคเรียนนี้)</h3>
-      <div class="chart-card-body"><canvas id="chartExamByDeptTerm"></canvas></div>
+    <div class="dash-panel-grid">
+      <div class="dash-subpanel">
+        <h4>📈 แนวโน้มจำนวนสอบป้องกัน/IS รายภาคเรียน</h4>
+        <div id="dashTrendCallout"></div>
+        <div class="chart-card-body" style="height:220px;"><canvas id="chartTrendBar"></canvas></div>
+      </div>
+      <div class="dash-subpanel">
+        <h4>👨‍🏫 ภาระงานที่ปรึกษา (Top 5)</h4>
+        <table class="dash-rank-table"><thead><tr><th>อันดับ</th><th>อาจารย์</th><th>ภาระงาน</th></tr></thead><tbody id="advisorRankTbody"></tbody></table>
+      </div>
     </div>
-    <div class="card chart-card">
-      <h3>🧾 ลงทะเบียน vs รักษาสภาพ (ภาคเรียนนี้)</h3>
-      <div class="chart-card-body"><canvas id="chartRegStatusTerm"></canvas></div>
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="dash-legend">
-      <span>สัดส่วนในแต่ละหมวดด้านล่าง:</span>
-      <span><span class="sw" style="background:#B8E0D2;"></span>ปกติ</span>
-      <span><span class="sw" style="background:#FFC2B4;"></span>เลยกำหนดส่งเล่ม</span>
-      <label style="margin-left:auto;"><input type="checkbox" id="dashOverdueToggle">แสดงเฉพาะที่เลยกำหนด</label>
-    </div>
-  </div>
-
-  <div class="summary-charts-row">
-    <div class="card chart-card">
-      <h3>🎓 นักศึกษาแยกตามหลักสูตร</h3>
-      <div id="barByProgram"></div>
-    </div>
-    <div class="card chart-card">
-      <h3>🏫 นักศึกษาแยกตามสาขาวิชา</h3>
-      <div id="barByDept"></div>
-    </div>
-  </div>
-
-  <div class="summary-charts-row">
-    <div class="card chart-card">
-      <h3>📋 นักศึกษาแยกตามแผนการศึกษา</h3>
-      <div id="barByPlan"></div>
-    </div>
-    <div class="card chart-card">
-      <h3>📘 ผลสอบเค้าโครงวิทยานิพนธ์/IS (3.1)</h3>
-      <div class="chart-card-body"><canvas id="chartProposal"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h3>📗 ผลสอบป้องกันวิทยานิพนธ์/IS (3.2)</h3>
-      <div class="chart-card-body"><canvas id="chartDefense"></canvas></div>
-    </div>
-  </div>
-
-  <div class="summary-charts-row">
-    <div class="card chart-card">
-      <h3>🎉 ผู้สำเร็จการศึกษา แยกตามสาขาวิชา</h3>
-      <div class="chart-card-body"><canvas id="chartGraduatedByDept"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h3>📅 ผู้สำเร็จการศึกษา แยกตามปีการศึกษา</h3>
-      <div class="chart-card-body"><canvas id="chartGraduatedByYear"></canvas></div>
+    <div class="dash-subpanel">
+      <h4>🧾 นักศึกษาที่ลงทะเบียนภาคเรียนนี้</h4>
+      <div style="overflow-x:auto;">
+        <table class="dash-recent-table">
+          <thead><tr><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>สถานะ</th><th>วันที่สอบ</th><th>ผลสอบ</th></tr></thead>
+          <tbody id="dashRecentTbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </section>
@@ -2719,10 +2691,8 @@ function bindNav(){
   document.getElementById('btnAdvisorLookupPrev').addEventListener('click', function(){ if(advisorLookupListPage>0){ advisorLookupListPage--; renderAdvisorLookupResults(); } });
   document.getElementById('btnAdvisorLookupNext').addEventListener('click', function(){ advisorLookupListPage++; renderAdvisorLookupResults(); });
   document.getElementById('auditLogSearch').addEventListener('input', renderAuditLogFiltered);
-  document.getElementById('dashOverdueToggle').addEventListener('change', function(e){
-    dashOverdueOnly = e.target.checked;
-    applyDashOverdueToggle();
-  });
+  document.getElementById('dashTermSelect').addEventListener('change', renderSummaryDashboard);
+  document.getElementById('dashShowOnlyLeaveToggle').addEventListener('change', renderSummaryDashboard);
   document.getElementById('btnExportTodayAction').addEventListener('click', exportTodayActionExcel);
   document.getElementById('btnExportLookupList').addEventListener('click', exportLookupListExcel);
   /* แถบค้นหา/กรองข้อมูลด้านบนแดชบอร์ดสรุปข้อมูล */
@@ -2821,12 +2791,6 @@ function onGlobalSearchInput(){
     });
   }, 300);
 }
-/* สถานะปุ่ม "แสดงเฉพาะที่เลยกำหนด" ในแดชบอร์ด — เก็บไว้แยกจาก DOM เพราะแถบสัดส่วนถูกวาดใหม่ทุกครั้งที่ renderSummaryDashboard
-   ทำงาน (ข้อมูลอาจเปลี่ยน) จึงต้องสั่ง apply ซ้ำหลังวาดใหม่ทุกรอบ ไม่ใช่แค่ตอนกดปุ่มครั้งเดียว */
-var dashOverdueOnly = false;
-function applyDashOverdueToggle(){
-  document.querySelectorAll('.dash-split-ok').forEach(function(el){ el.style.opacity = dashOverdueOnly ? '0.15' : '1'; });
-}
 var lookupSearchDebounceTimer = null;
 function onLookupSearchInput(){
   /* ค้นหาทันทีทุกตัวอักษรทำให้ยิงอ่านข้อมูลจากชีทกลางซ้ำถี่เกินไป (แต่ละครั้งมีดีเลย์เครือข่าย) จึงหน่วงเวลาสั้นๆ
@@ -2889,10 +2853,9 @@ var SUMMARY_CHART_COLORS = {
   defense: {'ผ่าน':'#B8E0D2','ผ่านแบบมีเงื่อนไข':'#FDD9A0','ไม่ผ่าน':'#F6B6A8','รอผล':'#C9CDD6'},
   year: ['#AFCBE8','#B8E0D2','#FDD9A0','#F7B8CE','#D2C4EE','#A8DED2','#F6B6A8','#C9CDD6']
 };
-/* พาสเทลคู่ ปกติ/เลยกำหนด — ใช้กับแถบสัดส่วนแยกตามสาขาวิชา/แผนการศึกษา/หลักสูตร */
-var DASH_OK_COLOR = '#B8E0D2', DASH_OVD_COLOR = '#FFC2B4';
 /* นักศึกษาเลยกำหนดส่งเล่มฉบับสมบูรณ์ — ใช้เกณฑ์เดียวกับแถบเตือน "ใกล้/เลยกำหนดส่งเล่ม" ทุกจุดที่ต้องนับ
-   (สอบป้องกันผ่านแล้ว, ยังไม่ส่งเล่ม, ยังไม่สำเร็จการศึกษา, มีกำหนดส่งเล่ม และเลยวันนั้นมาแล้ว) */
+   (สอบป้องกันผ่านแล้ว, ยังไม่ส่งเล่ม, ยังไม่สำเร็จการศึกษา, มีกำหนดส่งเล่ม และเลยวันนั้นมาแล้ว) — ยังใช้อยู่ที่หน้า
+   "ค้นหาตามสาขาวิชา" (studentStatusLabel/computeTodayActionItems) แม้จะเอาการ์ดนี้ออกจากแดชบอร์ดสรุปข้อมูลแล้ว */
 function isOverdueRec(r){
   if(r.graduated) return false;
   if((r.bookSubmitStatus||'ยังไม่ส่ง')==='ส่งแล้ว') return false;
@@ -2901,28 +2864,6 @@ function isOverdueRec(r){
   var due = new Date(r.defenseDueDate+'T00:00:00');
   if(isNaN(due.getTime())) return false;
   return due.getTime() < Date.now();
-}
-/* วาดแถวแถบสัดส่วนพาสเทล (ปกติ/เลยกำหนด) ลงใน container ที่ระบุ — items = [{name,total,overdue}] เรียงมาก่อนหลังตามต้องการ */
-function renderSplitBars(containerId, items){
-  var box = document.getElementById(containerId);
-  if(!box) return;
-  box.innerHTML = '';
-  if(!items.length){ box.appendChild(el('div',{class:'chart-empty-msg', style:'height:auto;padding:20px 0;', text:'ยังไม่มีข้อมูล'})); return; }
-  var max = Math.max.apply(null, items.map(function(x){ return x.total; }));
-  items.forEach(function(x){
-    var okCount = x.total - x.overdue;
-    var okPct = (okCount/max*100).toFixed(1);
-    var ovdPct = (x.overdue/max*100).toFixed(1);
-    var row = el('div',{class:'dash-bar-row'},[
-      el('span',{class:'lbl', title:x.name, text:x.name}),
-      el('span',{class:'track'},[
-        el('span',{class:'ok dash-split-ok', style:'width:'+okPct+'%;'}),
-        el('span',{class:'ovd dash-split-ovd', style:'width:'+ovdPct+'%;'})
-      ]),
-      el('span',{class:'tot', text:String(x.total)})
-    ]);
-    box.appendChild(row);
-  });
 }
 /* ดึงปีการศึกษา (พ.ศ. 4 หลัก) ออกจากช่อง graduatedTerm ที่กรอกแบบ "ภาคเรียน/ปี" เช่น "1/2568" —
    รองรับกรณีกรอกแค่ปีเดี่ยวๆ ด้วย ถ้าไม่พบรูปแบบที่ใช้ได้คืนค่าว่าง (ไปจัดกลุ่ม "ไม่ระบุปี" แทน) */
@@ -2982,7 +2923,9 @@ function renderOrUpdateLineChart(canvasId, chartKey, labels, datasets){
       plugins:{ legend:{ position:'top', labels:{ boxWidth:13, font:{ family:'Sarabun', size:12 } } } } }
   });
 }
-function renderOrUpdateBarChart(canvasId, chartKey, labels, values, colors){
+function renderOrUpdateBarChart(canvasId, chartKey, labels, values, colors, opts){
+  opts = opts || {};
+  var horizontal = opts.horizontal!==false; /* ค่าเริ่มต้นเป็นแนวนอน (เดิม) — ส่ง {horizontal:false} เพื่อวาดแท่งตั้ง (เช่น กราฟแนวโน้ม) */
   var canvas = document.getElementById(canvasId);
   var wrap = canvas.parentElement;
   var total = values.reduce(function(a,b){ return a+b; }, 0);
@@ -2995,12 +2938,13 @@ function renderOrUpdateBarChart(canvasId, chartKey, labels, values, colors){
     return;
   }
   canvas.style.display='';
+  var valueAxis = horizontal ? 'x' : 'y';
+  var opts2 = { maintainAspectRatio:false, indexAxis: horizontal?'y':'x', plugins:{ legend:{ display:false } }, scales:{} };
+  opts2.scales[valueAxis] = { beginAtZero:true, ticks:{ precision:0 } };
   summaryCharts[chartKey] = new Chart(canvas, {
     type:'bar',
     data:{ labels:labels, datasets:[{ data:values, backgroundColor:colors }] },
-    options:{ maintainAspectRatio:false, indexAxis:'y',
-      scales:{ x:{ beginAtZero:true, ticks:{ precision:0 } } },
-      plugins:{ legend:{ display:false } } }
+    options: opts2
   });
 }
 /* ===== ตัวช่วยเปรียบเทียบ/เรียงลำดับภาคเรียน (รูปแบบ "ภาค/ปี" เช่น "1/2569", ภาค 3 = ฤดูร้อน) =====
@@ -3079,8 +3023,95 @@ function renderTermTrendBadge(elId, curVal, prevVal, opts){
   elTrend.textContent = text;
   elTrend.style.display='';
 }
+/* ทำลาย Chart.js instance ทุกตัวที่ key ขึ้นต้นด้วย prefix ที่กำหนด — ใช้ก่อนวาดกราฟเล็กๆ จำนวนไม่คงที่ใหม่ทุกครั้ง
+   (เช่น โดนัทย่อยต่อสาขาวิชาที่จำนวนสาขาอาจเปลี่ยนไปตามตัวกรอง/ภาคเรียนที่เลือก) กัน canvas เก่าค้างไว้ไม่ถูกทำลาย */
+function destroySummaryChartsByPrefix(prefix){
+  Object.keys(summaryCharts).forEach(function(k){
+    if(k.indexOf(prefix)===0){ summaryCharts[k].destroy(); delete summaryCharts[k]; }
+  });
+}
+/* โดนัทเล็กๆ ต่อสาขาวิชา แสดงสัดส่วนผ่าน/ไม่ผ่าน/รอผล ของการสอบป้องกัน/IS ในภาคเรียนที่เลือก —
+   deptBuckets = {deptName: {ผ่าน,ผ่านแบบมีเงื่อนไข,ไม่ผ่าน,รอผล,total}} */
+function renderDeptMiniDonuts(containerId, deptBuckets){
+  var wrap = document.getElementById(containerId);
+  destroySummaryChartsByPrefix('deptMini_');
+  wrap.innerHTML = '';
+  var deptKeys = Object.keys(deptBuckets).sort(function(a,b){ return deptBuckets[b].total-deptBuckets[a].total; });
+  if(deptKeys.length===0){
+    wrap.appendChild(el('div',{class:'chart-empty-msg', style:'height:auto;padding:20px 0;', text:'ยังไม่มีข้อมูลการสอบในภาคเรียนนี้'}));
+    return;
+  }
+  deptKeys.forEach(function(dept, idx){
+    var b = deptBuckets[dept];
+    var canvasId = 'deptMiniCanvas_'+idx;
+    var card = el('div',{class:'dash-dept-mini-card'},[
+      el('div',{class:'dash-mini-chart-body'},[ el('canvas',{id:canvasId}) ]),
+      el('div',{class:'name', text:dept}),
+      el('div',{class:'total', text:b.total+' คน'})
+    ]);
+    wrap.appendChild(card);
+    var labels = ['ผ่าน','ผ่านแบบมีเงื่อนไข','ไม่ผ่าน','รอผล'];
+    var values = labels.map(function(l){ return b[l]||0; });
+    if(typeof Chart!=='undefined'){
+      summaryCharts['deptMini_'+idx] = new Chart(document.getElementById(canvasId), {
+        type:'doughnut',
+        data:{ labels:labels, datasets:[{ data:values, backgroundColor: labels.map(function(l){ return SUMMARY_CHART_COLORS.defense[l]; }), borderColor:'#fff', borderWidth:1.5 }] },
+        options:{ maintainAspectRatio:false, plugins:{ legend:{ display:false } } }
+      });
+    }
+  });
+}
+/* ตารางอันดับภาระงานที่ปรึกษาหลัก (Top 5) — ใช้ advisorUsedMap ตัวเดียวกับหน้า "ที่ปรึกษา" (ต้องเรียก
+   computeAdvisorUsedCounts() ให้สดก่อนเสมอ) นับถ่วงน้ำหนักแผน ข (การค้นคว้าอิสระ) เป็น 1/3 คน เหมือนกันทั้งระบบ */
+function renderAdvisorRankTable(){
+  var tbody = document.getElementById('advisorRankTbody');
+  var ranked = (masterData.advisors||[]).map(function(a){ return {advisor:a, used:advisorUsedCount(a)}; })
+    .filter(function(x){ return x.used>0; })
+    .sort(function(a,b){ return b.used-a.used; })
+    .slice(0,5);
+  tbody.innerHTML = '';
+  if(ranked.length===0){
+    tbody.appendChild(el('tr',{},[ el('td',{colspan:3, class:'chart-empty-msg', style:'height:auto;padding:14px 0;', text:'ยังไม่มีข้อมูลภาระงานที่ปรึกษา'}) ]));
+    return;
+  }
+  ranked.forEach(function(x, idx){
+    var usedTxt = (Math.round(x.used*100)/100).toString().replace(/\.0+$/,'');
+    var max = ADVISOR_RANK_QUOTA[x.advisor.rank];
+    tbody.appendChild(el('tr',{},[
+      el('td',{},[ el('span',{class:'dash-rank-badge', text:String(idx+1)}) ]),
+      el('td',{text:x.advisor.name}),
+      el('td',{text: usedTxt+(max?('/'+max+' คน'):' คน')})
+    ]));
+  });
+}
+/* ตารางรายชื่อนักศึกษาที่ลงทะเบียน/รักษาสภาพในภาคเรียนที่เลือก — เรียงวันที่สอบล่าสุดก่อน (ยังไม่สอบ/ไม่ระบุวันที่ไปท้ายสุด) */
+function renderDashRecentTable(termStudents){
+  var tbody = document.getElementById('dashRecentTbody');
+  tbody.innerHTML = '';
+  if(termStudents.length===0){
+    tbody.appendChild(el('tr',{},[ el('td',{colspan:6, class:'chart-empty-msg', style:'height:auto;padding:14px 0;', text:'ยังไม่มีนักศึกษาลงทะเบียน/รักษาสภาพในภาคเรียนนี้'}) ]));
+    return;
+  }
+  var rows = termStudents.slice().sort(function(a,b){
+    var da = a.defenseDate||'', db = b.defenseDate||'';
+    if(da!==db) return db.localeCompare(da);
+    return (a.studentName||'').localeCompare(b.studentName||'');
+  });
+  rows.forEach(function(r){
+    var isLeave = r.examTermStatus==='รักษาสภาพ';
+    tbody.appendChild(el('tr',{},[
+      el('td',{text:r.studentId||'-'}),
+      el('td',{text:r.studentName||'-'}),
+      el('td',{text:r.department||'-'}),
+      el('td',{},[ el('span',{class:'dash-status-pill '+(isLeave?'leave':'reg'), text: isLeave?'รักษาสภาพ':'ลงทะเบียน'}) ]),
+      el('td',{text: r.defenseDate ? toBuddhistDateStr(r.defenseDate) : '-'}),
+      el('td',{text: r.defenseResult || (r.defenseDate ? 'รอผล' : '-')})
+    ]));
+  });
+}
 function renderSummaryDashboard(){
-  return recordsGetAll().then(function(rows){
+  return Promise.all([recordsGetAll(), computeAdvisorUsedCounts()]).then(function(res){
+    var rows = res[0];
     var latestByStudent = {};
     rows.forEach(function(r){
       if(!r.studentId) return;
@@ -3098,7 +3129,7 @@ function renderSummaryDashboard(){
     var dashYearOptions = Object.keys(dashYearsSet).sort(function(a,b){ return b-a; });
     fillSelect(document.getElementById('dashYearFilter'), dashYearOptions, 'ทุกปี');
 
-    /* อ่านค่าตัวกรองปัจจุบันแล้วกรอง students ก่อนคำนวณการ์ด/กราฟทั้งหมดด้านล่าง */
+    /* อ่านค่าตัวกรองปัจจุบันแล้วกรอง students ก่อนคำนวณทุกช่องด้านล่าง (ใช้ร่วมกันทั้งแผงใหม่) */
     var fDept = document.getElementById('dashDeptFilter').value||'';
     var fProgram = document.getElementById('dashProgramFilter').value||'';
     var fPlan = document.getElementById('dashPlanFilter').value||'';
@@ -3111,141 +3142,117 @@ function renderSummaryDashboard(){
       return true;
     });
 
-    /* การ์ดสถิติสีสันด้านบน */
-    var graduatedCount = students.filter(function(r){ return !!r.graduated; }).length;
-    var withdrawnCount = students.filter(studentHasWithdrawnAdvisor).length;
-    var overdueCount = students.filter(isOverdueRec).length;
-    document.getElementById('statTotalStudents').textContent = students.length;
-    document.getElementById('statGraduated').textContent = graduatedCount;
-    document.getElementById('statActive').textContent = students.length - graduatedCount;
-    document.getElementById('statWithdrawnAdvisor').textContent = withdrawnCount;
-    document.getElementById('statOverdueBook').textContent = overdueCount;
+    /* ===== ตัวเลือกภาคเรียน (dashTermSelect) — รวมภาคเรียนจากทั้ง examTerm และ graduatedTerm ที่พบในข้อมูล (หลังกรองแล้ว)
+       เรียงใหม่ไปเก่า ค่าเริ่มต้นเลือกภาคล่าสุดที่มีข้อมูลสอบป้องกัน/IS จริง (ถ้าไม่มีเลยใช้ภาคล่าสุดที่พบ) —
+       คงค่าที่เลือกไว้เดิมถ้ายังอยู่ในตัวเลือก (กันไม่ให้ตัวเลือกกระโดดกลับทุกครั้งที่มีการ render ใหม่) */
+    var termStats = computeTermKpiStats(students);
+    var allTermKeys = Object.keys(termStats).sort(function(a,b){ return termSortKey(b)-termSortKey(a); });
+    var termSelectEl = document.getElementById('dashTermSelect');
+    var prevSelection = termSelectEl.value;
+    termSelectEl.innerHTML = '';
+    allTermKeys.forEach(function(t){ termSelectEl.appendChild(el('option',{value:t, text:gradListTermLabel(t)})); });
+    var termsWithExam = allTermKeys.filter(function(t){ return termStats[t].examCount>0; });
+    var defaultTerm = termsWithExam[0] || allTermKeys[0] || null;
+    var selectedTerm = (prevSelection && allTermKeys.indexOf(prevSelection)>-1) ? prevSelection : defaultTerm;
+    if(selectedTerm) termSelectEl.value = selectedTerm;
 
-    /* แถบสัดส่วน (ปกติ/เลยกำหนด) แยกตามหลักสูตร/สาขาวิชา/แผนการศึกษา */
-    function groupSplit(getKey, emptyLabel){
+    var onlyLeave = document.getElementById('dashShowOnlyLeaveToggle').checked;
+    var dashTermCaption = document.getElementById('dashTermCaption');
+
+    if(!selectedTerm){
+      dashTermCaption.textContent = 'ยังไม่มีข้อมูลภาคเรียนให้แสดง (ยังไม่มีการกรอกภาคเรียนที่สอบจบ/สำเร็จการศึกษา)';
+      ['miniRegCount','miniLeaveCount','miniExamCount'].forEach(function(id){ document.getElementById(id).textContent='0'; });
+      renderDeptMiniDonuts('deptMiniDonutsWrap', {});
+      document.getElementById('dashTrendCallout').innerHTML = '';
+      renderOrUpdateBarChart('chartTrendBar','trendBar', [], [], []);
+      renderDashRecentTable([]);
+    } else {
+      var prevTerm = prevTermOf(selectedTerm);
+      var curStats = termStats[selectedTerm] || emptyTermBucket();
+      var prevStats = termStats[prevTerm] || emptyTermBucket();
+
+      dashTermCaption.textContent = 'กำลังแสดง: '+gradListTermLabel(selectedTerm)+' — เทียบกับภาคเรียนก่อนหน้า ('+gradListTermLabel(prevTerm)+')'+(onlyLeave?' · กรองเฉพาะรักษาสภาพ':'');
+
+      document.getElementById('miniRegCount').textContent = curStats.regCount;
+      document.getElementById('miniLeaveCount').textContent = curStats.leaveCount;
+      document.getElementById('miniExamCount').textContent = curStats.examCount;
+
+      /* นักศึกษาของภาคเรียนที่เลือก (ตามตัวกรองด้านบนด้วย) — ใช้ร่วมกันทั้งโดนัทแยกสาขา ตารางรายชื่อ และกราฟแนวโน้ม */
+      var termStudentsBase = students.filter(function(r){ return r.examTerm===selectedTerm; });
+      var termStudents = onlyLeave ? termStudentsBase.filter(function(r){ return r.examTermStatus==='รักษาสภาพ'; }) : termStudentsBase;
+
+      /* โดนัทเล็กแยกตามสาขา — เฉพาะคนที่มีผลสอบป้องกัน/IS แล้วในภาคเรียนนี้ */
+      var deptBuckets = {};
+      termStudents.filter(recHasDefenseData).forEach(function(r){
+        var dept = r.department || 'ไม่ระบุสาขา';
+        if(!deptBuckets[dept]) deptBuckets[dept] = {total:0};
+        var result = r.defenseResult || 'รอผล';
+        deptBuckets[dept][result] = (deptBuckets[dept][result]||0)+1;
+        deptBuckets[dept].total++;
+      });
+      renderDeptMiniDonuts('deptMiniDonutsWrap', deptBuckets);
+
+      /* กราฟแนวโน้มแท่ง 8 ภาคเรียนล่าสุด (ต่อเนื่องไม่ข้ามภาคที่ไม่มีข้อมูล) นับถึงภาคเรียนที่เลือก + ป้ายเทียบภาคก่อนหน้า */
+      var trendTerms = lastNTermsEndingAt(selectedTerm, 8);
+      var trendLabels = trendTerms.map(function(t){ return gradListTermLabel(t); });
+      var examSeries = trendTerms.map(function(t){ return (termStats[t]||emptyTermBucket()).examCount; });
+      renderOrUpdateBarChart('chartTrendBar','trendBar', trendLabels, examSeries, trendLabels.map(function(){ return '#1b7a6e'; }), {horizontal:false});
+
+      var calloutBox = document.getElementById('dashTrendCallout');
+      var diff = curStats.examCount - prevStats.examCount;
+      var dirClass = diff>0 ? 'up' : (diff<0 ? 'down' : 'flat');
+      var arrow = diff>0 ? '▲' : (diff<0 ? '▼' : '—');
+      var calloutText;
+      if(prevStats.examCount===0){
+        calloutText = diff>0 ? ('▲ เพิ่มขึ้น '+diff+' คน (ภาคก่อนไม่มีข้อมูล)') : '— ไม่มีการเปลี่ยนแปลง';
+      } else {
+        var pct = Math.round((diff/prevStats.examCount)*100);
+        calloutText = (pct===0?'— เท่ากับภาคก่อน':(arrow+' '+(pct>0?'+':'')+pct+'% เทียบภาคก่อนหน้า'));
+      }
+      calloutBox.innerHTML = '';
+      calloutBox.appendChild(el('span',{class:'dash-trend-callout '+dirClass, text:calloutText}));
+
+      renderDashRecentTable(termStudentsBase.filter(function(r){ return !onlyLeave || r.examTermStatus==='รักษาสภาพ'; }));
+    }
+
+    /* ===== ข้อมูลนักศึกษา (demographics) — ใช้ชุด students ที่กรองตามตัวกรองด้านบนทั้งหมด ไม่ผูกกับภาคเรียนที่เลือก
+       เพื่อให้เห็นภาพรวมองค์ประกอบนักศึกษาทั้งหมด (คล้ายส่วน Demographics ในตัวอย่างที่ผู้ใช้ส่งมา) */
+    function groupCount(getKey, emptyLabel){
       var m = {};
       students.forEach(function(r){
         var k = getKey(r) || emptyLabel;
-        if(!m[k]) m[k] = {name:k, total:0, overdue:0};
-        m[k].total++;
-        if(isOverdueRec(r)) m[k].overdue++;
+        m[k] = (m[k]||0)+1;
       });
-      return Object.keys(m).map(function(k){ return m[k]; }).sort(function(a,b){ return b.total-a.total; });
+      return m;
     }
-    renderSplitBars('barByProgram', groupSplit(function(r){ return r.program; }, 'ไม่ระบุหลักสูตร'));
-    renderSplitBars('barByDept', groupSplit(function(r){ return r.department; }, 'ไม่ระบุสาขา'));
-    renderSplitBars('barByPlan', groupSplit(function(r){ return r.plan; }, 'ไม่ระบุแผน'));
-    applyDashOverdueToggle();
+    var byProgram = groupCount(function(r){ return r.program; }, 'ไม่ระบุหลักสูตร');
+    var programKeys = Object.keys(byProgram).sort(function(a,b){ return byProgram[b]-byProgram[a]; });
+    renderOrUpdateDonutChart('chartDemoProgram','demoProgram', programKeys, programKeys.map(function(k){ return byProgram[k]; }), SUMMARY_CHART_COLORS.program);
 
-    /* กราฟจำนวนผู้สำเร็จการศึกษาแล้ว แยกตามสาขาวิชา */
-    var graduatedByDept = {};
-    students.forEach(function(r){
-      if(!r.graduated) return;
-      var d = r.department || 'ไม่ระบุสาขา';
-      graduatedByDept[d] = (graduatedByDept[d]||0)+1;
-    });
-    var gradDeptKeys = Object.keys(graduatedByDept).sort(function(a,b){ return graduatedByDept[b]-graduatedByDept[a]; });
-    renderOrUpdateDonutChart('chartGraduatedByDept','graduatedByDept', gradDeptKeys, gradDeptKeys.map(function(k){ return graduatedByDept[k]; }), SUMMARY_CHART_COLORS.dept);
+    var byDept = groupCount(function(r){ return r.department; }, 'ไม่ระบุสาขา');
+    var byPlan = groupCount(function(r){ return r.plan; }, 'ไม่ระบุแผน');
 
-    /* กราฟจำนวนผู้สำเร็จการศึกษาแล้ว แยกตามปีการศึกษา (ดึงจากช่องภาคเรียนที่สำเร็จการศึกษา เช่น "1/2568") */
-    var graduatedByYear = {};
-    students.forEach(function(r){
-      if(!r.graduated) return;
-      var y = extractGraduatedYear(r.graduatedTerm);
-      var label = y ? ('ปีการศึกษา '+y) : 'ไม่ระบุปี';
-      graduatedByYear[label] = (graduatedByYear[label]||0)+1;
-    });
-    var gradYearKeys = Object.keys(graduatedByYear).sort(function(a,b){
-      if(a==='ไม่ระบุปี') return 1;
-      if(b==='ไม่ระบุปี') return -1;
-      return a.localeCompare(b, undefined, {numeric:true});
-    });
-    renderOrUpdateDonutChart('chartGraduatedByYear','graduatedByYear', gradYearKeys, gradYearKeys.map(function(k){ return graduatedByYear[k]; }), SUMMARY_CHART_COLORS.year);
-
-    /* กราฟสรุปผลสอบ แยกตามประเภทสอบ (นับเฉพาะนักศึกษาที่มีข้อมูลการสอบประเภทนั้นๆ แล้วเท่านั้น) */
-    var proposalStats = {'ผ่าน':0, 'ไม่ผ่าน':0, 'รอผล':0};
-    var defenseStats = {'ผ่าน':0, 'ผ่านแบบมีเงื่อนไข':0, 'ไม่ผ่าน':0, 'รอผล':0};
-    students.forEach(function(r){
-      if(recHasProposalData(r)){
-        var pr = r.proposalResult || 'รอผล';
-        proposalStats[pr] = (proposalStats[pr]||0)+1;
-      }
-      if(recHasDefenseData(r)){
-        var dr = r.defenseResult || 'รอผล';
-        defenseStats[dr] = (defenseStats[dr]||0)+1;
-      }
-    });
-    var proposalLabels = ['ผ่าน','ไม่ผ่าน','รอผล'];
-    renderOrUpdateDonutChart('chartProposal','proposal', proposalLabels, proposalLabels.map(function(k){ return proposalStats[k]; }), proposalLabels.map(function(k){ return SUMMARY_CHART_COLORS.proposal[k]; }));
-
-    var defenseLabels = ['ผ่าน','ผ่านแบบมีเงื่อนไข','ไม่ผ่าน','รอผล'];
-    renderOrUpdateDonutChart('chartDefense','defense', defenseLabels, defenseLabels.map(function(k){ return defenseStats[k]; }), defenseLabels.map(function(k){ return SUMMARY_CHART_COLORS.defense[k]; }));
-
-    /* ===== การ์ด KPI สไตล์แดชบอร์ดการตลาด: เทียบ "ภาคเรียนนี้" กับ "ภาคเรียนก่อนหน้า" + กราฟแนวโน้มรายภาคเรียน =====
-       "ภาคเรียนนี้" หมายถึงภาคเรียนล่าสุดที่มีข้อมูลสอบป้องกัน/IS จริง (ไม่ใช่ภาคเรียนปัจจุบันตามปฏิทิน เพราะระบบนี้ไม่ได้
-       ผูกกับปฏิทินภาคการศึกษาจริงของมหาวิทยาลัย) — ถ้าไม่มีข้อมูลสอบป้องกันเลยแต่มีข้อมูลสำเร็จการศึกษา จะใช้ภาคที่สำเร็จ
-       การศึกษาล่าสุดแทน เพื่อให้ยังเห็นอะไรบ้างแทนที่จะว่างเปล่าทั้งหมด */
-    var termStats = computeTermKpiStats(students);
-    var termsWithExam = Object.keys(termStats).filter(function(t){ return termStats[t].examCount>0; });
-    var currentTerm = termsWithExam.length
-      ? termsWithExam.sort(function(a,b){ return termSortKey(b)-termSortKey(a); })[0]
-      : (Object.keys(termStats).length ? Object.keys(termStats).sort(function(a,b){ return termSortKey(b)-termSortKey(a); })[0] : null);
-
-    var dashTermCaption = document.getElementById('dashTermCaption');
-    if(!currentTerm){
-      dashTermCaption.textContent = 'ยังไม่มีข้อมูลภาคเรียนให้เปรียบเทียบ (ยังไม่มีการกรอกภาคเรียนที่สอบจบ/สำเร็จการศึกษา)';
-      ['statExamThisTerm','statGradThisTerm'].forEach(function(id){ document.getElementById(id).textContent='0'; });
-      document.getElementById('statPassRateThisTerm').textContent='-';
-      document.getElementById('statRegVsLeaveThisTerm').textContent='0 / 0';
-      document.getElementById('statRegVsLeaveThisTermSub').textContent='';
-      ['statExamThisTermTrend','statGradThisTermTrend','statPassRateThisTermTrend'].forEach(function(id){ document.getElementById(id).style.display='none'; });
-      renderOrUpdateLineChart('chartTrendCounts','trendCounts', [], []);
-      renderOrUpdateLineChart('chartTrendPassRate','trendPassRate', [], []);
-      renderOrUpdateBarChart('chartExamByDeptTerm','examByDeptTerm', [], [], []);
-      renderOrUpdateDonutChart('chartRegStatusTerm','regStatusTerm', [], [], []);
-    } else {
-      var prevTerm = prevTermOf(currentTerm);
-      var curStats = termStats[currentTerm] || emptyTermBucket();
-      var prevStats = termStats[prevTerm] || emptyTermBucket();
-
-      dashTermCaption.textContent = 'ภาคเรียนนี้: '+gradListTermLabel(currentTerm)+' — เทียบกับภาคเรียนก่อนหน้า ('+gradListTermLabel(prevTerm)+')';
-
-      document.getElementById('statExamThisTerm').textContent = curStats.examCount;
-      renderTermTrendBadge('statExamThisTermTrend', curStats.examCount, prevStats.examCount);
-
-      document.getElementById('statGradThisTerm').textContent = curStats.gradCount;
-      renderTermTrendBadge('statGradThisTermTrend', curStats.gradCount, prevStats.gradCount);
-
-      var curRate = termPassRate(curStats), prevRate = termPassRate(prevStats);
-      document.getElementById('statPassRateThisTerm').textContent = curRate==null ? '-' : (Math.round(curRate)+'%');
-      if(curRate==null || prevRate==null){
-        document.getElementById('statPassRateThisTermTrend').style.display='none';
-      } else {
-        renderTermTrendBadge('statPassRateThisTermTrend', curRate, prevRate, {pointMode:true});
-      }
-
-      document.getElementById('statRegVsLeaveThisTerm').textContent = curStats.regCount+' / '+curStats.leaveCount;
-      document.getElementById('statRegVsLeaveThisTermSub').textContent = 'ลงทะเบียน '+curStats.regCount+' คน · รักษาสภาพ '+curStats.leaveCount+' คน';
-
-      /* กราฟแนวโน้ม 8 ภาคเรียนล่าสุด (ต่อเนื่องไม่ข้ามภาคที่ไม่มีข้อมูล) นับถึงภาคเรียนนี้ */
-      var trendTerms = lastNTermsEndingAt(currentTerm, 8);
-      var trendLabels = trendTerms.map(function(t){ return gradListTermLabel(t); });
-      var examSeries = trendTerms.map(function(t){ return (termStats[t]||emptyTermBucket()).examCount; });
-      var gradSeries = trendTerms.map(function(t){ return (termStats[t]||emptyTermBucket()).gradCount; });
-      var rateSeries = trendTerms.map(function(t){ return termPassRate(termStats[t]||emptyTermBucket()); });
-      renderOrUpdateLineChart('chartTrendCounts','trendCounts', trendLabels, [
-        {label:'สอบป้องกัน/IS', data:examSeries, borderColor:'#1b7a6e', backgroundColor:'rgba(215,240,236,.5)', tension:.3, fill:true},
-        {label:'สำเร็จการศึกษา', data:gradSeries, borderColor:'#5d3fa8', backgroundColor:'rgba(234,227,250,.5)', tension:.3, fill:true}
-      ]);
-      renderOrUpdateLineChart('chartTrendPassRate','trendPassRate', trendLabels, [
-        {label:'อัตราการสอบผ่าน (%)', data:rateSeries, borderColor:'#2f8f5b', backgroundColor:'rgba(184,224,210,.35)', tension:.3, fill:true}
-      ]);
-
-      /* กราฟแยกตามสาขาวิชา + สัดส่วนลงทะเบียน/รักษาสภาพ เฉพาะ "ภาคเรียนนี้" เท่านั้น */
-      var deptKeysTerm = Object.keys(curStats.deptCounts).sort(function(a,b){ return curStats.deptCounts[b]-curStats.deptCounts[a]; });
-      renderOrUpdateBarChart('chartExamByDeptTerm','examByDeptTerm', deptKeysTerm, deptKeysTerm.map(function(k){ return curStats.deptCounts[k]; }), SUMMARY_CHART_COLORS.dept);
-      renderOrUpdateDonutChart('chartRegStatusTerm','regStatusTerm', ['ลงทะเบียน','รักษาสภาพ'], [curStats.regCount, curStats.leaveCount], ['#AFCBE8','#FDD9A0']);
+    /* barDemoDept/barDemoPlan เป็น <div> ธรรมดา (ไม่ใช่ <canvas>) ใช้แถบพาสเทลแบบย่อ ไม่ต้องพึ่ง Chart.js/อินเทอร์เน็ต
+       เพื่อให้ยังเห็นข้อมูลได้แม้ออฟไลน์ — ต่างจากโดนัทหลักสูตรที่ใช้ Chart.js ตามตัวอย่างต้นแบบ */
+    function renderPlainBars(containerId, counts, colorList){
+      var box = document.getElementById(containerId);
+      box.innerHTML = '';
+      var keys = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
+      if(keys.length===0){ box.appendChild(el('div',{class:'chart-empty-msg', style:'height:auto;padding:14px 0;', text:'ยังไม่มีข้อมูล'})); return; }
+      var max = Math.max.apply(null, keys.map(function(k){ return counts[k]; }));
+      keys.forEach(function(k, idx){
+        var pct = (counts[k]/max*100).toFixed(1);
+        box.appendChild(el('div',{class:'dash-bar-row'},[
+          el('span',{class:'lbl', title:k, text:k}),
+          el('span',{class:'track'},[ el('span',{class:'ok', style:'width:'+pct+'%;background:'+(colorList[idx%colorList.length])+';'}) ]),
+          el('span',{class:'tot', text:String(counts[k])})
+        ]));
+      });
     }
+    renderPlainBars('barDemoDept', byDept, SUMMARY_CHART_COLORS.dept);
+    renderPlainBars('barDemoPlan', byPlan, SUMMARY_CHART_COLORS.program);
+
+    renderAdvisorRankTable();
   });
 }
 /* คำนวณลิสต์ "สิ่งที่ต้องทำวันนี้" จากชุดนักศึกษา (students) และเอกสารรับเข้า (diRows) ที่ส่งเข้ามา — แยกออกมาจาก renderSummaryDashboard
@@ -5902,8 +5909,8 @@ function getFilteredRecords(){
     return rows;
   });
 }
-/* สถานะโดยสรุปของนักศึกษา 1 คน ไว้ใช้แสดงในตาราง "ค้นหาตามสาขาวิชา" — อิงเกณฑ์เดียวกับการ์ดสถิติบนแดชบอร์ดสรุป
-   (statGraduated/statWithdrawnAdvisor/statOverdueBook/statActive) เพื่อให้ความหมายตรงกันทั้งระบบ */
+/* สถานะโดยสรุปของนักศึกษา 1 คน ไว้ใช้แสดงในตาราง "ค้นหาตามสาขาวิชา" — อิงเกณฑ์เดียวกับที่ใช้คำนวณในหน้าแดชบอร์ดสรุป
+   (เลยกำหนดส่งเล่ม/ถอนที่ปรึกษา/สำเร็จการศึกษา) เพื่อให้ความหมายตรงกันทั้งระบบ */
 function studentStatusLabel(r){
   if(r.graduated) return 'สำเร็จการศึกษาแล้ว';
   if(isOverdueRec(r)) return 'เลยกำหนดส่งเล่มฉบับสมบูรณ์';

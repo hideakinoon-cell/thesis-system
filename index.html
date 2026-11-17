@@ -1378,6 +1378,15 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
+    <h3>🔍 ตรวจสอบสาขา/หลักสูตร/แผนที่สะกดไม่ตรงรายการมาตรฐาน</h3>
+    <div class="help" style="margin-bottom:10px;">สแกนข้อมูลนักศึกษาทั้งหมด เทียบช่อง "สาขาวิชา"/"หลักสูตร"/"แผนการศึกษา" กับรายการมาตรฐานที่ตั้งไว้ในระบบ ถ้าพบค่าที่สะกดไม่ตรงกันเป๊ะ (เช่น มีวงเล็บต่อท้าย เว้นวรรคเกิน หรือพิมพ์เองแทนการเลือกจากดรอปดาวน์) นักศึกษาคนนั้นจะไม่ถูกนับรวมในตัวกรอง/แดชบอร์ดของสาขานั้นๆ อย่างถูกต้อง</div>
+    <div class="form-footer" style="justify-content:flex-start;">
+      <button class="btn btn-secondary" id="btnCheckMismatchedMasterFields">🔍 เริ่มตรวจสอบ</button>
+    </div>
+    <div id="mismatchedMasterFieldsResult" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
     <h3>🛠️ ซ่อมข้อมูล "ภาคเรียนที่สำเร็จการศึกษา" ที่สลับกับ "ประวัติที่ปรึกษา"</h3>
     <div class="help" style="margin-bottom:10px;">ก่อนหน้านี้เคยมีบั๊กที่ทำให้ตอนบันทึกข้อมูลบางครั้ง ค่า "ภาคเรียนที่สำเร็จการศึกษา" กับ "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ของนักศึกษาบางคนสลับตำแหน่งกัน (สังเกตได้จากช่องภาคเรียนที่สำเร็จการศึกษาขึ้นเป็นข้อความ "[]" แทนที่จะเป็นค่าว่างหรือภาคเรียนจริง) เครื่องมือนี้จะสแกนหาแล้วสลับค่ากลับให้ถูกตำแหน่ง โดยไม่กระทบข้อมูลอื่น (บั๊กต้นเหตุได้รับการแก้ไขแล้ว การบันทึกครั้งต่อไปจะไม่เกิดปัญหานี้อีก เครื่องมือนี้ใช้สำหรับซ่อมข้อมูลเก่าที่อาจได้รับผลกระทบไปแล้วเท่านั้น)</div>
     <div class="form-footer" style="justify-content:flex-start;">
@@ -7844,6 +7853,7 @@ function bindGoogleButtons(){
   document.getElementById('btnRestore').addEventListener('click', openRestorePicker);
   document.getElementById('btnCheckBrokenFiles').addEventListener('click', checkBrokenDriveFiles);
   document.getElementById('btnScanBogusAdvisorHistory').addEventListener('click', scanBogusAdvisorHistory);
+  document.getElementById('btnCheckMismatchedMasterFields').addEventListener('click', checkMismatchedMasterFields);
   document.getElementById('btnScanSwappedGradTerm').addEventListener('click', scanSwappedGradTermData);
   document.getElementById('btnScanWithdrawnAdvisor').addEventListener('click', scanWithdrawnAdvisorStudents);
   document.getElementById('btnPurgeDeleted').addEventListener('click', purgeDeletedUI);
@@ -8124,6 +8134,105 @@ function scanBogusAdvisorHistory(){
       });
     });
     resultBox.appendChild(confirmBtn);
+  }).catch(function(e){
+    resultBox.innerHTML='';
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    btn.disabled=false; btn.textContent=origText;
+  });
+}
+/* ================= ตรวจสอบสาขา/หลักสูตร/แผน ที่สะกดไม่ตรงกับรายการมาตรฐาน =================
+   ต้นเหตุที่พบจริง: นักศึกษาบางคนถูกบันทึกช่อง "สาขาวิชา"/"หลักสูตร"/"แผนการศึกษา" เป็นข้อความที่ไม่ตรงกับรายการมาตรฐาน
+   เป๊ะๆ (เช่น "ภาษาศาสตร์ (หลักสูตรสองภาษา)" ทั้งที่รายการมาตรฐานมีแค่ "ภาษาศาสตร์") อาจเกิดจากพิมพ์เองแทนการเลือกจาก
+   ดรอปดาวน์ หรือเคยมีตัวเลือกนี้มาก่อนแล้วถูกลบออกจากรายการมาตรฐานภายหลัง — ผลคือนักศึกษาคนนั้นจะไม่ถูกนับรวมเวลา
+   กรองตามสาขา/หลักสูตร/แผนในหน้าแดชบอร์ดหรือหน้าค้นหาตามสาขาวิชาเลย (ตัวกรองเทียบข้อความแบบตรงเป๊ะ) ทำให้ดูเหมือนข้อมูล
+   หายไปทั้งที่จริงๆ มีอยู่ครบ */
+var MISMATCH_FIELD_DEFS = [
+  {key:'department', label:'สาขาวิชา'},
+  {key:'program', label:'หลักสูตร'},
+  {key:'plan', label:'แผนการศึกษา'}
+];
+function checkMismatchedMasterFields(){
+  var btn = document.getElementById('btnCheckMismatchedMasterFields');
+  var resultBox = document.getElementById('mismatchedMasterFieldsResult');
+  resultBox.innerHTML = '';
+  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  var origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  recordsGetAll().then(function(allRecords){
+    resultBox.innerHTML = '';
+    btn.disabled = false; btn.textContent = origText;
+    /* เทียบเฉพาะรายการล่าสุดต่อคน (เหมือนที่แดชบอร์ด/ตัวกรองอื่นๆ ใช้) กันไม่ให้แถวประวัติเก่าที่ถูกแทนที่แล้วมาปนด้วย */
+    var latestByStudent = {};
+    allRecords.forEach(function(r){
+      if(!r.studentId) return;
+      if(!latestByStudent[r.studentId] || (r.updatedAt||0) > (latestByStudent[r.studentId].updatedAt||0)){
+        latestByStudent[r.studentId] = r;
+      }
+    });
+    var students = Object.keys(latestByStudent).map(function(sid){ return latestByStudent[sid]; });
+
+    var groups = {}; /* key: field+'::'+value -> {field,label,value,students:[rec,...]} */
+    MISMATCH_FIELD_DEFS.forEach(function(def){
+      var standardList = masterData[def.key+'s'] || [];
+      students.forEach(function(r){
+        var val = (r[def.key]||'').trim();
+        if(!val) return; /* ไม่กรอกไว้เลย ไม่ถือว่าสะกดผิด แค่ยังไม่ระบุ */
+        if(standardList.indexOf(val)>-1) return; /* ตรงกับรายการมาตรฐานอยู่แล้ว */
+        var gkey = def.key+'::'+val;
+        if(!groups[gkey]) groups[gkey] = {field:def.key, label:def.label, value:val, standardList:standardList, students:[]};
+        groups[gkey].students.push(r);
+      });
+    });
+    var groupKeys = Object.keys(groups).sort(function(a,b){ return groups[b].students.length - groups[a].students.length; });
+    if(groupKeys.length===0){
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบค่าที่สะกดไม่ตรงกับรายการมาตรฐาน ข้อมูลทุกคนตรงกันดีแล้ว'}));
+      return;
+    }
+    var totalAffected = groupKeys.reduce(function(s,k){ return s+groups[k].students.length; }, 0);
+    resultBox.appendChild(el('div',{class:'help', text:'พบค่าที่ไม่ตรงกับรายการมาตรฐาน '+groupKeys.length+' รายการ กระทบนักศึกษารวม '+totalAffected+' คน:'}));
+    groupKeys.forEach(function(gkey){
+      var g = groups[gkey];
+      var box = el('div',{class:'card', style:'background:#fff8ec;border-color:#f0d9a8;margin-top:10px;padding:12px 14px;'});
+      box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:'⚠️ '+g.label+': "'+g.value+'" — ไม่ตรงกับรายการมาตรฐาน (พบ '+g.students.length+' คน)'}));
+      var listBox = el('div',{style:'margin-bottom:8px;'});
+      g.students.forEach(function(r){
+        var row = el('div',{class:'help', style:'margin:2px 0;cursor:pointer;', text:'• '+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')});
+        row.addEventListener('click', function(){ switchView('dashboard'); selectLookupStudent(r.studentId); });
+        listBox.appendChild(row);
+      });
+      box.appendChild(listBox);
+      if(g.standardList.length){
+        var fixRow = el('div',{style:'display:flex;gap:8px;align-items:center;flex-wrap:wrap;'});
+        var sel = el('select',{style:'max-width:260px;'});
+        sel.appendChild(el('option',{value:'', text:'— เลือกค่ามาตรฐานที่ถูกต้อง —'}));
+        g.standardList.forEach(function(opt){ sel.appendChild(el('option',{value:opt, text:opt})); });
+        var fixBtn = el('button',{type:'button', class:'btn btn-secondary', text:'แก้ไขทั้งหมด '+g.students.length+' รายการเป็นค่านี้'});
+        fixBtn.addEventListener('click', function(){
+          var newVal = sel.value;
+          if(!newVal){ toast('กรุณาเลือกค่ามาตรฐานที่ถูกต้องก่อน', true); return; }
+          if(!confirm('แก้ไขช่อง "'+g.label+'" ของนักศึกษา '+g.students.length+' คน จาก "'+g.value+'" เป็น "'+newVal+'"?')) return;
+          fixBtn.disabled = true; fixBtn.textContent = 'กำลังแก้ไข...';
+          Promise.all(g.students.map(function(r){
+            var updated = Object.assign({}, r); updated[g.field] = newVal; updated.updatedAt = Date.now();
+            return recordsPut(updated);
+          })).then(function(){
+            return logAuditMany(g.students.map(function(r){ return makeAuditEntry('แก้ไข'+g.label+' (ตรวจสอบความสมบูรณ์ของข้อมูล): "'+g.value+'" → "'+newVal+'"', r.studentId, r.studentName); }));
+          }).then(function(){
+            toast('แก้ไข '+g.label+' ของนักศึกษา '+g.students.length+' คนเรียบร้อยแล้ว');
+            box.remove();
+          }).catch(function(e){
+            toast('แก้ไขไม่สำเร็จ: '+(e && e.message ? e.message : e), true);
+            fixBtn.disabled = false; fixBtn.textContent = 'แก้ไขทั้งหมด '+g.students.length+' รายการเป็นค่านี้';
+          });
+        });
+        fixRow.appendChild(sel);
+        fixRow.appendChild(fixBtn);
+        box.appendChild(fixRow);
+      } else {
+        box.appendChild(el('div',{class:'help', text:'(ยังไม่มีรายการมาตรฐานของ'+g.label+'ในระบบให้เลือกแก้ไข)'}));
+      }
+      resultBox.appendChild(box);
+    });
   }).catch(function(e){
     resultBox.innerHTML='';
     resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));

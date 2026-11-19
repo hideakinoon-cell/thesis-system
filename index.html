@@ -389,6 +389,10 @@ if('serviceWorker' in navigator){
   .landing-nav-links{display:flex;gap:22px;}
   .landing-nav-links a{color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;transition:color .15s;}
   .landing-nav-links a:hover{color:var(--primary);}
+  .landing-lang-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0;}
+  .landing-lang-toggle .lang-btn{border:none;background:#fff;color:var(--muted);font-weight:700;font-size:12.5px;padding:6px 12px;cursor:pointer;transition:background .15s,color .15s;}
+  .landing-lang-toggle .lang-btn.active{background:var(--primary);color:#fff;}
+  .landing-lang-toggle .lang-btn:not(.active):hover{background:#f3f4f8;}
   .btn-on-dark{background:#fff;color:var(--primary-dark);}
   .btn-on-dark:hover{filter:brightness(.96);}
   .btn-lg{padding:13px 26px;font-size:16px;}
@@ -450,11 +454,15 @@ if('serviceWorker' in navigator){
 <!-- ============ LANDING PAGE (แสดงก่อนเข้าสู่ระบบ ปิดเมื่อกด "เข้าสู่ระบบ") ============ -->
 <div id="landingPage" class="landing-page">
   <nav class="landing-nav">
-    <div class="landing-brand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
+    <div class="landing-brand" data-i18n="navBrand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
     <div class="landing-nav-links">
-      <a href="#lp-features">ฟีเจอร์</a>
+      <a href="#lp-features" data-i18n="navFeatures">ฟีเจอร์</a>
     </div>
-    <button type="button" class="btn btn-primary" id="btnLandingEnterNav">เข้าสู่ระบบ</button>
+    <div class="landing-lang-toggle">
+      <button type="button" class="lang-btn active" id="btnLangTH" data-lang="th">TH</button>
+      <button type="button" class="lang-btn" id="btnLangEN" data-lang="en">EN</button>
+    </div>
+    <button type="button" class="btn btn-primary" id="btnLandingEnterNav" data-i18n="navEnter">เข้าสู่ระบบ</button>
   </nav>
 
   <section class="landing-hero">
@@ -463,38 +471,38 @@ if('serviceWorker' in navigator){
     </video>
     <div class="landing-hero-overlay"></div>
     <div class="landing-hero-text">
-      <h1>ระบบจัดเก็บข้อมูล<br>การสอบวิทยานิพนธ์</h1>
-      <p>บันทึก ติดตาม และตรวจสอบข้อมูลการสอบของนักศึกษาระดับบัณฑิตศึกษาในที่เดียว ตั้งแต่เสนอหัวข้อจนถึงสำเร็จการศึกษา ลดความซ้ำซ้อนของเอกสารและประหยัดเวลาให้เจ้าหน้าที่</p>
-      <button type="button" class="btn btn-on-dark btn-lg" id="btnLandingEnterHero">เข้าสู่ระบบ →</button>
+      <h1 data-i18n="heroTitle">ระบบจัดเก็บข้อมูล<br>การสอบวิทยานิพนธ์</h1>
+      <p data-i18n="heroDesc">บันทึก ติดตาม และตรวจสอบข้อมูลการสอบของนักศึกษาระดับบัณฑิตศึกษาในที่เดียว ตั้งแต่เสนอหัวข้อจนถึงสำเร็จการศึกษา ลดความซ้ำซ้อนของเอกสารและประหยัดเวลาให้เจ้าหน้าที่</p>
+      <button type="button" class="btn btn-on-dark btn-lg" id="btnLandingEnterHero" data-i18n="heroEnter">เข้าสู่ระบบ →</button>
     </div>
   </section>
 
   <section class="landing-features" id="lp-features">
-    <div class="lf-item"><div class="lf-icon-circle lf-c1">📊</div><div class="lf-label">แดชบอร์ดสรุปข้อมูล</div></div>
-    <div class="lf-item"><div class="lf-icon-circle lf-c2">🔍</div><div class="lf-label">ตรวจสอบข้อมูลนักศึกษา</div></div>
-    <div class="lf-item"><div class="lf-icon-circle lf-c3">📝</div><div class="lf-label">บันทึกข้อมูลการสอบ</div></div>
-    <div class="lf-item"><div class="lf-icon-circle lf-c4">📋</div><div class="lf-label">รายการทั้งหมด</div></div>
-    <div class="lf-item"><div class="lf-icon-circle lf-c5">⚙️</div><div class="lf-label">ตั้งค่าระบบ</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c1">📊</div><div class="lf-label" data-i18n="featDashboard">แดชบอร์ดสรุปข้อมูล</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c2">🔍</div><div class="lf-label" data-i18n="featLookup">ตรวจสอบข้อมูลนักศึกษา</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c3">📝</div><div class="lf-label" data-i18n="featForm">บันทึกข้อมูลการสอบ</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c4">📋</div><div class="lf-label" data-i18n="featList">รายการทั้งหมด</div></div>
+    <div class="lf-item"><div class="lf-icon-circle lf-c5">⚙️</div><div class="lf-label" data-i18n="featSettings">ตั้งค่าระบบ</div></div>
   </section>
 
   <section class="landing-benefits-mini" id="lp-benefits">
     <div class="lbm-grid">
-      <div class="lbm-item"><span class="lbm-icon">⚡</span> รวดเร็ว ลดการกรอกข้อมูลซ้ำ</div>
-      <div class="lbm-item"><span class="lbm-icon">🔒</span> ปลอดภัย เก็บบน Google Sheets/Drive ของหน่วยงาน</div>
-      <div class="lbm-item"><span class="lbm-icon">📱</span> ใช้งานได้ทุกที่ ทุกอุปกรณ์</div>
-      <div class="lbm-item"><span class="lbm-icon">🤝</span> รองรับหลายสาขาวิชา หลายเจ้าหน้าที่</div>
+      <div class="lbm-item"><span class="lbm-icon">⚡</span> <span data-i18n="benefitFast">รวดเร็ว ลดการกรอกข้อมูลซ้ำ</span></div>
+      <div class="lbm-item"><span class="lbm-icon">🔒</span> <span data-i18n="benefitSecure">ปลอดภัย เก็บบน Google Sheets/Drive ของหน่วยงาน</span></div>
+      <div class="lbm-item"><span class="lbm-icon">📱</span> <span data-i18n="benefitAnywhere">ใช้งานได้ทุกที่ ทุกอุปกรณ์</span></div>
+      <div class="lbm-item"><span class="lbm-icon">🤝</span> <span data-i18n="benefitMulti">รองรับหลายสาขาวิชา หลายเจ้าหน้าที่</span></div>
     </div>
   </section>
 
   <footer class="landing-footer">
     <div class="landing-footer-inner">
-      <div class="lf-brand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
+      <div class="lf-brand" data-i18n="footerBrand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
       <div class="lf-links">
-        <a href="#lp-features">ฟีเจอร์</a>
+        <a href="#lp-features" data-i18n="navFeatures">ฟีเจอร์</a>
       </div>
-      <button type="button" class="btn btn-on-dark" id="btnLandingEnterFooter">เข้าสู่ระบบ</button>
+      <button type="button" class="btn btn-on-dark" id="btnLandingEnterFooter" data-i18n="navEnter">เข้าสู่ระบบ</button>
     </div>
-    <div class="landing-footer-copyright">© 2569 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
+    <div class="landing-footer-copyright" data-i18n="footerCopyright">© 2569 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
   </footer>
 </div>
 
@@ -2400,6 +2408,45 @@ function bindLandingPageEvents(){
     var btn = document.getElementById(id);
     if(btn) btn.addEventListener('click', enterFromLandingPage);
   });
+  document.getElementById('btnLangTH').addEventListener('click', function(){ applyLandingLang('th'); });
+  document.getElementById('btnLangEN').addEventListener('click', function(){ applyLandingLang('en'); });
+  var savedLang = 'th';
+  try{ savedLang = localStorage.getItem(LANDING_LANG_KEY) || 'th'; }catch(e){}
+  applyLandingLang(savedLang);
+}
+/* ===== หน้า Landing Page: สลับภาษาไทย/อังกฤษ (เฉพาะหน้านี้เท่านั้น ยังไม่รวมส่วนอื่นของระบบหลังล็อกอิน) =====
+   เก็บข้อความ 2 ภาษาไว้ใน LANDING_I18N คู่กับ data-i18n="คีย์" ที่ติดไว้บน element ที่ต้องการแปลในหน้า Landing
+   จำภาษาที่เลือกไว้ใน localStorage (ต่อเบราว์เซอร์ ไม่ผูกกับบัญชี) เพื่อให้ยังเป็นภาษาเดิมเมื่อกลับมาเปิดใหม่ */
+var LANDING_LANG_KEY = 'thesisLandingLang';
+var LANDING_I18N = {
+  navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
+  navFeatures: {th:'ฟีเจอร์', en:'Features'},
+  navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},
+  heroTitle: {th:'ระบบจัดเก็บข้อมูล<br>การสอบวิทยานิพนธ์', en:'Thesis Exam<br>Records System'},
+  heroDesc: {th:'บันทึก ติดตาม และตรวจสอบข้อมูลการสอบของนักศึกษาระดับบัณฑิตศึกษาในที่เดียว ตั้งแต่เสนอหัวข้อจนถึงสำเร็จการศึกษา ลดความซ้ำซ้อนของเอกสารและประหยัดเวลาให้เจ้าหน้าที่',
+    en:'Record, track, and review graduate students’ thesis exam data in one place — from topic proposal through graduation. Less duplicate paperwork, more time saved for staff.'},
+  heroEnter: {th:'เข้าสู่ระบบ →', en:'Log In →'},
+  featDashboard: {th:'แดชบอร์ดสรุปข้อมูล', en:'Summary Dashboard'},
+  featLookup: {th:'ตรวจสอบข้อมูลนักศึกษา', en:'Student Lookup'},
+  featForm: {th:'บันทึกข้อมูลการสอบ', en:'Record Exam Data'},
+  featList: {th:'รายการทั้งหมด', en:'All Records'},
+  featSettings: {th:'ตั้งค่าระบบ', en:'System Settings'},
+  benefitFast: {th:'รวดเร็ว ลดการกรอกข้อมูลซ้ำ', en:'Fast — less duplicate data entry'},
+  benefitSecure: {th:'ปลอดภัย เก็บบน Google Sheets/Drive ของหน่วยงาน', en:'Secure — stored on your organization’s Google Sheets/Drive'},
+  benefitAnywhere: {th:'ใช้งานได้ทุกที่ ทุกอุปกรณ์', en:'Access it anywhere, on any device'},
+  benefitMulti: {th:'รองรับหลายสาขาวิชา หลายเจ้าหน้าที่', en:'Supports multiple departments and staff members'},
+  footerBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
+  footerCopyright: {th:'© 2569 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'© 2026 Thesis Exam Records System'}
+};
+function applyLandingLang(lang){
+  if(lang!=='en') lang='th';
+  Object.keys(LANDING_I18N).forEach(function(key){
+    var text = LANDING_I18N[key][lang];
+    document.querySelectorAll('#landingPage [data-i18n="'+key+'"]').forEach(function(elx){ elx.innerHTML = text; });
+  });
+  document.getElementById('btnLangTH').classList.toggle('active', lang==='th');
+  document.getElementById('btnLangEN').classList.toggle('active', lang==='en');
+  try{ localStorage.setItem(LANDING_LANG_KEY, lang); }catch(e){}
 }
 function renderLockForm(){
   var loginForm = document.getElementById('lockLoginForm');

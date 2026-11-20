@@ -1354,29 +1354,29 @@ if('serviceWorker' in navigator){
       <div class="field full">
         <label>Google OAuth Client ID</label>
         <input type="text" id="s_clientId" placeholder="xxxxxxxxxx.apps.googleusercontent.com">
-        <div class="help">ต้องสร้างจาก Google Cloud Console ของคุณเอง ดูขั้นตอนใน SETUP.md ที่แนบมาด้วย ต้องเปิดไฟล์นี้ผ่านเซิร์ฟเวอร์ local (เช่น http://localhost:8765) หรือผ่านลิงก์เว็บที่เผยแพร่แล้ว (เช่น https://ชื่อผู้ใช้.github.io/...) จึงจะ Sign in ได้ — เปิดไฟล์แบบ double-click (file://) จะ Sign in ไม่ได้</div>
+        <div class="help" data-i18n="helpClientIdSetup">ต้องสร้างจาก Google Cloud Console ของคุณเอง ดูขั้นตอนใน SETUP.md ที่แนบมาด้วย ต้องเปิดไฟล์นี้ผ่านเซิร์ฟเวอร์ local (เช่น http://localhost:8765) หรือผ่านลิงก์เว็บที่เผยแพร่แล้ว (เช่น https://ชื่อผู้ใช้.github.io/...) จึงจะ Sign in ได้ — เปิดไฟล์แบบ double-click (file://) จะ Sign in ไม่ได้</div>
       </div>
     </div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnSaveClientId">บันทึก Client ID</button>
-      <button class="btn btn-primary" id="btnSignIn">🔐 เชื่อมต่อ Google Drive</button>
-      <button class="btn btn-secondary" id="btnSignOut" style="display:none;">ออกจากระบบ Drive</button>
+      <button class="btn btn-secondary" id="btnSaveClientId" data-i18n="btnSaveClientId">บันทึก Client ID</button>
+      <button class="btn btn-primary" id="btnSignIn" data-i18n="btnConnectGoogleDrive">🔐 เชื่อมต่อ Google Drive</button>
+      <button class="btn btn-secondary" id="btnSignOut" style="display:none;" data-i18n="btnSignOutDrive">ออกจากระบบ Drive</button>
     </div>
     <div class="help" id="authExpiryStatus"></div>
     <div class="form-footer" style="justify-content:flex-start;border-top:1px solid var(--border);margin-top:6px;padding-top:16px;">
-      <button class="btn btn-accent" id="btnBackupNow">☁️ สำรองข้อมูลขึ้น Drive ตอนนี้</button>
-      <button class="btn btn-secondary" id="btnRestore">⬇️ กู้คืนจาก Drive</button>
+      <button class="btn btn-accent" id="btnBackupNow" data-i18n="btnBackupNowLabel">☁️ สำรองข้อมูลขึ้น Drive ตอนนี้</button>
+      <button class="btn btn-secondary" id="btnRestore" data-i18n="btnRestoreFromDrive">⬇️ กู้คืนจาก Drive</button>
     </div>
     <div style="border-top:1px solid var(--border);margin-top:6px;padding-top:16px;">
       <label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;cursor:pointer;">
-        <input type="checkbox" id="s_autoBackup"> สำรองข้อมูลขึ้น Drive อัตโนมัติทุก 12 ชั่วโมง
+        <input type="checkbox" id="s_autoBackup"> <span data-i18n="lblAutoBackup12h">สำรองข้อมูลขึ้น Drive อัตโนมัติทุก 12 ชั่วโมง</span>
       </label>
-      <div class="help">ทำงานเฉพาะขณะเปิดหน้าเว็บนี้ค้างไว้และเชื่อมต่อ Google Drive อยู่เท่านั้น ถ้าปิดแท็บ/ปิดเครื่อง หรือหลุดการเชื่อมต่อ จะไม่มีการสำรองอัตโนมัติเกิดขึ้นจนกว่าจะเปิดและเชื่อมต่อใหม่</div>
-      <div class="help" id="s_lastBackupText" style="margin-top:4px;">ยังไม่เคยสำรองข้อมูล</div>
+      <div class="help" data-i18n="helpAutoBackup">ทำงานเฉพาะขณะเปิดหน้าเว็บนี้ค้างไว้และเชื่อมต่อ Google Drive อยู่เท่านั้น ถ้าปิดแท็บ/ปิดเครื่อง หรือหลุดการเชื่อมต่อ จะไม่มีการสำรองอัตโนมัติเกิดขึ้นจนกว่าจะเปิดและเชื่อมต่อใหม่</div>
+      <div class="help" id="s_lastBackupText" style="margin-top:4px;" data-i18n="txtNeverBackedUp">ยังไม่เคยสำรองข้อมูล</div>
       <div class="field" style="max-width:260px;margin-top:12px;">
-        <label>เก็บไฟล์สำรองล่าสุดไว้กี่ไฟล์</label>
+        <label data-i18n="lblBackupKeepCount">เก็บไฟล์สำรองล่าสุดไว้กี่ไฟล์</label>
         <input type="number" id="s_backupKeepCount" min="1" max="100" value="5">
-        <div class="help">ไฟล์สำรองเก่าที่เกินจำนวนนี้จะถูกลบออกจาก Drive อัตโนมัติทุกครั้งที่สำรองข้อมูลสำเร็จ เพื่อไม่ให้พื้นที่ Drive บานปลาย</div>
+        <div class="help" data-i18n="helpBackupKeepCount">ไฟล์สำรองเก่าที่เกินจำนวนนี้จะถูกลบออกจาก Drive อัตโนมัติทุกครั้งที่สำรองข้อมูลสำเร็จ เพื่อไม่ให้พื้นที่ Drive บานปลาย</div>
       </div>
     </div>
   </div>
@@ -3251,7 +3251,26 @@ var LANDING_I18N = {
   thExamResultOptional: {th:'ผลสอบ (ถ้ามี)', en:'Result (if any)'},
   thSentAt: {th:'ส่งเมื่อ', en:'Sent On'},
   txtNoDefenseResultYet: {th:'(ยังไม่มีผล)', en:'(No result yet)'},
-  btnUnmarkSubmitted: {th:'↩️ ยกเลิกเครื่องหมาย', en:'↩️ Unmark'}
+  btnUnmarkSubmitted: {th:'↩️ ยกเลิกเครื่องหมาย', en:'↩️ Unmark'},
+  titleChooseBackupFile: {th:'เลือกไฟล์สำรองข้อมูลเพื่อกู้คืน', en:'Choose a Backup File to Restore'},
+  btnRestoreShort: {th:'กู้คืน', en:'Restore'},
+  txtDriveConnected: {th:'เชื่อมต่อ Google Drive แล้ว', en:'Connected to Google Drive'},
+  txtDriveNotConnected: {th:'ยังไม่เชื่อมต่อ Google Drive', en:'Not connected to Google Drive'},
+  txtLastBackupPrefix: {th:'สำรองข้อมูลล่าสุด: ', en:'Last backed up: '},
+  txtNeverBackedUp: {th:'ยังไม่เคยสำรองข้อมูล', en:'No backup has been made yet.'},
+  txtLastGoogleConnectPrefix: {th:'เชื่อมต่อ Google ล่าสุดเมื่อ ', en:'Last connected to Google '},
+  txtLastGoogleConnectSuffix: {th:' วันที่แล้ว', en:' day(s) ago'},
+  txtAuthExpiryWarnSuffix: {th:' — ควรกดเชื่อมต่อใหม่เพื่อต่ออายุ (แอปยังอยู่ในสถานะทดสอบ จำกัด 7 วัน)', en:' — you should reconnect to renew access (the app is still in test mode, limited to 7 days)'},
+  helpClientIdSetup: {th:'ต้องสร้างจาก Google Cloud Console ของคุณเอง ดูขั้นตอนใน SETUP.md ที่แนบมาด้วย ต้องเปิดไฟล์นี้ผ่านเซิร์ฟเวอร์ local (เช่น http://localhost:8765) หรือผ่านลิงก์เว็บที่เผยแพร่แล้ว (เช่น https://ชื่อผู้ใช้.github.io/...) จึงจะ Sign in ได้ — เปิดไฟล์แบบ double-click (file://) จะ Sign in ไม่ได้', en:"Must be created from your own Google Cloud Console — see the steps in the attached SETUP.md. This file must be opened via a local server (e.g. http://localhost:8765) or a published web link (e.g. https://yourname.github.io/...) in order to sign in — opening it by double-clicking (file://) will not allow sign-in."},
+  btnSaveClientId: {th:'บันทึก Client ID', en:'Save Client ID'},
+  btnConnectGoogleDrive: {th:'🔐 เชื่อมต่อ Google Drive', en:'🔐 Connect Google Drive'},
+  btnSignOutDrive: {th:'ออกจากระบบ Drive', en:'Sign Out of Drive'},
+  btnBackupNowLabel: {th:'☁️ สำรองข้อมูลขึ้น Drive ตอนนี้', en:'☁️ Back Up to Drive Now'},
+  btnRestoreFromDrive: {th:'⬇️ กู้คืนจาก Drive', en:'⬇️ Restore from Drive'},
+  lblAutoBackup12h: {th:'สำรองข้อมูลขึ้น Drive อัตโนมัติทุก 12 ชั่วโมง', en:'Automatically back up to Drive every 12 hours'},
+  helpAutoBackup: {th:'ทำงานเฉพาะขณะเปิดหน้าเว็บนี้ค้างไว้และเชื่อมต่อ Google Drive อยู่เท่านั้น ถ้าปิดแท็บ/ปิดเครื่อง หรือหลุดการเชื่อมต่อ จะไม่มีการสำรองอัตโนมัติเกิดขึ้นจนกว่าจะเปิดและเชื่อมต่อใหม่', en:'Only works while this page stays open and Google Drive remains connected. If the tab/device is closed, or the connection drops, no automatic backup will happen until it is reopened and reconnected.'},
+  lblBackupKeepCount: {th:'เก็บไฟล์สำรองล่าสุดไว้กี่ไฟล์', en:'Number of Recent Backups to Keep'},
+  helpBackupKeepCount: {th:'ไฟล์สำรองเก่าที่เกินจำนวนนี้จะถูกลบออกจาก Drive อัตโนมัติทุกครั้งที่สำรองข้อมูลสำเร็จ เพื่อไม่ให้พื้นที่ Drive บานปลาย', en:'Older backup files beyond this count are automatically deleted from Drive every time a backup succeeds, to keep Drive storage from growing unbounded.'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -8158,9 +8177,9 @@ function renderBackupStatus(){
   if(lastBackupAt){
     var d = new Date(lastBackupAt);
     function p(n){ return String(n).padStart(2,'0'); }
-    el2.textContent = 'สำรองข้อมูลล่าสุด: '+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
+    el2.textContent = (i18nText('txtLastBackupPrefix')||'สำรองข้อมูลล่าสุด: ')+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
   } else {
-    el2.textContent = 'ยังไม่เคยสำรองข้อมูล';
+    el2.textContent = (i18nText('txtNeverBackedUp')||'ยังไม่เคยสำรองข้อมูล');
   }
 }
 /* โควตาที่ปรึกษา ตามเกณฑ์การแต่งตั้งอาจารย์ที่ปรึกษาวิทยานิพนธ์/การค้นคว้าอิสระ:
@@ -8789,7 +8808,7 @@ function updateDriveStatusUI(connected){
   var statusEl = document.getElementById('driveStatus');
   var textEl = document.getElementById('driveStatusText');
   statusEl.classList.toggle('on', !!connected);
-  textEl.textContent = connected ? 'เชื่อมต่อ Google Drive แล้ว' : 'ยังไม่เชื่อมต่อ Google Drive';
+  textEl.textContent = connected ? (i18nText('txtDriveConnected')||'เชื่อมต่อ Google Drive แล้ว') : (i18nText('txtDriveNotConnected')||'ยังไม่เชื่อมต่อ Google Drive');
   document.getElementById('btnSignIn').style.display = connected ? 'none':'';
   document.getElementById('btnSignOut').style.display = connected ? '':'none';
 }
@@ -8940,7 +8959,7 @@ function renderAuthExpiryStatus(){
   var warn = days>=AUTH_EXPIRY_WARNING_DAYS;
   box.innerHTML='';
   box.style.color = warn ? '#dc2626' : '';
-  box.textContent = (warn?'⚠️ ':'')+'เชื่อมต่อ Google ล่าสุดเมื่อ '+days+' วันที่แล้ว'+(warn?' — ควรกดเชื่อมต่อใหม่เพื่อต่ออายุ (แอปยังอยู่ในสถานะทดสอบ จำกัด 7 วัน)':'');
+  box.textContent = (warn?'⚠️ ':'')+(i18nText('txtLastGoogleConnectPrefix')||'เชื่อมต่อ Google ล่าสุดเมื่อ ')+days+(i18nText('txtLastGoogleConnectSuffix')||' วันที่แล้ว')+(warn?(i18nText('txtAuthExpiryWarnSuffix')||' — ควรกดเชื่อมต่อใหม่เพื่อต่ออายุ (แอปยังอยู่ในสถานะทดสอบ จำกัด 7 วัน)'):'');
 }
 function attemptSilentReconnectThenBackup(){
   if(!googleClientId){ remindManualReconnect(); return; }
@@ -10244,16 +10263,16 @@ function showBackupListModal(files){
   var root = document.getElementById('modalRoot');
   var backdrop = el('div',{class:'modal-backdrop'});
   var modal = el('div',{class:'modal'});
-  modal.appendChild(el('h3',{text:'เลือกไฟล์สำรองข้อมูลเพื่อกู้คืน'}));
+  modal.appendChild(el('h3',{text:(i18nText('titleChooseBackupFile')||'เลือกไฟล์สำรองข้อมูลเพื่อกู้คืน')}));
   files.forEach(function(f){
     var row = el('div',{class:'list-item'},[
       el('span',{text:f.name}),
-      el('button',{class:'btn btn-primary btn-sm', text:'กู้คืน', onclick:function(){ backdrop.remove(); restoreFromDrive(f.id); }})
+      el('button',{class:'btn btn-primary btn-sm', text:(i18nText('btnRestoreShort')||'กู้คืน'), onclick:function(){ backdrop.remove(); restoreFromDrive(f.id); }})
     ]);
     modal.appendChild(row);
   });
   modal.appendChild(el('div',{class:'form-footer'},[
-    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }})
+    el('button',{class:'btn btn-secondary', text:(i18nText('btnCloseModal')||'ปิด'), onclick:function(){ backdrop.remove(); }})
   ]));
   backdrop.appendChild(modal);
   backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });

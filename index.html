@@ -2637,6 +2637,8 @@ var LANDING_I18N = {
   phDiStudentSearch: {th:'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหาในระบบ...', en:'Type student ID or name to search the system...'},
   lblSearchNameOrId: {th:'ค้นหาชื่อ/รหัส', en:'Search Name/ID'},
   phGenericSearch: {th:'พิมพ์เพื่อค้นหา...', en:'Type to search...'},
+  btnOpenLink: {th:'🔗 เปิดลิงก์', en:'🔗 Open Link'},
+  txtDelete: {th:'ลบ', en:'Delete'},
   navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   navFeatures: {th:'ฟีเจอร์', en:'Features'},
   navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},
@@ -2669,6 +2671,7 @@ function applyLandingLang(lang){
     var text = LANDING_I18N[key][lang];
     document.querySelectorAll('[data-i18n="'+key+'"]').forEach(function(elx){ elx.innerHTML = text; });
     document.querySelectorAll('[data-i18n-ph="'+key+'"]').forEach(function(elx){ elx.placeholder = text; });
+    document.querySelectorAll('[data-i18n-title="'+key+'"]').forEach(function(elx){ elx.title = text; });
   });
   [['btnLangTH','btnLangEN'],['btnLockLangTH','btnLockLangEN'],['btnTopbarLangTH','btnTopbarLangEN']].forEach(function(pair){
     var thBtn=document.getElementById(pair[0]), enBtn=document.getElementById(pair[1]);
@@ -4401,7 +4404,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       if(f.isLink){
         advisorAppointList.appendChild(el('div',{class:'attach-item'},[
           el('span',{class:'name', text:'🔗 '+f.name}),
-          el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'🔗 เปิดลิงก์'})
+          el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', 'data-i18n':'btnOpenLink', text:(i18nText('btnOpenLink')||'🔗 เปิดลิงก์')})
         ]));
       } else {
         advisorAppointList.appendChild(el('div',{class:'attach-item'},[
@@ -4601,7 +4604,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
         if(f.isLink){
           fileList.appendChild(el('div',{class:'attach-item'},[
             el('span',{class:'name', text:'🔗 '+f.name}),
-            el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'🔗 เปิดลิงก์'})
+            el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', 'data-i18n':'btnOpenLink', text:(i18nText('btnOpenLink')||'🔗 เปิดลิงก์')})
           ]));
         } else {
           fileList.appendChild(el('div',{class:'attach-item'},[
@@ -4891,7 +4894,7 @@ function renderDocIntakeList(){
         el('td',{}, [statusSel]),
         el('td',{text: r.note||'-'}),
         el('td',{},[
-          el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteDocIntakeConfirm(r.id); }, text:'ลบ'})
+          el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteDocIntakeConfirm(r.id); }, 'data-i18n':'txtDelete', text:(i18nText('txtDelete')||'ลบ')})
         ])
       ]);
       tbody.appendChild(tr);
@@ -5150,7 +5153,7 @@ function addDynamicRow(containerId, placeholder, slot, initial){
     row.appendChild(extLabel);
     row.appendChild(dateInput);
   }
-  var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
+  var rm = el('button',{type:'button', class:'icon-btn', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){ row.remove(); }, text:'✕'});
   row.appendChild(rm);
   container.appendChild(row);
   return row;
@@ -5191,7 +5194,7 @@ function addCommitteeRow(containerId, existingName, existingPosition){
   var nameCombo = buildSearchSelect(el('div',{}), allAdvisorNames(), 'phSearchCommitteeMember');
   var posSel = el('select',{});
   fillSelect(posSel, allPositionNames(), i18nText('optSpecifyPosition'));
-  var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
+  var rm = el('button',{type:'button', class:'icon-btn', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){ row.remove(); }, text:'✕'});
   row.appendChild(nameCombo); row.appendChild(posSel); row.appendChild(rm);
   container.appendChild(row);
   if(existingName) setSelectValueWithFallback(nameCombo, existingName);
@@ -5325,7 +5328,7 @@ function addPublicationRow(existing, containerId){
   var year = el('input',{type:'text', class:'pub-year', placeholder:'ปีที่ตีพิมพ์'});
   if(existing && existing.year) year.value = existing.year;
   var link = el('input',{type:'text', placeholder:'ลิงก์ผลงาน (URL)', value:(existing&&existing.link)||''});
-  var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
+  var rm = el('button',{type:'button', class:'icon-btn', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){ row.remove(); }, text:'✕'});
   row.appendChild(venue); row.appendChild(year); row.appendChild(link); row.appendChild(rm);
   container.appendChild(row);
   return row;
@@ -6159,8 +6162,8 @@ function renderAttachmentList(section){
       if(f.isLink){
         row = el('div',{class:'attach-item'},[
           el('span',{class:'name', text:'🔗 '+f.name}),
-          el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'🔗 เปิดลิงก์'}),
-          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, text:'ลบ'})
+          el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', 'data-i18n':'btnOpenLink', text:(i18nText('btnOpenLink')||'🔗 เปิดลิงก์')}),
+          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, 'data-i18n':'txtDelete', text:(i18nText('txtDelete')||'ลบ')})
         ]);
       } else {
         var driveBtn;
@@ -6174,7 +6177,7 @@ function renderAttachmentList(section){
           el('span',{class:'size', text:fmtBytes(f.size)}),
           el('button',{type:'button', class:'link-btn', onclick:function(){ downloadFile(f.id); }, text:'⬇ ดาวน์โหลด'}),
           driveBtn,
-          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, text:'ลบ'})
+          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, 'data-i18n':'txtDelete', text:(i18nText('txtDelete')||'ลบ')})
         ]);
       }
       container.appendChild(row);
@@ -6357,7 +6360,7 @@ function renderList(){
           el('td',{style:'white-space:nowrap;'},[
             el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ recordsGet(r.id).then(loadRecordIntoForm); switchView('form'); }, text:'แก้ไข'}),
             el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ startNewExamForStudent(r.studentId); }, text:'➕ เพิ่มการสอบใหม่'}),
-            el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteRecordConfirm(r.id); }, text:'ลบ'})
+            el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteRecordConfirm(r.id); }, 'data-i18n':'txtDelete', text:(i18nText('txtDelete')||'ลบ')})
           ])
         ]);
         tbody.appendChild(tr);
@@ -7427,7 +7430,7 @@ function renderPositionList(){
       el('span',{text:pos.name}),
       el('span',{class:'role-badge', text:SLOT_LABELS[pos.slot]||pos.slot}),
       el('button',{type:'button', text:'✎', title:'แก้ไขตำแหน่ง', onclick:function(){ openPositionEditModal(pos); }}),
-      el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){ removePosition(pos.name); }})
+      el('button',{type:'button', text:'✕', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){ removePosition(pos.name); }})
     ]);
     container.appendChild(chip);
   });
@@ -7855,7 +7858,7 @@ function renderAdvisorList(){
     var chip = el('span',{class:'chip'}, [el('span',{text:advisor.name})].concat(badges).concat([
       el('button',{type:'button', text:'📋', title:'ดูรายงานที่ปรึกษา', onclick:function(){ openAdvisorReportModal(advisor); }}),
       el('button',{type:'button', text:'✎', title:'แก้ไขชื่อ/ตำแหน่ง', onclick:function(){ openAdvisorEditModal(advisor); }}),
-      el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){ removeAdvisor(advisor.name); }})
+      el('button',{type:'button', text:'✕', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){ removeAdvisor(advisor.name); }})
     ]));
     container.appendChild(chip);
   });
@@ -7994,7 +7997,7 @@ function renderChipList(containerId, key){
         }
         renameMasterItem(key, val, newVal);
       }}),
-      el('button',{type:'button', text:'✕', title:'ลบ', onclick:function(){
+      el('button',{type:'button', text:'✕', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){
         if(!confirm('ลบ "'+val+'" ('+(MASTER_LIST_LABELS[key]||key)+') ออกจากรายการหรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
         var deptPinCleanupP = Promise.resolve();
         withFreshMasterData(function(){

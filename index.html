@@ -1655,7 +1655,7 @@ var DEFAULT_GOOGLE_CLIENT_ID = '735808286134-4c4itsvdhe1v7po7bl71cnnq6k5imgve.ap
 var DEFAULT_SHEET_ID = '1Rymd5QMIXL1j2f4fLujmDXgK0sKy_umKEYI5z2iP8sQ';
 var DEFAULT_CLOUD_MODE_ENABLED = true;
 var DEFAULT_VIEWER_PIN_HASH = 'ad7d15dafd42a49ca8e6ba2dfbb41abaa96d7a368cad455c07f622f7fb90ddc2';
-var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[], documentTypes:[] };
+var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[], documentTypes:[], programsEn:{}, departmentsEn:{} };
 /* ตรวจว่าแผนการเรียนนี้เป็น "การค้นคว้าอิสระ" (IS) หรือไม่ — ใช้เกณฑ์นี้ทุกจุดที่ต้องแยกวิทยานิพนธ์ออกจากการค้นคว้าอิสระ
    (เช่น เช็คลิสต์ความครบถ้วน, การคำนวณโควตาที่ปรึกษา) แทนการเทียบสตริง "แผน ข" ตรงๆ เพียงอย่างเดียว เพราะ masterData.plans
    แก้ไขเองได้จากหน้าตั้งค่า (งานที่ #14) — บางสาขาใช้ชื่อ "แผน 1 แบบวิชาการ (วิทยานิพนธ์)" / "แผน 2 แบบวิชาชีพ (ค้นคว้าอิสระ)"
@@ -2069,7 +2069,7 @@ function openDocLinkStudentsModal(en, field){
   } else {
     sorted.forEach(function(s){
       box.appendChild(el('div',{style:'padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:14px;'},[
-        document.createTextNode((s.studentId||'-')+' — '+(s.studentName||'-')+' ('+(s.program||'-')+' / '+(s.department||'-')+')')
+        document.createTextNode((s.studentId||'-')+' — '+(s.studentName||'-')+' ('+(s.program?programDisplayName(s.program):'-')+' / '+(s.department?departmentDisplayName(s.department):'-')+')')
       ]));
     });
   }
@@ -3426,15 +3426,36 @@ var LANDING_I18N = {
   impWarnDeptNotFoundSuffix: {th:'" ยังไม่มีในระบบ', en:'" does not exist in the system yet'},
   impWarnExistingPrefix: {th:'รหัสนี้มีอยู่แล้วในระบบ (', en:'This ID already exists in the system ('},
   impWarnExistingSuffix: {th:')', en:')'},
-  phStudentNameExample: {th:'นายสมศักดิ์ รักเรียน', en:'e.g. Somsak Rakrian'}
+  phStudentNameExample: {th:'นายสมศักดิ์ รักเรียน', en:'e.g. Somsak Rakrian'},
+  titleEditEnglishName: {th:'เพิ่ม/แก้ไขชื่อภาษาอังกฤษ', en:'Add/Edit English name'},
+  promptEditEnglishNameColon: {th:'ชื่อภาษาอังกฤษของ "', en:'English name for "'},
+  promptEditEnglishNameColonSuffix: {th:'":', en:'":'}
 };
-function i18nText(key){
+/* คืนค่าภาษาที่กำลังใช้แสดงผล ('th' หรือ 'en') อ่านจาก localStorage ตัวเดียวกับที่ applyLandingLang() ใช้บันทึก
+   แยกออกมาเป็นฟังก์ชันกลาง เพื่อให้ i18nText() และฟังก์ชันอื่นๆ (เช่น programDisplayName/departmentDisplayName)
+   ใช้ตรรกะเดียวกันไม่ต้องคัดลอกโค้ดซ้ำ */
+function currentLandingLang(){
   var lang = 'th';
   try{ lang = localStorage.getItem(LANDING_LANG_KEY) || 'th'; }catch(e){}
-  if(lang!=='en') lang='th';
+  return lang==='en' ? 'en' : 'th';
+}
+function i18nText(key){
+  var lang = currentLandingLang();
   var entry = LANDING_I18N[key];
   return entry ? (entry[lang] || entry.th || '') : '';
 }
+/* ชื่อหลักสูตร/สาขาวิชาที่ "แสดงผล" บนหน้าจอ — ถ้าสลับไปภาษาอังกฤษและมีการตั้งชื่ออังกฤษไว้ใน Settings
+   (masterData.programsEn/departmentsEn) จะคืนชื่ออังกฤษนั้น ไม่เช่นนั้นคืนชื่อไทยเดิมเสมอ
+   *** ใช้ฟังก์ชันนี้เฉพาะจุดที่ "แสดงผล" ให้ผู้ใช้ดูเท่านั้น (ตาราง/ป้ายกำกับ/ตัวเลือกใน dropdown ที่ยังคง value เป็นไทย) ***
+   ห้ามใช้กับค่าที่ต้องจับคู่/เปรียบเทียบ/บันทึก/ส่งออก Excel เพราะค่าที่เก็บจริงในระบบต้องเป็นภาษาไทยเสมอ
+   (ชื่ออังกฤษเป็นแค่ "ป้ายแสดงผล" คู่กัน ไม่ใช่ค่าแทนที่) */
+function masterNameDisplay(enMapKey, thName){
+  if(!thName) return thName;
+  if(currentLandingLang()==='en' && masterData[enMapKey] && masterData[enMapKey][thName]) return masterData[enMapKey][thName];
+  return thName;
+}
+function programDisplayName(thName){ return masterNameDisplay('programsEn', thName); }
+function departmentDisplayName(thName){ return masterNameDisplay('departmentsEn', thName); }
 function applyLandingLang(lang){
   if(lang!=='en') lang='th';
   Object.keys(LANDING_I18N).forEach(function(key){
@@ -3836,7 +3857,7 @@ function onDashSearchInput(){
         var item = el('div',{class:'lookup-item'},[
           el('div',{class:'li-main'},[
             el('span',{class:'li-name', text:s.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)')}),
-            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||(i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา'))})
+            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department?departmentDisplayName(s.department):(i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา'))})
           ])
         ]);
         item.addEventListener('click', function(){
@@ -3873,7 +3894,7 @@ function onGlobalSearchInput(){
         var item = el('div',{class:'lookup-item'},[
           el('div',{class:'li-main'},[
             el('span',{class:'li-name', text:s.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)')}),
-            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||(i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา'))})
+            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department?departmentDisplayName(s.department):(i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา'))})
           ])
         ]);
         item.addEventListener('click', function(){
@@ -4143,7 +4164,7 @@ function renderDeptMiniDonuts(containerId, deptBuckets){
     var canvasId = 'deptMiniCanvas_'+idx;
     var card = el('div',{class:'dash-dept-mini-card'},[
       el('div',{class:'dash-mini-chart-body'},[ el('canvas',{id:canvasId}) ]),
-      el('div',{class:'name', text:dept}),
+      el('div',{class:'name', text:departmentDisplayName(dept)}),
       el('div',{class:'total', text:b.total+(i18nText('txtPeopleCountSuffix2')||' คน')})
     ]);
     wrap.appendChild(card);
@@ -4199,7 +4220,7 @@ function renderDashRecentTable(termStudents){
     tbody.appendChild(el('tr',{},[
       el('td',{text:r.studentId||'-'}),
       el('td',{text:r.studentName||'-'}),
-      el('td',{text:r.department||'-'}),
+      el('td',{text: r.department ? departmentDisplayName(r.department) : '-'}),
       el('td',{},[ el('span',{class:'dash-status-pill '+(isLeave?'leave':'reg'), text: isLeave?(i18nText('txtStatusLeave')||'รักษาสภาพ'):(i18nText('txtStatusRegistered')||'ลงทะเบียน')}) ]),
       el('td',{text: r.defenseDate ? toBuddhistDateStr(r.defenseDate) : '-'}),
       el('td',{text: r.defenseResult || (r.defenseDate ? (i18nText('txtPendingResult')||'รอผล') : '-')})
@@ -4329,14 +4350,14 @@ function renderSummaryDashboard(){
     }
     var byProgram = groupCount(function(r){ return r.program; }, i18nText('txtProgramNotSpecified')||'ไม่ระบุหลักสูตร');
     var programKeys = Object.keys(byProgram).sort(function(a,b){ return byProgram[b]-byProgram[a]; });
-    renderOrUpdateDonutChart('chartDemoProgram','demoProgram', programKeys, programKeys.map(function(k){ return byProgram[k]; }), SUMMARY_CHART_COLORS.program);
+    renderOrUpdateDonutChart('chartDemoProgram','demoProgram', programKeys.map(programDisplayName), programKeys.map(function(k){ return byProgram[k]; }), SUMMARY_CHART_COLORS.program);
 
     var byDept = groupCount(function(r){ return r.department; }, i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา');
     var byPlan = groupCount(function(r){ return r.plan; }, i18nText('txtPlanNotSpecified')||'ไม่ระบุแผน');
 
     /* barDemoDept/barDemoPlan เป็น <div> ธรรมดา (ไม่ใช่ <canvas>) ใช้แถบพาสเทลแบบย่อ ไม่ต้องพึ่ง Chart.js/อินเทอร์เน็ต
        เพื่อให้ยังเห็นข้อมูลได้แม้ออฟไลน์ — ต่างจากโดนัทหลักสูตรที่ใช้ Chart.js ตามตัวอย่างต้นแบบ */
-    function renderPlainBars(containerId, counts, colorList){
+    function renderPlainBars(containerId, counts, colorList, displayFn){
       var box = document.getElementById(containerId);
       box.innerHTML = '';
       var keys = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
@@ -4344,14 +4365,15 @@ function renderSummaryDashboard(){
       var max = Math.max.apply(null, keys.map(function(k){ return counts[k]; }));
       keys.forEach(function(k, idx){
         var pct = (counts[k]/max*100).toFixed(1);
+        var displayLabel = displayFn ? displayFn(k) : k;
         box.appendChild(el('div',{class:'dash-bar-row'},[
-          el('span',{class:'lbl', title:k, text:k}),
+          el('span',{class:'lbl', title:displayLabel, text:displayLabel}),
           el('span',{class:'track'},[ el('span',{class:'ok', style:'width:'+pct+'%;background:'+(colorList[idx%colorList.length])+';'}) ]),
           el('span',{class:'tot', text:String(counts[k])})
         ]));
       });
     }
-    renderPlainBars('barDemoDept', byDept, SUMMARY_CHART_COLORS.dept);
+    renderPlainBars('barDemoDept', byDept, SUMMARY_CHART_COLORS.dept, departmentDisplayName);
     renderPlainBars('barDemoPlan', byPlan, SUMMARY_CHART_COLORS.program);
 
     renderAdvisorRankTable();
@@ -4744,7 +4766,7 @@ function renderLookupList(){
       var item = el('div',{class:'lookup-item'},[
         el('div',{class:'li-main'},[
           el('span',{class:'li-name', text:s.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)')}),
-          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program||'-')+' / '+(s.department||'-')+(s.plan?' ('+s.plan+')':'')+' • '+s.status+(s.mainAdvisor?(i18nText('txtAdvisorInlinePrefix')||' • ที่ปรึกษา: ')+s.mainAdvisor:'')})
+          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program?programDisplayName(s.program):'-')+' / '+(s.department?departmentDisplayName(s.department):'-')+(s.plan?' ('+s.plan+')':'')+' • '+s.status+(s.mainAdvisor?(i18nText('txtAdvisorInlinePrefix')||' • ที่ปรึกษา: ')+s.mainAdvisor:'')})
         ]),
         el('span',{class:'li-count', text:s.count+(i18nText('txtExamItemsCountSuffix')||' รายการสอบ')})
       ]);
@@ -4995,7 +5017,7 @@ function renderExamDateSearchResult(){
         el('td',{text:s.time||'-'}),
         el('td',{text:s.typeTxt}),
         el('td',{text:s.studentName+' ('+s.studentId+')'}),
-        el('td',{text:s.department||'-'}),
+        el('td',{text: s.department ? departmentDisplayName(s.department) : '-'}),
         el('td',{text:s.location||'-'}),
         el('td',{},[peopleWrap])
       ]));
@@ -5171,8 +5193,8 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       kv('แผนการเรียน', latest.plan)
     ]),
     el('div',{class:'kv-grid', style:'margin-top:12px;'},[
-      kv('หลักสูตร', latest.program),
-      kv('สาขาวิชา', latest.department)
+      kv('หลักสูตร', programDisplayName(latest.program)),
+      kv('สาขาวิชา', departmentDisplayName(latest.department))
     ])
   ]);
   wrap.appendChild(sec1);
@@ -5505,7 +5527,7 @@ function renderDocIntakeSelects(){
   if(!docTypeSel) return; // section อยู่ใน DOM เสมอ แต่กันไว้เผื่อยังไม่โหลด
   fillSelect(docTypeSel, masterData.documentTypes||[], i18nText('optSelectDocType')||'เลือกประเภทเอกสาร');
   fillSelect(document.getElementById('di_filterDocType'), masterData.documentTypes||[], i18nText('optAllDocTypes')||'ทุกประเภท');
-  fillSelect(document.getElementById('di_filterDept'), masterData.departments||[], i18nText('filterAllDept')||'ทุกสาขา');
+  fillSelect(document.getElementById('di_filterDept'), masterData.departments||[], i18nText('filterAllDept')||'ทุกสาขา', departmentDisplayName);
   toggleDiPublicationSection();
   var deptList = document.getElementById('di_departmentList');
   if(deptList){
@@ -5552,7 +5574,7 @@ function renderDocIntakeStudentSearchResults(){
         var item = el('div',{class:'lookup-item', style:'margin-bottom:6px;'},[
           el('div',{class:'li-main'},[
             el('span',{class:'li-name', text:s.studentName}),
-            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||'-')})
+            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department?departmentDisplayName(s.department):'-')})
           ])
         ]);
         item.addEventListener('click', function(){
@@ -5700,7 +5722,7 @@ function renderDocIntakeList(){
         el('td',{text: r.docType||'-'}),
         el('td',{text: r.studentId||'-'}),
         el('td',{text: r.studentName||'-'}),
-        el('td',{text: r.department||'-'}),
+        el('td',{text: r.department ? departmentDisplayName(r.department) : '-'}),
         el('td',{}, [statusSel]),
         el('td',{text: r.note||'-'}),
         el('td',{},[
@@ -5799,7 +5821,7 @@ function renderGradList(){
       }
       cells.push(el('td',{text:r.studentId||'-'}));
       cells.push(el('td',{text:r.studentName||'-'}));
-      cells.push(el('td',{text:r.department||'-'}));
+      cells.push(el('td',{text: r.department ? departmentDisplayName(r.department) : '-'}));
       cells.push(el('td',{text:toBuddhistDateStr(r.defenseDate)||'-'}));
       cells.push(el('td',{text:gradListTermLabel(r.examTerm)}));
       cells.push(el('td',{text:r.defenseResult||(i18nText('txtNoDefenseResultYet')||'(ยังไม่มีผล)')}));
@@ -5903,11 +5925,11 @@ function bindDocIntakeEvents(){
 }
 
 /* ================= SELECT RENDERING ================= */
-function fillSelect(selectEl, list, placeholder){
+function fillSelect(selectEl, list, placeholder, displayFn){
   var current = selectEl.value;
   selectEl.innerHTML='';
   selectEl.appendChild(el('option',{value:'', text: placeholder||'-- เลือก --'}));
-  list.forEach(function(item){ selectEl.appendChild(el('option',{value:item, text:item})); });
+  list.forEach(function(item){ selectEl.appendChild(el('option',{value:item, text: displayFn ? displayFn(item) : item})); });
   if(list.indexOf(current)>-1) selectEl.value = current;
 }
 function ensureSearchSelect(id, list, placeholder){
@@ -5924,9 +5946,9 @@ function ensureSearchSelect(id, list, placeholder){
 function renderAllSelects(){
   initDocLinkAutocompletes();
   initLocationAutocompletes();
-  fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, i18nText('filterAllDept'));
-  fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, i18nText('filterAllDept'));
-  fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, i18nText('filterAllProgram'));
+  fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, i18nText('filterAllDept'), departmentDisplayName);
+  fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, i18nText('filterAllDept'), departmentDisplayName);
+  fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, i18nText('filterAllProgram'), programDisplayName);
   fillSelect(document.getElementById('dashPlanFilter'), masterData.plans, i18nText('filterAllPlan'));
   ensureSearchSelect('f_program', masterData.programs, 'phSearchProgram');
   ensureSearchSelect('f_department', masterData.departments, 'phSearchDepartment');
@@ -7177,7 +7199,7 @@ function renderList(){
         var tr = el('tr',{},[
           el('td',{text:r.studentId}),
           el('td',{text:r.studentName}),
-          el('td',{text:r.department||'-'}),
+          el('td',{text: r.department ? departmentDisplayName(r.department) : '-'}),
           el('td',{}, typeTagEls),
           el('td',{text: dateParts.length ? dateParts.join(' / ') : '-'}),
           el('td',{}, resultTagEls),
@@ -7570,7 +7592,7 @@ function renderImportPreview(previewBox, importBtn){
     else { statusText=(i18nText('txtReadyToImport')||'✅ พร้อมนำเข้า'); statusColor='#1f8a4c'; }
     tbody.appendChild(el('tr',{},[
       el('td',{text:String(r.rowNum)}), el('td',{text:r.studentId}), el('td',{text:r.studentName}),
-      el('td',{text:r.degreeLevel}), el('td',{text:r.plan}), el('td',{text:r.program}), el('td',{text:r.department}),
+      el('td',{text:r.degreeLevel}), el('td',{text:r.plan}), el('td',{text:programDisplayName(r.program)}), el('td',{text:departmentDisplayName(r.department)}),
       el('td',{text:statusText, style:'color:'+statusColor+';'})
     ]));
   });
@@ -8194,7 +8216,7 @@ function renderDeptPinSection(){
   var prevVal = sel.value;
   sel.innerHTML='';
   (masterData.departments||[]).forEach(function(d){
-    sel.appendChild(el('option',{value:d, text:d}));
+    sel.appendChild(el('option',{value:d, text:departmentDisplayName(d)}));
   });
   if(prevVal && masterData.departments.indexOf(prevVal)>-1) sel.value = prevVal;
   var listEl = document.getElementById('deptPinList');
@@ -8206,7 +8228,7 @@ function renderDeptPinSection(){
   }
   deptPins.forEach(function(d){
     var chip = el('span',{class:'chip'},[
-      el('span',{text:'✅ '+d.department}),
+      el('span',{text:'✅ '+departmentDisplayName(d.department)}),
       el('button',{type:'button', text:'✕', title:(i18nText('titleDisableDeptPin')||'ปิดใช้งานรหัสผ่านของสาขานี้'), 'data-i18n-title':'titleDisableDeptPin', onclick:function(){ removeDeptPin(d.department); }})
     ]);
     listEl.appendChild(chip);
@@ -8804,12 +8826,36 @@ function removeAdvisor(name){
     renderMasterLists(); renderAllSelects();
   }).catch(function(e){ alertMasterDataSaveFailed(e, i18nText('actionLabelDeleteAdvisor')||'ลบอาจารย์ที่ปรึกษา'); });
 }
+/* คีย์ของแผนที่ชื่ออังกฤษ (Thai->English) ที่สัมพันธ์กับ master data key นั้นๆ — ปัจจุบันรองรับเฉพาะหลักสูตร/สาขาวิชา
+   ตามที่ผู้ใช้เลือก (ไม่ใช่แผนการเรียน/ประเภทเอกสาร) คืนค่า null ถ้า key นั้นไม่มีชื่ออังกฤษให้ตั้ง */
+function enMapKeyFor(key){
+  if(key==='programs') return 'programsEn';
+  if(key==='departments') return 'departmentsEn';
+  return null;
+}
 function renderChipList(containerId, key){
   var container = document.getElementById(containerId);
   container.innerHTML='';
+  var enMapKey = enMapKeyFor(key);
   masterData[key].forEach(function(val){
-    var chip = el('span',{class:'chip'},[
-      el('span',{text:val}),
+    var enVal = enMapKey ? (masterData[enMapKey]&&masterData[enMapKey][val]) : null;
+    var chipChildren = [ el('span',{text: enVal ? (val+' ('+enVal+')') : val}) ];
+    if(enMapKey){
+      chipChildren.push(el('button',{type:'button', text:'EN', title:(i18nText('titleEditEnglishName')||'เพิ่ม/แก้ไขชื่อภาษาอังกฤษ'), 'data-i18n-title':'titleEditEnglishName', style:'font-size:10px;font-weight:700;', onclick:function(){
+        var newEnVal = prompt((i18nText('promptEditEnglishNameColon')||'ชื่อภาษาอังกฤษของ "')+val+(i18nText('promptEditEnglishNameColonSuffix')||'":'), enVal||'');
+        if(newEnVal===null) return;
+        newEnVal = newEnVal.trim();
+        withFreshMasterData(function(){
+          if(!masterData[enMapKey]) masterData[enMapKey]={};
+          if(newEnVal) masterData[enMapKey][val]=newEnVal; else delete masterData[enMapKey][val];
+          return Promise.resolve();
+        }).then(function(){
+          logAudit('แก้ไขชื่อภาษาอังกฤษ'+(MASTER_LIST_LABELS[key]||key), '', val+' → '+(newEnVal||'(ลบ)'));
+          renderMasterLists(); renderAllSelects(); renderList();
+        }).catch(function(e){ alertMasterDataSaveFailed(e, (i18nText('actionLabelEditPrefix')||'แก้ไข')+masterListLabel(key)); });
+      }}));
+    }
+    var chip = el('span',{class:'chip'}, chipChildren.concat([
       el('button',{type:'button', text:'✎', title:(i18nText('titleEditNameAutoUpdate')||'แก้ไขชื่อ (จะปรับปรุงข้อมูลที่เคยบันทึกไว้ให้อัตโนมัติ)'), 'data-i18n-title':'titleEditNameAutoUpdate', onclick:function(){
         var newVal = prompt((i18nText('promptEditNameColon')||'แก้ไขชื่อ:'), val);
         if(newVal===null) return;
@@ -8831,6 +8877,7 @@ function renderChipList(containerId, key){
         var deptPinCleanupP = Promise.resolve();
         withFreshMasterData(function(){
           masterData[key] = masterData[key].filter(function(v){ return v!==val; });
+          if(enMapKey && masterData[enMapKey]) delete masterData[enMapKey][val];
           if(key==='departments' && (deptPins||[]).some(function(d){ return d.department===val; })){
             deptPins = deptPins.filter(function(d){ return d.department!==val; });
             deptPinCleanupP = dbPut('meta',{key:'deptPins', value:deptPins});
@@ -8841,16 +8888,21 @@ function renderChipList(containerId, key){
           return deptPinCleanupP;
         }).then(function(){ renderMasterLists(); renderAllSelects(); }).catch(function(e){ alertMasterDataSaveFailed(e, (i18nText('actionLabelDeletePrefix')||'ลบ')+masterListLabel(key)); });
       }})
-    ]);
+    ]));
     container.appendChild(chip);
   });
 }
 function renameMasterItem(key, oldVal, newVal){
   var deptPinRenameP = Promise.resolve();
+  var enMapKey = enMapKeyFor(key);
   withFreshMasterData(function(){
     var idx = masterData[key].indexOf(oldVal);
     if(idx===-1) return {__skip:true};
     masterData[key][idx] = newVal;
+    if(enMapKey && masterData[enMapKey] && masterData[enMapKey][oldVal]!==undefined){
+      masterData[enMapKey][newVal] = masterData[enMapKey][oldVal];
+      delete masterData[enMapKey][oldVal];
+    }
     if(key==='departments'){
       var deptPinEntry = (deptPins||[]).filter(function(d){ return d.department===oldVal; })[0];
       if(deptPinEntry){
@@ -8877,8 +8929,15 @@ function renameMasterItem(key, oldVal, newVal){
    oldVal ออกจากรายการ (ไม่ต้องเพิ่ม/แก้ เพราะ newVal มีอยู่แล้ว) แล้ว cascade เปลี่ยนข้อมูลที่เคยบันทึกไว้ทั้งหมดจาก oldVal
    เป็น newVal เพื่อไม่ให้ตกหล่น */
 function mergeMasterItem(key, oldVal, newVal){
+  var enMapKey = enMapKeyFor(key);
   withFreshMasterData(function(){
     masterData[key] = masterData[key].filter(function(v){ return v!==oldVal; });
+    if(enMapKey && masterData[enMapKey] && masterData[enMapKey][oldVal]!==undefined){
+      /* ถ้ารายการที่ถูกรวมเข้าไป (newVal) ยังไม่มีชื่อภาษาอังกฤษของตัวเอง ให้ใช้ชื่อภาษาอังกฤษของ oldVal แทนไปก่อน
+         (ดีกว่าปล่อยให้หายไปเงียบๆ) ถ้า newVal มีชื่อภาษาอังกฤษของตัวเองอยู่แล้ว ให้คงไว้ตามเดิม ไม่ทับ */
+      if(masterData[enMapKey][newVal]===undefined) masterData[enMapKey][newVal] = masterData[enMapKey][oldVal];
+      delete masterData[enMapKey][oldVal];
+    }
     return Promise.resolve();
   }).then(function(){
     logAudit('รวม'+(MASTER_LIST_LABELS[key]||key), '', oldVal+' → '+newVal);

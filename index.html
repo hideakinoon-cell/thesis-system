@@ -580,7 +580,7 @@ if('serviceWorker' in navigator){
 <!-- ============ SUMMARY DASHBOARD VIEW (แสดงทันทีหลังปลดล็อก) ============ -->
 <section id="view-summary">
   <div class="card" id="dashFilterCard">
-    <h3>🔎 ค้นหา / กรองข้อมูลแดชบอร์ด</h3>
+    <h3 data-i18n="secSummarySearch">🔎 ค้นหา / กรองข้อมูลแดชบอร์ด</h3>
     <div class="dash-filter-row">
       <div class="field dash-filter-search">
         <label>ค้นหานักศึกษา (รหัส/ชื่อ-นามสกุล)</label>
@@ -609,7 +609,7 @@ if('serviceWorker' in navigator){
 
   <div class="card dash-panel-wrap">
     <div class="dash-panel-header">
-      <h3>📊 ภาพรวมภาคเรียน</h3>
+      <h3 data-i18n="secSummaryOverview">📊 ภาพรวมภาคเรียน</h3>
       <div class="dash-panel-header-controls">
         <label>ภาคเรียน: <select id="dashTermSelect"></select></label>
         <label><input type="checkbox" id="dashShowOnlyLeaveToggle"> แสดงเฉพาะที่รักษาสภาพ</label>
@@ -678,7 +678,7 @@ if('serviceWorker' in navigator){
 <section id="view-dashboard" style="display:none;">
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;">🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
+      <h3 style="margin:0;" data-i18n="secLookupTitle">🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
       <button type="button" class="btn btn-secondary btn-sm" id="btnExportLookupList">📥 ส่งออก Excel</button>
     </div>
     <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา...">
@@ -717,7 +717,7 @@ if('serviceWorker' in navigator){
 <!-- ============ ADVISOR LOOKUP VIEW ============ -->
 <section id="view-advisors" style="display:none;">
   <div class="card">
-    <h3>👨‍🏫 ค้นหาอาจารย์ที่ปรึกษา</h3>
+    <h3 data-i18n="secAdvisorSearch">👨‍🏫 ค้นหาอาจารย์ที่ปรึกษา</h3>
     <div class="help" style="margin-bottom:10px;">แสดงเฉพาะผู้ที่มีตำแหน่งที่ปรึกษาหลักหรือที่ปรึกษาร่วม ไม่รวมผู้ที่มีแค่ตำแหน่งประธาน/กรรมการสอบ (เช่น กรรมการสอบจากภายนอก) — จัดการรายชื่อทั้งหมดได้ที่หน้าตั้งค่า</div>
     <input type="text" id="advisorLookupSearch" placeholder="พิมพ์ชื่ออาจารย์ที่ปรึกษาเพื่อค้นหา...">
     <div class="lookup-result-list" id="advisorLookupResultList"></div>
@@ -733,7 +733,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card" style="margin-top:16px;">
-    <h3>📅 ค้นหาตามวันที่สอบ (ทุกสาขา)</h3>
+    <h3 data-i18n="secAdvisorExamDate">📅 ค้นหาตามวันที่สอบ (ทุกสาขา)</h3>
     <div class="help" style="margin-bottom:10px;">เลือกวันที่เพื่อดูว่าวันนั้นมีการสอบของสาขาใดบ้าง ใครเป็นประธาน/กรรมการสอบบ้าง — ดึงจากทุกสาขาวิชาในระบบ ไม่จำกัดเฉพาะสาขาที่กำลังดู ใช้เช็คก่อนออกคำสั่งแต่งตั้งกรรมการ เพื่อกันกรรมการท่านเดียวกันถูกเชิญไปสอบซ้อนกันในวันเดียวกันโดยไม่รู้ตัว</div>
     <div class="field" style="max-width:260px;"><label>วันที่สอบ</label><input type="date" id="examDateSearchInput"></div>
     <div id="examDateSearchResult" style="margin-top:14px;"></div>
@@ -744,7 +744,7 @@ if('serviceWorker' in navigator){
 <section id="view-advisorlist" style="display:none;">
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;">👥 รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h3>
+      <h3 style="margin:0;" data-i18n="secAdvisorListTitle">👥 รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button type="button" class="btn btn-secondary btn-sm" id="btnExportAdvisorList">📥 ส่งออกรายชื่อ Excel</button>
         <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorWorkloadReport">📊 สรุปภาระงานอาจารย์ทั้งหมด</button>
@@ -780,7 +780,7 @@ if('serviceWorker' in navigator){
 <!-- ============ DOC INTAKE VIEW (ลงทะเบียนรับเอกสาร) ============ -->
 <section id="view-docintake" style="display:none;">
   <div class="card">
-    <h3>📥 ลงทะเบียนรับเอกสาร</h3>
+    <h3 data-i18n="secDocIntakeTitle">📥 ลงทะเบียนรับเอกสาร</h3>
     <div class="help" style="margin-bottom:10px;">บันทึกเอกสารที่นักศึกษาส่งมา เช่น บว.04 (ขอแต่งตั้งอาจารย์ที่ปรึกษา) — พิมพ์ค้นหารหัส/ชื่อนักศึกษาที่มีข้อมูลอยู่แล้วในระบบเพื่อดึงชื่อ-สาขาอัตโนมัติ หรือกรอกเองได้ถ้ายังไม่มีข้อมูลนักศึกษาคนนี้ในระบบ</div>
     <div class="field-row-with-btn" style="flex-wrap:wrap;gap:14px;">
       <div class="field" style="min-width:110px;"><label>เลขรับเอกสาร</label><input type="text" id="di_intakeNo" readonly style="background:#f4f6fa;font-weight:600;text-align:center;"></div>
@@ -819,7 +819,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card" style="margin-top:16px;">
-    <h3>🔎 ตัวกรอง</h3>
+    <h3 data-i18n="secDocIntakeFilter">🔎 ตัวกรอง</h3>
     <div class="dash-filter-row">
       <div class="field"><label>ตั้งแต่วันที่</label><input type="date" id="di_filterFrom"></div>
       <div class="field"><label>ถึงวันที่</label><input type="date" id="di_filterTo"></div>
@@ -840,7 +840,7 @@ if('serviceWorker' in navigator){
 
   <div class="card" style="margin-top:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-      <h3 style="margin:0;">📋 รายการที่ลงทะเบียน</h3>
+      <h3 style="margin:0;" data-i18n="secDocIntakeList">📋 รายการที่ลงทะเบียน</h3>
       <button type="button" class="btn btn-secondary btn-sm" id="btnExportDocIntake">⬇ Excel</button>
     </div>
     <div style="overflow-x:auto;margin-top:12px;">
@@ -864,7 +864,7 @@ if('serviceWorker' in navigator){
 <section id="view-gradlist" style="display:none;">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-      <h3 style="margin:0;">📤 รายชื่อนักศึกษาสอบป้องกันผ่านแล้ว</h3>
+      <h3 style="margin:0;" data-i18n="secGradlistTitle">📤 รายชื่อนักศึกษาสอบป้องกันผ่านแล้ว</h3>
       <div style="display:flex;gap:8px;">
         <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabPending">🕓 รอส่ง</button>
         <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabSent">✅ ส่งแล้ว</button>
@@ -892,7 +892,7 @@ if('serviceWorker' in navigator){
 <!-- ============ FORM VIEW ============ -->
 <section id="view-form" style="display:none;">
   <div class="card" id="formSec1">
-    <h3>หมวดที่ 1: ข้อมูลนักศึกษา</h3>
+    <h3 data-i18n="secForm1">หมวดที่ 1: ข้อมูลนักศึกษา</h3>
     <div class="grid">
       <div class="field">
         <label>รหัสนักศึกษา <span class="req">*</span></label>
@@ -994,7 +994,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card" id="formSec2">
-    <h3>หมวดที่ 2: อาจารย์ที่ปรึกษา &amp; หัวข้อ</h3>
+    <h3 data-i18n="secForm2">หมวดที่ 2: อาจารย์ที่ปรึกษา &amp; หัวข้อ</h3>
     <div class="grid">
       <div class="field full">
         <label>อาจารย์ที่ปรึกษาหลัก</label>
@@ -1034,7 +1034,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card" id="formSec3">
-    <h3>หมวดที่ 3: กำหนดการสอบและผลสอบ</h3>
+    <h3 data-i18n="secForm3">หมวดที่ 3: กำหนดการสอบและผลสอบ</h3>
     <div class="help">กรอกข้อมูลใน "3.1" หรือ "3.2" เพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (1 รายการ = การสอบ 1 ครั้ง) ถ้านักศึกษาเคยสอบมาก่อน หรือจะบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนเดิม ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 แล้วกด "＋ เพิ่มข้อมูลใหม่" เพื่อเริ่มรายการใหม่ — ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม เมื่อกด "แก้ไข" รายการที่เคยบันทึกไว้ ส่วนที่ไม่ตรงกับประเภทเดิมจะถูกล็อกไว้เพื่อป้องกันการเขียนทับ</div>
 
     <div id="studentHistoryBox" style="display:none;margin-top:14px;">
@@ -1182,7 +1182,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card" id="formSec5">
-    <h3>หมวดที่ 5: การเผยแพร่ผลงานวิจัย</h3>
+    <h3 data-i18n="secForm5">หมวดที่ 5: การเผยแพร่ผลงานวิจัย</h3>
     <div class="help" style="margin-bottom:10px;">กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน</div>
     <div class="field full">
       <div class="multi-row-list" id="publicationList"></div>
@@ -1201,7 +1201,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card" id="formSec6">
-    <h3>หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</h3>
+    <h3 data-i18n="secForm6">หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</h3>
     <div class="grid">
       <div class="field">
         <label>สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ</label>
@@ -1302,7 +1302,7 @@ if('serviceWorker' in navigator){
 <!-- ============ SETTINGS VIEW ============ -->
 <section id="view-settings" style="display:none;">
   <div class="card">
-    <h3>🔒 ความปลอดภัย — เปลี่ยนรหัสผ่านเข้าระบบ</h3>
+    <h3 data-i18n="secSettingsSecurity">🔒 ความปลอดภัย — เปลี่ยนรหัสผ่านเข้าระบบ</h3>
     <div class="grid cols-3">
       <div class="field"><label>รหัสผ่านปัจจุบัน</label><input type="password" id="pin_current" autocomplete="current-password"></div>
       <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="pin_new1" autocomplete="new-password"></div>
@@ -1315,7 +1315,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>👁️ รหัสผ่านสำหรับเจ้าหน้าที่ "ดูข้อมูลอย่างเดียว"</h3>
+    <h3 data-i18n="secSettingsViewerPin">👁️ รหัสผ่านสำหรับเจ้าหน้าที่ "ดูข้อมูลอย่างเดียว"</h3>
     <div class="help" style="margin-bottom:10px;">ตั้งรหัสผ่านแยกให้เจ้าหน้าที่ที่เกี่ยวข้อง เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารแนบได้เท่านั้น — ดูได้ แต่บันทึก/แก้ไข/ลบ/ตั้งค่าไม่ได้ ใช้รหัสเดียวกันได้กับหลายคน</div>
     <div class="grid cols-2">
       <div class="field"><label>ตั้งรหัสผ่านดูอย่างเดียว</label><input type="password" id="viewerPin1" autocomplete="new-password"></div>
@@ -1330,7 +1330,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>🏫 รหัสผ่านเจ้าหน้าที่สาขา (ดูได้เฉพาะสาขาของตัวเอง)</h3>
+    <h3 data-i18n="secSettingsDeptPin">🏫 รหัสผ่านเจ้าหน้าที่สาขา (ดูได้เฉพาะสาขาของตัวเอง)</h3>
     <div class="help" style="margin-bottom:10px;">ตั้งรหัสผ่านแยกให้แต่ละสาขา เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะข้อมูลนักศึกษาของสาขานั้น ๆ ในหน้า "ตรวจสอบข้อมูล" เท่านั้น (ดูอย่างเดียว บันทึก/แก้ไขไม่ได้) — <strong>ข้อควรทราบ:</strong> เป็นการกรองในหน้าจอแอปเท่านั้น ถ้าเปิดโหมดข้อมูลกลาง เจ้าหน้าที่ที่มีบัญชี Google ถูกแชร์สิทธิ์อ่านไว้จะยังเปิด Google Sheet ดูข้อมูลทุกสาขาได้โดยตรงอยู่ดี ไม่ใช่การปิดกั้นข้อมูลแบบเข้มงวด</div>
     <div class="grid cols-2">
       <div class="field">
@@ -1349,7 +1349,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>เชื่อมต่อ Google Drive (สำรอง/กู้คืนข้อมูล และอัปโหลดไฟล์แนบ)</h3>
+    <h3 data-i18n="secSettingsDrive">เชื่อมต่อ Google Drive (สำรอง/กู้คืนข้อมูล และอัปโหลดไฟล์แนบ)</h3>
     <div class="grid">
       <div class="field full">
         <label>Google OAuth Client ID</label>
@@ -1382,7 +1382,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>🔍 ตรวจสอบไฟล์แนบที่ลิงก์เสีย</h3>
+    <h3 data-i18n="secSettingsBrokenFiles">🔍 ตรวจสอบไฟล์แนบที่ลิงก์เสีย</h3>
     <div class="help" style="margin-bottom:10px;">สแกนไฟล์แนบทั้งหมดที่เคยอัปโหลดขึ้น Google Drive ในระบบ เช็คว่าแต่ละไฟล์ยังเปิดได้จริงหรือไม่ (เช่น ถูกลบ/ย้ายไปถังขยะ/ไม่มีสิทธิ์เข้าถึงแล้ว) มีประโยชน์เวลาสงสัยว่ามีการย้าย/ลบไฟล์ในบัญชี Drive โดยไม่ได้ตั้งใจ</div>
     <div class="form-footer" style="justify-content:flex-start;">
       <button class="btn btn-secondary" id="btnCheckBrokenFiles">🔍 เริ่มตรวจสอบ</button>
@@ -1391,7 +1391,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>🧹 ล้างประวัติที่ปรึกษาที่ขึ้นผิดพลาด</h3>
+    <h3 data-i18n="secSettingsAdvisorHistoryCleanup">🧹 ล้างประวัติที่ปรึกษาที่ขึ้นผิดพลาด</h3>
     <div class="help" style="margin-bottom:10px;">ก่อนหน้านี้ระบบเคยขึ้น "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ผิดพลาดในบางกรณี เช่น ตอนกรอกชื่อที่ปรึกษาให้นักศึกษาคนหนึ่งเป็นครั้งแรก ทั้งที่ไม่ได้เปลี่ยนจากชื่อเดิม เครื่องมือนี้จะสแกนหาแล้วลบเฉพาะรายการประวัติปลอมเหล่านั้นออก โดยไม่กระทบประวัติการเปลี่ยนแปลงที่ปรึกษาจริง</div>
     <div class="form-footer" style="justify-content:flex-start;">
       <button class="btn btn-secondary" id="btnScanBogusAdvisorHistory">🔍 เริ่มตรวจสอบ</button>
@@ -1400,7 +1400,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>🔍 ตรวจสอบสาขา/หลักสูตร/แผนที่สะกดไม่ตรงรายการมาตรฐาน</h3>
+    <h3 data-i18n="secSettingsMismatchFields">🔍 ตรวจสอบสาขา/หลักสูตร/แผนที่สะกดไม่ตรงรายการมาตรฐาน</h3>
     <div class="help" style="margin-bottom:10px;">สแกนข้อมูลนักศึกษาทั้งหมด เทียบช่อง "สาขาวิชา"/"หลักสูตร"/"แผนการศึกษา" กับรายการมาตรฐานที่ตั้งไว้ในระบบ ถ้าพบค่าที่สะกดไม่ตรงกันเป๊ะ (เช่น มีวงเล็บต่อท้าย เว้นวรรคเกิน หรือพิมพ์เองแทนการเลือกจากดรอปดาวน์) นักศึกษาคนนั้นจะไม่ถูกนับรวมในตัวกรอง/แดชบอร์ดของสาขานั้นๆ อย่างถูกต้อง</div>
     <div class="form-footer" style="justify-content:flex-start;">
       <button class="btn btn-secondary" id="btnCheckMismatchedMasterFields">🔍 เริ่มตรวจสอบ</button>
@@ -1409,7 +1409,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>🛠️ ซ่อมข้อมูล "ภาคเรียนที่สำเร็จการศึกษา" ที่สลับกับ "ประวัติที่ปรึกษา"</h3>
+    <h3 data-i18n="secSettingsGradTermFix">🛠️ ซ่อมข้อมูล "ภาคเรียนที่สำเร็จการศึกษา" ที่สลับกับ "ประวัติที่ปรึกษา"</h3>
     <div class="help" style="margin-bottom:10px;">ก่อนหน้านี้เคยมีบั๊กที่ทำให้ตอนบันทึกข้อมูลบางครั้ง ค่า "ภาคเรียนที่สำเร็จการศึกษา" กับ "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ของนักศึกษาบางคนสลับตำแหน่งกัน (สังเกตได้จากช่องภาคเรียนที่สำเร็จการศึกษาขึ้นเป็นข้อความ "[]" แทนที่จะเป็นค่าว่างหรือภาคเรียนจริง) เครื่องมือนี้จะสแกนหาแล้วสลับค่ากลับให้ถูกตำแหน่ง โดยไม่กระทบข้อมูลอื่น (บั๊กต้นเหตุได้รับการแก้ไขแล้ว การบันทึกครั้งต่อไปจะไม่เกิดปัญหานี้อีก เครื่องมือนี้ใช้สำหรับซ่อมข้อมูลเก่าที่อาจได้รับผลกระทบไปแล้วเท่านั้น)</div>
     <div class="form-footer" style="justify-content:flex-start;">
       <button class="btn btn-secondary" id="btnScanSwappedGradTerm">🔍 เริ่มตรวจสอบ</button>
@@ -1418,7 +1418,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>⚠️ นักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่</h3>
+    <h3 data-i18n="secSettingsWithdrawnAdvisor">⚠️ นักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่</h3>
     <div class="help" style="margin-bottom:10px;">สแกนหานักศึกษาที่เคยมีอาจารย์ที่ปรึกษาหลักแล้วถูกถอนออก แต่ยังไม่ได้แต่งตั้งที่ปรึกษาคนใหม่แทน มีประโยชน์เวลาต้องการติดตามว่านักศึกษาคนไหนยังค้างเรื่องที่ปรึกษาอยู่บ้าง</div>
     <div class="form-footer" style="justify-content:flex-start;">
       <button class="btn btn-secondary" id="btnScanWithdrawnAdvisor">🔍 เริ่มตรวจสอบ</button>
@@ -1427,7 +1427,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>⚠️ นักศึกษาที่ไม่มีข้อมูลแผนการเรียน</h3>
+    <h3 data-i18n="secSettingsNoPlan">⚠️ นักศึกษาที่ไม่มีข้อมูลแผนการเรียน</h3>
     <div class="help" style="margin-bottom:10px;">สแกนหานักศึกษาที่ช่อง "แผนการเรียน" ว่างเปล่าอยู่ในปัจจุบัน (เช่น เคยได้รับผลกระทบจากบั๊กที่ค่าแผนการเรียนหายไปเมื่อรายการนั้นถูกลบออกจาก master data) เครื่องมือนี้แค่ตรวจสอบและแสดงรายชื่อให้เท่านั้น ไม่แก้ไขข้อมูลให้อัตโนมัติ เพราะไม่ทราบว่าค่าที่ถูกต้องของแต่ละคนคืออะไร กดปุ่ม "แก้ไข" ข้างรายชื่อเพื่อเปิดระเบียนแล้วเลือกแผนการเรียนที่ถูกต้องกลับเข้าไปได้เลย</div>
     <div class="form-footer" style="justify-content:flex-start;">
       <button class="btn btn-secondary" id="btnScanMissingPlan">🔍 เริ่มตรวจสอบ</button>
@@ -1436,7 +1436,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)</h3>
+    <h3 data-i18n="secSettingsCloudSync">🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)</h3>
     <div class="help" style="margin-bottom:14px;">เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md</div>
     <div class="grid">
       <div class="field full">
@@ -1468,7 +1468,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>🗑️ ล้างข้อมูลที่ถูกลบถาวร (ลดขนาดชีทกลาง)</h3>
+    <h3 data-i18n="secSettingsPurgeDeleted">🗑️ ล้างข้อมูลที่ถูกลบถาวร (ลดขนาดชีทกลาง)</h3>
     <div class="help" style="margin-bottom:10px;">การกดปุ่ม "ลบ" ในหน้าต่างๆ ของระบบข้อมูลกลางเป็นการ "ซ่อน" รายการเท่านั้น (แถวเดิมยังค้างอยู่ในชีท Google Sheets เผื่อกู้คืน/ตรวจสอบย้อนหลังได้) เมื่อมีการลบ/นำเข้าข้อมูลบ่อยๆ แถวที่ซ่อนไว้จะสะสมมากขึ้นเรื่อยๆ ทำให้ทุกครั้งที่เปิดหน้ารายการต้องโหลดข้อมูลมากกว่าที่เห็นจริง และรู้สึกช้าลง เครื่องมือนี้จะลบแถวที่ถูกซ่อนไว้เหล่านั้นออกจากชีท (Records/Files/DocIntake) อย่างถาวร <strong>ไม่สามารถกู้คืนได้อีก</strong> ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ</div>
     <div class="form-footer" style="justify-content:flex-start;">
       <button class="btn btn-secondary" id="btnPurgeDeleted">🗑️ ล้างข้อมูลที่ถูกลบถาวร</button>
@@ -1477,7 +1477,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card">
-    <h3>ข้อมูลตั้งต้น (Master Data)</h3>
+    <h3 data-i18n="secSettingsMasterData">ข้อมูลตั้งต้น (Master Data)</h3>
     <div class="master-grid">
       <div class="master-card">
         <h4>หลักสูตร</h4>
@@ -1526,7 +1526,7 @@ if('serviceWorker' in navigator){
 <!-- ============ AUDIT LOG VIEW (เฉพาะ Admin) ============ -->
 <section id="view-auditlog" style="display:none;">
   <div class="card">
-    <h3>📜 ประวัติการแก้ไขข้อมูล</h3>
+    <h3 data-i18n="secAuditlogTitle">📜 ประวัติการแก้ไขข้อมูล</h3>
     <div class="help" style="margin-bottom:10px;">บันทึกทุกครั้งที่มีการสร้าง/แก้ไข/ลบข้อมูลนักศึกษาในระบบ เรียงจากล่าสุดไปเก่าสุด</div>
     <input type="text" id="auditLogSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อกรอง...">
     <div id="auditLogList" style="margin-top:12px;"></div>
@@ -2466,6 +2466,35 @@ var LANDING_I18N = {
   navTabGradlist: {th:'📤 รายชื่อรอส่ง', en:'📤 Pending Submission'},
   navTabSettings: {th:'⚙️ ตั้งค่า', en:'⚙️ Settings'},
   navTabAuditlog: {th:'📜 ประวัติการแก้ไข', en:'📜 Edit History'},
+  secSummarySearch: {th:'🔎 ค้นหา / กรองข้อมูลแดชบอร์ด', en:'🔎 Search / Filter Dashboard Data'},
+  secSummaryOverview: {th:'📊 ภาพรวมภาคเรียน', en:'📊 Term Overview'},
+  secLookupTitle: {th:'🔍 ตรวจสอบข้อมูลนักศึกษา', en:'🔍 Student Lookup'},
+  secAdvisorSearch: {th:'👨‍🏫 ค้นหาอาจารย์ที่ปรึกษา', en:'👨‍🏫 Search Advisors'},
+  secAdvisorExamDate: {th:'📅 ค้นหาตามวันที่สอบ (ทุกสาขา)', en:'📅 Search by Exam Date (All Departments)'},
+  secAdvisorListTitle: {th:'👥 รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)', en:'👥 Advisor List (Advisors/Committee)'},
+  secDocIntakeTitle: {th:'📥 ลงทะเบียนรับเอกสาร', en:'📥 Register Documents'},
+  secDocIntakeFilter: {th:'🔎 ตัวกรอง', en:'🔎 Filters'},
+  secDocIntakeList: {th:'📋 รายการที่ลงทะเบียน', en:'📋 Registered Items'},
+  secGradlistTitle: {th:'📤 รายชื่อนักศึกษาสอบป้องกันผ่านแล้ว', en:'📤 Students Who Passed Defense'},
+  secForm1: {th:'หมวดที่ 1: ข้อมูลนักศึกษา', en:'Section 1: Student Information'},
+  secForm2: {th:'หมวดที่ 2: อาจารย์ที่ปรึกษา &amp; หัวข้อ', en:'Section 2: Advisor &amp; Thesis Topic'},
+  secForm3: {th:'หมวดที่ 3: กำหนดการสอบและผลสอบ', en:'Section 3: Exam Schedule and Results'},
+  secForm5: {th:'หมวดที่ 5: การเผยแพร่ผลงานวิจัย', en:'Section 5: Research Publication'},
+  secForm6: {th:'หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์', en:'Section 6: Final Thesis/Independent Study Submission'},
+  secSettingsSecurity: {th:'🔒 ความปลอดภัย — เปลี่ยนรหัสผ่านเข้าระบบ', en:'🔒 Security — Change System Password'},
+  secSettingsViewerPin: {th:'👁️ รหัสผ่านสำหรับเจ้าหน้าที่ "ดูข้อมูลอย่างเดียว"', en:'👁️ Password for "View-Only" Staff'},
+  secSettingsDeptPin: {th:'🏫 รหัสผ่านเจ้าหน้าที่สาขา (ดูได้เฉพาะสาขาของตัวเอง)', en:'🏫 Department Staff Password (Own Department Only)'},
+  secSettingsDrive: {th:'เชื่อมต่อ Google Drive (สำรอง/กู้คืนข้อมูล และอัปโหลดไฟล์แนบ)', en:'Connect Google Drive (Backup/Restore Data and Upload Attachments)'},
+  secSettingsBrokenFiles: {th:'🔍 ตรวจสอบไฟล์แนบที่ลิงก์เสีย', en:'🔍 Check Attachments with Broken Links'},
+  secSettingsAdvisorHistoryCleanup: {th:'🧹 ล้างประวัติที่ปรึกษาที่ขึ้นผิดพลาด', en:'🧹 Clean Up Incorrect Advisor History'},
+  secSettingsMismatchFields: {th:'🔍 ตรวจสอบสาขา/หลักสูตร/แผนที่สะกดไม่ตรงรายการมาตรฐาน', en:'🔍 Check Department/Program/Plan Spelling Mismatches'},
+  secSettingsGradTermFix: {th:'🛠️ ซ่อมข้อมูล "ภาคเรียนที่สำเร็จการศึกษา" ที่สลับกับ "ประวัติที่ปรึกษา"', en:'🛠️ Fix "Graduation Term" Data Swapped with "Advisor History"'},
+  secSettingsWithdrawnAdvisor: {th:'⚠️ นักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่', en:'⚠️ Students Whose Advisor Was Withdrawn but Not Yet Reassigned'},
+  secSettingsNoPlan: {th:'⚠️ นักศึกษาที่ไม่มีข้อมูลแผนการเรียน', en:'⚠️ Students Missing Study Plan Data'},
+  secSettingsCloudSync: {th:'🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)', en:'🌐 Central Data System (Multiple Devices/Staff)'},
+  secSettingsPurgeDeleted: {th:'🗑️ ล้างข้อมูลที่ถูกลบถาวร (ลดขนาดชีทกลาง)', en:'🗑️ Purge Permanently Deleted Data (Reduce Central Sheet Size)'},
+  secSettingsMasterData: {th:'ข้อมูลตั้งต้น (Master Data)', en:'Master Data'},
+  secAuditlogTitle: {th:'📜 ประวัติการแก้ไขข้อมูล', en:'📜 Edit History'},
   navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   navFeatures: {th:'ฟีเจอร์', en:'Features'},
   navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},

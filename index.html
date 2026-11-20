@@ -583,27 +583,27 @@ if('serviceWorker' in navigator){
     <h3 data-i18n="secSummarySearch">🔎 ค้นหา / กรองข้อมูลแดชบอร์ด</h3>
     <div class="dash-filter-row">
       <div class="field dash-filter-search">
-        <label>ค้นหานักศึกษา (รหัส/ชื่อ-นามสกุล)</label>
-        <input type="text" id="dashSearchInput" placeholder="พิมพ์แล้วเลือกจากรายการเพื่อดูข้อมูลนักศึกษาคนนั้น...">
+        <label data-i18n="lblSearchStudentIdFullName">ค้นหานักศึกษา (รหัส/ชื่อ-นามสกุล)</label>
+        <input type="text" id="dashSearchInput" placeholder="พิมพ์แล้วเลือกจากรายการเพื่อดูข้อมูลนักศึกษาคนนั้น..." data-i18n-ph="phDashSearch">
         <div class="lookup-result-list" id="dashSearchResults" style="display:none;"></div>
       </div>
       <div class="field">
-        <label>สาขาวิชา</label>
-        <select id="dashDeptFilter"><option value="">ทุกสาขา</option></select>
+        <label data-i18n="lblDepartment">สาขาวิชา</label>
+        <select id="dashDeptFilter"><option value="" data-i18n="filterAllDept">ทุกสาขา</option></select>
       </div>
       <div class="field">
-        <label>หลักสูตร</label>
-        <select id="dashProgramFilter"><option value="">ทุกหลักสูตร</option></select>
+        <label data-i18n="lblProgram">หลักสูตร</label>
+        <select id="dashProgramFilter"><option value="" data-i18n="filterAllProgram">ทุกหลักสูตร</option></select>
       </div>
       <div class="field">
         <label data-i18n="lblStudyPlan">แผนการเรียน</label>
-        <select id="dashPlanFilter"><option value="">ทุกแผน</option></select>
+        <select id="dashPlanFilter"><option value="" data-i18n="filterAllPlan">ทุกแผน</option></select>
       </div>
       <div class="field">
-        <label>ปีการศึกษา</label>
-        <select id="dashYearFilter"><option value="">ทุกปี</option></select>
+        <label data-i18n="lblAcademicYear">ปีการศึกษา</label>
+        <select id="dashYearFilter"><option value="" data-i18n="optAllYears">ทุกปี</option></select>
       </div>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnDashFilterReset">ล้างตัวกรอง</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnDashFilterReset" data-i18n="btnClearFilters">ล้างตัวกรอง</button>
     </div>
   </div>
 
@@ -611,33 +611,33 @@ if('serviceWorker' in navigator){
     <div class="dash-panel-header">
       <h3 data-i18n="secSummaryOverview">📊 ภาพรวมภาคเรียน</h3>
       <div class="dash-panel-header-controls">
-        <label>ภาคเรียน: <select id="dashTermSelect"></select></label>
-        <label><input type="checkbox" id="dashShowOnlyLeaveToggle"> แสดงเฉพาะที่รักษาสภาพ</label>
+        <label><span data-i18n="lblTermColon">ภาคเรียน: </span><select id="dashTermSelect"></select></label>
+        <label><input type="checkbox" id="dashShowOnlyLeaveToggle"> <span data-i18n="chkShowOnlyLeave">แสดงเฉพาะที่รักษาสภาพ</span></label>
       </div>
     </div>
-    <div class="dash-term-caption" id="dashTermCaption">กำลังคำนวณภาคเรียนปัจจุบันจากข้อมูล...</div>
+    <div class="dash-term-caption" id="dashTermCaption" data-i18n="txtCalculatingCurrentTerm">กำลังคำนวณภาคเรียนปัจจุบันจากข้อมูล...</div>
 
     <div class="dash-overview-row">
       <div class="dash-mini-stat">
         <div class="icon">📝</div>
         <div class="val" id="miniRegCount">0</div>
-        <div class="lbl">ลงทะเบียนภาคนี้</div>
+        <div class="lbl" data-i18n="lblRegisteredThisTerm">ลงทะเบียนภาคนี้</div>
       </div>
       <div class="dash-mini-stat">
         <div class="icon">🛟</div>
         <div class="val" id="miniLeaveCount">0</div>
-        <div class="lbl">รักษาสภาพภาคนี้</div>
+        <div class="lbl" data-i18n="lblOnLeaveThisTerm">รักษาสภาพภาคนี้</div>
       </div>
       <div class="dash-mini-stat">
         <div class="icon">🎯</div>
         <div class="val" id="miniExamCount">0</div>
-        <div class="lbl">สอบป้องกัน/IS ภาคนี้</div>
+        <div class="lbl" data-i18n="lblDefenseExamThisTerm">สอบป้องกัน/IS ภาคนี้</div>
       </div>
     </div>
 
     <div class="dash-panel-grid">
       <div class="dash-subpanel">
-        <h4>👥 ข้อมูลนักศึกษา (ตามตัวกรองด้านบน)</h4>
+        <h4 data-i18n="hStudentDataByFilter">👥 ข้อมูลนักศึกษา (ตามตัวกรองด้านบน)</h4>
         <div class="dash-subpanel-cols">
           <div class="dash-mini-chart-body"><canvas id="chartDemoProgram"></canvas></div>
           <div id="barDemoDept"></div>
@@ -645,28 +645,28 @@ if('serviceWorker' in navigator){
         </div>
       </div>
       <div class="dash-subpanel">
-        <h4>🏫 แยกตามสาขา (ผลสอบป้องกัน/IS ภาคเรียนนี้)</h4>
+        <h4 data-i18n="hByDepartmentThisTerm">🏫 แยกตามสาขา (ผลสอบป้องกัน/IS ภาคเรียนนี้)</h4>
         <div class="dash-dept-mini-grid" id="deptMiniDonutsWrap"></div>
       </div>
     </div>
 
     <div class="dash-panel-grid">
       <div class="dash-subpanel">
-        <h4>📈 แนวโน้มจำนวนสอบป้องกัน/IS รายภาคเรียน</h4>
+        <h4 data-i18n="hDefenseExamTrend">📈 แนวโน้มจำนวนสอบป้องกัน/IS รายภาคเรียน</h4>
         <div id="dashTrendCallout"></div>
         <div class="chart-card-body" style="height:220px;"><canvas id="chartTrendBar"></canvas></div>
       </div>
       <div class="dash-subpanel">
-        <h4>👨‍🏫 ภาระงานที่ปรึกษา (Top 5)</h4>
-        <table class="dash-rank-table"><thead><tr><th>อันดับ</th><th>อาจารย์</th><th>ภาระงาน</th></tr></thead><tbody id="advisorRankTbody"></tbody></table>
+        <h4 data-i18n="hAdvisorWorkloadTop5">👨‍🏫 ภาระงานที่ปรึกษา (Top 5)</h4>
+        <table class="dash-rank-table"><thead><tr><th data-i18n="thRank">อันดับ</th><th data-i18n="thAdvisorShort">อาจารย์</th><th data-i18n="thWorkload">ภาระงาน</th></tr></thead><tbody id="advisorRankTbody"></tbody></table>
       </div>
     </div>
 
     <div class="dash-subpanel">
-      <h4>🧾 นักศึกษาที่ลงทะเบียนภาคเรียนนี้</h4>
+      <h4 data-i18n="hRegisteredThisTermList">🧾 นักศึกษาที่ลงทะเบียนภาคเรียนนี้</h4>
       <div style="overflow-x:auto;">
         <table class="dash-recent-table">
-          <thead><tr><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>สถานะ</th><th>วันที่สอบ</th><th>ผลสอบ</th></tr></thead>
+          <thead><tr><th data-i18n="thStudentId">รหัสนักศึกษา</th><th data-i18n="thStudentName">ชื่อ-นามสกุล</th><th data-i18n="thDepartment">สาขาวิชา</th><th data-i18n="thStatus">สถานะ</th><th data-i18n="thExamDate">วันที่สอบ</th><th data-i18n="thExamResult">ผลสอบ</th></tr></thead>
           <tbody id="dashRecentTbody"></tbody>
         </table>
       </div>
@@ -679,25 +679,25 @@ if('serviceWorker' in navigator){
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <h3 style="margin:0;" data-i18n="secLookupTitle">🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnExportLookupList">📥 ส่งออก Excel</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnExportLookupList" data-i18n="btnExportExcel">📥 ส่งออก Excel</button>
     </div>
     <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา..." data-i18n-ph="phLookupSearch">
     <div class="grid" style="max-width:680px;margin-top:10px;">
       <div class="field">
-        <label>หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด</label>
-        <select id="lookupDeptFilter"><option value="">ทุกสาขา</option></select>
+        <label data-i18n="lblOrSelectDeptAll">หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด</label>
+        <select id="lookupDeptFilter"><option value="" data-i18n="filterAllDept">ทุกสาขา</option></select>
       </div>
       <div class="field">
-        <label>เลือกขั้นตอน (ไม่บังคับ)</label>
-        <select id="byDeptStageFilter"><option value="">ทุกขั้นตอน</option></select>
+        <label data-i18n="lblSelectStageOptional">เลือกขั้นตอน (ไม่บังคับ)</label>
+        <select id="byDeptStageFilter"><option value="" data-i18n="optAllStages">ทุกขั้นตอน</option></select>
       </div>
     </div>
     <div class="lookup-result-list" id="lookupResultList"></div>
-    <div class="empty-state" id="lookupEmpty" style="display:none;">ไม่พบนักศึกษาที่ตรงกับคำค้นหา</div>
+    <div class="empty-state" id="lookupEmpty" style="display:none;" data-i18n="txtNoStudentFoundForSearch">ไม่พบนักศึกษาที่ตรงกับคำค้นหา</div>
     <div id="lookupPagination" style="display:none;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
       <span id="lookupPageInfo" class="help"></span>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnLookupPrev">‹ ก่อนหน้า</button>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnLookupNext">ถัดไป ›</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnLookupPrev" data-i18n="btnListPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnLookupNext" data-i18n="btnListNext">ถัดไป ›</button>
     </div>
   </div>
 
@@ -710,7 +710,7 @@ if('serviceWorker' in navigator){
   </div>
 
   <div id="lookupDetail">
-    <div class="empty-state">เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด</div>
+    <div class="empty-state" data-i18n="txtSelectStudentToViewDetail">เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด</div>
   </div>
 </section>
 
@@ -718,24 +718,24 @@ if('serviceWorker' in navigator){
 <section id="view-advisors" style="display:none;">
   <div class="card">
     <h3 data-i18n="secAdvisorSearch">👨‍🏫 ค้นหาอาจารย์ที่ปรึกษา</h3>
-    <div class="help" style="margin-bottom:10px;">แสดงเฉพาะผู้ที่มีตำแหน่งที่ปรึกษาหลักหรือที่ปรึกษาร่วม ไม่รวมผู้ที่มีแค่ตำแหน่งประธาน/กรรมการสอบ (เช่น กรรมการสอบจากภายนอก) — จัดการรายชื่อทั้งหมดได้ที่หน้าตั้งค่า</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpAdvisorSearch">แสดงเฉพาะผู้ที่มีตำแหน่งที่ปรึกษาหลักหรือที่ปรึกษาร่วม ไม่รวมผู้ที่มีแค่ตำแหน่งประธาน/กรรมการสอบ (เช่น กรรมการสอบจากภายนอก) — จัดการรายชื่อทั้งหมดได้ที่หน้าตั้งค่า</div>
     <input type="text" id="advisorLookupSearch" placeholder="พิมพ์ชื่ออาจารย์ที่ปรึกษาเพื่อค้นหา..." data-i18n-ph="phAdvisorLookupSearch">
     <div class="lookup-result-list" id="advisorLookupResultList"></div>
     <div class="empty-state" id="advisorLookupEmpty" style="display:none;"></div>
     <div id="advisorLookupPagination" style="display:none;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
       <span id="advisorLookupPageInfo" class="help"></span>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorLookupPrev">‹ ก่อนหน้า</button>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorLookupNext">ถัดไป ›</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorLookupPrev" data-i18n="btnListPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorLookupNext" data-i18n="btnListNext">ถัดไป ›</button>
     </div>
   </div>
   <div id="advisorLookupDetail">
-    <div class="empty-state">เลือกอาจารย์จากรายการด้านบนเพื่อดูรายงานที่ปรึกษา</div>
+    <div class="empty-state" data-i18n="txtSelectAdvisorToViewReport">เลือกอาจารย์จากรายการด้านบนเพื่อดูรายงานที่ปรึกษา</div>
   </div>
 
   <div class="card" style="margin-top:16px;">
     <h3 data-i18n="secAdvisorExamDate">📅 ค้นหาตามวันที่สอบ (ทุกสาขา)</h3>
-    <div class="help" style="margin-bottom:10px;">เลือกวันที่เพื่อดูว่าวันนั้นมีการสอบของสาขาใดบ้าง ใครเป็นประธาน/กรรมการสอบบ้าง — ดึงจากทุกสาขาวิชาในระบบ ไม่จำกัดเฉพาะสาขาที่กำลังดู ใช้เช็คก่อนออกคำสั่งแต่งตั้งกรรมการ เพื่อกันกรรมการท่านเดียวกันถูกเชิญไปสอบซ้อนกันในวันเดียวกันโดยไม่รู้ตัว</div>
-    <div class="field" style="max-width:260px;"><label>วันที่สอบ</label><input type="date" id="examDateSearchInput"></div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpExamDateSearch">เลือกวันที่เพื่อดูว่าวันนั้นมีการสอบของสาขาใดบ้าง ใครเป็นประธาน/กรรมการสอบบ้าง — ดึงจากทุกสาขาวิชาในระบบ ไม่จำกัดเฉพาะสาขาที่กำลังดู ใช้เช็คก่อนออกคำสั่งแต่งตั้งกรรมการ เพื่อกันกรรมการท่านเดียวกันถูกเชิญไปสอบซ้อนกันในวันเดียวกันโดยไม่รู้ตัว</div>
+    <div class="field" style="max-width:260px;"><label data-i18n="thExamDate">วันที่สอบ</label><input type="date" id="examDateSearchInput"></div>
     <div id="examDateSearchResult" style="margin-top:14px;"></div>
   </div>
 </section>
@@ -746,24 +746,24 @@ if('serviceWorker' in navigator){
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <h3 style="margin:0;" data-i18n="secAdvisorListTitle">👥 รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button type="button" class="btn btn-secondary btn-sm" id="btnExportAdvisorList">📥 ส่งออกรายชื่อ Excel</button>
-        <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorWorkloadReport">📊 สรุปภาระงานอาจารย์ทั้งหมด</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnExportAdvisorList" data-i18n="btnExportAdvisorListExcel">📥 ส่งออกรายชื่อ Excel</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorWorkloadReport" data-i18n="hAdvisorWorkloadReport">📊 สรุปภาระงานอาจารย์ทั้งหมด</button>
       </div>
     </div>
-    <div class="help" style="margin-bottom:8px;">รายชื่ออาจารย์ทั้งหมดที่ใช้เลือกในช่องที่ปรึกษา/กรรมการสอบทั่วทั้งระบบ</div>
-    <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor">เพิ่ม</button></div>
-    <div id="m_advisor_dupWarning" style="display:none;color:#dc2626;font-size:13px;margin-top:4px;">⚠️ มีชื่อนี้อยู่แล้วในรายการ</div>
+    <div class="help" style="margin-bottom:8px;" data-i18n="helpAdvisorListAll">รายชื่ออาจารย์ทั้งหมดที่ใช้เลือกในช่องที่ปรึกษา/กรรมการสอบทั่วทั้งระบบ</div>
+    <div class="field-row-with-btn"><input type="text" id="m_advisor_input" placeholder="เช่น ผศ.ดร.สมชาย ใจดี" data-i18n-ph="phAdvisorNameExample"><button class="btn btn-secondary btn-sm" id="btnAddAdvisor" data-i18n="btnAddShort">เพิ่ม</button></div>
+    <div id="m_advisor_dupWarning" style="display:none;color:#dc2626;font-size:13px;margin-top:4px;" data-i18n="txtDupNameWarning">⚠️ มีชื่อนี้อยู่แล้วในรายการ</div>
     <div class="field" style="max-width:340px;margin-top:10px;">
-      <label>ตำแหน่งทางวิชาการ (ใช้คำนวณโควตาที่ปรึกษา)</label>
+      <label data-i18n="lblAdvisorRank">ตำแหน่งทางวิชาการ (ใช้คำนวณโควตาที่ปรึกษา)</label>
       <select id="m_advisor_rank">
-        <option value="">ไม่ระบุ (ไม่คำนวณโควตา)</option>
-        <option value="ดร.">ดร. (โควตา 5 คน)</option>
-        <option value="ผศ.">ผศ. (โควตา 10 คน)</option>
-        <option value="รศ.">รศ. (โควตา 10 คน)</option>
-        <option value="ศ.">ศ. (โควตา 10 คน)</option>
+        <option value="" data-i18n="optRankNone">ไม่ระบุ (ไม่คำนวณโควตา)</option>
+        <option value="ดร." data-i18n="optRankDr">ดร. (โควตา 5 คน)</option>
+        <option value="ผศ." data-i18n="optRankAsstProf">ผศ. (โควตา 10 คน)</option>
+        <option value="รศ." data-i18n="optRankAssocProf">รศ. (โควตา 10 คน)</option>
+        <option value="ศ." data-i18n="optRankProf">ศ. (โควตา 10 คน)</option>
       </select>
     </div>
-    <div class="help" style="margin:10px 0 4px;">เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):</div>
+    <div class="help" style="margin:10px 0 4px;" data-i18n="helpAdvisorRolesMulti">เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):</div>
     <div class="radio-group" id="m_advisor_roles"></div>
     <div class="field" style="max-width:340px;margin-top:14px;">
       <input type="text" id="m_advisor_search" placeholder="🔍 ค้นหาชื่ออาจารย์..." data-i18n-ph="phAdvisorNameSearch">
@@ -771,8 +771,8 @@ if('serviceWorker' in navigator){
     <div class="help" id="m_advisor_count" style="margin:6px 0 2px;"></div>
     <div class="chip-list" id="m_advisors" style="margin-top:8px;"></div>
     <div id="advisorListPagination" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
-      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorListPrev">‹ ก่อนหน้า</button>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorListNext">ถัดไป ›</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorListPrev" data-i18n="btnListPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAdvisorListNext" data-i18n="btnListNext">ถัดไป ›</button>
     </div>
   </div>
 </section>
@@ -3335,7 +3335,37 @@ var LANDING_I18N = {
   helpAdvisorListMoved: {th:'ย้ายไปจัดการที่แท็บ <strong>👥 รายชื่ออาจารย์</strong> แล้ว (แยกเป็นแท็บของตัวเองเพราะรายชื่อมีจำนวนมาก)', en:'This has moved to the <strong>👥 Advisor List</strong> tab (split into its own tab since the list is long)'},
   btnGoToAdvisorListTab: {th:'ไปที่แท็บรายชื่ออาจารย์ →', en:'Go to Advisor List Tab →'},
   helpAuditLog: {th:'บันทึกทุกครั้งที่มีการสร้าง/แก้ไข/ลบข้อมูลนักศึกษาในระบบ เรียงจากล่าสุดไปเก่าสุด', en:'Records every time student data is created, edited, or deleted in the system, sorted from most recent to oldest.'},
-  phAuditLogSearch: {th:'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อกรอง...', en:'Type a student ID or name to filter...'}
+  phAuditLogSearch: {th:'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อกรอง...', en:'Type a student ID or name to filter...'},
+  lblSearchStudentIdFullName: {th:'ค้นหานักศึกษา (รหัส/ชื่อ-นามสกุล)', en:'Search Student (ID/Name)'},
+  phDashSearch: {th:'พิมพ์แล้วเลือกจากรายการเพื่อดูข้อมูลนักศึกษาคนนั้น...', en:'Type and select from the list to view that student...'},
+  lblAcademicYear: {th:'ปีการศึกษา', en:'Academic Year'},
+  btnClearFilters: {th:'ล้างตัวกรอง', en:'Clear Filters'},
+  lblTermColon: {th:'ภาคเรียน: ', en:'Term: '},
+  chkShowOnlyLeave: {th:'แสดงเฉพาะที่รักษาสภาพ', en:'Show on-leave students only'},
+  txtCalculatingCurrentTerm: {th:'กำลังคำนวณภาคเรียนปัจจุบันจากข้อมูล...', en:'Calculating the current term from the data...'},
+  lblRegisteredThisTerm: {th:'ลงทะเบียนภาคนี้', en:'Registered This Term'},
+  lblOnLeaveThisTerm: {th:'รักษาสภาพภาคนี้', en:'On Leave This Term'},
+  lblDefenseExamThisTerm: {th:'สอบป้องกัน/IS ภาคนี้', en:'Defense/IS Exam This Term'},
+  hStudentDataByFilter: {th:'👥 ข้อมูลนักศึกษา (ตามตัวกรองด้านบน)', en:'👥 Student Data (By Filters Above)'},
+  hByDepartmentThisTerm: {th:'🏫 แยกตามสาขา (ผลสอบป้องกัน/IS ภาคเรียนนี้)', en:'🏫 By Department (Defense/IS Results This Term)'},
+  hDefenseExamTrend: {th:'📈 แนวโน้มจำนวนสอบป้องกัน/IS รายภาคเรียน', en:'📈 Defense/IS Exam Trend by Term'},
+  hAdvisorWorkloadTop5: {th:'👨‍🏫 ภาระงานที่ปรึกษา (Top 5)', en:'👨‍🏫 Advisor Workload (Top 5)'},
+  thRank: {th:'อันดับ', en:'Rank'},
+  thAdvisorShort: {th:'อาจารย์', en:'Advisor'},
+  thWorkload: {th:'ภาระงาน', en:'Workload'},
+  hRegisteredThisTermList: {th:'🧾 นักศึกษาที่ลงทะเบียนภาคเรียนนี้', en:'🧾 Students Registered This Term'},
+  lblOrSelectDeptAll: {th:'หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด', en:'Or select a department to view the full list'},
+  lblSelectStageOptional: {th:'เลือกขั้นตอน (ไม่บังคับ)', en:'Select Stage (optional)'},
+  optAllStages: {th:'ทุกขั้นตอน', en:'All Stages'},
+  txtSelectStudentToViewDetail: {th:'เลือกนักศึกษาจากรายการด้านบนเพื่อดูข้อมูลทั้งหมด', en:'Select a student from the list above to view all details'},
+  helpAdvisorSearch: {th:'แสดงเฉพาะผู้ที่มีตำแหน่งที่ปรึกษาหลักหรือที่ปรึกษาร่วม ไม่รวมผู้ที่มีแค่ตำแหน่งประธาน/กรรมการสอบ (เช่น กรรมการสอบจากภายนอก) — จัดการรายชื่อทั้งหมดได้ที่หน้าตั้งค่า', en:'Shows only those with a main-advisor or co-advisor role, excluding those with only a chair/committee role (e.g. external committee members) — manage the full list on the Settings page'},
+  txtSelectAdvisorToViewReport: {th:'เลือกอาจารย์จากรายการด้านบนเพื่อดูรายงานที่ปรึกษา', en:'Select an advisor from the list above to view the advisor report'},
+  helpExamDateSearch: {th:'เลือกวันที่เพื่อดูว่าวันนั้นมีการสอบของสาขาใดบ้าง ใครเป็นประธาน/กรรมการสอบบ้าง — ดึงจากทุกสาขาวิชาในระบบ ไม่จำกัดเฉพาะสาขาที่กำลังดู ใช้เช็คก่อนออกคำสั่งแต่งตั้งกรรมการ เพื่อกันกรรมการท่านเดียวกันถูกเชิญไปสอบซ้อนกันในวันเดียวกันโดยไม่รู้ตัว', en:'Select a date to see which departments have exams that day and who the chair/committee members are — pulled from every department in the system, not limited to the one currently being viewed. Use it to check before issuing a committee appointment order, to prevent the same committee member being double-booked for exams on the same day without realizing it'},
+  btnExportAdvisorListExcel: {th:'📥 ส่งออกรายชื่อ Excel', en:'📥 Export List to Excel'},
+  helpAdvisorListAll: {th:'รายชื่ออาจารย์ทั้งหมดที่ใช้เลือกในช่องที่ปรึกษา/กรรมการสอบทั่วทั้งระบบ', en:'The full list of advisors used for selecting advisor/committee fields throughout the system'},
+  phAdvisorNameExample: {th:'เช่น ผศ.ดร.สมชาย ใจดี', en:'e.g. Asst. Prof. Dr. Somchai Jaidee'},
+  txtDupNameWarning: {th:'⚠️ มีชื่อนี้อยู่แล้วในรายการ', en:'⚠️ This name already exists in the list'},
+  helpAdvisorRolesMulti: {th:'เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):', en:'Select the role(s) this advisor can serve in (more than one may be selected):'}
 };
 function i18nText(key){
   var lang = 'th';

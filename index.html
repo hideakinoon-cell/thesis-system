@@ -1480,44 +1480,44 @@ if('serviceWorker' in navigator){
     <h3 data-i18n="secSettingsMasterData">ข้อมูลตั้งต้น (Master Data)</h3>
     <div class="master-grid">
       <div class="master-card">
-        <h4>หลักสูตร</h4>
-        <div class="field-row-with-btn"><input type="text" id="m_program_input" placeholder="เช่น ครุศาสตรมหาบัณฑิต"><button class="btn btn-secondary btn-sm" data-add="programs">เพิ่ม</button></div>
+        <h4 data-i18n="lblProgram">หลักสูตร</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_program_input" placeholder="เช่น ครุศาสตรมหาบัณฑิต" data-i18n-ph="phProgramExample"><button class="btn btn-secondary btn-sm" data-add="programs" data-i18n="btnAddShort">เพิ่ม</button></div>
         <div class="chip-list" id="m_programs"></div>
       </div>
       <div class="master-card">
-        <h4>สาขาวิชา</h4>
-        <div class="field-row-with-btn"><input type="text" id="m_department_input" placeholder="เช่น สาขาวิชาหลักสูตรและการสอน"><button class="btn btn-secondary btn-sm" data-add="departments">เพิ่ม</button></div>
+        <h4 data-i18n="lblDepartment">สาขาวิชา</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_department_input" placeholder="เช่น สาขาวิชาหลักสูตรและการสอน" data-i18n-ph="phDepartmentExample"><button class="btn btn-secondary btn-sm" data-add="departments" data-i18n="btnAddShort">เพิ่ม</button></div>
         <div class="chip-list" id="m_departments"></div>
       </div>
       <div class="master-card">
-        <h4>แผนการเรียน</h4>
-        <div class="field-row-with-btn"><input type="text" id="m_plan_input" placeholder="เช่น แผน ก, แบบ 1.1"><button class="btn btn-secondary btn-sm" data-add="plans">เพิ่ม</button></div>
+        <h4 data-i18n="lblStudyPlan">แผนการเรียน</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_plan_input" placeholder="เช่น แผน ก, แบบ 1.1" data-i18n-ph="phPlanExample"><button class="btn btn-secondary btn-sm" data-add="plans" data-i18n="btnAddShort">เพิ่ม</button></div>
         <div class="chip-list" id="m_plans"></div>
       </div>
       <div class="master-card">
-        <h4>ประเภทเอกสาร (หน้าลงทะเบียนรับเอกสาร)</h4>
-        <div class="field-row-with-btn"><input type="text" id="m_docType_input" placeholder="เช่น บว.04, บว.25"><button class="btn btn-secondary btn-sm" data-add="documentTypes">เพิ่ม</button></div>
+        <h4 data-i18n="hDocTypeMasterCard">ประเภทเอกสาร (หน้าลงทะเบียนรับเอกสาร)</h4>
+        <div class="field-row-with-btn"><input type="text" id="m_docType_input" placeholder="เช่น บว.04, บว.25" data-i18n-ph="phDocTypeExample"><button class="btn btn-secondary btn-sm" data-add="documentTypes" data-i18n="btnAddShort">เพิ่ม</button></div>
         <div class="chip-list" id="m_docTypes"></div>
       </div>
       <div class="master-card" style="grid-column:1/-1;">
-        <h4>ตำแหน่งกรรมการ/อาจารย์</h4>
-        <div class="help" style="margin-bottom:8px;">กำหนดรายชื่อตำแหน่งเองได้ทั้งหมด แก้ไข/เพิ่ม/ลบได้ตามต้องการ แต่ละตำแหน่งต้องระบุว่าใช้กับช่องไหนในฟอร์ม</div>
+        <h4 data-i18n="hPositionMasterCard">ตำแหน่งกรรมการ/อาจารย์</h4>
+        <div class="help" style="margin-bottom:8px;" data-i18n="helpPositionMaster">กำหนดรายชื่อตำแหน่งเองได้ทั้งหมด แก้ไข/เพิ่ม/ลบได้ตามต้องการ แต่ละตำแหน่งต้องระบุว่าใช้กับช่องไหนในฟอร์ม</div>
         <div class="field-row-with-btn">
-          <input type="text" id="m_position_input" placeholder="เช่น ประธานกรรมการ">
+          <input type="text" id="m_position_input" placeholder="เช่น ประธานกรรมการ" data-i18n-ph="phPositionNameExample">
           <select id="m_position_slot" style="max-width:260px;">
-            <option value="chair">ใช้ในช่อง: ประธานกรรมการ</option>
-            <option value="mainAdvisor">ใช้ในช่อง: อาจารย์ที่ปรึกษาหลัก</option>
-            <option value="coAdvisor">ใช้ในช่อง: อาจารย์ที่ปรึกษาร่วม</option>
-            <option value="committee">ใช้ในช่อง: กรรมการสอบ (เพิ่มได้หลายคน)</option>
+            <option value="chair" data-i18n="optUsedInSlotChair">ใช้ในช่อง: ประธานกรรมการ</option>
+            <option value="mainAdvisor" data-i18n="optUsedInSlotMainAdvisor">ใช้ในช่อง: อาจารย์ที่ปรึกษาหลัก</option>
+            <option value="coAdvisor" data-i18n="optUsedInSlotCoAdvisor">ใช้ในช่อง: อาจารย์ที่ปรึกษาร่วม</option>
+            <option value="committee" data-i18n="optUsedInSlotCommittee">ใช้ในช่อง: กรรมการสอบ (เพิ่มได้หลายคน)</option>
           </select>
-          <button class="btn btn-secondary btn-sm" id="btnAddPosition">เพิ่ม</button>
+          <button class="btn btn-secondary btn-sm" id="btnAddPosition" data-i18n="btnAddShort">เพิ่ม</button>
         </div>
         <div class="chip-list" id="m_positions" style="margin-top:12px;"></div>
       </div>
       <div class="master-card" style="grid-column:1/-1;">
-        <h4>รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h4>
-        <div class="help">ย้ายไปจัดการที่แท็บ <strong>👥 รายชื่ออาจารย์</strong> แล้ว (แยกเป็นแท็บของตัวเองเพราะรายชื่อมีจำนวนมาก)</div>
-        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="switchView('advisorlist')">ไปที่แท็บรายชื่ออาจารย์ →</button>
+        <h4 data-i18n="hAdvisorListMasterCard">รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)</h4>
+        <div class="help" data-i18n="helpAdvisorListMoved">ย้ายไปจัดการที่แท็บ <strong>👥 รายชื่ออาจารย์</strong> แล้ว (แยกเป็นแท็บของตัวเองเพราะรายชื่อมีจำนวนมาก)</div>
+        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="switchView('advisorlist')" data-i18n="btnGoToAdvisorListTab">ไปที่แท็บรายชื่ออาจารย์ →</button>
       </div>
     </div>
   </div>
@@ -1527,10 +1527,10 @@ if('serviceWorker' in navigator){
 <section id="view-auditlog" style="display:none;">
   <div class="card">
     <h3 data-i18n="secAuditlogTitle">📜 ประวัติการแก้ไขข้อมูล</h3>
-    <div class="help" style="margin-bottom:10px;">บันทึกทุกครั้งที่มีการสร้าง/แก้ไข/ลบข้อมูลนักศึกษาในระบบ เรียงจากล่าสุดไปเก่าสุด</div>
-    <input type="text" id="auditLogSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อกรอง...">
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpAuditLog">บันทึกทุกครั้งที่มีการสร้าง/แก้ไข/ลบข้อมูลนักศึกษาในระบบ เรียงจากล่าสุดไปเก่าสุด</div>
+    <input type="text" id="auditLogSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อกรอง..." data-i18n-ph="phAuditLogSearch">
     <div id="auditLogList" style="margin-top:12px;"></div>
-    <div class="empty-state" id="auditLogEmpty" style="display:none;">ยังไม่มีประวัติการแก้ไขข้อมูล</div>
+    <div class="empty-state" id="auditLogEmpty" style="display:none;" data-i18n="txtNoAuditHistoryYet">ยังไม่มีประวัติการแก้ไขข้อมูล</div>
   </div>
 </section>
 
@@ -3311,7 +3311,31 @@ var LANDING_I18N = {
   txtStatusStudying: {th:'กำลังศึกษา', en:'Studying'},
   txtOfflineSyncBannerPrefix: {th:'📶 อินเทอร์เน็ตกลับมาแล้ว มีข้อมูล ', en:'📶 Internet connection restored — there are '},
   txtOfflineSyncBannerSuffix: {th:' รายการที่บันทึกไว้ตอนออฟไลน์ในเครื่องนี้ ยังไม่ถูกซิงค์เข้าชีทกลาง', en:' entries saved on this device while offline that have not been synced to the central sheet yet'},
-  btnSyncOfflineNow: {th:'🔄 ซิงค์ข้อมูลตอนนี้', en:'🔄 Sync Now'}
+  btnSyncOfflineNow: {th:'🔄 ซิงค์ข้อมูลตอนนี้', en:'🔄 Sync Now'},
+  actionLabelAddPrefix: {th:'เพิ่ม', en:'Add '},
+  actionLabelDeletePrefix: {th:'ลบ', en:'Delete '},
+  actionLabelEditPrefix: {th:'แก้ไข', en:'Edit '},
+  actionLabelMergePrefix: {th:'รวม', en:'Merge '},
+  titleEditNameAutoUpdate: {th:'แก้ไขชื่อ (จะปรับปรุงข้อมูลที่เคยบันทึกไว้ให้อัตโนมัติ)', en:'Edit name (previously saved data will be updated automatically)'},
+  promptEditNameColon: {th:'แก้ไขชื่อ:', en:'Edit name:'},
+  btnAddShort: {th:'เพิ่ม', en:'Add'},
+  phProgramExample: {th:'เช่น ครุศาสตรมหาบัณฑิต', en:'e.g. Master of Education'},
+  phDepartmentExample: {th:'เช่น สาขาวิชาหลักสูตรและการสอน', en:'e.g. Curriculum and Instruction'},
+  phPlanExample: {th:'เช่น แผน ก, แบบ 1.1', en:'e.g. Plan A, Type 1.1'},
+  hDocTypeMasterCard: {th:'ประเภทเอกสาร (หน้าลงทะเบียนรับเอกสาร)', en:'Document Type (Doc Intake Page)'},
+  phDocTypeExample: {th:'เช่น บว.04, บว.25', en:'e.g. Form 04, Form 25'},
+  hPositionMasterCard: {th:'ตำแหน่งกรรมการ/อาจารย์', en:'Committee/Advisor Position'},
+  helpPositionMaster: {th:'กำหนดรายชื่อตำแหน่งเองได้ทั้งหมด แก้ไข/เพิ่ม/ลบได้ตามต้องการ แต่ละตำแหน่งต้องระบุว่าใช้กับช่องไหนในฟอร์ม', en:'All position names are fully customizable — edit, add, or delete as needed. Each position must specify which field on the form it is used for.'},
+  phPositionNameExample: {th:'เช่น ประธานกรรมการ', en:'e.g. Committee Chair'},
+  optUsedInSlotChair: {th:'ใช้ในช่อง: ประธานกรรมการ', en:'Used for: Committee Chair'},
+  optUsedInSlotMainAdvisor: {th:'ใช้ในช่อง: อาจารย์ที่ปรึกษาหลัก', en:'Used for: Main Advisor'},
+  optUsedInSlotCoAdvisor: {th:'ใช้ในช่อง: อาจารย์ที่ปรึกษาร่วม', en:'Used for: Co-Advisor'},
+  optUsedInSlotCommittee: {th:'ใช้ในช่อง: กรรมการสอบ (เพิ่มได้หลายคน)', en:'Used for: Committee Member (multiple allowed)'},
+  hAdvisorListMasterCard: {th:'รายชื่ออาจารย์ (ที่ปรึกษา/กรรมการ)', en:'Advisor Names (Advisors/Committee Members)'},
+  helpAdvisorListMoved: {th:'ย้ายไปจัดการที่แท็บ <strong>👥 รายชื่ออาจารย์</strong> แล้ว (แยกเป็นแท็บของตัวเองเพราะรายชื่อมีจำนวนมาก)', en:'This has moved to the <strong>👥 Advisor List</strong> tab (split into its own tab since the list is long)'},
+  btnGoToAdvisorListTab: {th:'ไปที่แท็บรายชื่ออาจารย์ →', en:'Go to Advisor List Tab →'},
+  helpAuditLog: {th:'บันทึกทุกครั้งที่มีการสร้าง/แก้ไข/ลบข้อมูลนักศึกษาในระบบ เรียงจากล่าสุดไปเก่าสุด', en:'Records every time student data is created, edited, or deleted in the system, sorted from most recent to oldest.'},
+  phAuditLogSearch: {th:'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อกรอง...', en:'Type a student ID or name to filter...'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -7929,6 +7953,10 @@ function renderImportFailedList(container, details){
 /* ป้ายชื่อภาษาไทยของแต่ละรายการ master data (ใช้ทั้งในข้อความยืนยันก่อนลบ และบันทึกลง Audit Log) —
    ครอบคลุม programs/departments/plans/documentTypes ที่ใช้ renderChipList ร่วมกัน (ไม่รวม advisors ซึ่งมี Audit Log ของตัวเองอยู่แล้ว) */
 var MASTER_LIST_LABELS = { programs:'หลักสูตร', departments:'สาขาวิชา', plans:'แผนการเรียน', documentTypes:'ประเภทเอกสาร' };
+var MASTER_LIST_LABEL_KEYS = { programs:'lblProgram', departments:'lblDepartment', plans:'lblStudyPlan', documentTypes:'lblDocTypeField' };
+/* ใช้เฉพาะข้อความที่ผู้ใช้เห็นบนหน้าจอ (alert/confirm) เท่านั้น — logAudit() ยังคงใช้ MASTER_LIST_LABELS[key] ตรงๆ
+   เพราะเป็นข้อมูลที่บันทึกไว้ถาวร (ประวัติการแก้ไข) ต้องคงเป็นภาษาไทยเสมอไม่ว่าจะสลับภาษาหน้าจอเป็นอะไร */
+function masterListLabel(key){ return i18nText(MASTER_LIST_LABEL_KEYS[key])||MASTER_LIST_LABELS[key]||key; }
 function bindSettingsEvents(){
   document.querySelectorAll('#view-settings [data-add]').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -7945,7 +7973,7 @@ function bindSettingsEvents(){
         if(result && result.__skip) return;
         logAudit('เพิ่ม'+(MASTER_LIST_LABELS[key]||key), '', val);
         renderMasterLists(); renderAllSelects();
-      }).catch(function(e){ alertMasterDataSaveFailed(e, 'เพิ่ม'+(MASTER_LIST_LABELS[key]||key)); });
+      }).catch(function(e){ alertMasterDataSaveFailed(e, (i18nText('actionLabelAddPrefix')||'เพิ่ม')+masterListLabel(key)); });
       input.value='';
     });
   });
@@ -8677,8 +8705,8 @@ function renderChipList(containerId, key){
   masterData[key].forEach(function(val){
     var chip = el('span',{class:'chip'},[
       el('span',{text:val}),
-      el('button',{type:'button', text:'✎', title:'แก้ไขชื่อ (จะปรับปรุงข้อมูลที่เคยบันทึกไว้ให้อัตโนมัติ)', onclick:function(){
-        var newVal = prompt('แก้ไขชื่อ:', val);
+      el('button',{type:'button', text:'✎', title:(i18nText('titleEditNameAutoUpdate')||'แก้ไขชื่อ (จะปรับปรุงข้อมูลที่เคยบันทึกไว้ให้อัตโนมัติ)'), 'data-i18n-title':'titleEditNameAutoUpdate', onclick:function(){
+        var newVal = prompt((i18nText('promptEditNameColon')||'แก้ไขชื่อ:'), val);
         if(newVal===null) return;
         newVal = newVal.trim();
         if(!newVal || newVal===val) return;
@@ -8694,7 +8722,7 @@ function renderChipList(containerId, key){
         renameMasterItem(key, val, newVal);
       }}),
       el('button',{type:'button', text:'✕', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){
-        if(!confirm((i18nText('confirmDeleteMasterItemP1')||'ลบ "')+val+(i18nText('confirmDeleteMasterItemP2')||'" (')+(MASTER_LIST_LABELS[key]||key)+(i18nText('confirmDeleteMasterItemP3')||') ออกจากรายการหรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)'))) return;
+        if(!confirm((i18nText('confirmDeleteMasterItemP1')||'ลบ "')+val+(i18nText('confirmDeleteMasterItemP2')||'" (')+masterListLabel(key)+(i18nText('confirmDeleteMasterItemP3')||') ออกจากรายการหรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)'))) return;
         var deptPinCleanupP = Promise.resolve();
         withFreshMasterData(function(){
           masterData[key] = masterData[key].filter(function(v){ return v!==val; });
@@ -8706,7 +8734,7 @@ function renderChipList(containerId, key){
         }).then(function(){
           logAudit('ลบ'+(MASTER_LIST_LABELS[key]||key), '', val);
           return deptPinCleanupP;
-        }).then(function(){ renderMasterLists(); renderAllSelects(); }).catch(function(e){ alertMasterDataSaveFailed(e, 'ลบ'+(MASTER_LIST_LABELS[key]||key)); });
+        }).then(function(){ renderMasterLists(); renderAllSelects(); }).catch(function(e){ alertMasterDataSaveFailed(e, (i18nText('actionLabelDeletePrefix')||'ลบ')+masterListLabel(key)); });
       }})
     ]);
     container.appendChild(chip);
@@ -8737,7 +8765,7 @@ function renameMasterItem(key, oldVal, newVal){
     renderAllSelects();
     renderList();
     toast((i18nText('toastNameEdited')||'แก้ไขชื่อเรียบร้อย')+(updatedCount>0?((i18nText('toastUpdatedRecordsPrefixAnd')||' และปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว ')+updatedCount+(i18nText('toastUpdatedRecordsSuffix')||' รายการ')):''));
-  }).catch(function(e){ alertMasterDataSaveFailed(e, 'แก้ไข'+(MASTER_LIST_LABELS[key]||key)); });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, (i18nText('actionLabelEditPrefix')||'แก้ไข')+masterListLabel(key)); });
 }
 /* รวมรายการที่พิมพ์ชื่อซ้ำกับรายการที่มีอยู่แล้วในระบบ (เช่น รายชื่อ "แผนการเรียน" ที่สะกดต่างกันเล็กน้อยจากการนำเข้าข้อมูลหลายครั้ง
    จนกลายเป็นหลายรายการทั้งที่จริงคืออันเดียวกัน) — ต่างจาก renameMasterItem ตรงที่ newVal มีอยู่แล้วในรายการหลัก จึงแค่ลบ
@@ -8755,7 +8783,7 @@ function mergeMasterItem(key, oldVal, newVal){
     renderAllSelects();
     renderList();
     toast((i18nText('toastRecordsMerged')||'รวมรายการเรียบร้อย')+(updatedCount>0?((i18nText('toastUpdatedRecordsPrefixAnd')||' และปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว ')+updatedCount+(i18nText('toastUpdatedRecordsSuffix')||' รายการ')):''));
-  }).catch(function(e){ alertMasterDataSaveFailed(e, 'รวม'+(MASTER_LIST_LABELS[key]||key)); });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, (i18nText('actionLabelMergePrefix')||'รวม')+masterListLabel(key)); });
 }
 /* เปลี่ยนค่าอ้างอิงในข้อมูลที่เคยบันทึกไว้ทุกที่ที่เกี่ยวข้องกับ master data key นั้นๆ — ครอบคลุมทั้งข้อมูลการสอบ (records)
    สำหรับ programs/departments/plans/advisors และข้อมูลลงทะเบียนรับเอกสาร (docIntake) สำหรับ documentTypes โดยเฉพาะ

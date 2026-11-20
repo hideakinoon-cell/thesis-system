@@ -1655,7 +1655,7 @@ var DEFAULT_GOOGLE_CLIENT_ID = '735808286134-4c4itsvdhe1v7po7bl71cnnq6k5imgve.ap
 var DEFAULT_SHEET_ID = '1Rymd5QMIXL1j2f4fLujmDXgK0sKy_umKEYI5z2iP8sQ';
 var DEFAULT_CLOUD_MODE_ENABLED = true;
 var DEFAULT_VIEWER_PIN_HASH = 'ad7d15dafd42a49ca8e6ba2dfbb41abaa96d7a368cad455c07f622f7fb90ddc2';
-var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[], documentTypes:[], programsEn:{}, departmentsEn:{} };
+var masterData = { programs:[], departments:[], plans:['แผน ก','แผน ข','แบบ 1.1','แบบ 2.1'], advisors:[], positions:[], documentTypes:[], programsEn:{}, departmentsEn:{}, plansEn:{}, documentTypesEn:{} };
 /* ตรวจว่าแผนการเรียนนี้เป็น "การค้นคว้าอิสระ" (IS) หรือไม่ — ใช้เกณฑ์นี้ทุกจุดที่ต้องแยกวิทยานิพนธ์ออกจากการค้นคว้าอิสระ
    (เช่น เช็คลิสต์ความครบถ้วน, การคำนวณโควตาที่ปรึกษา) แทนการเทียบสตริง "แผน ข" ตรงๆ เพียงอย่างเดียว เพราะ masterData.plans
    แก้ไขเองได้จากหน้าตั้งค่า (งานที่ #14) — บางสาขาใช้ชื่อ "แผน 1 แบบวิชาการ (วิทยานิพนธ์)" / "แผน 2 แบบวิชาชีพ (ค้นคว้าอิสระ)"
@@ -3456,6 +3456,8 @@ function masterNameDisplay(enMapKey, thName){
 }
 function programDisplayName(thName){ return masterNameDisplay('programsEn', thName); }
 function departmentDisplayName(thName){ return masterNameDisplay('departmentsEn', thName); }
+function planDisplayName(thName){ return masterNameDisplay('plansEn', thName); }
+function documentTypeDisplayName(thName){ return masterNameDisplay('documentTypesEn', thName); }
 function applyLandingLang(lang){
   if(lang!=='en') lang='th';
   Object.keys(LANDING_I18N).forEach(function(key){
@@ -4374,7 +4376,7 @@ function renderSummaryDashboard(){
       });
     }
     renderPlainBars('barDemoDept', byDept, SUMMARY_CHART_COLORS.dept, departmentDisplayName);
-    renderPlainBars('barDemoPlan', byPlan, SUMMARY_CHART_COLORS.program);
+    renderPlainBars('barDemoPlan', byPlan, SUMMARY_CHART_COLORS.program, planDisplayName);
 
     renderAdvisorRankTable();
   });
@@ -4766,7 +4768,7 @@ function renderLookupList(){
       var item = el('div',{class:'lookup-item'},[
         el('div',{class:'li-main'},[
           el('span',{class:'li-name', text:s.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)')}),
-          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program?programDisplayName(s.program):'-')+' / '+(s.department?departmentDisplayName(s.department):'-')+(s.plan?' ('+s.plan+')':'')+' • '+s.status+(s.mainAdvisor?(i18nText('txtAdvisorInlinePrefix')||' • ที่ปรึกษา: ')+s.mainAdvisor:'')})
+          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program?programDisplayName(s.program):'-')+' / '+(s.department?departmentDisplayName(s.department):'-')+(s.plan?' ('+planDisplayName(s.plan)+')':'')+' • '+s.status+(s.mainAdvisor?(i18nText('txtAdvisorInlinePrefix')||' • ที่ปรึกษา: ')+s.mainAdvisor:'')})
         ]),
         el('span',{class:'li-count', text:s.count+(i18nText('txtExamItemsCountSuffix')||' รายการสอบ')})
       ]);
@@ -4910,7 +4912,7 @@ function renderAdvisorProfile(advisor, rep){
         var arrow = el('span',{text:'▸', style:'display:inline-block;width:14px;'});
         var groupHeader = el('div',{style:'font-weight:600;font-size:13px;color:var(--muted);margin:10px 0 4px;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;'},[
           arrow,
-          el('span',{text:(g.plan||(i18nText('txtPlanNotSpecified')||'ไม่ระบุแผน'))+' ('+g.items.length+(i18nText('txtPeopleCountSuffix2')||' คน')+')'})
+          el('span',{text:(g.plan?planDisplayName(g.plan):(i18nText('txtPlanNotSpecified')||'ไม่ระบุแผน'))+' ('+g.items.length+(i18nText('txtPeopleCountSuffix2')||' คน')+')'})
         ]);
         groupHeader.addEventListener('click', function(){
           var isOpen = listEl.style.display !== 'none';
@@ -5190,7 +5192,7 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
       kv('รหัสนักศึกษา', latest.studentId),
       kv('ชื่อ-นามสกุล', latest.studentName),
       kv('ระดับการศึกษา', latest.degreeLevel),
-      kv('แผนการเรียน', latest.plan)
+      kv('แผนการเรียน', planDisplayName(latest.plan))
     ]),
     el('div',{class:'kv-grid', style:'margin-top:12px;'},[
       kv('หลักสูตร', programDisplayName(latest.program)),
@@ -5525,8 +5527,8 @@ function docStatusLabelTh(s){ return DOC_STATUS_LABELS[s] || s || '-'; }
 function renderDocIntakeSelects(){
   var docTypeSel = document.getElementById('di_docType');
   if(!docTypeSel) return; // section อยู่ใน DOM เสมอ แต่กันไว้เผื่อยังไม่โหลด
-  fillSelect(docTypeSel, masterData.documentTypes||[], i18nText('optSelectDocType')||'เลือกประเภทเอกสาร');
-  fillSelect(document.getElementById('di_filterDocType'), masterData.documentTypes||[], i18nText('optAllDocTypes')||'ทุกประเภท');
+  fillSelect(docTypeSel, masterData.documentTypes||[], i18nText('optSelectDocType')||'เลือกประเภทเอกสาร', documentTypeDisplayName);
+  fillSelect(document.getElementById('di_filterDocType'), masterData.documentTypes||[], i18nText('optAllDocTypes')||'ทุกประเภท', documentTypeDisplayName);
   fillSelect(document.getElementById('di_filterDept'), masterData.departments||[], i18nText('filterAllDept')||'ทุกสาขา', departmentDisplayName);
   toggleDiPublicationSection();
   var deptList = document.getElementById('di_departmentList');
@@ -5719,7 +5721,7 @@ function renderDocIntakeList(){
       var tr = el('tr',{},[
         el('td',{text: r.intakeNo||'-'}),
         el('td',{}, [dateInput]),
-        el('td',{text: r.docType||'-'}),
+        el('td',{text: r.docType ? documentTypeDisplayName(r.docType) : '-'}),
         el('td',{text: r.studentId||'-'}),
         el('td',{text: r.studentName||'-'}),
         el('td',{text: r.department ? departmentDisplayName(r.department) : '-'}),
@@ -5949,10 +5951,10 @@ function renderAllSelects(){
   fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, i18nText('filterAllDept'), departmentDisplayName);
   fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, i18nText('filterAllDept'), departmentDisplayName);
   fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, i18nText('filterAllProgram'), programDisplayName);
-  fillSelect(document.getElementById('dashPlanFilter'), masterData.plans, i18nText('filterAllPlan'));
+  fillSelect(document.getElementById('dashPlanFilter'), masterData.plans, i18nText('filterAllPlan'), planDisplayName);
   ensureSearchSelect('f_program', masterData.programs, 'phSearchProgram');
   ensureSearchSelect('f_department', masterData.departments, 'phSearchDepartment');
-  fillSelect(document.getElementById('f_plan'), masterData.plans, i18nText('selectStudyPlan'));
+  fillSelect(document.getElementById('f_plan'), masterData.plans, i18nText('selectStudyPlan'), planDisplayName);
   ensureSearchSelect('f_mainAdvisor', advisorNamesByRole(positionsBySlot('mainAdvisor')), 'phSearchMainAdvisor');
   ensureSearchSelect('p_chair', advisorNamesByRole(positionsBySlot('chair')), 'phSearchChair');
   ensureSearchSelect('d_chair', advisorNamesByRole(positionsBySlot('chair')), 'phSearchChair');
@@ -7592,7 +7594,7 @@ function renderImportPreview(previewBox, importBtn){
     else { statusText=(i18nText('txtReadyToImport')||'✅ พร้อมนำเข้า'); statusColor='#1f8a4c'; }
     tbody.appendChild(el('tr',{},[
       el('td',{text:String(r.rowNum)}), el('td',{text:r.studentId}), el('td',{text:r.studentName}),
-      el('td',{text:r.degreeLevel}), el('td',{text:r.plan}), el('td',{text:programDisplayName(r.program)}), el('td',{text:departmentDisplayName(r.department)}),
+      el('td',{text:r.degreeLevel}), el('td',{text:planDisplayName(r.plan)}), el('td',{text:programDisplayName(r.program)}), el('td',{text:departmentDisplayName(r.department)}),
       el('td',{text:statusText, style:'color:'+statusColor+';'})
     ]));
   });
@@ -8642,7 +8644,7 @@ function openAdvisorReportModal(advisor){
         var ul = el('div');
         list.forEach(function(s){
           ul.appendChild(el('div',{style:'padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:14px;'},[
-            document.createTextNode((s.studentId||'-')+' — '+(s.studentName||'-')+(s.plan?' ('+s.plan+')':''))
+            document.createTextNode((s.studentId||'-')+' — '+(s.studentName||'-')+(s.plan?' ('+planDisplayName(s.plan)+')':''))
           ]));
         });
         box.appendChild(ul);
@@ -8831,6 +8833,8 @@ function removeAdvisor(name){
 function enMapKeyFor(key){
   if(key==='programs') return 'programsEn';
   if(key==='departments') return 'departmentsEn';
+  if(key==='plans') return 'plansEn';
+  if(key==='documentTypes') return 'documentTypesEn';
   return null;
 }
 function renderChipList(containerId, key){

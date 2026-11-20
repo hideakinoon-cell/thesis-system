@@ -866,26 +866,26 @@ if('serviceWorker' in navigator){
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
       <h3 style="margin:0;" data-i18n="secGradlistTitle">📤 รายชื่อนักศึกษาสอบป้องกันผ่านแล้ว</h3>
       <div style="display:flex;gap:8px;">
-        <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabPending">🕓 รอส่ง</button>
-        <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabSent">✅ ส่งแล้ว</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabPending" data-i18n="btnGradTabPending">🕓 รอส่ง</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnGradListTabSent" data-i18n="btnGradTabSent">✅ ส่งแล้ว</button>
       </div>
     </div>
-    <div class="help" style="margin-top:8px;">รวมนักศึกษาที่มีการลงวันที่สอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2) ไว้แล้ว (ไม่รอผลสอบ เพราะบางสาขาส่งผลช้า) — เลือกรายชื่อที่ต้องการแล้วกด "ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว" เพื่อดาวน์โหลดไฟล์และกันไม่ให้ส่งซ้ำรอบถัดไป</div>
+    <div class="help" style="margin-top:8px;" data-i18n="gradListHelpMain">รวมนักศึกษาที่มีการลงวันที่สอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2) ไว้แล้ว (ไม่รอผลสอบ เพราะบางสาขาส่งผลช้า) — เลือกรายชื่อที่ต้องการแล้วกด "ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว" เพื่อดาวน์โหลดไฟล์และกันไม่ให้ส่งซ้ำรอบถัดไป</div>
     <div id="gradListPendingActions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListSelectAll">☑️ เลือกทั้งหมด</button>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListClearSel">☐ ยกเลิกเลือกทั้งหมด</button>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListExportOnly">⬇ ส่งออก Excel อย่างเดียว</button>
-      <button type="button" class="btn btn-primary btn-sm" id="btnGradListExportAndMark">✅ ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListSelectAll" data-i18n="btnGradSelectAll">☑️ เลือกทั้งหมด</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListClearSel" data-i18n="btnGradClearSel">☐ ยกเลิกเลือกทั้งหมด</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnGradListExportOnly" data-i18n="btnGradExportOnly">⬇ ส่งออก Excel อย่างเดียว</button>
+      <button type="button" class="btn btn-primary btn-sm" id="btnGradListExportAndMark" data-i18n="btnGradExportAndMark">✅ ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว</button>
     </div>
     <div style="overflow-x:auto;margin-top:12px;">
     <table>
       <thead id="gradListThead">
-        <tr><th></th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>วันที่สอบ</th><th>ผลสอบ</th><th>จัดการ</th></tr>
+        <tr><th></th><th data-i18n="thStudentId">รหัสนักศึกษา</th><th data-i18n="thStudentName">ชื่อ-นามสกุล</th><th data-i18n="thDepartment">สาขาวิชา</th><th data-i18n="thExamDate">วันที่สอบ</th><th data-i18n="thExamResultOptional">ผลสอบ</th><th data-i18n="thActions">จัดการ</th></tr>
       </thead>
       <tbody id="gradListTbody"></tbody>
     </table>
     </div>
-    <div class="empty-state" id="gradListEmpty" style="display:none;">ยังไม่มีรายชื่อในหมวดนี้</div>
+    <div class="empty-state" id="gradListEmpty" style="display:none;" data-i18n="txtNoGradListEntries">ยังไม่มีรายชื่อในหมวดนี้</div>
   </div>
 </section>
 
@@ -3238,7 +3238,20 @@ var LANDING_I18N = {
   thReceivedDateShort: {th:'วันที่รับ', en:'Date Received'},
   thNote: {th:'หมายเหตุ', en:'Note'},
   txtNoDocIntakeEntries: {th:'ยังไม่มีรายการลงทะเบียน — เริ่มบันทึกรายการใหม่ได้ที่ด้านบน', en:'No registered entries yet — start by saving a new entry above.'},
-  txtNoStudentMatchDocIntake: {th:'ไม่พบนักศึกษาที่ตรงกับคำค้นหาในระบบ — กรอกข้อมูลเองด้านล่างได้', en:"No student matching this search was found in the system — you can enter the details manually below."}
+  txtNoStudentMatchDocIntake: {th:'ไม่พบนักศึกษาที่ตรงกับคำค้นหาในระบบ — กรอกข้อมูลเองด้านล่างได้', en:"No student matching this search was found in the system — you can enter the details manually below."},
+  btnGradTabPending: {th:'🕓 รอส่ง', en:'🕓 Pending'},
+  btnGradTabSent: {th:'✅ ส่งแล้ว', en:'✅ Sent'},
+  gradListHelpMain: {th:'รวมนักศึกษาที่มีการลงวันที่สอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2) ไว้แล้ว (ไม่รอผลสอบ เพราะบางสาขาส่งผลช้า) — เลือกรายชื่อที่ต้องการแล้วกด "ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว" เพื่อดาวน์โหลดไฟล์และกันไม่ให้ส่งซ้ำรอบถัดไป', en:'Includes every student with a thesis/IS defense date (3.2) already entered (not waiting for the result, since some departments report results late) — select the names you want, then click "Export to Excel + mark as submitted" to download the file and prevent sending them again next time.'},
+  btnGradSelectAll: {th:'☑️ เลือกทั้งหมด', en:'☑️ Select All'},
+  btnGradClearSel: {th:'☐ ยกเลิกเลือกทั้งหมด', en:'☐ Clear Selection'},
+  btnGradExportOnly: {th:'⬇ ส่งออก Excel อย่างเดียว', en:'⬇ Export to Excel Only'},
+  btnGradExportAndMark: {th:'✅ ส่งออก Excel + ทำเครื่องหมายว่าส่งแล้ว', en:'✅ Export to Excel + Mark as Submitted'},
+  txtNoGradListEntries: {th:'ยังไม่มีรายชื่อในหมวดนี้', en:'No names in this category yet.'},
+  thExamTermGraduated: {th:'ภาคเรียนที่สอบจบ', en:'Term Completed'},
+  thExamResultOptional: {th:'ผลสอบ (ถ้ามี)', en:'Result (if any)'},
+  thSentAt: {th:'ส่งเมื่อ', en:'Sent On'},
+  txtNoDefenseResultYet: {th:'(ยังไม่มีผล)', en:'(No result yet)'},
+  btnUnmarkSubmitted: {th:'↩️ ยกเลิกเครื่องหมาย', en:'↩️ Unmark'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -5548,6 +5561,14 @@ function gradListTermLabel(term){
   if(!term) return '-';
   var parts = String(term).split('/');
   if(parts.length!==2) return term;
+  var semLabel = parts[0]==='3' ? (i18nText('optSummerTerm')||'ฤดูร้อน') : parts[0];
+  return semLabel+'/'+parts[1];
+}
+/* ใช้เฉพาะตอนส่งออก Excel เท่านั้น — คงเป็นภาษาไทยเสมอไม่ว่าจะสลับภาษาหน้าจอเป็นอะไร (เหมือน docStatusLabelTh) */
+function gradListTermLabelTh(term){
+  if(!term) return '-';
+  var parts = String(term).split('/');
+  if(parts.length!==2) return term;
   var semLabel = parts[0]==='3' ? 'ฤดูร้อน' : parts[0];
   return semLabel+'/'+parts[1];
 }
@@ -5568,8 +5589,8 @@ function renderGradList(){
   var thead = document.getElementById('gradListThead');
   thead.innerHTML = '';
   var headCells = gradListTab==='pending'
-    ? ['', 'รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบ','ภาคเรียนที่สอบจบ','ผลสอบ (ถ้ามี)','จัดการ']
-    : ['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบ','ภาคเรียนที่สอบจบ','ผลสอบ (ถ้ามี)','ส่งเมื่อ','จัดการ'];
+    ? ['', (i18nText('thStudentId')||'รหัสนักศึกษา'),(i18nText('thStudentName')||'ชื่อ-นามสกุล'),(i18nText('thDepartment')||'สาขาวิชา'),(i18nText('thExamDate')||'วันที่สอบ'),(i18nText('thExamTermGraduated')||'ภาคเรียนที่สอบจบ'),(i18nText('thExamResultOptional')||'ผลสอบ (ถ้ามี)'),(i18nText('thActions')||'จัดการ')]
+    : [(i18nText('thStudentId')||'รหัสนักศึกษา'),(i18nText('thStudentName')||'ชื่อ-นามสกุล'),(i18nText('thDepartment')||'สาขาวิชา'),(i18nText('thExamDate')||'วันที่สอบ'),(i18nText('thExamTermGraduated')||'ภาคเรียนที่สอบจบ'),(i18nText('thExamResultOptional')||'ผลสอบ (ถ้ามี)'),(i18nText('thSentAt')||'ส่งเมื่อ'),(i18nText('thActions')||'จัดการ')];
   var headRow = el('tr',{}, headCells.map(function(t){ return el('th',{text:t}); }));
   thead.appendChild(headRow);
 
@@ -5592,14 +5613,14 @@ function renderGradList(){
       cells.push(el('td',{text:r.department||'-'}));
       cells.push(el('td',{text:toBuddhistDateStr(r.defenseDate)||'-'}));
       cells.push(el('td',{text:gradListTermLabel(r.examTerm)}));
-      cells.push(el('td',{text:r.defenseResult||'(ยังไม่มีผล)'}));
+      cells.push(el('td',{text:r.defenseResult||(i18nText('txtNoDefenseResultYet')||'(ยังไม่มีผล)')}));
       if(gradListTab==='sent'){
         cells.push(el('td',{text: r.gradListSentAt ? toBuddhistDateStr(new Date(r.gradListSentAt).toISOString().slice(0,10)) : '-'}));
       }
       cells.push(el('td',{},[
         gradListTab==='pending'
           ? el('span',{class:'help', text:''})
-          : el('button',{class:'link-btn', style:'color:#c0392b', text:'↩️ ยกเลิกเครื่องหมาย', onclick:function(){ gradListUnmark(r); }})
+          : el('button',{class:'link-btn', style:'color:#c0392b', text:(i18nText('btnUnmarkSubmitted')||'↩️ ยกเลิกเครื่องหมาย'), onclick:function(){ gradListUnmark(r); }})
       ]));
       tbody.appendChild(el('tr',{}, cells));
     });
@@ -5614,7 +5635,7 @@ function gradListUnmark(r){
 function gradListExportRows(rows){
   var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','วันที่สอบจบ','ภาคเรียนที่สอบจบ']]
     .concat(rows.map(function(r){
-      return [r.studentId||'', r.studentName||'', r.department||'', toBuddhistDateStr(r.defenseDate)||'', gradListTermLabel(r.examTerm)];
+      return [r.studentId||'', r.studentName||'', r.department||'', toBuddhistDateStr(r.defenseDate)||'', gradListTermLabelTh(r.examTerm)];
     }));
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(aoa);

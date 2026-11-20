@@ -898,7 +898,7 @@ if('serviceWorker' in navigator){
         <label><span data-i18n="lblStudentId">รหัสนักศึกษา</span> <span class="req">*</span></label>
         <div class="field-row-with-btn">
           <input type="text" id="f_studentId" placeholder="66010xxx">
-          <button type="button" class="btn btn-secondary btn-sm" id="btnFindStudent">🔍 ค้นหาข้อมูลเดิม</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnFindStudent" data-i18n="btnFindExistingStudent">🔍 ค้นหาข้อมูลเดิม</button>
         </div>
       </div>
       <div class="field">
@@ -1304,47 +1304,47 @@ if('serviceWorker' in navigator){
   <div class="card">
     <h3 data-i18n="secSettingsSecurity">🔒 ความปลอดภัย — เปลี่ยนรหัสผ่านเข้าระบบ</h3>
     <div class="grid cols-3">
-      <div class="field"><label>รหัสผ่านปัจจุบัน</label><input type="password" id="pin_current" autocomplete="current-password"></div>
-      <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="pin_new1" autocomplete="new-password"></div>
-      <div class="field"><label>ยืนยันรหัสผ่านใหม่</label><input type="password" id="pin_new2" autocomplete="new-password"></div>
+      <div class="field"><label data-i18n="lblCurrentPassword">รหัสผ่านปัจจุบัน</label><input type="password" id="pin_current" autocomplete="current-password"></div>
+      <div class="field"><label data-i18n="lblNewPassword">รหัสผ่านใหม่</label><input type="password" id="pin_new1" autocomplete="new-password"></div>
+      <div class="field"><label data-i18n="lblConfirmNewPassword">ยืนยันรหัสผ่านใหม่</label><input type="password" id="pin_new2" autocomplete="new-password"></div>
     </div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnChangePin">เปลี่ยนรหัสผ่าน</button>
+      <button class="btn btn-secondary" id="btnChangePin" data-i18n="btnChangePinLabel">เปลี่ยนรหัสผ่าน</button>
     </div>
-    <div class="help">ระบบล็อกนี้ป้องกันเฉพาะการเปิดดูผ่านหน้าจอเท่านั้น (กันคนเดินผ่านมาเปิดดู) ข้อมูลจริงเก็บในเบราว์เซอร์เครื่องนี้ ควรตั้งรหัสผ่าน Windows และล็อกหน้าจอเมื่อไม่ใช้งานด้วยเพื่อความปลอดภัยที่สมบูรณ์ยิ่งขึ้น</div>
+    <div class="help" data-i18n="helpLockScreenNote">ระบบล็อกนี้ป้องกันเฉพาะการเปิดดูผ่านหน้าจอเท่านั้น (กันคนเดินผ่านมาเปิดดู) ข้อมูลจริงเก็บในเบราว์เซอร์เครื่องนี้ ควรตั้งรหัสผ่าน Windows และล็อกหน้าจอเมื่อไม่ใช้งานด้วยเพื่อความปลอดภัยที่สมบูรณ์ยิ่งขึ้น</div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsViewerPin">👁️ รหัสผ่านสำหรับเจ้าหน้าที่ "ดูข้อมูลอย่างเดียว"</h3>
-    <div class="help" style="margin-bottom:10px;">ตั้งรหัสผ่านแยกให้เจ้าหน้าที่ที่เกี่ยวข้อง เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารแนบได้เท่านั้น — ดูได้ แต่บันทึก/แก้ไข/ลบ/ตั้งค่าไม่ได้ ใช้รหัสเดียวกันได้กับหลายคน</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpViewerPinIntro">ตั้งรหัสผ่านแยกให้เจ้าหน้าที่ที่เกี่ยวข้อง เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารแนบได้เท่านั้น — ดูได้ แต่บันทึก/แก้ไข/ลบ/ตั้งค่าไม่ได้ ใช้รหัสเดียวกันได้กับหลายคน</div>
     <div class="grid cols-2">
-      <div class="field"><label>ตั้งรหัสผ่านดูอย่างเดียว</label><input type="password" id="viewerPin1" autocomplete="new-password"></div>
-      <div class="field"><label>ยืนยันรหัสผ่าน</label><input type="password" id="viewerPin2" autocomplete="new-password"></div>
+      <div class="field"><label data-i18n="lblSetViewerPassword">ตั้งรหัสผ่านดูอย่างเดียว</label><input type="password" id="viewerPin1" autocomplete="new-password"></div>
+      <div class="field"><label data-i18n="lblConfirmPassword">ยืนยันรหัสผ่าน</label><input type="password" id="viewerPin2" autocomplete="new-password"></div>
     </div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnSetViewerPin">บันทึกรหัสผ่านดูอย่างเดียว</button>
-      <button class="btn btn-secondary" id="btnRemoveViewerPin" style="display:none;color:#c0392b;">ปิดใช้งานรหัสผ่านดูอย่างเดียว</button>
+      <button class="btn btn-secondary" id="btnSetViewerPin" data-i18n="btnSaveViewerPassword">บันทึกรหัสผ่านดูอย่างเดียว</button>
+      <button class="btn btn-secondary" id="btnRemoveViewerPin" style="display:none;color:#c0392b;" data-i18n="btnDisableViewerPassword">ปิดใช้งานรหัสผ่านดูอย่างเดียว</button>
     </div>
     <div class="help" id="viewerPinStatus"></div>
-    <div class="help">หมายเหตุ: ถ้าเปิดใช้ "ระบบข้อมูลกลาง" (Google Sheets) ไว้ เจ้าหน้าที่ดูอย่างเดียวยังต้อง Sign in ด้วยบัญชี Google ของตัวเองเพื่ออ่านข้อมูลจากชีทกลางเช่นกัน — แนะนำให้แชร์ชีทกลางและโฟลเดอร์ไฟล์แนบใน Drive ให้บัญชีของเจ้าหน้าที่กลุ่มนี้ในสิทธิ์ "Viewer" (ดูอย่างเดียว) เท่านั้น เพื่อป้องกันการแก้ไขข้อมูลจริงอีกชั้นหนึ่ง และอย่าลืมเพิ่มอีเมลเป็น Test user ในหน้า Google Cloud Console ด้วย (ดูปุ่มลัดด้านล่างในหัวข้อ "ตรวจสอบสิทธิ์การเข้าถึง")</div>
+    <div class="help" data-i18n="helpViewerPinCloudNote">หมายเหตุ: ถ้าเปิดใช้ "ระบบข้อมูลกลาง" (Google Sheets) ไว้ เจ้าหน้าที่ดูอย่างเดียวยังต้อง Sign in ด้วยบัญชี Google ของตัวเองเพื่ออ่านข้อมูลจากชีทกลางเช่นกัน — แนะนำให้แชร์ชีทกลางและโฟลเดอร์ไฟล์แนบใน Drive ให้บัญชีของเจ้าหน้าที่กลุ่มนี้ในสิทธิ์ "Viewer" (ดูอย่างเดียว) เท่านั้น เพื่อป้องกันการแก้ไขข้อมูลจริงอีกชั้นหนึ่ง และอย่าลืมเพิ่มอีเมลเป็น Test user ในหน้า Google Cloud Console ด้วย (ดูปุ่มลัดด้านล่างในหัวข้อ "ตรวจสอบสิทธิ์การเข้าถึง")</div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsDeptPin">🏫 รหัสผ่านเจ้าหน้าที่สาขา (ดูได้เฉพาะสาขาของตัวเอง)</h3>
-    <div class="help" style="margin-bottom:10px;">ตั้งรหัสผ่านแยกให้แต่ละสาขา เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะข้อมูลนักศึกษาของสาขานั้น ๆ ในหน้า "ตรวจสอบข้อมูล" เท่านั้น (ดูอย่างเดียว บันทึก/แก้ไขไม่ได้) — <strong>ข้อควรทราบ:</strong> เป็นการกรองในหน้าจอแอปเท่านั้น ถ้าเปิดโหมดข้อมูลกลาง เจ้าหน้าที่ที่มีบัญชี Google ถูกแชร์สิทธิ์อ่านไว้จะยังเปิด Google Sheet ดูข้อมูลทุกสาขาได้โดยตรงอยู่ดี ไม่ใช่การปิดกั้นข้อมูลแบบเข้มงวด</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpDeptPinIntro">ตั้งรหัสผ่านแยกให้แต่ละสาขา เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะข้อมูลนักศึกษาของสาขานั้น ๆ ในหน้า "ตรวจสอบข้อมูล" เท่านั้น (ดูอย่างเดียว บันทึก/แก้ไขไม่ได้) — <strong>ข้อควรทราบ:</strong> เป็นการกรองในหน้าจอแอปเท่านั้น ถ้าเปิดโหมดข้อมูลกลาง เจ้าหน้าที่ที่มีบัญชี Google ถูกแชร์สิทธิ์อ่านไว้จะยังเปิด Google Sheet ดูข้อมูลทุกสาขาได้โดยตรงอยู่ดี ไม่ใช่การปิดกั้นข้อมูลแบบเข้มงวด</div>
     <div class="grid cols-2">
       <div class="field">
-        <label>สาขา</label>
+        <label data-i18n="lblDepartmentShort">สาขา</label>
         <select id="deptPin_department"></select>
       </div>
       <div class="field"></div>
-      <div class="field"><label>ตั้งรหัสผ่าน</label><input type="password" id="deptPin_pin1" autocomplete="new-password"></div>
-      <div class="field"><label>ยืนยันรหัสผ่าน</label><input type="password" id="deptPin_pin2" autocomplete="new-password"></div>
+      <div class="field"><label data-i18n="lblSetPassword">ตั้งรหัสผ่าน</label><input type="password" id="deptPin_pin1" autocomplete="new-password"></div>
+      <div class="field"><label data-i18n="lblConfirmPassword">ยืนยันรหัสผ่าน</label><input type="password" id="deptPin_pin2" autocomplete="new-password"></div>
     </div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnSetDeptPin">บันทึกรหัสผ่านสาขานี้</button>
+      <button class="btn btn-secondary" id="btnSetDeptPin" data-i18n="btnSaveDeptPassword">บันทึกรหัสผ่านสาขานี้</button>
     </div>
-    <div class="help" style="margin:10px 0 4px;">สาขาที่ตั้งรหัสผ่านไว้แล้ว:</div>
+    <div class="help" style="margin:10px 0 4px;" data-i18n="txtDeptPinListLabel">สาขาที่ตั้งรหัสผ่านไว้แล้ว:</div>
     <div id="deptPinList"></div>
   </div>
 
@@ -1383,95 +1383,95 @@ if('serviceWorker' in navigator){
 
   <div class="card">
     <h3 data-i18n="secSettingsBrokenFiles">🔍 ตรวจสอบไฟล์แนบที่ลิงก์เสีย</h3>
-    <div class="help" style="margin-bottom:10px;">สแกนไฟล์แนบทั้งหมดที่เคยอัปโหลดขึ้น Google Drive ในระบบ เช็คว่าแต่ละไฟล์ยังเปิดได้จริงหรือไม่ (เช่น ถูกลบ/ย้ายไปถังขยะ/ไม่มีสิทธิ์เข้าถึงแล้ว) มีประโยชน์เวลาสงสัยว่ามีการย้าย/ลบไฟล์ในบัญชี Drive โดยไม่ได้ตั้งใจ</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpBrokenFiles">สแกนไฟล์แนบทั้งหมดที่เคยอัปโหลดขึ้น Google Drive ในระบบ เช็คว่าแต่ละไฟล์ยังเปิดได้จริงหรือไม่ (เช่น ถูกลบ/ย้ายไปถังขยะ/ไม่มีสิทธิ์เข้าถึงแล้ว) มีประโยชน์เวลาสงสัยว่ามีการย้าย/ลบไฟล์ในบัญชี Drive โดยไม่ได้ตั้งใจ</div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnCheckBrokenFiles">🔍 เริ่มตรวจสอบ</button>
+      <button class="btn btn-secondary" id="btnCheckBrokenFiles" data-i18n="btnStartScan">🔍 เริ่มตรวจสอบ</button>
     </div>
     <div id="brokenFilesResult" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsAdvisorHistoryCleanup">🧹 ล้างประวัติที่ปรึกษาที่ขึ้นผิดพลาด</h3>
-    <div class="help" style="margin-bottom:10px;">ก่อนหน้านี้ระบบเคยขึ้น "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ผิดพลาดในบางกรณี เช่น ตอนกรอกชื่อที่ปรึกษาให้นักศึกษาคนหนึ่งเป็นครั้งแรก ทั้งที่ไม่ได้เปลี่ยนจากชื่อเดิม เครื่องมือนี้จะสแกนหาแล้วลบเฉพาะรายการประวัติปลอมเหล่านั้นออก โดยไม่กระทบประวัติการเปลี่ยนแปลงที่ปรึกษาจริง</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpAdvisorHistoryCleanup">ก่อนหน้านี้ระบบเคยขึ้น "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ผิดพลาดในบางกรณี เช่น ตอนกรอกชื่อที่ปรึกษาให้นักศึกษาคนหนึ่งเป็นครั้งแรก ทั้งที่ไม่ได้เปลี่ยนจากชื่อเดิม เครื่องมือนี้จะสแกนหาแล้วลบเฉพาะรายการประวัติปลอมเหล่านั้นออก โดยไม่กระทบประวัติการเปลี่ยนแปลงที่ปรึกษาจริง</div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnScanBogusAdvisorHistory">🔍 เริ่มตรวจสอบ</button>
+      <button class="btn btn-secondary" id="btnScanBogusAdvisorHistory" data-i18n="btnStartScan">🔍 เริ่มตรวจสอบ</button>
     </div>
     <div id="bogusAdvisorHistoryResult" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsMismatchFields">🔍 ตรวจสอบสาขา/หลักสูตร/แผนที่สะกดไม่ตรงรายการมาตรฐาน</h3>
-    <div class="help" style="margin-bottom:10px;">สแกนข้อมูลนักศึกษาทั้งหมด เทียบช่อง "สาขาวิชา"/"หลักสูตร"/"แผนการศึกษา" กับรายการมาตรฐานที่ตั้งไว้ในระบบ ถ้าพบค่าที่สะกดไม่ตรงกันเป๊ะ (เช่น มีวงเล็บต่อท้าย เว้นวรรคเกิน หรือพิมพ์เองแทนการเลือกจากดรอปดาวน์) นักศึกษาคนนั้นจะไม่ถูกนับรวมในตัวกรอง/แดชบอร์ดของสาขานั้นๆ อย่างถูกต้อง</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpMismatchFields">สแกนข้อมูลนักศึกษาทั้งหมด เทียบช่อง "สาขาวิชา"/"หลักสูตร"/"แผนการศึกษา" กับรายการมาตรฐานที่ตั้งไว้ในระบบ ถ้าพบค่าที่สะกดไม่ตรงกันเป๊ะ (เช่น มีวงเล็บต่อท้าย เว้นวรรคเกิน หรือพิมพ์เองแทนการเลือกจากดรอปดาวน์) นักศึกษาคนนั้นจะไม่ถูกนับรวมในตัวกรอง/แดชบอร์ดของสาขานั้นๆ อย่างถูกต้อง</div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnCheckMismatchedMasterFields">🔍 เริ่มตรวจสอบ</button>
+      <button class="btn btn-secondary" id="btnCheckMismatchedMasterFields" data-i18n="btnStartScan">🔍 เริ่มตรวจสอบ</button>
     </div>
     <div id="mismatchedMasterFieldsResult" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsGradTermFix">🛠️ ซ่อมข้อมูล "ภาคเรียนที่สำเร็จการศึกษา" ที่สลับกับ "ประวัติที่ปรึกษา"</h3>
-    <div class="help" style="margin-bottom:10px;">ก่อนหน้านี้เคยมีบั๊กที่ทำให้ตอนบันทึกข้อมูลบางครั้ง ค่า "ภาคเรียนที่สำเร็จการศึกษา" กับ "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ของนักศึกษาบางคนสลับตำแหน่งกัน (สังเกตได้จากช่องภาคเรียนที่สำเร็จการศึกษาขึ้นเป็นข้อความ "[]" แทนที่จะเป็นค่าว่างหรือภาคเรียนจริง) เครื่องมือนี้จะสแกนหาแล้วสลับค่ากลับให้ถูกตำแหน่ง โดยไม่กระทบข้อมูลอื่น (บั๊กต้นเหตุได้รับการแก้ไขแล้ว การบันทึกครั้งต่อไปจะไม่เกิดปัญหานี้อีก เครื่องมือนี้ใช้สำหรับซ่อมข้อมูลเก่าที่อาจได้รับผลกระทบไปแล้วเท่านั้น)</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpGradTermFix">ก่อนหน้านี้เคยมีบั๊กที่ทำให้ตอนบันทึกข้อมูลบางครั้ง ค่า "ภาคเรียนที่สำเร็จการศึกษา" กับ "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ของนักศึกษาบางคนสลับตำแหน่งกัน (สังเกตได้จากช่องภาคเรียนที่สำเร็จการศึกษาขึ้นเป็นข้อความ "[]" แทนที่จะเป็นค่าว่างหรือภาคเรียนจริง) เครื่องมือนี้จะสแกนหาแล้วสลับค่ากลับให้ถูกตำแหน่ง โดยไม่กระทบข้อมูลอื่น (บั๊กต้นเหตุได้รับการแก้ไขแล้ว การบันทึกครั้งต่อไปจะไม่เกิดปัญหานี้อีก เครื่องมือนี้ใช้สำหรับซ่อมข้อมูลเก่าที่อาจได้รับผลกระทบไปแล้วเท่านั้น)</div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnScanSwappedGradTerm">🔍 เริ่มตรวจสอบ</button>
+      <button class="btn btn-secondary" id="btnScanSwappedGradTerm" data-i18n="btnStartScan">🔍 เริ่มตรวจสอบ</button>
     </div>
     <div id="swappedGradTermResult" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsWithdrawnAdvisor">⚠️ นักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่</h3>
-    <div class="help" style="margin-bottom:10px;">สแกนหานักศึกษาที่เคยมีอาจารย์ที่ปรึกษาหลักแล้วถูกถอนออก แต่ยังไม่ได้แต่งตั้งที่ปรึกษาคนใหม่แทน มีประโยชน์เวลาต้องการติดตามว่านักศึกษาคนไหนยังค้างเรื่องที่ปรึกษาอยู่บ้าง</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpWithdrawnAdvisor">สแกนหานักศึกษาที่เคยมีอาจารย์ที่ปรึกษาหลักแล้วถูกถอนออก แต่ยังไม่ได้แต่งตั้งที่ปรึกษาคนใหม่แทน มีประโยชน์เวลาต้องการติดตามว่านักศึกษาคนไหนยังค้างเรื่องที่ปรึกษาอยู่บ้าง</div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnScanWithdrawnAdvisor">🔍 เริ่มตรวจสอบ</button>
+      <button class="btn btn-secondary" id="btnScanWithdrawnAdvisor" data-i18n="btnStartScan">🔍 เริ่มตรวจสอบ</button>
     </div>
     <div id="withdrawnAdvisorResult" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsNoPlan">⚠️ นักศึกษาที่ไม่มีข้อมูลแผนการเรียน</h3>
-    <div class="help" style="margin-bottom:10px;">สแกนหานักศึกษาที่ช่อง "แผนการเรียน" ว่างเปล่าอยู่ในปัจจุบัน (เช่น เคยได้รับผลกระทบจากบั๊กที่ค่าแผนการเรียนหายไปเมื่อรายการนั้นถูกลบออกจาก master data) เครื่องมือนี้แค่ตรวจสอบและแสดงรายชื่อให้เท่านั้น ไม่แก้ไขข้อมูลให้อัตโนมัติ เพราะไม่ทราบว่าค่าที่ถูกต้องของแต่ละคนคืออะไร กดปุ่ม "แก้ไข" ข้างรายชื่อเพื่อเปิดระเบียนแล้วเลือกแผนการเรียนที่ถูกต้องกลับเข้าไปได้เลย</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpNoPlan">สแกนหานักศึกษาที่ช่อง "แผนการเรียน" ว่างเปล่าอยู่ในปัจจุบัน (เช่น เคยได้รับผลกระทบจากบั๊กที่ค่าแผนการเรียนหายไปเมื่อรายการนั้นถูกลบออกจาก master data) เครื่องมือนี้แค่ตรวจสอบและแสดงรายชื่อให้เท่านั้น ไม่แก้ไขข้อมูลให้อัตโนมัติ เพราะไม่ทราบว่าค่าที่ถูกต้องของแต่ละคนคืออะไร กดปุ่ม "แก้ไข" ข้างรายชื่อเพื่อเปิดระเบียนแล้วเลือกแผนการเรียนที่ถูกต้องกลับเข้าไปได้เลย</div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnScanMissingPlan">🔍 เริ่มตรวจสอบ</button>
+      <button class="btn btn-secondary" id="btnScanMissingPlan" data-i18n="btnStartScan">🔍 เริ่มตรวจสอบ</button>
     </div>
     <div id="missingPlanResult" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsCloudSync">🌐 ระบบข้อมูลกลาง (หลายเครื่อง/หลายเจ้าหน้าที่)</h3>
-    <div class="help" style="margin-bottom:14px;">เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md</div>
+    <div class="help" style="margin-bottom:14px;" data-i18n="helpCloudSyncIntro">เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md</div>
     <div class="grid">
       <div class="field full">
-        <label>Spreadsheet ID หรือลิงก์ Google Sheet กลาง</label>
-        <input type="text" id="s_sheetId" placeholder="วางลิงก์ Google Sheet หรือ Spreadsheet ID ที่นี่">
-        <div class="help">สร้าง Google Sheet เปล่าขึ้นมา 1 ไฟล์ แชร์สิทธิ์ "แก้ไขได้" ให้อีเมลของเจ้าหน้าที่ทุกคนที่จะใช้งาน แล้ววางลิงก์ของชีทนั้นที่นี่ (ทำครั้งเดียวต่อ 1 เครื่อง เจ้าหน้าที่แต่ละคนต้องตั้งค่าช่องนี้ด้วยลิงก์ชีทเดียวกัน)</div>
+        <label data-i18n="lblSheetIdOrLink">Spreadsheet ID หรือลิงก์ Google Sheet กลาง</label>
+        <input type="text" id="s_sheetId" placeholder="วางลิงก์ Google Sheet หรือ Spreadsheet ID ที่นี่" data-i18n-ph="phSheetIdOrLink">
+        <div class="help" data-i18n="helpSheetIdOrLink">สร้าง Google Sheet เปล่าขึ้นมา 1 ไฟล์ แชร์สิทธิ์ "แก้ไขได้" ให้อีเมลของเจ้าหน้าที่ทุกคนที่จะใช้งาน แล้ววางลิงก์ของชีทนั้นที่นี่ (ทำครั้งเดียวต่อ 1 เครื่อง เจ้าหน้าที่แต่ละคนต้องตั้งค่าช่องนี้ด้วยลิงก์ชีทเดียวกัน)</div>
       </div>
     </div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnSaveSheetId">บันทึก Spreadsheet ID</button>
-      <button class="btn btn-secondary" id="btnInitSheet">🛠️ สร้าง/ตรวจสอบโครงสร้างชีท</button>
+      <button class="btn btn-secondary" id="btnSaveSheetId" data-i18n="btnSaveSheetId">บันทึก Spreadsheet ID</button>
+      <button class="btn btn-secondary" id="btnInitSheet" data-i18n="btnInitSheet">🛠️ สร้าง/ตรวจสอบโครงสร้างชีท</button>
     </div>
     <div style="border-top:1px solid var(--border);margin-top:6px;padding-top:16px;">
       <label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;cursor:pointer;">
-        <input type="checkbox" id="s_cloudMode"> เปิดใช้งานระบบข้อมูลกลาง (ทุกคนอ่าน/บันทึกข้อมูลจากชีทนี้ร่วมกัน)
+        <input type="checkbox" id="s_cloudMode"> <span data-i18n="chkEnableCloudSync">เปิดใช้งานระบบข้อมูลกลาง (ทุกคนอ่าน/บันทึกข้อมูลจากชีทนี้ร่วมกัน)</span>
       </label>
-      <div class="help">เมื่อเปิดใช้งาน หน้ารายการ/ตรวจสอบข้อมูล/ฟอร์มบันทึกข้อมูลทั้งหมดจะอ่าน-เขียนจาก Google Sheet กลางแทน IndexedDB ในเครื่อง ไฟล์แนบจะอัปโหลดขึ้น Drive ทันทีที่แนบ (ไม่เก็บสำเนาในเครื่อง) หากปิดใช้งาน ระบบจะกลับไปใช้ข้อมูลในเครื่องนี้ตามปกติ</div>
+      <div class="help" data-i18n="helpCloudSyncCheckbox">เมื่อเปิดใช้งาน หน้ารายการ/ตรวจสอบข้อมูล/ฟอร์มบันทึกข้อมูลทั้งหมดจะอ่าน-เขียนจาก Google Sheet กลางแทน IndexedDB ในเครื่อง ไฟล์แนบจะอัปโหลดขึ้น Drive ทันทีที่แนบ (ไม่เก็บสำเนาในเครื่อง) หากปิดใช้งาน ระบบจะกลับไปใช้ข้อมูลในเครื่องนี้ตามปกติ</div>
     </div>
     <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
-      <button class="btn btn-accent" id="btnMigrateToCloud">📤 ย้ายข้อมูลเดิมในเครื่องนี้เข้าระบบกลาง</button>
-      <div class="help" style="margin-top:8px;">ใช้ครั้งเดียวตอนเริ่มต้นใช้ระบบกลาง — ดึงรายการสอบ/ไฟล์แนบ/ข้อมูลตั้งต้นที่เคยบันทึกไว้ในเครื่องนี้ทั้งหมด ส่งเข้าชีทกลาง + Google Drive ให้อัตโนมัติ (ควรทำจากเครื่องที่มีข้อมูลเดิมมากที่สุดเพียงเครื่องเดียว เพื่อไม่ให้ข้อมูลซ้ำ)</div>
+      <button class="btn btn-accent" id="btnMigrateToCloud" data-i18n="btnMigrateToCloud">📤 ย้ายข้อมูลเดิมในเครื่องนี้เข้าระบบกลาง</button>
+      <div class="help" style="margin-top:8px;" data-i18n="helpMigrateToCloud">ใช้ครั้งเดียวตอนเริ่มต้นใช้ระบบกลาง — ดึงรายการสอบ/ไฟล์แนบ/ข้อมูลตั้งต้นที่เคยบันทึกไว้ในเครื่องนี้ทั้งหมด ส่งเข้าชีทกลาง + Google Drive ให้อัตโนมัติ (ควรทำจากเครื่องที่มีข้อมูลเดิมมากที่สุดเพียงเครื่องเดียว เพื่อไม่ให้ข้อมูลซ้ำ)</div>
     </div>
     <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
-      <label style="font-weight:600;font-size:14.5px;">🔐 ตรวจสอบสิทธิ์การเข้าถึง</label>
-      <div class="help" style="margin-top:2px;margin-bottom:10px;">เมื่อมีเจ้าหน้าที่ลาออกหรือเปลี่ยนหน้าที่ ต้องเอาอีเมลออกจาก 2 จุดนี้ด้วยตัวเอง — ระบบไม่สามารถดึงหรือแก้รายชื่อ Test users ให้อัตโนมัติได้ เพราะ Google ไม่มี API ให้เว็บแอปภายนอกเข้าถึงส่วนนี้ ปุ่มด้านล่างเป็นแค่ทางลัดเปิดหน้าให้ตรวจสอบเองเร็วขึ้น</div>
-      <button class="btn btn-secondary btn-sm" id="btnOpenSheetShare" type="button">🔗 เปิดชีทกลาง (ตรวจสอบ/แก้ไขสิทธิ์แชร์)</button>
-      <button class="btn btn-secondary btn-sm" id="btnOpenTestUsers" type="button" style="margin-left:8px;">🔗 เปิดหน้า Test users (Google Cloud Console)</button>
+      <label style="font-weight:600;font-size:14.5px;" data-i18n="lblCheckAccessRights">🔐 ตรวจสอบสิทธิ์การเข้าถึง</label>
+      <div class="help" style="margin-top:2px;margin-bottom:10px;" data-i18n="helpCheckAccessRights">เมื่อมีเจ้าหน้าที่ลาออกหรือเปลี่ยนหน้าที่ ต้องเอาอีเมลออกจาก 2 จุดนี้ด้วยตัวเอง — ระบบไม่สามารถดึงหรือแก้รายชื่อ Test users ให้อัตโนมัติได้ เพราะ Google ไม่มี API ให้เว็บแอปภายนอกเข้าถึงส่วนนี้ ปุ่มด้านล่างเป็นแค่ทางลัดเปิดหน้าให้ตรวจสอบเองเร็วขึ้น</div>
+      <button class="btn btn-secondary btn-sm" id="btnOpenSheetShare" type="button" data-i18n="btnOpenSheetShare">🔗 เปิดชีทกลาง (ตรวจสอบ/แก้ไขสิทธิ์แชร์)</button>
+      <button class="btn btn-secondary btn-sm" id="btnOpenTestUsers" type="button" style="margin-left:8px;" data-i18n="btnOpenTestUsers">🔗 เปิดหน้า Test users (Google Cloud Console)</button>
     </div>
   </div>
 
   <div class="card">
     <h3 data-i18n="secSettingsPurgeDeleted">🗑️ ล้างข้อมูลที่ถูกลบถาวร (ลดขนาดชีทกลาง)</h3>
-    <div class="help" style="margin-bottom:10px;">การกดปุ่ม "ลบ" ในหน้าต่างๆ ของระบบข้อมูลกลางเป็นการ "ซ่อน" รายการเท่านั้น (แถวเดิมยังค้างอยู่ในชีท Google Sheets เผื่อกู้คืน/ตรวจสอบย้อนหลังได้) เมื่อมีการลบ/นำเข้าข้อมูลบ่อยๆ แถวที่ซ่อนไว้จะสะสมมากขึ้นเรื่อยๆ ทำให้ทุกครั้งที่เปิดหน้ารายการต้องโหลดข้อมูลมากกว่าที่เห็นจริง และรู้สึกช้าลง เครื่องมือนี้จะลบแถวที่ถูกซ่อนไว้เหล่านั้นออกจากชีท (Records/Files/DocIntake) อย่างถาวร <strong>ไม่สามารถกู้คืนได้อีก</strong> ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpPurgeDeleted">การกดปุ่ม "ลบ" ในหน้าต่างๆ ของระบบข้อมูลกลางเป็นการ "ซ่อน" รายการเท่านั้น (แถวเดิมยังค้างอยู่ในชีท Google Sheets เผื่อกู้คืน/ตรวจสอบย้อนหลังได้) เมื่อมีการลบ/นำเข้าข้อมูลบ่อยๆ แถวที่ซ่อนไว้จะสะสมมากขึ้นเรื่อยๆ ทำให้ทุกครั้งที่เปิดหน้ารายการต้องโหลดข้อมูลมากกว่าที่เห็นจริง และรู้สึกช้าลง เครื่องมือนี้จะลบแถวที่ถูกซ่อนไว้เหล่านั้นออกจากชีท (Records/Files/DocIntake) อย่างถาวร <strong>ไม่สามารถกู้คืนได้อีก</strong> ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ</div>
     <div class="form-footer" style="justify-content:flex-start;">
-      <button class="btn btn-secondary" id="btnPurgeDeleted">🗑️ ล้างข้อมูลที่ถูกลบถาวร</button>
+      <button class="btn btn-secondary" id="btnPurgeDeleted" data-i18n="btnPurgeDeletedLabel">🗑️ ล้างข้อมูลที่ถูกลบถาวร</button>
     </div>
     <div id="purgeDeletedResult" style="margin-top:10px;"></div>
   </div>
@@ -3365,7 +3365,47 @@ var LANDING_I18N = {
   helpAdvisorListAll: {th:'รายชื่ออาจารย์ทั้งหมดที่ใช้เลือกในช่องที่ปรึกษา/กรรมการสอบทั่วทั้งระบบ', en:'The full list of advisors used for selecting advisor/committee fields throughout the system'},
   phAdvisorNameExample: {th:'เช่น ผศ.ดร.สมชาย ใจดี', en:'e.g. Asst. Prof. Dr. Somchai Jaidee'},
   txtDupNameWarning: {th:'⚠️ มีชื่อนี้อยู่แล้วในรายการ', en:'⚠️ This name already exists in the list'},
-  helpAdvisorRolesMulti: {th:'เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):', en:'Select the role(s) this advisor can serve in (more than one may be selected):'}
+  helpAdvisorRolesMulti: {th:'เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):', en:'Select the role(s) this advisor can serve in (more than one may be selected):'},
+  btnFindExistingStudent: {th:'🔍 ค้นหาข้อมูลเดิม', en:'🔍 Find Existing Data'},
+  lblCurrentPassword: {th:'รหัสผ่านปัจจุบัน', en:'Current Password'},
+  lblNewPassword: {th:'รหัสผ่านใหม่', en:'New Password'},
+  lblConfirmNewPassword: {th:'ยืนยันรหัสผ่านใหม่', en:'Confirm New Password'},
+  btnChangePinLabel: {th:'เปลี่ยนรหัสผ่าน', en:'Change Password'},
+  helpLockScreenNote: {th:'ระบบล็อกนี้ป้องกันเฉพาะการเปิดดูผ่านหน้าจอเท่านั้น (กันคนเดินผ่านมาเปิดดู) ข้อมูลจริงเก็บในเบราว์เซอร์เครื่องนี้ ควรตั้งรหัสผ่าน Windows และล็อกหน้าจอเมื่อไม่ใช้งานด้วยเพื่อความปลอดภัยที่สมบูรณ์ยิ่งขึ้น', en:'This lock screen only prevents casual viewing on this screen (stops passersby from looking). The actual data is stored in this browser — you should also set a Windows password and lock the screen when not in use for more complete security.'},
+  helpViewerPinIntro: {th:'ตั้งรหัสผ่านแยกให้เจ้าหน้าที่ที่เกี่ยวข้อง เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารแนบได้เท่านั้น — ดูได้ แต่บันทึก/แก้ไข/ลบ/ตั้งค่าไม่ได้ ใช้รหัสเดียวกันได้กับหลายคน', en:'Set a separate password for relevant staff. Logging in with this password shows only the "Student Lookup" page and allows downloading attachments only — view only, no saving/editing/deleting/settings access. The same password can be shared by multiple people.'},
+  lblSetViewerPassword: {th:'ตั้งรหัสผ่านดูอย่างเดียว', en:'Set View-Only Password'},
+  lblConfirmPassword: {th:'ยืนยันรหัสผ่าน', en:'Confirm Password'},
+  btnSaveViewerPassword: {th:'บันทึกรหัสผ่านดูอย่างเดียว', en:'Save View-Only Password'},
+  btnDisableViewerPassword: {th:'ปิดใช้งานรหัสผ่านดูอย่างเดียว', en:'Disable View-Only Password'},
+  helpViewerPinCloudNote: {th:'หมายเหตุ: ถ้าเปิดใช้ "ระบบข้อมูลกลาง" (Google Sheets) ไว้ เจ้าหน้าที่ดูอย่างเดียวยังต้อง Sign in ด้วยบัญชี Google ของตัวเองเพื่ออ่านข้อมูลจากชีทกลางเช่นกัน — แนะนำให้แชร์ชีทกลางและโฟลเดอร์ไฟล์แนบใน Drive ให้บัญชีของเจ้าหน้าที่กลุ่มนี้ในสิทธิ์ "Viewer" (ดูอย่างเดียว) เท่านั้น เพื่อป้องกันการแก้ไขข้อมูลจริงอีกชั้นหนึ่ง และอย่าลืมเพิ่มอีเมลเป็น Test user ในหน้า Google Cloud Console ด้วย (ดูปุ่มลัดด้านล่างในหัวข้อ "ตรวจสอบสิทธิ์การเข้าถึง")', en:'Note: If "Central Data System" (Google Sheets) is enabled, view-only staff still need to sign in with their own Google account to read data from the central sheet — it is recommended to share the central sheet and the Drive attachment folder with these staff accounts as "Viewer" (view-only) only, to add an extra layer of protection against real edits. Also remember to add their email as a Test user on the Google Cloud Console page (see the shortcut button below under "Check Access Rights")'},
+  helpDeptPinIntro: {th:'ตั้งรหัสผ่านแยกให้แต่ละสาขา เมื่อเข้าระบบด้วยรหัสนี้จะเห็นเฉพาะข้อมูลนักศึกษาของสาขานั้น ๆ ในหน้า "ตรวจสอบข้อมูล" เท่านั้น (ดูอย่างเดียว บันทึก/แก้ไขไม่ได้) — <strong>ข้อควรทราบ:</strong> เป็นการกรองในหน้าจอแอปเท่านั้น ถ้าเปิดโหมดข้อมูลกลาง เจ้าหน้าที่ที่มีบัญชี Google ถูกแชร์สิทธิ์อ่านไว้จะยังเปิด Google Sheet ดูข้อมูลทุกสาขาได้โดยตรงอยู่ดี ไม่ใช่การปิดกั้นข้อมูลแบบเข้มงวด', en:'Set a separate password for each department. Logging in with this password shows only that department\'s student data on the "Student Lookup" page (view only, no saving/editing) — <strong>Note:</strong> this is only a filter at the app-screen level. If central data mode is enabled, staff whose Google account has been granted read access can still open the Google Sheet directly and see every department\'s data — it is not a strict data lockdown.'},
+  lblDepartmentShort: {th:'สาขา', en:'Department'},
+  lblSetPassword: {th:'ตั้งรหัสผ่าน', en:'Set Password'},
+  btnSaveDeptPassword: {th:'บันทึกรหัสผ่านสาขานี้', en:'Save This Department\'s Password'},
+  txtDeptPinListLabel: {th:'สาขาที่ตั้งรหัสผ่านไว้แล้ว:', en:'Departments with a password already set:'},
+  btnStartScan: {th:'🔍 เริ่มตรวจสอบ', en:'🔍 Start Check'},
+  helpBrokenFiles: {th:'สแกนไฟล์แนบทั้งหมดที่เคยอัปโหลดขึ้น Google Drive ในระบบ เช็คว่าแต่ละไฟล์ยังเปิดได้จริงหรือไม่ (เช่น ถูกลบ/ย้ายไปถังขยะ/ไม่มีสิทธิ์เข้าถึงแล้ว) มีประโยชน์เวลาสงสัยว่ามีการย้าย/ลบไฟล์ในบัญชี Drive โดยไม่ได้ตั้งใจ', en:'Scans every attachment ever uploaded to Google Drive in the system, checking whether each file can still be opened (e.g. deleted/moved to trash/access no longer granted). Useful when you suspect a file was moved or deleted from the Drive account unintentionally.'},
+  helpAdvisorHistoryCleanup: {th:'ก่อนหน้านี้ระบบเคยขึ้น "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ผิดพลาดในบางกรณี เช่น ตอนกรอกชื่อที่ปรึกษาให้นักศึกษาคนหนึ่งเป็นครั้งแรก ทั้งที่ไม่ได้เปลี่ยนจากชื่อเดิม เครื่องมือนี้จะสแกนหาแล้วลบเฉพาะรายการประวัติปลอมเหล่านั้นออก โดยไม่กระทบประวัติการเปลี่ยนแปลงที่ปรึกษาจริง', en:'Previously, the system sometimes logged a false "advisor change history" entry in certain cases — for example, when entering an advisor\'s name for a student for the first time, even though it was not actually a change from a previous name. This tool scans for and removes only those false history entries, without affecting genuine advisor-change history.'},
+  helpMismatchFields: {th:'สแกนข้อมูลนักศึกษาทั้งหมด เทียบช่อง "สาขาวิชา"/"หลักสูตร"/"แผนการศึกษา" กับรายการมาตรฐานที่ตั้งไว้ในระบบ ถ้าพบค่าที่สะกดไม่ตรงกันเป๊ะ (เช่น มีวงเล็บต่อท้าย เว้นวรรคเกิน หรือพิมพ์เองแทนการเลือกจากดรอปดาวน์) นักศึกษาคนนั้นจะไม่ถูกนับรวมในตัวกรอง/แดชบอร์ดของสาขานั้นๆ อย่างถูกต้อง', en:'Scans all student data, comparing the "Department"/"Program"/"Study Plan" fields against the standard lists set up in the system. If a value is found that doesn\'t match exactly (e.g. has trailing parentheses, extra spaces, or was typed in manually instead of chosen from the dropdown), that student will not be correctly counted in that department\'s filters/dashboard.'},
+  helpGradTermFix: {th:'ก่อนหน้านี้เคยมีบั๊กที่ทำให้ตอนบันทึกข้อมูลบางครั้ง ค่า "ภาคเรียนที่สำเร็จการศึกษา" กับ "ประวัติการเปลี่ยนแปลงที่ปรึกษา" ของนักศึกษาบางคนสลับตำแหน่งกัน (สังเกตได้จากช่องภาคเรียนที่สำเร็จการศึกษาขึ้นเป็นข้อความ "[]" แทนที่จะเป็นค่าว่างหรือภาคเรียนจริง) เครื่องมือนี้จะสแกนหาแล้วสลับค่ากลับให้ถูกตำแหน่ง โดยไม่กระทบข้อมูลอื่น (บั๊กต้นเหตุได้รับการแก้ไขแล้ว การบันทึกครั้งต่อไปจะไม่เกิดปัญหานี้อีก เครื่องมือนี้ใช้สำหรับซ่อมข้อมูลเก่าที่อาจได้รับผลกระทบไปแล้วเท่านั้น)', en:'Previously there was a bug that sometimes caused the "Graduation Term" value and the "Advisor Change History" value to get swapped for certain students when saving (noticeable when the graduation term field shows the text "[]" instead of being blank or a real term). This tool scans for and swaps these values back into their correct positions, without affecting other data (the root-cause bug has been fixed, so future saves will not have this issue again — this tool is only for repairing old data that may have already been affected).'},
+  helpWithdrawnAdvisor: {th:'สแกนหานักศึกษาที่เคยมีอาจารย์ที่ปรึกษาหลักแล้วถูกถอนออก แต่ยังไม่ได้แต่งตั้งที่ปรึกษาคนใหม่แทน มีประโยชน์เวลาต้องการติดตามว่านักศึกษาคนไหนยังค้างเรื่องที่ปรึกษาอยู่บ้าง', en:'Scans for students who previously had a main advisor who was withdrawn, but have not yet had a new advisor appointed. Useful when you need to track which students still have an outstanding advisor issue.'},
+  helpNoPlan: {th:'สแกนหานักศึกษาที่ช่อง "แผนการเรียน" ว่างเปล่าอยู่ในปัจจุบัน (เช่น เคยได้รับผลกระทบจากบั๊กที่ค่าแผนการเรียนหายไปเมื่อรายการนั้นถูกลบออกจาก master data) เครื่องมือนี้แค่ตรวจสอบและแสดงรายชื่อให้เท่านั้น ไม่แก้ไขข้อมูลให้อัตโนมัติ เพราะไม่ทราบว่าค่าที่ถูกต้องของแต่ละคนคืออะไร กดปุ่ม "แก้ไข" ข้างรายชื่อเพื่อเปิดระเบียนแล้วเลือกแผนการเรียนที่ถูกต้องกลับเข้าไปได้เลย', en:'Scans for students whose "Study Plan" field is currently empty (e.g. previously affected by a bug where the study plan value disappeared when that item was deleted from master data). This tool only checks and displays the list — it does not fix the data automatically, since it doesn\'t know what the correct value for each person should be. Click the "Edit" button next to a name to open that record and select the correct study plan back in.'},
+  helpCloudSyncIntro: {th:'เปิดใช้งานเพื่อให้เจ้าหน้าที่หลายคนบันทึกข้อมูลร่วมกันได้จากคนละเครื่อง/สถานที่ โดยข้อมูลทั้งหมดจะย้ายไปเก็บบน Google Sheet กลาง (แทนที่จะเก็บแค่ในเบราว์เซอร์เครื่องนี้) ทุกเครื่องต้องมีอินเทอร์เน็ตและเชื่อมต่อ Google Drive อยู่ตลอดเวลาที่ใช้งาน ดูขั้นตอนติดตั้งแบบละเอียดใน SETUP.md', en:'Enable this so multiple staff members can save data together from different devices/locations. All data will move to be stored on a central Google Sheet (instead of only in this browser). Every device must have internet access and stay connected to Google Drive the entire time it is being used. See SETUP.md for detailed installation steps.'},
+  lblSheetIdOrLink: {th:'Spreadsheet ID หรือลิงก์ Google Sheet กลาง', en:'Spreadsheet ID or Central Google Sheet Link'},
+  phSheetIdOrLink: {th:'วางลิงก์ Google Sheet หรือ Spreadsheet ID ที่นี่', en:'Paste the Google Sheet link or Spreadsheet ID here'},
+  helpSheetIdOrLink: {th:'สร้าง Google Sheet เปล่าขึ้นมา 1 ไฟล์ แชร์สิทธิ์ "แก้ไขได้" ให้อีเมลของเจ้าหน้าที่ทุกคนที่จะใช้งาน แล้ววางลิงก์ของชีทนั้นที่นี่ (ทำครั้งเดียวต่อ 1 เครื่อง เจ้าหน้าที่แต่ละคนต้องตั้งค่าช่องนี้ด้วยลิงก์ชีทเดียวกัน)', en:'Create one empty Google Sheet, share "Can edit" access with every staff member\'s email who will use it, then paste that sheet\'s link here (done once per device — each staff member must set this field to the same sheet link).'},
+  btnSaveSheetId: {th:'บันทึก Spreadsheet ID', en:'Save Spreadsheet ID'},
+  btnInitSheet: {th:'🛠️ สร้าง/ตรวจสอบโครงสร้างชีท', en:'🛠️ Create/Verify Sheet Structure'},
+  chkEnableCloudSync: {th:'เปิดใช้งานระบบข้อมูลกลาง (ทุกคนอ่าน/บันทึกข้อมูลจากชีทนี้ร่วมกัน)', en:'Enable Central Data System (everyone reads/saves data from this sheet together)'},
+  helpCloudSyncCheckbox: {th:'เมื่อเปิดใช้งาน หน้ารายการ/ตรวจสอบข้อมูล/ฟอร์มบันทึกข้อมูลทั้งหมดจะอ่าน-เขียนจาก Google Sheet กลางแทน IndexedDB ในเครื่อง ไฟล์แนบจะอัปโหลดขึ้น Drive ทันทีที่แนบ (ไม่เก็บสำเนาในเครื่อง) หากปิดใช้งาน ระบบจะกลับไปใช้ข้อมูลในเครื่องนี้ตามปกติ', en:'When enabled, all list/lookup pages and the data entry form will read-write from the central Google Sheet instead of this device\'s local IndexedDB. Attachments will upload to Drive as soon as they are attached (no local copy kept). If disabled, the system reverts to using this device\'s local data as normal.'},
+  btnMigrateToCloud: {th:'📤 ย้ายข้อมูลเดิมในเครื่องนี้เข้าระบบกลาง', en:'📤 Migrate This Device\'s Existing Data to the Central System'},
+  helpMigrateToCloud: {th:'ใช้ครั้งเดียวตอนเริ่มต้นใช้ระบบกลาง — ดึงรายการสอบ/ไฟล์แนบ/ข้อมูลตั้งต้นที่เคยบันทึกไว้ในเครื่องนี้ทั้งหมด ส่งเข้าชีทกลาง + Google Drive ให้อัตโนมัติ (ควรทำจากเครื่องที่มีข้อมูลเดิมมากที่สุดเพียงเครื่องเดียว เพื่อไม่ให้ข้อมูลซ้ำ)', en:'Use once, when starting to use the central system — pulls all exam records/attachments/master data previously saved on this device and automatically sends them to the central sheet + Google Drive (should be done from only the single device with the most existing data, to avoid duplicate data).'},
+  lblCheckAccessRights: {th:'🔐 ตรวจสอบสิทธิ์การเข้าถึง', en:'🔐 Check Access Rights'},
+  helpCheckAccessRights: {th:'เมื่อมีเจ้าหน้าที่ลาออกหรือเปลี่ยนหน้าที่ ต้องเอาอีเมลออกจาก 2 จุดนี้ด้วยตัวเอง — ระบบไม่สามารถดึงหรือแก้รายชื่อ Test users ให้อัตโนมัติได้ เพราะ Google ไม่มี API ให้เว็บแอปภายนอกเข้าถึงส่วนนี้ ปุ่มด้านล่างเป็นแค่ทางลัดเปิดหน้าให้ตรวจสอบเองเร็วขึ้น', en:'When a staff member resigns or changes roles, their email must be manually removed from these 2 places — the system cannot automatically fetch or edit the Test users list, because Google provides no API for external web apps to access this. The buttons below are just shortcuts to open the page for you to check more quickly.'},
+  btnOpenSheetShare: {th:'🔗 เปิดชีทกลาง (ตรวจสอบ/แก้ไขสิทธิ์แชร์)', en:'🔗 Open Central Sheet (Check/Edit Sharing Permissions)'},
+  btnOpenTestUsers: {th:'🔗 เปิดหน้า Test users (Google Cloud Console)', en:'🔗 Open Test Users Page (Google Cloud Console)'},
+  helpPurgeDeleted: {th:'การกดปุ่ม "ลบ" ในหน้าต่างๆ ของระบบข้อมูลกลางเป็นการ "ซ่อน" รายการเท่านั้น (แถวเดิมยังค้างอยู่ในชีท Google Sheets เผื่อกู้คืน/ตรวจสอบย้อนหลังได้) เมื่อมีการลบ/นำเข้าข้อมูลบ่อยๆ แถวที่ซ่อนไว้จะสะสมมากขึ้นเรื่อยๆ ทำให้ทุกครั้งที่เปิดหน้ารายการต้องโหลดข้อมูลมากกว่าที่เห็นจริง และรู้สึกช้าลง เครื่องมือนี้จะลบแถวที่ถูกซ่อนไว้เหล่านั้นออกจากชีท (Records/Files/DocIntake) อย่างถาวร <strong>ไม่สามารถกู้คืนได้อีก</strong> ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ', en:'Clicking "Delete" on various pages of the central data system only "hides" the item (the original row still remains in the Google Sheets, in case it needs to be restored or audited later). With frequent deletes/imports, hidden rows accumulate more and more, making every list page load more data than what is actually shown and feel slower. This tool permanently deletes those hidden rows from the sheet (Records/Files/DocIntake). <strong>This cannot be undone.</strong> Data that has not been deleted will not be affected in any way.'},
+  btnPurgeDeletedLabel: {th:'🗑️ ล้างข้อมูลที่ถูกลบถาวร', en:'🗑️ Purge Permanently Deleted Data'}
 };
 function i18nText(key){
   var lang = 'th';

@@ -1693,7 +1693,7 @@ var pendingDefenseAttempts = []; // ประวัติการสอบป�
 window.addEventListener('DOMContentLoaded', function(){
   function reportGlobalError(msg){
     try{ toast((i18nText('toastErrorGeneric')||'เกิดข้อผิดพลาด: ')+msg, true); }
-    catch(e2){ alert('เกิดข้อผิดพลาด: '+msg); }
+    catch(e2){ alert((i18nText('toastErrorGeneric')||'เกิดข้อผิดพลาด: ')+msg); }
   }
   window.addEventListener('error', function(e){
     console.error('Uncaught error:', e.error || e.message);
@@ -2773,6 +2773,48 @@ var LANDING_I18N = {
   toastRestoreSuccess: {th:'กู้คืนข้อมูลสำเร็จ', en:'Data restored successfully'},
   toastRestoreSuccessNote: {th:' (เก็บไว้เป็นสำเนาในเครื่องนี้ ไม่กระทบชีทกลาง — ปิดโหมดข้อมูลกลางชั่วคราวหากต้องการดูข้อมูลที่กู้คืนมา)', en:' (kept as a copy on this device, does not affect the central sheet — temporarily disable central data mode if you want to view the restored data)'},
   toastRestoreFailed: {th:'กู้คืนข้อมูลไม่สำเร็จ: ', en:'Data restore failed: '},
+  confirmDisableViewPin: {th:'ปิดใช้งานรหัสผ่านดูอย่างเดียว? เจ้าหน้าที่ที่ใช้รหัสนี้จะเข้าระบบไม่ได้อีก', en:'Disable the view-only password? Staff using this password will no longer be able to log in'},
+  confirmDeleteRegistration: {th:'ยืนยันลบรายการลงทะเบียนนี้?', en:'Confirm delete this registration record?'},
+  confirmUnmarkSubmittedPrefix: {th:'ยกเลิกเครื่องหมาย "ส่งแล้ว" ของ ', en:'Unmark "submitted" for '},
+  confirmUnmarkSubmittedSuffix: {th:' หรือไม่? (รายชื่อนี้จะกลับไปอยู่ในแท็บ "รอส่ง" อีกครั้ง)', en:'? (This name will move back to the "Pending" tab)'},
+  confirmExportMarkSentPrefix: {th:'ส่งออก Excel ', en:'Export '},
+  confirmExportMarkSentSuffix: {th:' รายชื่อ และทำเครื่องหมายว่า "ส่งแล้ว" เลยหรือไม่?\n(รายชื่อเหล่านี้จะไม่ขึ้นในแท็บ "รอส่ง" อีก จนกว่าจะยกเลิกเครื่องหมายในแท็บ "ส่งแล้ว")', en:' names to Excel and mark them as "submitted"?\n(These names will no longer appear in the "Pending" tab until unmarked in the "Submitted" tab)'},
+  confirmStaleOverwrite: {th:'ข้อมูลรายการนี้ถูกแก้ไขโดยผู้อื่นหลังจากที่คุณเปิดฟอร์มนี้ขึ้นมา หากบันทึกต่อ การแก้ไขของคุณจะบันทึกทับข้อมูลล่าสุด ต้องการบันทึกทับหรือไม่?', en:'This record has been edited by someone else since you opened this form. If you continue saving, your changes will overwrite the latest data. Overwrite anyway?'},
+  confirmDeleteFile: {th:'ลบไฟล์นี้หรือไม่?', en:'Delete this file?'},
+  confirmDeleteRecordWithFiles: {th:'ยืนยันลบข้อมูลรายการนี้? (ไฟล์แนบที่เกี่ยวข้องจะถูกลบด้วย)', en:'Confirm delete this record? (Related attached files will also be deleted)'},
+  confirmDisableDeptPinPrefix: {th:'ปิดใช้งานรหัสผ่านของสาขา "', en:'Disable the password for department "'},
+  confirmDisableDeptPinSuffix: {th:'"? เจ้าหน้าที่ที่ใช้รหัสนี้จะเข้าระบบไม่ได้อีก', en:'"? Staff using this password will no longer be able to log in'},
+  confirmDeleteRolePrefix: {th:'ลบตำแหน่ง "', en:'Delete the role "'},
+  confirmDeleteRoleSuffix: {th:'" หรือไม่? (จะเอาออกจากอาจารย์ทุกคนที่เคยติ๊กตำแหน่งนี้ด้วย แต่ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)', en:'"? (It will be removed from every advisor who has this role checked, but previously saved data will not be deleted)'},
+  confirmDeleteAdvisorPrefix: {th:'ลบ "', en:'Remove "'},
+  confirmDeleteAdvisorSuffix: {th:'" ออกจากรายชื่ออาจารย์หรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)', en:'" from the advisor list? (Previously saved data will not be deleted)'},
+  confirmMergeDupP1: {th:'มี "', en:'"'},
+  confirmMergeDupP2: {th:'" อยู่ในรายการอยู่แล้ว ต้องการรวม "', en:'" already exists in the list. Merge "'},
+  confirmMergeDupP3: {th:'" เข้ากับ "', en:'" into "'},
+  confirmMergeDupP4: {th:'" หรือไม่?\nข้อมูลที่เคยบันทึกไว้ด้วยชื่อ "', en:'"?\nAll previously saved data under the name "'},
+  confirmMergeDupP5: {th:'" ทั้งหมดจะถูกเปลี่ยนเป็น "', en:'" will be changed to "'},
+  confirmMergeDupP6: {th:'" และรายการซ้ำจะถูกลบออก', en:'" and the duplicate entry will be removed'},
+  confirmDeleteMasterItemP1: {th:'ลบ "', en:'Delete "'},
+  confirmDeleteMasterItemP2: {th:'" (', en:'" ('},
+  confirmDeleteMasterItemP3: {th:') ออกจากรายการหรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)', en:') from the list? (Previously saved data will not be deleted)'},
+  confirmPurgeDeletedPrefix: {th:'ยืนยันลบแถวที่ถูกลบไว้ ', en:'Confirm permanently delete '},
+  confirmPurgeDeletedSuffix: {th:' รายการออกจากชีทถาวร? การกระทำนี้ไม่สามารถกู้คืนได้อีก (ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ)', en:' previously-deleted rows from the sheet? This action cannot be undone (data that has not been deleted will not be affected)'},
+  confirmDeleteMissingFileEntry: {th:'ลบรายการไฟล์นี้ออกจากระบบ? (ไม่กระทบไฟล์ต้นฉบับใน Drive เพราะหาไม่เจออยู่แล้ว) หลังลบสามารถแนบไฟล์ใหม่ทดแทนได้ที่หน้าบันทึกข้อมูลของนักศึกษาคนนี้', en:"Remove this file entry from the system? (It won't affect the original file on Drive since it can no longer be found there.) After removing it, you can attach a replacement file on this student's record page"},
+  confirmPurgeBogusHistoryP1: {th:'ยืนยันลบประวัติที่ขึ้นผิดพลาด ', en:'Confirm delete '},
+  confirmPurgeBogusHistoryP2: {th:' รายการ จาก ', en:' erroneous history entries from '},
+  confirmPurgeBogusHistoryP3: {th:' นักศึกษา? ระบบจะลบเฉพาะรายการที่ตรวจพบว่าไม่ใช่การเปลี่ยนแปลงจริง ประวัติการเปลี่ยนแปลงที่ปรึกษาจริงจะไม่ถูกแตะต้อง', en:' students? The system will only delete entries detected as not being real changes — genuine advisor-change history will not be touched'},
+  confirmBulkEditFieldP1: {th:'แก้ไขช่อง "', en:'Edit the field "'},
+  confirmBulkEditFieldP2: {th:'" ของนักศึกษา ', en:'" for '},
+  confirmBulkEditFieldP3: {th:' คน จาก "', en:' student(s) from "'},
+  confirmBulkEditFieldP4: {th:'" เป็น "', en:'" to "'},
+  confirmBulkEditFieldP5: {th:'"?', en:'"?'},
+  confirmSwapBackPrefix: {th:'ยืนยันสลับค่ากลับให้ถูกตำแหน่งสำหรับ ', en:'Confirm swap the values back to the correct position for '},
+  confirmSwapBackSuffix: {th:' คน?', en:' people?'},
+  confirmMigrateToCloud: {th:'จะย้ายข้อมูลทั้งหมดในเครื่องนี้ (รายการสอบ + ไฟล์แนบ + ข้อมูลตั้งต้น) ขึ้นชีทกลางที่ตั้งค่าไว้ ควรทำจากเครื่องที่มีข้อมูลล่าสุด/มากที่สุดเพียงครั้งเดียว ดำเนินการต่อหรือไม่?', en:'This will migrate all data on this device (exam records + attachments + master data) up to the configured central sheet. It should be done only once, from the device with the most up-to-date/complete data. Continue?'},
+  confirmRestoreCloudMode: {th:'ขณะนี้เปิดใช้งานระบบข้อมูลกลางอยู่ การกู้คืนนี้จะแทนที่เฉพาะสำเนาข้อมูลสำรองในเครื่องนี้เท่านั้น ไม่กระทบชีทกลางที่ทุกคนใช้ร่วมกัน ยืนยันหรือไม่?', en:'The central data system is currently enabled. This restore will only replace the backup copy on this device — it will not affect the shared central sheet. Confirm?'},
+  confirmRestoreLocalMode: {th:'การกู้คืนจะแทนที่ข้อมูลทั้งหมดในเครื่องด้วยข้อมูลจากไฟล์สำรองนี้ ยืนยันหรือไม่?', en:'This restore will replace all data on this device with data from this backup file. Confirm?'},
+  alertCloudSaveFailedP1: {th:'⚠️ บันทึก "', en:'⚠️ Saving "'},
+  alertCloudSaveFailedP2: {th:'" ไปยังระบบกลางไม่สำเร็จ\n\nสาเหตุที่เป็นไปได้: อินเทอร์เน็ตขัดข้อง หรือ ต้องเข้าสู่ระบบ Google ใหม่ (เซสชันหมดอายุ)\n\nกรุณาตรวจสอบอินเทอร์เน็ต หรือกดปุ่ม "เข้าสู่ระบบ Google" ใหม่ในหน้าตั้งค่า แล้วลองทำรายการนี้ซ้ำอีกครั้ง — ข้อมูลนี้ยังไม่ถูกบันทึกขึ้นระบบกลาง\n\nรายละเอียด: ', en:'" to the central system failed\n\nPossible causes: internet connection issue, or you need to sign in to Google again (session expired)\n\nPlease check your internet connection, or click the "Sign in to Google" button again in Settings, then try this action again — this data has not yet been saved to the central system\n\nDetails: '},
   navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   navFeatures: {th:'ฟีเจอร์', en:'Features'},
   navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},
@@ -2954,7 +2996,7 @@ function setViewerPin(){
   }).catch(function(e){ if(e.message!=='stop') console.error(e); });
 }
 function removeViewerPin(){
-  if(!confirm('ปิดใช้งานรหัสผ่านดูอย่างเดียว? เจ้าหน้าที่ที่ใช้รหัสนี้จะเข้าระบบไม่ได้อีก')) return;
+  if(!confirm(i18nText('confirmDisableViewPin')||'ปิดใช้งานรหัสผ่านดูอย่างเดียว? เจ้าหน้าที่ที่ใช้รหัสนี้จะเข้าระบบไม่ได้อีก')) return;
   viewerPinHash = null;
   dbPut('meta',{key:'viewerPinHash', value:null}).then(function(){
     renderViewerPinStatus();
@@ -3109,7 +3151,7 @@ function withFreshMasterData(mutatorFn){
 function alertMasterDataSaveFailed(e, actionLabel){
   console.error('withFreshMasterData failed: '+actionLabel, e);
   var reason = (e && e.message) ? e.message : String(e);
-  alert('⚠️ บันทึก "'+actionLabel+'" ไปยังระบบกลางไม่สำเร็จ\n\nสาเหตุที่เป็นไปได้: อินเทอร์เน็ตขัดข้อง หรือ ต้องเข้าสู่ระบบ Google ใหม่ (เซสชันหมดอายุ)\n\nกรุณาตรวจสอบอินเทอร์เน็ต หรือกดปุ่ม "เข้าสู่ระบบ Google" ใหม่ในหน้าตั้งค่า แล้วลองทำรายการนี้ซ้ำอีกครั้ง — ข้อมูลนี้ยังไม่ถูกบันทึกขึ้นระบบกลาง\n\nรายละเอียด: '+reason);
+  alert((i18nText('alertCloudSaveFailedP1')||'⚠️ บันทึก "')+actionLabel+(i18nText('alertCloudSaveFailedP2')||'" ไปยังระบบกลางไม่สำเร็จ\n\nสาเหตุที่เป็นไปได้: อินเทอร์เน็ตขัดข้อง หรือ ต้องเข้าสู่ระบบ Google ใหม่ (เซสชันหมดอายุ)\n\nกรุณาตรวจสอบอินเทอร์เน็ต หรือกดปุ่ม "เข้าสู่ระบบ Google" ใหม่ในหน้าตั้งค่า แล้วลองทำรายการนี้ซ้ำอีกครั้ง — ข้อมูลนี้ยังไม่ถูกบันทึกขึ้นระบบกลาง\n\nรายละเอียด: ')+reason);
 }
 function saveGoogleClientId(){ return dbPut('meta',{key:'googleClientId', value:googleClientId}); }
 
@@ -5036,7 +5078,7 @@ function renderDocIntakeList(){
   });
 }
 function deleteDocIntakeConfirm(id){
-  if(!confirm('ยืนยันลบรายการลงทะเบียนนี้?')) return;
+  if(!confirm(i18nText('confirmDeleteRegistration')||'ยืนยันลบรายการลงทะเบียนนี้?')) return;
   docIntakeDelete(id).then(function(){ toast(i18nText('toast024')||'ลบรายการแล้ว'); renderDocIntakeList(); });
 }
 function exportDocIntakeExcel(){
@@ -5132,7 +5174,7 @@ function renderGradList(){
   });
 }
 function gradListUnmark(r){
-  if(!confirm('ยกเลิกเครื่องหมาย "ส่งแล้ว" ของ '+(r.studentName||r.studentId)+' หรือไม่? (รายชื่อนี้จะกลับไปอยู่ในแท็บ "รอส่ง" อีกครั้ง)')) return;
+  if(!confirm((i18nText('confirmUnmarkSubmittedPrefix')||'ยกเลิกเครื่องหมาย "ส่งแล้ว" ของ ')+(r.studentName||r.studentId)+(i18nText('confirmUnmarkSubmittedSuffix')||' หรือไม่? (รายชื่อนี้จะกลับไปอยู่ในแท็บ "รอส่ง" อีกครั้ง)'))) return;
   recordsPut(Object.assign({}, r, {gradListSentAt:null, updatedAt:Date.now()})).then(function(){
     toast(i18nText('toast026')||'ยกเลิกเครื่องหมายแล้ว'); renderGradList();
   });
@@ -5165,7 +5207,7 @@ function gradListExportAndMark(){
   getGradListSelectedRows().then(function(res){
     var rows = res.selected.length>0 ? res.selected : res.all;
     if(rows.length===0){ toast(i18nText('toast027')||'ไม่มีรายชื่อให้ส่งออกในขณะนี้', true); return; }
-    if(!confirm('ส่งออก Excel '+rows.length+' รายชื่อ และทำเครื่องหมายว่า "ส่งแล้ว" เลยหรือไม่?\n(รายชื่อเหล่านี้จะไม่ขึ้นในแท็บ "รอส่ง" อีก จนกว่าจะยกเลิกเครื่องหมายในแท็บ "ส่งแล้ว")')) return;
+    if(!confirm((i18nText('confirmExportMarkSentPrefix')||'ส่งออก Excel ')+rows.length+(i18nText('confirmExportMarkSentSuffix')||' รายชื่อ และทำเครื่องหมายว่า "ส่งแล้ว" เลยหรือไม่?\n(รายชื่อเหล่านี้จะไม่ขึ้นในแท็บ "รอส่ง" อีก จนกว่าจะยกเลิกเครื่องหมายในแท็บ "ส่งแล้ว")'))) return;
     gradListExportRows(rows);
     var now = Date.now();
     var updates = rows.map(function(r){ return recordsPut(Object.assign({}, r, {gradListSentAt:now, updatedAt:now})); });
@@ -6187,7 +6229,7 @@ function saveRecord(){
     wasExisting = !!existing;
     rec.createdAt = existing ? existing.createdAt : Date.now();
     if(cloudModeEnabled && existing && formOpenedAt && existing.updatedAt && existing.updatedAt > formOpenedAt){
-      var ok = confirm('ข้อมูลรายการนี้ถูกแก้ไขโดยผู้อื่นหลังจากที่คุณเปิดฟอร์มนี้ขึ้นมา หากบันทึกต่อ การแก้ไขของคุณจะบันทึกทับข้อมูลล่าสุด ต้องการบันทึกทับหรือไม่?');
+      var ok = confirm(i18nText('confirmStaleOverwrite')||'ข้อมูลรายการนี้ถูกแก้ไขโดยผู้อื่นหลังจากที่คุณเปิดฟอร์มนี้ขึ้นมา หากบันทึกต่อ การแก้ไขของคุณจะบันทึกทับข้อมูลล่าสุด ต้องการบันทึกทับหรือไม่?');
       if(!ok){ var e2=new Error('CANCELLED'); e2.silent=true; throw e2; }
     }
     if(existing){
@@ -6333,7 +6375,7 @@ function downloadFile(id){
   });
 }
 function deleteFile(id, section){
-  if(!confirm('ลบไฟล์นี้หรือไม่?')) return;
+  if(!confirm(i18nText('confirmDeleteFile')||'ลบไฟล์นี้หรือไม่?')) return;
   filesDelete(id).then(function(){ renderAttachmentList(section); });
 }
 
@@ -6503,7 +6545,7 @@ function renderList(){
   });
 }
 function deleteRecordConfirm(id){
-  if(!confirm('ยืนยันลบข้อมูลรายการนี้? (ไฟล์แนบที่เกี่ยวข้องจะถูกลบด้วย)')) return;
+  if(!confirm(i18nText('confirmDeleteRecordWithFiles')||'ยืนยันลบข้อมูลรายการนี้? (ไฟล์แนบที่เกี่ยวข้องจะถูกลบด้วย)')) return;
   recordsGet(id).then(function(existing){
     return Promise.all([
       recordsDelete(id),
@@ -7538,7 +7580,7 @@ function setDeptPin(){
   }).catch(function(e){ if(e.message!=='stop') console.error(e); });
 }
 function removeDeptPin(dept){
-  if(!confirm('ปิดใช้งานรหัสผ่านของสาขา "'+dept+'"? เจ้าหน้าที่ที่ใช้รหัสนี้จะเข้าระบบไม่ได้อีก')) return;
+  if(!confirm((i18nText('confirmDisableDeptPinPrefix')||'ปิดใช้งานรหัสผ่านของสาขา "')+dept+(i18nText('confirmDisableDeptPinSuffix')||'"? เจ้าหน้าที่ที่ใช้รหัสนี้จะเข้าระบบไม่ได้อีก'))) return;
   deptPins = (deptPins||[]).filter(function(d){ return d.department!==dept; });
   dbPut('meta',{key:'deptPins', value:deptPins}).then(function(){
     renderDeptPinSection();
@@ -7647,7 +7689,7 @@ function cascadeCommitteePositionRename(oldName, newName){
   });
 }
 function removePosition(name){
-  if(!confirm('ลบตำแหน่ง "'+name+'" หรือไม่? (จะเอาออกจากอาจารย์ทุกคนที่เคยติ๊กตำแหน่งนี้ด้วย แต่ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
+  if(!confirm((i18nText('confirmDeleteRolePrefix')||'ลบตำแหน่ง "')+name+(i18nText('confirmDeleteRoleSuffix')||'" หรือไม่? (จะเอาออกจากอาจารย์ทุกคนที่เคยติ๊กตำแหน่งนี้ด้วย แต่ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)'))) return;
   withFreshMasterData(function(){
     masterData.positions = masterData.positions.filter(function(p){ return p.name!==name; });
     masterData.advisors.forEach(function(a){
@@ -8100,7 +8142,7 @@ function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
   }).catch(function(e){ alertMasterDataSaveFailed(e, 'แก้ไขข้อมูลอาจารย์ที่ปรึกษา'); });
 }
 function removeAdvisor(name){
-  if(!confirm('ลบ "'+name+'" ออกจากรายชื่ออาจารย์หรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
+  if(!confirm((i18nText('confirmDeleteAdvisorPrefix')||'ลบ "')+name+(i18nText('confirmDeleteAdvisorSuffix')||'" ออกจากรายชื่ออาจารย์หรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)'))) return;
   withFreshMasterData(function(){
     masterData.advisors = masterData.advisors.filter(function(a){ return a.name!==name; });
     return Promise.resolve();
@@ -8125,14 +8167,14 @@ function renderChipList(containerId, key){
              แทนที่จะบล็อกไว้เฉยๆ ให้ถือเป็นการ "รวมรายการซ้ำ" — ยกเว้นอาจารย์ เพราะชื่อซ้ำกันเป๊ะอาจเป็นคนละคนโดยบังเอิญ
              จึงยังคงให้แก้ไขผ่านช่องแก้ไขชื่อทีละคน หรือลบ/เพิ่มเองแทน */
           if(key==='advisors'){ toast(i18nText('toast051')||'มีชื่อนี้อยู่แล้วในรายการ', true); return; }
-          if(!confirm('มี "'+newVal+'" อยู่ในรายการอยู่แล้ว ต้องการรวม "'+val+'" เข้ากับ "'+newVal+'" หรือไม่?\nข้อมูลที่เคยบันทึกไว้ด้วยชื่อ "'+val+'" ทั้งหมดจะถูกเปลี่ยนเป็น "'+newVal+'" และรายการซ้ำจะถูกลบออก')) return;
+          if(!confirm((i18nText('confirmMergeDupP1')||'มี "')+newVal+(i18nText('confirmMergeDupP2')||'" อยู่ในรายการอยู่แล้ว ต้องการรวม "')+val+(i18nText('confirmMergeDupP3')||'" เข้ากับ "')+newVal+(i18nText('confirmMergeDupP4')||'" หรือไม่?\nข้อมูลที่เคยบันทึกไว้ด้วยชื่อ "')+val+(i18nText('confirmMergeDupP5')||'" ทั้งหมดจะถูกเปลี่ยนเป็น "')+newVal+(i18nText('confirmMergeDupP6')||'" และรายการซ้ำจะถูกลบออก'))) return;
           mergeMasterItem(key, val, newVal);
           return;
         }
         renameMasterItem(key, val, newVal);
       }}),
       el('button',{type:'button', text:'✕', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){
-        if(!confirm('ลบ "'+val+'" ('+(MASTER_LIST_LABELS[key]||key)+') ออกจากรายการหรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)')) return;
+        if(!confirm((i18nText('confirmDeleteMasterItemP1')||'ลบ "')+val+(i18nText('confirmDeleteMasterItemP2')||'" (')+(MASTER_LIST_LABELS[key]||key)+(i18nText('confirmDeleteMasterItemP3')||') ออกจากรายการหรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)'))) return;
         var deptPinCleanupP = Promise.resolve();
         withFreshMasterData(function(){
           masterData[key] = masterData[key].filter(function(v){ return v!==val; });
@@ -8350,7 +8392,7 @@ function purgeDeletedUI(){
     resultBox.appendChild(el('div',{class:'help', text:'พบรายการที่ถูกลบไว้ค้างอยู่ในชีททั้งหมด '+total+' รายการ (รายการสอบ '+counts.records+', ไฟล์แนบ '+counts.files+', เอกสารรับเข้า '+counts.docIntake+')'}));
     var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;color:#c0392b;', text:'🗑️ ยืนยันล้างถาวร ('+total+' รายการ)'});
     confirmBtn.addEventListener('click', function(){
-      if(!confirm('ยืนยันลบแถวที่ถูกลบไว้ '+total+' รายการออกจากชีทถาวร? การกระทำนี้ไม่สามารถกู้คืนได้อีก (ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ)')) return;
+      if(!confirm((i18nText('confirmPurgeDeletedPrefix')||'ยืนยันลบแถวที่ถูกลบไว้ ')+total+(i18nText('confirmPurgeDeletedSuffix')||' รายการออกจากชีทถาวร? การกระทำนี้ไม่สามารถกู้คืนได้อีก (ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ)'))) return;
       confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังล้างข้อมูล...';
       purgeAllDeletedRecords().then(function(res){
         resultBox.innerHTML='';
@@ -8532,7 +8574,7 @@ function checkBrokenDriveFiles(){
         var row = el('div',{class:'attach-item'},[
           el('span',{class:'name', text:'⚠️ '+f.name+' — '+studentTxt+' ('+sectionTxt+') — '+f.reason}),
           el('button',{type:'button', class:'link-btn', style:'color:#c0392b', text:'ลบรายการนี้ออกจากระบบ', onclick:function(){
-            if(!confirm('ลบรายการไฟล์นี้ออกจากระบบ? (ไม่กระทบไฟล์ต้นฉบับใน Drive เพราะหาไม่เจออยู่แล้ว) หลังลบสามารถแนบไฟล์ใหม่ทดแทนได้ที่หน้าบันทึกข้อมูลของนักศึกษาคนนี้')) return;
+            if(!confirm(i18nText('confirmDeleteMissingFileEntry')||'ลบรายการไฟล์นี้ออกจากระบบ? (ไม่กระทบไฟล์ต้นฉบับใน Drive เพราะหาไม่เจออยู่แล้ว) หลังลบสามารถแนบไฟล์ใหม่ทดแทนได้ที่หน้าบันทึกข้อมูลของนักศึกษาคนนี้')) return;
             filesDelete(f.id).then(function(){ row.remove(); toast(i18nText('toast024')||'ลบรายการแล้ว'); });
           }})
         ]);
@@ -8581,7 +8623,7 @@ function scanBogusAdvisorHistory(){
     });
     var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;color:#c0392b;', text:'🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด ('+totalBogus+' รายการ)'});
     confirmBtn.addEventListener('click', function(){
-      if(!confirm('ยืนยันลบประวัติที่ขึ้นผิดพลาด '+totalBogus+' รายการ จาก '+affected.length+' นักศึกษา? ระบบจะลบเฉพาะรายการที่ตรวจพบว่าไม่ใช่การเปลี่ยนแปลงจริง ประวัติการเปลี่ยนแปลงที่ปรึกษาจริงจะไม่ถูกแตะต้อง')) return;
+      if(!confirm((i18nText('confirmPurgeBogusHistoryP1')||'ยืนยันลบประวัติที่ขึ้นผิดพลาด ')+totalBogus+(i18nText('confirmPurgeBogusHistoryP2')||' รายการ จาก ')+affected.length+(i18nText('confirmPurgeBogusHistoryP3')||' นักศึกษา? ระบบจะลบเฉพาะรายการที่ตรวจพบว่าไม่ใช่การเปลี่ยนแปลงจริง ประวัติการเปลี่ยนแปลงที่ปรึกษาจริงจะไม่ถูกแตะต้อง'))) return;
       confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังลบ...';
       Promise.all(affected.map(function(x){
         var updated = Object.assign({}, x.rec, {advisorHistory: x.genuine});
@@ -8672,7 +8714,7 @@ function checkMismatchedMasterFields(){
         fixBtn.addEventListener('click', function(){
           var newVal = sel.value;
           if(!newVal){ toast(i18nText('toast067')||'กรุณาเลือกค่ามาตรฐานที่ถูกต้องก่อน', true); return; }
-          if(!confirm('แก้ไขช่อง "'+g.label+'" ของนักศึกษา '+g.students.length+' คน จาก "'+g.value+'" เป็น "'+newVal+'"?')) return;
+          if(!confirm((i18nText('confirmBulkEditFieldP1')||'แก้ไขช่อง "')+g.label+(i18nText('confirmBulkEditFieldP2')||'" ของนักศึกษา ')+g.students.length+(i18nText('confirmBulkEditFieldP3')||' คน จาก "')+g.value+(i18nText('confirmBulkEditFieldP4')||'" เป็น "')+newVal+(i18nText('confirmBulkEditFieldP5')||'"?'))) return;
           fixBtn.disabled = true; fixBtn.textContent = 'กำลังแก้ไข...';
           Promise.all(g.students.map(function(r){
             var updated = Object.assign({}, r); updated[g.field] = newVal; updated.updatedAt = Date.now();
@@ -8762,7 +8804,7 @@ function scanSwappedGradTermData(){
     });
     var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;', text:'🛠️ ยืนยันซ่อมข้อมูล ('+affected.length+' คน)'});
     confirmBtn.addEventListener('click', function(){
-      if(!confirm('ยืนยันสลับค่ากลับให้ถูกตำแหน่งสำหรับ '+affected.length+' คน?')) return;
+      if(!confirm((i18nText('confirmSwapBackPrefix')||'ยืนยันสลับค่ากลับให้ถูกตำแหน่งสำหรับ ')+affected.length+(i18nText('confirmSwapBackSuffix')||' คน?'))) return;
       confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังซ่อม...';
       Promise.all(affected.map(function(x){
         var newRow = x.row.slice();
@@ -9591,7 +9633,7 @@ function initOfflineDetection(){
 }
 function migrateLocalDataToCloud(){
   if(!sheetId){ toast(i18nText('toast049')||'กรุณากรอกและบันทึก Spreadsheet ID ก่อน', true); return; }
-  if(!confirm('จะย้ายข้อมูลทั้งหมดในเครื่องนี้ (รายการสอบ + ไฟล์แนบ + ข้อมูลตั้งต้น) ขึ้นชีทกลางที่ตั้งค่าไว้ ควรทำจากเครื่องที่มีข้อมูลล่าสุด/มากที่สุดเพียงครั้งเดียว ดำเนินการต่อหรือไม่?')) return;
+  if(!confirm(i18nText('confirmMigrateToCloud')||'จะย้ายข้อมูลทั้งหมดในเครื่องนี้ (รายการสอบ + ไฟล์แนบ + ข้อมูลตั้งต้น) ขึ้นชีทกลางที่ตั้งค่าไว้ ควรทำจากเครื่องที่มีข้อมูลล่าสุด/มากที่สุดเพียงครั้งเดียว ดำเนินการต่อหรือไม่?')) return;
   toast(i18nText('toast074')||'กำลังเตรียมย้ายข้อมูล...');
   ensureAuthed().then(function(){
     return Promise.all([dbGetAll('records'), dbGetAll('files')]);
@@ -9765,8 +9807,8 @@ function showBackupListModal(files){
 }
 function restoreFromDrive(fileId){
   var warnMsg = cloudModeEnabled
-    ? 'ขณะนี้เปิดใช้งานระบบข้อมูลกลางอยู่ การกู้คืนนี้จะแทนที่เฉพาะสำเนาข้อมูลสำรองในเครื่องนี้เท่านั้น ไม่กระทบชีทกลางที่ทุกคนใช้ร่วมกัน ยืนยันหรือไม่?'
-    : 'การกู้คืนจะแทนที่ข้อมูลทั้งหมดในเครื่องด้วยข้อมูลจากไฟล์สำรองนี้ ยืนยันหรือไม่?';
+    ? (i18nText('confirmRestoreCloudMode')||'ขณะนี้เปิดใช้งานระบบข้อมูลกลางอยู่ การกู้คืนนี้จะแทนที่เฉพาะสำเนาข้อมูลสำรองในเครื่องนี้เท่านั้น ไม่กระทบชีทกลางที่ทุกคนใช้ร่วมกัน ยืนยันหรือไม่?')
+    : (i18nText('confirmRestoreLocalMode')||'การกู้คืนจะแทนที่ข้อมูลทั้งหมดในเครื่องด้วยข้อมูลจากไฟล์สำรองนี้ ยืนยันหรือไม่?');
   if(!confirm(warnMsg)) return;
   ensureAuthed().then(function(){
     return driveFetch('https://www.googleapis.com/drive/v3/files/'+fileId+'?alt=media');

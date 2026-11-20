@@ -1771,6 +1771,10 @@ var OLD_ROLE_KEY_TO_NAME = {
 var SLOT_LABELS = {
   chair:'ประธานกรรมการ', mainAdvisor:'อาจารย์ที่ปรึกษาหลัก', coAdvisor:'อาจารย์ที่ปรึกษาร่วม', committee:'กรรมการสอบ'
 };
+var SLOT_LABEL_KEYS = {
+  chair:'lblChairPersonRole', mainAdvisor:'lblMainAdvisor', coAdvisor:'lblCoAdvisor', committee:'lblCommitteeMemberRole'
+};
+function slotLabel(slot){ return i18nText(SLOT_LABEL_KEYS[slot])||SLOT_LABELS[slot]||slot; }
 function loadMeta(){
   return dbGetAll('meta').then(function(rows){
     var seen = {};
@@ -3148,7 +3152,70 @@ var LANDING_I18N = {
   txtExamTypeProposal: {th:'สอบเค้าโครง', en:'Proposal Exam'},
   txtExamTypeDefense: {th:'สอบป้องกัน/IS', en:'Defense/IS Exam'},
   txtFilesCountSuffix: {th:' ไฟล์', en:' file(s)'},
-  btnAddNewExam: {th:'➕ เพิ่มการสอบใหม่', en:'➕ Add New Exam'}
+  btnAddNewExam: {th:'➕ เพิ่มการสอบใหม่', en:'➕ Add New Exam'},
+  txtAdvisorQuotaPrefix: {th:'ที่ปรึกษา: ', en:'Advisor: '},
+  txtCurrentlyAdvisorPrefix: {th:'ขณะนี้ ', en:'Currently, '},
+  txtCurrentlyAdvisorMid: {th:' เป็นที่ปรึกษาหลักอยู่ ', en:' is the main advisor for '},
+  txtOverQuotaSuffix: {th:' (เกินโควตา)', en:' (over quota)'},
+  txtAdvisorNoRankSuffix: {th:' คน (ยังไม่ระบุตำแหน่งทางวิชาการ จึงยังไม่คำนวณโควตาสูงสุด)', en:' student(s) (academic rank not specified yet, so maximum quota is not calculated)'},
+  txtCommitteeWorkloadPrefix: {th:'กรรมการสอบ: ', en:'Committee Member: '},
+  txtNoAdvisorsInSystem: {th:'ยังไม่มีข้อมูลอาจารย์ในระบบ — เพิ่มได้ที่หน้าตั้งค่า', en:'No advisor data in the system yet — you can add some on the Settings page.'},
+  txtNoMainCoAdvisors: {th:'ยังไม่มีผู้ที่มีตำแหน่งที่ปรึกษาหลัก/ที่ปรึกษาร่วมในระบบ (มีเฉพาะประธาน/กรรมการสอบ) — ตั้งตำแหน่งได้ที่หน้าตั้งค่า', en:'No one with a main/co-advisor role is in the system yet (only exam chairs/committee members exist) — you can set roles on the Settings page.'},
+  txtNoNameMatchesSearch: {th:'ไม่พบชื่อที่ตรงกับคำค้นหา', en:'No names matching this search were found.'},
+  txtAcademicRankNotSpecified: {th:'ยังไม่ระบุตำแหน่งทางวิชาการ', en:'Academic rank not specified'},
+  txtReportShort: {th:'📋 รายงาน', en:'📋 Report'},
+  txtShowingRangePeopleMid: {th:' คน (หน้า ', en:' people (page '},
+  txtAcademicRankPrefix: {th:'ตำแหน่งทางวิชาการ: ', en:'Academic rank: '},
+  txtTotalMainAdviseesPrefix: {th:'เป็นที่ปรึกษาหลักทั้งหมด ', en:'Main advisor for a total of '},
+  txtNoDataPlain: {th:'ไม่มีข้อมูล', en:'No data'},
+  txtViewDataArrow: {th:'ดูข้อมูล →', en:'View Data →'},
+  optCommitteeMemberDefault: {th:'กรรมการ', en:'Committee Member'},
+  txtExamSessionTypeProposal: {th:'สอบเค้าโครง (3.1)', en:'Proposal Exam (3.1)'},
+  txtExamSessionTypeDefense: {th:'สอบป้องกัน/IS (3.2)', en:'Defense/IS Exam (3.2)'},
+  txtSearching: {th:'กำลังค้นหา...', en:'Searching...'},
+  txtNoExamOnDatePrefix: {th:'ไม่พบการสอบที่ตรงกับวันที่ ', en:'No exams found matching the date '},
+  txtNoExamOnDateSuffix: {th:' ในทุกสาขา', en:' across all departments.'},
+  txtDupCommitteeWarning: {th:'⚠️ พบชื่อประธาน/กรรมการสอบที่ถูกเชิญมากกว่า 1 ครั้งในวันนี้ (ไฮไลต์สีแดงด้านล่าง) — กรุณาตรวจสอบเวลา/สถานที่อีกครั้งก่อนออกคำสั่งแต่งตั้ง', en:'⚠️ Found exam chair/committee names invited more than once today (highlighted in red below) — please double-check the time/location before issuing the appointment order.'},
+  txtFoundSessionsPrefix: {th:'พบทั้งหมด ', en:'Found a total of '},
+  txtFoundSessionsMid: {th:' นัดสอบ วันที่ ', en:' exam session(s) on '},
+  txtFoundSessionsSuffix: {th:' (ทุกสาขา)', en:' (all departments)'},
+  thExamTime: {th:'เวลา', en:'Time'},
+  thExamTypeCol: {th:'ประเภท', en:'Type'},
+  thStudentCol: {th:'นักศึกษา', en:'Student'},
+  thDepartmentCol: {th:'สาขาวิชา', en:'Department'},
+  thLocationCol: {th:'สถานที่', en:'Location'},
+  thChairCommitteeCol: {th:'ประธาน/กรรมการสอบ', en:'Chair/Committee'},
+  txtChairLabelSuffix: {th:' (ประธาน)', en:' (Chair)'},
+  titleEditPosition: {th:'แก้ไขตำแหน่ง', en:'Edit Position'},
+  lblPositionName: {th:'ชื่อตำแหน่ง', en:'Position Name'},
+  lblUsedInSlot: {th:'ใช้ในช่อง', en:'Used For'},
+  lblUsedInSlotColonPrefix: {th:'ใช้ในช่อง: ', en:'Used for: '},
+  lblChairPersonRole: {th:'ประธานกรรมการ', en:'Committee Chair'},
+  lblCommitteeMemberRole: {th:'กรรมการสอบ', en:'Committee Member'},
+  lblCommitteeMemberMulti: {th:'กรรมการสอบ (เพิ่มได้หลายคน)', en:'Committee Member (multiple allowed)'},
+  txtNoAdvisorsList: {th:'ยังไม่มีรายชื่ออาจารย์', en:'No advisor names yet.'},
+  hAdvisorWorkloadReport: {th:'📊 สรุปภาระงานอาจารย์ทั้งหมด', en:'📊 Overall Advisor Workload Summary'},
+  helpAdvisorWorkloadReport: {th:'รวมโควตาที่ปรึกษาหลักและจำนวนครั้งที่เป็นประธาน/กรรมการสอบของอาจารย์ทุกท่านไว้ในตารางเดียว คลิกหัวตารางเพื่อเรียงลำดับ', en:'Shows every advisor\'s main-advisor quota and exam chair/committee counts in one table. Click a column header to sort.'},
+  btnExportExcel: {th:'📥 ส่งออก Excel', en:'📥 Export to Excel'},
+  txtAdvisorReportTitlePrefix: {th:'รายงานที่ปรึกษา: ', en:'Advisor Report: '},
+  txtAdvisorReportBreakdownMid: {th:' — สอบผ่านแล้ว (ปลดโควต้า) ', en:' — Passed (Quota Released): '},
+  txtAdvisorReportBreakdownMid2: {th:', ยังเป็นที่ปรึกษาอยู่ ', en:', Currently Advising: '},
+  actionLabelAddAdvisor: {th:'เพิ่มอาจารย์ที่ปรึกษา', en:'Add Advisor'},
+  actionLabelAddPosition: {th:'เพิ่มตำแหน่งทางวิชาการ', en:'Add Academic Position'},
+  actionLabelEditPosition: {th:'แก้ไขตำแหน่งทางวิชาการ', en:'Edit Academic Position'},
+  actionLabelDeletePosition: {th:'ลบตำแหน่งทางวิชาการ', en:'Delete Academic Position'},
+  actionLabelEditAdvisor: {th:'แก้ไขข้อมูลอาจารย์ที่ปรึกษา', en:'Edit Advisor Information'},
+  actionLabelDeleteAdvisor: {th:'ลบอาจารย์ที่ปรึกษา', en:'Delete Advisor'},
+  txtNoNamesMatchSearch: {th:'ไม่พบรายชื่อที่ตรงกับคำค้นหา', en:'No names matching this search were found.'},
+  txtPageOfSuffix: {th:' (หน้า ', en:' (page '},
+  txtNamesCountSuffix: {th:' รายชื่อ', en:' name(s)'},
+  titleViewAdvisorReport: {th:'ดูรายงานที่ปรึกษา', en:'View Advisor Report'},
+  titleEditNameRole: {th:'แก้ไขชื่อ/ตำแหน่ง', en:'Edit Name/Role'},
+  thAdvisorNameCol: {th:'ชื่ออาจารย์', en:'Advisor Name'},
+  thAdvisorRankCol: {th:'ตำแหน่ง', en:'Rank'},
+  thAdvisorQuotaUsedCol: {th:'ที่ปรึกษา (ใช้/โควตา)', en:'Advisees (Used/Quota)'},
+  thAdvisorCommitteeCol: {th:'กรรมการสอบ', en:'Committee'},
+  thAdvisorTotalCol: {th:'รวม', en:'Total'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -4499,16 +4566,16 @@ function renderAdvisorLookupResults(){
   container.innerHTML='';
   pagerEl.style.display='none';
   if(allAdvisors.length===0){
-    emptyEl.textContent = 'ยังไม่มีข้อมูลอาจารย์ในระบบ — เพิ่มได้ที่หน้าตั้งค่า';
+    emptyEl.textContent = i18nText('txtNoAdvisorsInSystem')||'ยังไม่มีข้อมูลอาจารย์ในระบบ — เพิ่มได้ที่หน้าตั้งค่า';
     emptyEl.style.display='';
     return;
   }
   if(all.length===0){
-    emptyEl.textContent = 'ยังไม่มีผู้ที่มีตำแหน่งที่ปรึกษาหลัก/ที่ปรึกษาร่วมในระบบ (มีเฉพาะประธาน/กรรมการสอบ) — ตั้งตำแหน่งได้ที่หน้าตั้งค่า';
+    emptyEl.textContent = i18nText('txtNoMainCoAdvisors')||'ยังไม่มีผู้ที่มีตำแหน่งที่ปรึกษาหลัก/ที่ปรึกษาร่วมในระบบ (มีเฉพาะประธาน/กรรมการสอบ) — ตั้งตำแหน่งได้ที่หน้าตั้งค่า';
     emptyEl.style.display='';
     return;
   }
-  emptyEl.textContent = 'ไม่พบชื่อที่ตรงกับคำค้นหา';
+  emptyEl.textContent = i18nText('txtNoNameMatchesSearch')||'ไม่พบชื่อที่ตรงกับคำค้นหา';
   emptyEl.style.display = list.length===0 ? '' : 'none';
 
   var totalPages = Math.max(1, Math.ceil(list.length / ADVISOR_LOOKUP_PAGE_SIZE));
@@ -4520,7 +4587,7 @@ function renderAdvisorLookupResults(){
   pageItems.forEach(function(advisor){
     var quotaTxt = advisorQuotaBadgeText(advisor);
     var cwTxt = committeeWorkloadBadgeText(advisor);
-    var subParts = [advisor.rank||'ยังไม่ระบุตำแหน่งทางวิชาการ'];
+    var subParts = [advisor.rank||(i18nText('txtAcademicRankNotSpecified')||'ยังไม่ระบุตำแหน่งทางวิชาการ')];
     if(quotaTxt) subParts.push(quotaTxt);
     if(cwTxt) subParts.push(cwTxt);
     var item = el('div',{class:'lookup-item'},[
@@ -4528,7 +4595,7 @@ function renderAdvisorLookupResults(){
         el('span',{class:'li-name', text:advisor.name}),
         el('span',{class:'li-sub', text:subParts.join(' • ')})
       ]),
-      el('span',{class:'li-count', text:'📋 รายงาน'})
+      el('span',{class:'li-count', text:(i18nText('txtReportShort')||'📋 รายงาน')})
     ]);
     item.addEventListener('click', function(){
       document.querySelectorAll('#advisorLookupResultList .lookup-item').forEach(function(x){ x.classList.remove('active'); });
@@ -4544,7 +4611,7 @@ function renderAdvisorLookupResults(){
   if(list.length===0){
     pageInfoEl.textContent = '';
   } else {
-    pageInfoEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+pageItems.length)+' จาก '+list.length+' คน (หน้า '+(advisorLookupListPage+1)+'/'+totalPages+')';
+    pageInfoEl.textContent = (i18nText('txtShowingRangePrefix')||'แสดง ')+(startIdx+1)+'-'+(startIdx+pageItems.length)+(i18nText('txtShowingRangeMid')||' จาก ')+list.length+(i18nText('txtShowingRangePeopleMid')||' คน (หน้า ')+(advisorLookupListPage+1)+'/'+totalPages+')';
   }
   prevBtn.disabled = advisorLookupListPage<=0;
   nextBtn.disabled = advisorLookupListPage>=totalPages-1;
@@ -4556,10 +4623,10 @@ function renderAdvisorProfile(advisor, rep){
   var total = rep.graduated.length + rep.active.length;
   var header = el('div',{class:'card section-card'},[
     el('h3',{text:'👨‍🏫 '+advisor.name}),
-    el('div',{class:'help', style:'margin-bottom:6px;', text:(advisor.rank?'ตำแหน่งทางวิชาการ: '+advisor.rank+' • ':'ยังไม่ระบุตำแหน่งทางวิชาการ • ')+'เป็นที่ปรึกษาหลักทั้งหมด '+total+' คน'}),
+    el('div',{class:'help', style:'margin-bottom:6px;', text:(advisor.rank?(i18nText('txtAcademicRankPrefix')||'ตำแหน่งทางวิชาการ: ')+advisor.rank+' • ':(i18nText('txtAcademicRankNotSpecified')||'ยังไม่ระบุตำแหน่งทางวิชาการ')+' • ')+(i18nText('txtTotalMainAdviseesPrefix')||'เป็นที่ปรึกษาหลักทั้งหมด ')+total+(i18nText('txtPeopleCountSuffix2')||' คน')}),
     el('div',{class:'kv-grid'},[
-      kv('ยังเป็นที่ปรึกษาอยู่', rep.active.length+' คน'),
-      kv('สอบผ่านแล้ว (ปลดโควต้า)', rep.graduated.length+' คน')
+      kv('ยังเป็นที่ปรึกษาอยู่', rep.active.length+(i18nText('txtPeopleCountSuffix2')||' คน')),
+      kv('สอบผ่านแล้ว (ปลดโควต้า)', rep.graduated.length+(i18nText('txtPeopleCountSuffix2')||' คน'))
     ])
   ]);
   wrap.appendChild(header);
@@ -4585,9 +4652,9 @@ function renderAdvisorProfile(advisor, rep){
   }
   function studentSection(title, list){
     var card = el('div',{class:'card section-card'});
-    card.appendChild(el('h3',{text:title+' ('+list.length+' คน)'}));
+    card.appendChild(el('h3',{text:title+' ('+list.length+(i18nText('txtPeopleCountSuffix2')||' คน')+')'}));
     if(!list.length){
-      card.appendChild(el('div',{class:'empty-state', text:'ไม่มีข้อมูล'}));
+      card.appendChild(el('div',{class:'empty-state', 'data-i18n':'txtNoDataPlain', text:(i18nText('txtNoDataPlain')||'ไม่มีข้อมูล')}));
     } else {
       /* กลุ่มรายชื่อแต่ละแผนพับ/ขยายได้ (เริ่มพับไว้ก่อน) — ลดการเลื่อนดูเวลามีรายชื่อ นศ. เยอะหลายแผน
          ยังเห็นจำนวนคนต่อแผนได้ทันทีจากหัวข้อโดยไม่ต้องกดขยาย */
@@ -4596,7 +4663,7 @@ function renderAdvisorProfile(advisor, rep){
         var arrow = el('span',{text:'▸', style:'display:inline-block;width:14px;'});
         var groupHeader = el('div',{style:'font-weight:600;font-size:13px;color:var(--muted);margin:10px 0 4px;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;'},[
           arrow,
-          el('span',{text:(g.plan||'ไม่ระบุแผน')+' ('+g.items.length+' คน)'})
+          el('span',{text:(g.plan||(i18nText('txtPlanNotSpecified')||'ไม่ระบุแผน'))+' ('+g.items.length+(i18nText('txtPeopleCountSuffix2')||' คน')+')'})
         ]);
         groupHeader.addEventListener('click', function(){
           var isOpen = listEl.style.display !== 'none';
@@ -4607,10 +4674,10 @@ function renderAdvisorProfile(advisor, rep){
         g.items.forEach(function(s){
           var item = el('div',{class:'lookup-item'},[
             el('div',{class:'li-main'},[
-              el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
+              el('span',{class:'li-name', text:s.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)')}),
               el('span',{class:'li-sub', text:s.studentId})
             ]),
-            el('span',{class:'li-count', text:'ดูข้อมูล →'})
+            el('span',{class:'li-count', 'data-i18n':'txtViewDataArrow', text:(i18nText('txtViewDataArrow')||'ดูข้อมูล →')})
           ]);
           item.addEventListener('click', function(){
             switchView('dashboard');
@@ -4625,8 +4692,8 @@ function renderAdvisorProfile(advisor, rep){
     }
     wrap.appendChild(card);
   }
-  studentSection('ยังเป็นที่ปรึกษาอยู่', rep.active);
-  studentSection('สอบผ่านแล้ว (ปลดโควต้า)', rep.graduated);
+  studentSection(i18nText('kvStillAdvisor')||'ยังเป็นที่ปรึกษาอยู่', rep.active);
+  studentSection(i18nText('kvQuotaReleased')||'สอบผ่านแล้ว (ปลดโควต้า)', rep.graduated);
 }
 /* ================= ค้นหาตามวันที่สอบ (ทุกสาขา) =================
    ใช้เช็คก่อนออกคำสั่งแต่งตั้งกรรมการสอบ — กรรมการ 1 ท่านไปสอบได้หลายสาขา แต่เจ้าหน้าที่ไม่มีทางรู้ว่าวันนั้นมีสาขาอื่น
@@ -4640,16 +4707,16 @@ function getExamSessionsByDate(dateStr){
       if(date !== dateStr) return;
       sessions.push({
         type:type, typeTxt:typeTxt, time:time||'', location:location||'',
-        studentId:r.studentId, studentName:r.studentName||'(ไม่ระบุชื่อ)', department:r.department||'',
-        chair:chair||'', committee:(committee||[]).map(function(c){ return {name:c.name, position:c.position||'กรรมการ'}; })
+        studentId:r.studentId, studentName:r.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)'), department:r.department||'',
+        chair:chair||'', committee:(committee||[]).map(function(c){ return {name:c.name, position:c.position||(i18nText('optCommitteeMemberDefault')||'กรรมการ')}; })
       });
     }
     (rows||[]).forEach(function(r){
       if(r.deleted) return;
-      (r.proposalAttempts||[]).forEach(function(a){ pushIfDate('proposal','สอบเค้าโครง (3.1)', a.date, a.time, a.location, a.chair, a.committee, r); });
-      if(recHasProposalData(r)) pushIfDate('proposal','สอบเค้าโครง (3.1)', r.proposalDate, r.proposalTime, r.proposalLocation, r.proposalChair, r.proposalCommittee, r);
-      (r.defenseAttempts||[]).forEach(function(a){ pushIfDate('defense','สอบป้องกัน/IS (3.2)', a.date, a.time, a.location, a.chair, a.committee, r); });
-      if(recHasDefenseData(r)) pushIfDate('defense','สอบป้องกัน/IS (3.2)', r.defenseDate, r.defenseTime, r.defenseLocation, r.defenseChair, r.defenseCommittee, r);
+      (r.proposalAttempts||[]).forEach(function(a){ pushIfDate('proposal',(i18nText('txtExamSessionTypeProposal')||'สอบเค้าโครง (3.1)'), a.date, a.time, a.location, a.chair, a.committee, r); });
+      if(recHasProposalData(r)) pushIfDate('proposal',(i18nText('txtExamSessionTypeProposal')||'สอบเค้าโครง (3.1)'), r.proposalDate, r.proposalTime, r.proposalLocation, r.proposalChair, r.proposalCommittee, r);
+      (r.defenseAttempts||[]).forEach(function(a){ pushIfDate('defense',(i18nText('txtExamSessionTypeDefense')||'สอบป้องกัน/IS (3.2)'), a.date, a.time, a.location, a.chair, a.committee, r); });
+      if(recHasDefenseData(r)) pushIfDate('defense',(i18nText('txtExamSessionTypeDefense')||'สอบป้องกัน/IS (3.2)'), r.defenseDate, r.defenseTime, r.defenseLocation, r.defenseChair, r.defenseCommittee, r);
     });
     /* นับจำนวนครั้งที่แต่ละชื่อ (ประธาน/กรรมการ) ปรากฏในวันนี้ เพื่อตีตรา ⚠️ ให้ชื่อที่ถูกเชิญมากกว่า 1 ครั้งในวันเดียวกัน
        (สัญญาณเสี่ยงคำสั่งซ้ำ/สอบชนกัน ให้เจ้าหน้าที่ไปตรวจสอบเวลา/สถานที่ต่อว่าชนจริงหรือแค่คนละช่วงเวลา) */
@@ -4672,28 +4739,28 @@ function renderExamDateSearchResult(){
   var box = document.getElementById('examDateSearchResult');
   box.innerHTML = '';
   if(!dateStr){ return; }
-  box.appendChild(el('div',{class:'help', text:'กำลังค้นหา...'}));
+  box.appendChild(el('div',{class:'help', 'data-i18n':'txtSearching', text:(i18nText('txtSearching')||'กำลังค้นหา...')}));
   return getExamSessionsByDate(dateStr).then(function(sessions){
     box.innerHTML = '';
     if(!sessions.length){
-      box.appendChild(el('div',{class:'empty-state', text:'ไม่พบการสอบที่ตรงกับวันที่ '+(toBuddhistDateStr(dateStr)||dateStr)+' ในทุกสาขา'}));
+      box.appendChild(el('div',{class:'empty-state', text:(i18nText('txtNoExamOnDatePrefix')||'ไม่พบการสอบที่ตรงกับวันที่ ')+(toBuddhistDateStr(dateStr)||dateStr)+(i18nText('txtNoExamOnDateSuffix')||' ในทุกสาขา')}));
       return;
     }
     var hasDup = sessions.some(function(s){ return s.chairDup || s.committee.some(function(c){ return c.dup; }); });
     if(hasDup){
       box.appendChild(el('div',{class:'help', style:'color:#dc2626;font-weight:600;margin-bottom:8px;',
-        text:'⚠️ พบชื่อประธาน/กรรมการสอบที่ถูกเชิญมากกว่า 1 ครั้งในวันนี้ (ไฮไลต์สีแดงด้านล่าง) — กรุณาตรวจสอบเวลา/สถานที่อีกครั้งก่อนออกคำสั่งแต่งตั้ง'}));
+        text:(i18nText('txtDupCommitteeWarning')||'⚠️ พบชื่อประธาน/กรรมการสอบที่ถูกเชิญมากกว่า 1 ครั้งในวันนี้ (ไฮไลต์สีแดงด้านล่าง) — กรุณาตรวจสอบเวลา/สถานที่อีกครั้งก่อนออกคำสั่งแต่งตั้ง')}));
     }
-    box.appendChild(el('div',{class:'help', style:'margin-bottom:8px;', text:'พบทั้งหมด '+sessions.length+' นัดสอบ วันที่ '+(toBuddhistDateStr(dateStr)||dateStr)+' (ทุกสาขา)'}));
+    box.appendChild(el('div',{class:'help', style:'margin-bottom:8px;', text:(i18nText('txtFoundSessionsPrefix')||'พบทั้งหมด ')+sessions.length+(i18nText('txtFoundSessionsMid')||' นัดสอบ วันที่ ')+(toBuddhistDateStr(dateStr)||dateStr)+(i18nText('txtFoundSessionsSuffix')||' (ทุกสาขา)')}));
     var wrapTable = el('div',{style:'overflow-x:auto;'});
     var table = el('table');
-    var theadTr = el('tr',{},['เวลา','ประเภท','นักศึกษา','สาขาวิชา','สถานที่','ประธาน/กรรมการสอบ'].map(function(h){ return el('th',{text:h}); }));
+    var theadTr = el('tr',{},[(i18nText('thExamTime')||'เวลา'),(i18nText('thExamTypeCol')||'ประเภท'),(i18nText('thStudentCol')||'นักศึกษา'),(i18nText('thDepartmentCol')||'สาขาวิชา'),(i18nText('thLocationCol')||'สถานที่'),(i18nText('thChairCommitteeCol')||'ประธาน/กรรมการสอบ')].map(function(h){ return el('th',{text:h}); }));
     table.appendChild(el('thead',{},[theadTr]));
     var tbody = el('tbody');
     sessions.forEach(function(s){
       var peopleWrap = el('div',{style:'display:flex;flex-direction:column;gap:3px;'});
       if(s.chair){
-        peopleWrap.appendChild(el('div',{style:'font-weight:600;'+(s.chairDup?'color:#dc2626;':''), text:(s.chairDup?'⚠️ ':'')+s.chair+' (ประธาน)'}));
+        peopleWrap.appendChild(el('div',{style:'font-weight:600;'+(s.chairDup?'color:#dc2626;':''), text:(s.chairDup?'⚠️ ':'')+s.chair+(i18nText('txtChairLabelSuffix')||' (ประธาน)')}));
       }
       s.committee.forEach(function(c){
         peopleWrap.appendChild(el('div',{style:c.dup?'color:#dc2626;':'', text:(c.dup?'⚠️ ':'')+c.name+' ('+c.position+')'}));
@@ -7840,7 +7907,7 @@ function bindSettingsEvents(){
       document.getElementById('m_advisor_rank').value='';
       document.getElementById('m_advisor_dupWarning').style.display='none';
       document.getElementById('btnAddAdvisor').disabled=false;
-    }).catch(function(e){ alertMasterDataSaveFailed(e, 'เพิ่มอาจารย์ที่ปรึกษา'); });
+    }).catch(function(e){ alertMasterDataSaveFailed(e, i18nText('actionLabelAddAdvisor')||'เพิ่มอาจารย์ที่ปรึกษา'); });
   });
   document.getElementById('m_advisor_search').addEventListener('input', function(){ advisorListPage=0; renderAdvisorList(); });
   document.getElementById('btnAdvisorListPrev').addEventListener('click', function(){ if(advisorListPage>0){ advisorListPage--; renderAdvisorList(); } });
@@ -7859,7 +7926,7 @@ function bindSettingsEvents(){
     }).then(function(result){
       if(result && result.__skip) return;
       renderMasterLists(); renderAllSelects(); input.value='';
-    }).catch(function(e){ alertMasterDataSaveFailed(e, 'เพิ่มตำแหน่งทางวิชาการ'); });
+    }).catch(function(e){ alertMasterDataSaveFailed(e, i18nText('actionLabelAddPosition')||'เพิ่มตำแหน่งทางวิชาการ'); });
   });
 }
 function renderMasterLists(){
@@ -7943,8 +8010,8 @@ function renderPositionList(){
   masterData.positions.forEach(function(pos){
     var chip = el('span',{class:'chip'},[
       el('span',{text:pos.name}),
-      el('span',{class:'role-badge', text:SLOT_LABELS[pos.slot]||pos.slot}),
-      el('button',{type:'button', text:'✎', title:'แก้ไขตำแหน่ง', onclick:function(){ openPositionEditModal(pos); }}),
+      el('span',{class:'role-badge', text:slotLabel(pos.slot)}),
+      el('button',{type:'button', text:'✎', title:(i18nText('titleEditPosition')||'แก้ไขตำแหน่ง'), 'data-i18n-title':'titleEditPosition', onclick:function(){ openPositionEditModal(pos); }}),
       el('button',{type:'button', text:'✕', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){ removePosition(pos.name); }})
     ]);
     container.appendChild(chip);
@@ -7954,23 +8021,23 @@ function openPositionEditModal(pos){
   var root = document.getElementById('modalRoot');
   var backdrop = el('div',{class:'modal-backdrop'});
   var modal = el('div',{class:'modal'});
-  modal.appendChild(el('h3',{text:'แก้ไขตำแหน่ง'}));
+  modal.appendChild(el('h3',{'data-i18n':'titleEditPosition', text:(i18nText('titleEditPosition')||'แก้ไขตำแหน่ง')}));
   modal.appendChild(el('div',{class:'field'},[
-    el('label',{text:'ชื่อตำแหน่ง'}),
+    el('label',{'data-i18n':'lblPositionName', text:(i18nText('lblPositionName')||'ชื่อตำแหน่ง')}),
     el('input',{type:'text', id:'editPositionName', value:pos.name})
   ]));
-  var slotField = el('div',{class:'field'},[el('label',{text:'ใช้ในช่อง'})]);
+  var slotField = el('div',{class:'field'},[el('label',{'data-i18n':'lblUsedInSlot', text:(i18nText('lblUsedInSlot')||'ใช้ในช่อง')})]);
   var slotSelect = el('select',{id:'editPositionSlot'});
-  [['chair','ประธานกรรมการ'],['mainAdvisor','อาจารย์ที่ปรึกษาหลัก'],['coAdvisor','อาจารย์ที่ปรึกษาร่วม'],['committee','กรรมการสอบ (เพิ่มได้หลายคน)']].forEach(function(o){
-    var opt = el('option',{value:o[0], text:'ใช้ในช่อง: '+o[1]});
+  [['chair','lblChairPersonRole','ประธานกรรมการ'],['mainAdvisor','lblMainAdvisor','อาจารย์ที่ปรึกษาหลัก'],['coAdvisor','lblCoAdvisor','อาจารย์ที่ปรึกษาร่วม'],['committee','lblCommitteeMemberMulti','กรรมการสอบ (เพิ่มได้หลายคน)']].forEach(function(o){
+    var opt = el('option',{value:o[0], text:(i18nText('lblUsedInSlotColonPrefix')||'ใช้ในช่อง: ')+(i18nText(o[1])||o[2])});
     if(pos.slot===o[0]) opt.setAttribute('selected','selected');
     slotSelect.appendChild(opt);
   });
   slotField.appendChild(slotSelect);
   modal.appendChild(slotField);
   modal.appendChild(el('div',{class:'form-footer'},[
-    el('button',{class:'btn btn-secondary', text:'ยกเลิก', onclick:function(){ backdrop.remove(); }}),
-    el('button',{class:'btn btn-primary', text:'บันทึก', onclick:function(){
+    el('button',{class:'btn btn-secondary', 'data-i18n':'btnCancel', text:(i18nText('btnCancel')||'ยกเลิก'), onclick:function(){ backdrop.remove(); }}),
+    el('button',{class:'btn btn-primary', 'data-i18n':'btnSave', text:(i18nText('btnSave')||'บันทึก'), onclick:function(){
       var newName = document.getElementById('editPositionName').value.trim();
       var newSlot = document.getElementById('editPositionSlot').value;
       if(!newName){ toast(i18nText('toast056')||'กรุณากรอกชื่อตำแหน่ง', true); return; }
@@ -7998,7 +8065,7 @@ function updatePosition(oldName, newName, newSlot){
     renderAllSelects();
     renderList();
     toast((i18nText('toastRoleSaved')||'บันทึกตำแหน่งเรียบร้อย')+(updatedCount>0?((i18nText('toastUpdatedRecordsPrefixNoAnd')||' ปรับปรุงข้อมูลที่เคยบันทึกไว้แล้ว ')+updatedCount+(i18nText('toastUpdatedRecordsSuffix')||' รายการ')):''));
-  }).catch(function(e){ alertMasterDataSaveFailed(e, 'แก้ไขตำแหน่งทางวิชาการ'); });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, i18nText('actionLabelEditPosition')||'แก้ไขตำแหน่งทางวิชาการ'); });
 }
 function renamePositionCascade(oldName, newName){
   masterData.advisors.forEach(function(a){
@@ -8035,7 +8102,7 @@ function removePosition(name){
       if(a.roles) a.roles = a.roles.filter(function(r){ return r!==name; });
     });
     return Promise.resolve();
-  }).then(function(){ renderMasterLists(); renderAllSelects(); }).catch(function(e){ alertMasterDataSaveFailed(e, 'ลบตำแหน่งทางวิชาการ'); });
+  }).then(function(){ renderMasterLists(); renderAllSelects(); }).catch(function(e){ alertMasterDataSaveFailed(e, i18nText('actionLabelDeletePosition')||'ลบตำแหน่งทางวิชาการ'); });
 }
 function renderBackupStatus(){
   document.getElementById('s_autoBackup').checked = !!autoBackupEnabled;
@@ -8103,7 +8170,7 @@ function advisorQuotaBadgeText(advisor){
   if(!max) return null;
   var used = advisorUsedCount(advisor);
   var usedTxt = (Math.round(used*100)/100).toString().replace(/\.0+$/,'');
-  return 'ที่ปรึกษา: '+usedTxt+'/'+max+' คน';
+  return (i18nText('txtAdvisorQuotaPrefix')||'ที่ปรึกษา: ')+usedTxt+'/'+max+(i18nText('txtPeopleCountSuffix2')||' คน');
 }
 /* ข้อความบอกจำนวนนักศึกษาที่อาจารย์ท่านนี้เป็น "ที่ปรึกษาหลัก" อยู่ตอนนี้ (ก่อนบันทึกแถวที่กำลังกรอก) โชว์ไว้ใต้ช่องเลือก
    อาจารย์ที่ปรึกษาหลักในหน้าบันทึกข้อมูล เพื่อให้เจ้าหน้าที่เห็นภาระงานทันทีตอนกำลังมอบหมาย ไม่ต้องสลับไปเช็คหน้า
@@ -8118,9 +8185,9 @@ function mainAdvisorQuotaHintText(advisorName){
   var max = ADVISOR_RANK_QUOTA[advisor.rank];
   if(max){
     var over = used>max;
-    return (over?'⚠️ ':'')+'ขณะนี้ '+advisor.name+' เป็นที่ปรึกษาหลักอยู่ '+usedTxt+'/'+max+' คน'+(over?' (เกินโควตา)':'');
+    return (over?'⚠️ ':'')+(i18nText('txtCurrentlyAdvisorPrefix')||'ขณะนี้ ')+advisor.name+(i18nText('txtCurrentlyAdvisorMid')||' เป็นที่ปรึกษาหลักอยู่ ')+usedTxt+'/'+max+(i18nText('txtPeopleCountSuffix2')||' คน')+(over?(i18nText('txtOverQuotaSuffix')||' (เกินโควตา)'):'');
   }
-  return 'ขณะนี้ '+advisor.name+' เป็นที่ปรึกษาหลักอยู่ '+usedTxt+' คน (ยังไม่ระบุตำแหน่งทางวิชาการ จึงยังไม่คำนวณโควตาสูงสุด)';
+  return (i18nText('txtCurrentlyAdvisorPrefix')||'ขณะนี้ ')+advisor.name+(i18nText('txtCurrentlyAdvisorMid')||' เป็นที่ปรึกษาหลักอยู่ ')+usedTxt+(i18nText('txtAdvisorNoRankSuffix')||' คน (ยังไม่ระบุตำแหน่งทางวิชาการ จึงยังไม่คำนวณโควตาสูงสุด)');
 }
 function updateMainAdvisorQuotaHint(){
   var hintEl = document.getElementById('f_mainAdvisorQuotaHint');
@@ -8137,7 +8204,7 @@ function committeeWorkloadCount(advisor){
 function committeeWorkloadBadgeText(advisor){
   var count = committeeWorkloadCount(advisor);
   if(!count) return null;
-  return 'กรรมการสอบ: '+count+' ครั้ง';
+  return (i18nText('txtCommitteeWorkloadPrefix')||'กรรมการสอบ: ')+count+(i18nText('txtUsedTimesSuffix')||' ครั้ง');
 }
 /* ตารางสรุปภาระงานอาจารย์รวม (โควตาที่ปรึกษาหลัก + จำนวนครั้งเป็นประธาน/กรรมการสอบ) ไว้ในที่เดียว
    แทนที่จะต้องเปิดดูทีละคนในหน้ารายชื่ออาจารย์ — ช่วยให้เจ้าหน้าที่กระจายภาระงานได้เป็นธรรมขึ้น */
@@ -8170,7 +8237,7 @@ function sortAdvisorWorkloadRows(rows){
 function advisorWorkloadNumText(n){
   return (Math.round(n*100)/100).toString().replace(/\.0+$/,'');
 }
-var ADVISOR_WORKLOAD_COLUMNS = [['name','ชื่ออาจารย์'],['rank','ตำแหน่ง'],['used','ที่ปรึกษา (ใช้/โควตา)'],['committee','กรรมการสอบ'],['total','รวม']];
+var ADVISOR_WORKLOAD_COLUMNS = [['name','thAdvisorNameCol','ชื่ออาจารย์'],['rank','thAdvisorRankCol','ตำแหน่ง'],['used','thAdvisorQuotaUsedCol','ที่ปรึกษา (ใช้/โควตา)'],['committee','thAdvisorCommitteeCol','กรรมการสอบ'],['total','thAdvisorTotalCol','รวม']];
 function renderAdvisorWorkloadTable(){
   var wrap = document.getElementById('advisorWorkloadTableWrap');
   if(!wrap) return;
@@ -8180,7 +8247,7 @@ function renderAdvisorWorkloadTable(){
   var headRow = el('tr',{});
   ADVISOR_WORKLOAD_COLUMNS.forEach(function(c){
     var arrow = advisorWorkloadSort.key===c[0] ? (advisorWorkloadSort.dir===1?' ▲':' ▼') : '';
-    var th = el('th',{style:'text-align:left;padding:6px 8px;border-bottom:2px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;', text:c[1]+arrow});
+    var th = el('th',{style:'text-align:left;padding:6px 8px;border-bottom:2px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;', text:(i18nText(c[1])||c[2])+arrow});
     th.addEventListener('click', function(){
       if(advisorWorkloadSort.key===c[0]) advisorWorkloadSort.dir *= -1;
       else { advisorWorkloadSort.key = c[0]; advisorWorkloadSort.dir = 1; }
@@ -8191,14 +8258,14 @@ function renderAdvisorWorkloadTable(){
   table.appendChild(el('thead',{},[headRow]));
   var tbody = el('tbody',{});
   if(!rows.length){
-    tbody.appendChild(el('tr',{},[el('td',{colspan:'5', class:'help', style:'padding:10px 8px;', text:'ยังไม่มีรายชื่ออาจารย์'})]));
+    tbody.appendChild(el('tr',{},[el('td',{colspan:'5', class:'help', style:'padding:10px 8px;', 'data-i18n':'txtNoAdvisorsList', text:(i18nText('txtNoAdvisorsList')||'ยังไม่มีรายชื่ออาจารย์')})]));
   } else {
     rows.forEach(function(r){
       tbody.appendChild(el('tr',{},[
         el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;', text:r.name}),
         el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;', text:r.rank||'—'}),
         el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;'+(r.over?'color:#dc2626;font-weight:600;':''), text: r.max ? (advisorWorkloadNumText(r.used)+'/'+r.max+(r.over?' ⚠️':'')) : '—'}),
-        el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;', text: r.committee ? (r.committee+' ครั้ง') : '—'}),
+        el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;', text: r.committee ? (r.committee+(i18nText('txtUsedTimesSuffix')||' ครั้ง')) : '—'}),
         el('td',{style:'padding:6px 8px;border-bottom:1px solid #f1f5f9;font-weight:600;', text: advisorWorkloadNumText(r.total)})
       ]));
     });
@@ -8239,14 +8306,14 @@ function openAdvisorWorkloadReportModal(){
     var root = document.getElementById('modalRoot');
     var backdrop = el('div',{class:'modal-backdrop'});
     var modal = el('div',{class:'modal', style:'width:min(760px,94vw);'});
-    modal.appendChild(el('h3',{text:'📊 สรุปภาระงานอาจารย์ทั้งหมด'}));
+    modal.appendChild(el('h3',{'data-i18n':'hAdvisorWorkloadReport', text:(i18nText('hAdvisorWorkloadReport')||'📊 สรุปภาระงานอาจารย์ทั้งหมด')}));
     modal.appendChild(el('div',{class:'help', style:'margin-bottom:10px;'}, [
-      document.createTextNode('รวมโควตาที่ปรึกษาหลักและจำนวนครั้งที่เป็นประธาน/กรรมการสอบของอาจารย์ทุกท่านไว้ในตารางเดียว คลิกหัวตารางเพื่อเรียงลำดับ')
+      document.createTextNode(i18nText('helpAdvisorWorkloadReport')||'รวมโควตาที่ปรึกษาหลักและจำนวนครั้งที่เป็นประธาน/กรรมการสอบของอาจารย์ทุกท่านไว้ในตารางเดียว คลิกหัวตารางเพื่อเรียงลำดับ')
     ]));
     modal.appendChild(el('div',{id:'advisorWorkloadTableWrap', style:'overflow-x:auto;'}));
     modal.appendChild(el('div',{class:'form-footer'},[
-      el('button',{class:'btn btn-secondary', text:'📥 ส่งออก Excel', onclick:exportAdvisorWorkloadExcel}),
-      el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }})
+      el('button',{class:'btn btn-secondary', 'data-i18n':'btnExportExcel', text:(i18nText('btnExportExcel')||'📥 ส่งออก Excel'), onclick:exportAdvisorWorkloadExcel}),
+      el('button',{class:'btn btn-secondary', 'data-i18n':'btnCloseModal', text:(i18nText('btnCloseModal')||'ปิด'), onclick:function(){ backdrop.remove(); }})
     ]));
     backdrop.appendChild(modal);
     backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
@@ -8293,15 +8360,15 @@ function openAdvisorReportModal(advisor){
     var root = document.getElementById('modalRoot');
     var backdrop = el('div',{class:'modal-backdrop'});
     var modal = el('div',{class:'modal'});
-    modal.appendChild(el('h3',{text:'รายงานที่ปรึกษา: '+advisor.name}));
+    modal.appendChild(el('h3',{text:(i18nText('txtAdvisorReportTitlePrefix')||'รายงานที่ปรึกษา: ')+advisor.name}));
     modal.appendChild(el('div',{class:'help', style:'margin-bottom:10px;'}, [
-      document.createTextNode('เป็นที่ปรึกษาหลักทั้งหมด '+total+' คน — สอบผ่านแล้ว (ปลดโควต้า) '+rep.graduated.length+' คน, ยังเป็นที่ปรึกษาอยู่ '+rep.active.length+' คน')
+      document.createTextNode((i18nText('txtTotalMainAdviseesPrefix')||'เป็นที่ปรึกษาหลักทั้งหมด ')+total+(i18nText('txtPeopleCountSuffix2')||' คน')+(i18nText('txtAdvisorReportBreakdownMid')||' — สอบผ่านแล้ว (ปลดโควต้า) ')+rep.graduated.length+(i18nText('txtPeopleCountSuffix2')||' คน')+(i18nText('txtAdvisorReportBreakdownMid2')||', ยังเป็นที่ปรึกษาอยู่ ')+rep.active.length+(i18nText('txtPeopleCountSuffix2')||' คน'))
     ]));
     function studentListEl(title, list){
       var box = el('div',{style:'margin-bottom:14px;'});
-      box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:title+' ('+list.length+' คน)'}));
+      box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:title+' ('+list.length+(i18nText('txtPeopleCountSuffix2')||' คน')+')'}));
       if(!list.length){
-        box.appendChild(el('div',{class:'help', text:'— ไม่มี —'}));
+        box.appendChild(el('div',{class:'help', 'data-i18n':'txtNoneDash', text:(i18nText('txtNoneDash')||'— ไม่มี —')}));
       } else {
         var ul = el('div');
         list.forEach(function(s){
@@ -8313,10 +8380,10 @@ function openAdvisorReportModal(advisor){
       }
       return box;
     }
-    modal.appendChild(studentListEl('ยังเป็นที่ปรึกษาอยู่', rep.active));
-    modal.appendChild(studentListEl('สอบผ่านแล้ว (ปลดโควต้า)', rep.graduated));
+    modal.appendChild(studentListEl(i18nText('kvStillAdvisor')||'ยังเป็นที่ปรึกษาอยู่', rep.active));
+    modal.appendChild(studentListEl(i18nText('kvQuotaReleased')||'สอบผ่านแล้ว (ปลดโควต้า)', rep.graduated));
     modal.appendChild(el('div',{class:'form-footer'},[
-      el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }})
+      el('button',{class:'btn btn-secondary', 'data-i18n':'btnCloseModal', text:(i18nText('btnCloseModal')||'ปิด'), onclick:function(){ backdrop.remove(); }})
     ]));
     backdrop.appendChild(modal);
     backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
@@ -8342,10 +8409,10 @@ function renderAdvisorList(){
 
   if(countEl){
     if(filtered.length===0){
-      countEl.textContent = q ? 'ไม่พบรายชื่อที่ตรงกับคำค้นหา' : 'ยังไม่มีรายชื่ออาจารย์';
+      countEl.textContent = q ? (i18nText('txtNoNamesMatchSearch')||'ไม่พบรายชื่อที่ตรงกับคำค้นหา') : (i18nText('txtNoAdvisorsList')||'ยังไม่มีรายชื่ออาจารย์');
     } else {
-      var pageTxt = totalPages>1 ? ' (หน้า '+(advisorListPage+1)+'/'+totalPages+')' : '';
-      countEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+capped.length)+' จาก '+filtered.length+' รายชื่อ'+pageTxt;
+      var pageTxt = totalPages>1 ? (i18nText('txtPageOfSuffix')||' (หน้า ')+(advisorListPage+1)+'/'+totalPages+')' : '';
+      countEl.textContent = (i18nText('txtShowingRangePrefix')||'แสดง ')+(startIdx+1)+'-'+(startIdx+capped.length)+(i18nText('txtShowingRangeMid')||' จาก ')+filtered.length+(i18nText('txtNamesCountSuffix')||' รายชื่อ')+pageTxt;
     }
   }
   var prevBtn = document.getElementById('btnAdvisorListPrev');
@@ -8371,8 +8438,8 @@ function renderAdvisorList(){
       badges.push(el('span',{class:'role-badge', style:'background:#fef3c7;color:#92400e;', text:cwTxt}));
     }
     var chip = el('span',{class:'chip'}, [el('span',{text:advisor.name})].concat(badges).concat([
-      el('button',{type:'button', text:'📋', title:'ดูรายงานที่ปรึกษา', onclick:function(){ openAdvisorReportModal(advisor); }}),
-      el('button',{type:'button', text:'✎', title:'แก้ไขชื่อ/ตำแหน่ง', onclick:function(){ openAdvisorEditModal(advisor); }}),
+      el('button',{type:'button', text:'📋', title:(i18nText('titleViewAdvisorReport')||'ดูรายงานที่ปรึกษา'), 'data-i18n-title':'titleViewAdvisorReport', onclick:function(){ openAdvisorReportModal(advisor); }}),
+      el('button',{type:'button', text:'✎', title:(i18nText('titleEditNameRole')||'แก้ไขชื่อ/ตำแหน่ง'), 'data-i18n-title':'titleEditNameRole', onclick:function(){ openAdvisorEditModal(advisor); }}),
       el('button',{type:'button', text:'✕', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){ removeAdvisor(advisor.name); }})
     ]));
     container.appendChild(chip);
@@ -8478,7 +8545,7 @@ function updateAdvisor(oldName, newName, newRoles, newRank, doCascade){
       else if(newName!==oldName) msg += (i18nText('toastAdvisorRenameNote')||' (ข้อมูลนักศึกษาที่เคยบันทึกชื่อเดิมไว้จะยังคงเป็นชื่อเดิม แต่ยังนับรวมในโควตา/รายงานของชื่อใหม่ให้อัตโนมัติ)');
       toast(msg);
     });
-  }).catch(function(e){ alertMasterDataSaveFailed(e, 'แก้ไขข้อมูลอาจารย์ที่ปรึกษา'); });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, i18nText('actionLabelEditAdvisor')||'แก้ไขข้อมูลอาจารย์ที่ปรึกษา'); });
 }
 function removeAdvisor(name){
   if(!confirm((i18nText('confirmDeleteAdvisorPrefix')||'ลบ "')+name+(i18nText('confirmDeleteAdvisorSuffix')||'" ออกจากรายชื่ออาจารย์หรือไม่? (ข้อมูลที่เคยบันทึกไว้จะไม่ถูกลบ)'))) return;
@@ -8488,7 +8555,7 @@ function removeAdvisor(name){
   }).then(function(){
     logAudit('ลบอาจารย์ที่ปรึกษา', '', name);
     renderMasterLists(); renderAllSelects();
-  }).catch(function(e){ alertMasterDataSaveFailed(e, 'ลบอาจารย์ที่ปรึกษา'); });
+  }).catch(function(e){ alertMasterDataSaveFailed(e, i18nText('actionLabelDeleteAdvisor')||'ลบอาจารย์ที่ปรึกษา'); });
 }
 function renderChipList(containerId, key){
   var container = document.getElementById(containerId);

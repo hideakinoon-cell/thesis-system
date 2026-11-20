@@ -2205,25 +2205,25 @@ function openBulkAttachModal(){
   var root = document.getElementById('modalRoot');
   var backdrop = el('div',{class:'modal-backdrop'});
   var modal = el('div',{class:'modal', style:'width:min(720px,96vw);'});
-  modal.appendChild(el('h3',{text:'📎 แนบลิงก์ประกาศแบบกลุ่ม'}));
-  modal.appendChild(el('div',{class:'help', text:'เลือกประเภทผลสอบ ใส่ลิงก์ประกาศ แล้วเลือกนักศึกษาที่มีชื่ออยู่ในประกาศฉบับเดียวกัน เพื่อแนบลิงก์ (และตั้งผลสอบถ้าต้องการ) ให้ทุกคนพร้อมกันในครั้งเดียว'}));
+  modal.appendChild(el('h3',{'data-i18n':'hBulkAttachModal', text:(i18nText('hBulkAttachModal')||'📎 แนบลิงก์ประกาศแบบกลุ่ม')}));
+  modal.appendChild(el('div',{class:'help', 'data-i18n':'helpBulkAttach', text:(i18nText('helpBulkAttach')||'เลือกประเภทผลสอบ ใส่ลิงก์ประกาศ แล้วเลือกนักศึกษาที่มีชื่ออยู่ในประกาศฉบับเดียวกัน เพื่อแนบลิงก์ (และตั้งผลสอบถ้าต้องการ) ให้ทุกคนพร้อมกันในครั้งเดียว')}));
 
   var fieldSelect = el('select',{id:'bulkAttachField'});
   DOC_LINK_FIELDS.forEach(function(f){ fieldSelect.appendChild(el('option',{value:f, text:DOC_LINK_FIELD_LABELS[f]})); });
-  modal.appendChild(el('div',{class:'field'},[el('label',{text:'ประเภทผลสอบ'}), fieldSelect]));
+  modal.appendChild(el('div',{class:'field'},[el('label',{'data-i18n':'lblExamResultType', text:(i18nText('lblExamResultType')||'ประเภทผลสอบ')}), fieldSelect]));
 
-  var linkInput = el('input',{type:'text', id:'bulkAttachLink', placeholder:'วางลิงก์ประกาศ (เช่น ลิงก์ Google Drive) ที่นี่', list:'bulkAttachLinkSuggestions'});
+  var linkInput = el('input',{type:'text', id:'bulkAttachLink', placeholder:(i18nText('phAnnounceLinkPaste')||'วางลิงก์ประกาศ (เช่น ลิงก์ Google Drive) ที่นี่'), 'data-i18n-ph':'phAnnounceLinkPaste', list:'bulkAttachLinkSuggestions'});
   var linkDatalist = el('datalist',{id:'bulkAttachLinkSuggestions'});
-  modal.appendChild(el('div',{class:'field'},[el('label',{text:'ลิงก์ประกาศ'}), linkInput, linkDatalist]));
+  modal.appendChild(el('div',{class:'field'},[el('label',{'data-i18n':'lblAnnounceLink', text:(i18nText('lblAnnounceLink')||'ลิงก์ประกาศ')}), linkInput, linkDatalist]));
 
   var resultSelect = el('select',{id:'bulkAttachResult'});
-  modal.appendChild(el('div',{class:'field'},[el('label',{text:'ตั้งผลสอบให้ทุกคนพร้อมกันด้วย (ไม่บังคับ)'}), resultSelect]));
+  modal.appendChild(el('div',{class:'field'},[el('label',{'data-i18n':'lblSetResultForAll', text:(i18nText('lblSetResultForAll')||'ตั้งผลสอบให้ทุกคนพร้อมกันด้วย (ไม่บังคับ)')}), resultSelect]));
 
-  var searchInput = el('input',{type:'text', id:'bulkAttachSearch', placeholder:'ค้นหา รหัส/ชื่อ/สาขา เพื่อกรองรายชื่อด้านล่าง'});
-  modal.appendChild(el('div',{class:'field'},[el('label',{text:'เลือกนักศึกษา'}), searchInput]));
+  var searchInput = el('input',{type:'text', id:'bulkAttachSearch', placeholder:(i18nText('phSearchIdNameDept')||'ค้นหา รหัส/ชื่อ/สาขา เพื่อกรองรายชื่อด้านล่าง'), 'data-i18n-ph':'phSearchIdNameDept'});
+  modal.appendChild(el('div',{class:'field'},[el('label',{'data-i18n':'lblSelectStudents', text:(i18nText('lblSelectStudents')||'เลือกนักศึกษา')}), searchInput]));
 
-  var selectAllBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'เลือกทั้งหมดที่ค้นหาเจอ'});
-  var clearSelBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'ล้างรายการที่เลือก'});
+  var selectAllBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', 'data-i18n':'btnSelectAllFound', text:(i18nText('btnSelectAllFound')||'เลือกทั้งหมดที่ค้นหาเจอ')});
+  var clearSelBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', 'data-i18n':'btnClearSelection', text:(i18nText('btnClearSelection')||'ล้างรายการที่เลือก')});
   modal.appendChild(el('div',{style:'display:flex;gap:8px;margin:8px 0;'},[selectAllBtn, clearSelBtn]));
 
   var listBox = el('div',{class:'lookup-result-list', id:'bulkAttachList'});
@@ -2235,9 +2235,9 @@ function openBulkAttachModal(){
   var statusEl = el('div',{class:'help', style:'margin-top:8px;'});
   modal.appendChild(statusEl);
 
-  var applyBtn = el('button',{class:'btn btn-primary', text:'แนบให้ทุกคนที่เลือก', id:'btnConfirmBulkAttach'});
+  var applyBtn = el('button',{class:'btn btn-primary', 'data-i18n':'btnAttachToSelected', text:(i18nText('btnAttachToSelected')||'แนบให้ทุกคนที่เลือก'), id:'btnConfirmBulkAttach'});
   modal.appendChild(el('div',{class:'form-footer'},[
-    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }}),
+    el('button',{class:'btn btn-secondary', 'data-i18n':'btnCloseModal', text:(i18nText('btnCloseModal')||'ปิด'), onclick:function(){ backdrop.remove(); }}),
     applyBtn
   ]));
 
@@ -2256,7 +2256,7 @@ function openBulkAttachModal(){
   function refreshResultOptions(){
     var info = BULK_ATTACH_FIELD_MAP[fieldSelect.value];
     resultSelect.innerHTML='';
-    resultSelect.appendChild(el('option',{value:'', text:'— ไม่เปลี่ยนผลสอบ —'}));
+    resultSelect.appendChild(el('option',{value:'', text:(i18nText('optNoResultChange')||'— ไม่เปลี่ยนผลสอบ —')}));
     info.resultOptions.forEach(function(opt){ resultSelect.appendChild(el('option',{value:opt, text:opt})); });
   }
   function refreshLinkSuggestions(){
@@ -2267,7 +2267,7 @@ function openBulkAttachModal(){
     });
   }
   function updateSelCount(){
-    selCountEl.textContent = 'เลือกแล้ว '+Object.keys(selectedIds).length+' คน';
+    selCountEl.textContent = (i18nText('txtSelectedCountPrefix')||'เลือกแล้ว ')+Object.keys(selectedIds).length+(i18nText('txtSelectedCountSuffix')||' คน');
   }
   function renderRows(){
     var q = (searchInput.value||'').trim().toLowerCase();
@@ -2275,7 +2275,7 @@ function openBulkAttachModal(){
     listBox.innerHTML='';
     var filtered = allRows.filter(function(r){ return matchesQuery(r,q); });
     if(filtered.length===0){
-      listBox.appendChild(el('div',{class:'help', text:'ไม่พบนักศึกษาที่ตรงกับคำค้นหา'}));
+      listBox.appendChild(el('div',{class:'help', 'data-i18n':'txtNoStudentMatch', text:(i18nText('txtNoStudentMatch')||'ไม่พบนักศึกษาที่ตรงกับคำค้นหา')}));
       return;
     }
     filtered.forEach(function(r){
@@ -2290,7 +2290,7 @@ function openBulkAttachModal(){
         cb,
         el('div',{class:'li-main'},[
           el('span',{class:'li-name', text:r.studentId+' — '+(r.studentName||'-')}),
-          el('span',{class:'li-sub', text:(r.department||'-')+(hasLink?' • มีลิงก์อยู่แล้ว':'')})
+          el('span',{class:'li-sub', text:(r.department||'-')+(hasLink?(i18nText('txtHasLinkAlready')||' • มีลิงก์อยู่แล้ว'):'')})
         ])
       ]));
     });
@@ -2313,7 +2313,7 @@ function openBulkAttachModal(){
     runBulkAttach(fieldSelect.value, link, resultSelect.value, selectedRecs, applyBtn, statusEl);
   });
 
-  statusEl.textContent = 'กำลังโหลดรายชื่อนักศึกษา...';
+  statusEl.textContent = (i18nText('txtLoadingStudentList')||'กำลังโหลดรายชื่อนักศึกษา...');
   Promise.all([recordsGetAll(), refreshDocLinkSuggestions()]).then(function(results){
     allRows = (results[0]||[]).filter(function(r){ return !r.deleted && r.studentId; }).sort(function(a,b){
       return (a.studentName||'').localeCompare(b.studentName||'','th');
@@ -2324,7 +2324,7 @@ function openBulkAttachModal(){
     renderRows();
     updateSelCount();
   }).catch(function(e){
-    statusEl.textContent = 'โหลดรายชื่อนักศึกษาไม่สำเร็จ: '+(e&&e.message?e.message:e);
+    statusEl.textContent = (i18nText('txtLoadStudentListFailed')||'โหลดรายชื่อนักศึกษาไม่สำเร็จ: ')+(e&&e.message?e.message:e);
   });
 }
 function runBulkAttach(field, link, resultVal, selectedRecs, applyBtn, statusEl){
@@ -2677,6 +2677,114 @@ var LANDING_I18N = {
   missDefenseData: {th:'ยังไม่มีข้อมูลสอบป้องกันวิทยานิพนธ์/การค้นคว้าอิสระ (3.2)', en:'No defense/independent study exam data yet (3.2)'},
   missBookLink: {th:'ระบุว่าส่งเล่มฉบับสมบูรณ์แล้ว แต่ยังไม่แนบลิงก์เอกสาร', en:'Marked as final book submitted, but no document link attached yet'},
   missGraduatedTerm: {th:'ติ๊กว่าสำเร็จการศึกษาแล้ว แต่ยังไม่ระบุภาคเรียนที่สำเร็จการศึกษา', en:'Marked as graduated, but the graduation term is not yet specified'},
+  hBulkAttachModal: {th:'📎 แนบลิงก์ประกาศแบบกลุ่ม', en:'📎 Bulk Attach Announcement Link'},
+  helpBulkAttach: {th:'เลือกประเภทผลสอบ ใส่ลิงก์ประกาศ แล้วเลือกนักศึกษาที่มีชื่ออยู่ในประกาศฉบับเดียวกัน เพื่อแนบลิงก์ (และตั้งผลสอบถ้าต้องการ) ให้ทุกคนพร้อมกันในครั้งเดียว', en:'Select the exam result type, enter the announcement link, then select the students whose names appear in that same announcement to attach the link (and set the result, if desired) for everyone at once'},
+  lblExamResultType: {th:'ประเภทผลสอบ', en:'Exam Result Type'},
+  phAnnounceLinkPaste: {th:'วางลิงก์ประกาศ (เช่น ลิงก์ Google Drive) ที่นี่', en:'Paste the announcement link here (e.g. a Google Drive link)'},
+  lblAnnounceLink: {th:'ลิงก์ประกาศ', en:'Announcement Link'},
+  lblSetResultForAll: {th:'ตั้งผลสอบให้ทุกคนพร้อมกันด้วย (ไม่บังคับ)', en:'Also set the result for everyone (optional)'},
+  phSearchIdNameDept: {th:'ค้นหา รหัส/ชื่อ/สาขา เพื่อกรองรายชื่อด้านล่าง', en:'Search ID/name/department to filter the list below'},
+  lblSelectStudents: {th:'เลือกนักศึกษา', en:'Select Students'},
+  btnSelectAllFound: {th:'เลือกทั้งหมดที่ค้นหาเจอ', en:'Select All Found'},
+  btnClearSelection: {th:'ล้างรายการที่เลือก', en:'Clear Selection'},
+  btnAttachToSelected: {th:'แนบให้ทุกคนที่เลือก', en:'Attach to All Selected'},
+  btnCloseModal: {th:'ปิด', en:'Close'},
+  optNoResultChange: {th:'— ไม่เปลี่ยนผลสอบ —', en:'— Do not change result —'},
+  txtSelectedCountPrefix: {th:'เลือกแล้ว ', en:'Selected '},
+  txtSelectedCountSuffix: {th:' คน', en:' people'},
+  txtNoStudentMatch: {th:'ไม่พบนักศึกษาที่ตรงกับคำค้นหา', en:'No students match this search'},
+  txtHasLinkAlready: {th:' • มีลิงก์อยู่แล้ว', en:' • Already has a link'},
+  txtLoadingStudentList: {th:'กำลังโหลดรายชื่อนักศึกษา...', en:'Loading student list...'},
+  txtLoadStudentListFailed: {th:'โหลดรายชื่อนักศึกษาไม่สำเร็จ: ', en:'Failed to load student list: '},
+  hBulkImportBasic: {th:'📥 นำเข้าข้อมูลจำนวนมาก (หมวดที่ 1: ข้อมูลพื้นฐานนักศึกษา)', en:'📥 Bulk Import (Section 1: Basic Student Information)'},
+  helpBulkImportBasic: {th:'อัปโหลดไฟล์ Excel (.xlsx) หรือ CSV ที่มีคอลัมน์: รหัสนักศึกษา, ชื่อ-นามสกุล, ระดับการศึกษา, แผนการเรียน, หลักสูตร, สาขาวิชา (ส่วนหมวดอื่นๆ กรอกทีหลังได้ตามปกติ)', en:'Upload an Excel (.xlsx) or CSV file with these columns: Student ID, Full Name, Degree Level, Study Plan, Program, Department (other sections can be filled in later as usual)'},
+  btnDownloadTemplate: {th:'⬇ ดาวน์โหลดเทมเพลต Excel', en:'⬇ Download Excel Template'},
+  lblChooseFile: {th:'เลือกไฟล์', en:'Choose File'},
+  optSkipDupRow: {th:'ข้ามแถวนั้น (แนะนำ)', en:'Skip that row (recommended)'},
+  optUpdateDupRow: {th:'อัปเดตข้อมูลหมวด 1 ของแถวเดิม', en:'Update Section 1 data of the existing row'},
+  lblDupHandling: {th:'ถ้ารหัสนักศึกษาซ้ำกับข้อมูลที่มีอยู่แล้วในระบบ', en:'If the student ID duplicates data already in the system'},
+  chkAutoAddMaster: {th:'เพิ่มหลักสูตร/สาขาวิชา/แผนการเรียนที่ยังไม่มีในระบบเข้า master data ให้อัตโนมัติ', en:'Automatically add programs/departments/study plans not yet in the system to master data'},
+  btnStartImport: {th:'เริ่มนำเข้า', en:'Start Import'},
+  txtReadingFile: {th:'กำลังอ่านไฟล์...', en:'Reading file...'},
+  txtReadFileFailed: {th:'อ่านไฟล์ไม่สำเร็จ: ', en:'Failed to read file: '},
+  txtReadFileFailedPlain: {th:'อ่านไฟล์ไม่สำเร็จ', en:'Failed to read file'},
+  txtFileHasNoData: {th:'ไฟล์นี้ไม่มีข้อมูล', en:'This file has no data'},
+  txtMissingColumnsPrefix: {th:'ไม่พบคอลัมน์ที่จำเป็นในไฟล์ (แถวแรกต้องเป็นหัวตาราง): ', en:'Required columns not found in the file (the first row must be the header row): '},
+  txtMissingColumnsSuffix: {th:' — แนะนำให้ดาวน์โหลดเทมเพลตแล้วกรอกตามรูปแบบ', en:' — we recommend downloading the template and filling it in following that format'},
+  txtValidatingData: {th:'กำลังตรวจสอบข้อมูล...', en:'Validating data...'},
+  txtValidateDataFailed: {th:'ตรวจสอบข้อมูลไม่สำเร็จ: ', en:'Data validation failed: '},
+  txtNoDataRowsInFile: {th:'ไม่พบแถวข้อมูลในไฟล์ (นอกเหนือจากหัวตาราง)', en:'No data rows found in the file (besides the header row)'},
+  txtFoundRowsPrefix: {th:'พบทั้งหมด ', en:'Found '},
+  txtFoundRowsMid: {th:' แถว — พร้อมนำเข้า ', en:' rows total — ready to import '},
+  txtFoundRowsMid2: {th:' แถว, ข้ามเนื่องจากข้อมูลไม่ครบ ', en:' rows, skipping due to incomplete data: '},
+  txtFoundRowsSuffix: {th:' แถว', en:' rows'},
+  thRowNum: {th:'แถว', en:'Row'},
+  thStudentIdShort: {th:'รหัส นศ.', en:'Student ID'},
+  thDegreeShort: {th:'ระดับ', en:'Degree'},
+  thPlanShort: {th:'แผน', en:'Plan'},
+  thDeptShort: {th:'สาขา', en:'Department'},
+  thStatus: {th:'สถานะ', en:'Status'},
+  thReason: {th:'สาเหตุ', en:'Reason'},
+  txtReadyToImport: {th:'✅ พร้อมนำเข้า', en:'✅ Ready to import'},
+  txtItemsCountSuffix: {th:' รายการ)', en:' items)'},
+  txtItemsCountSuffixEllipsis: {th:' รายการ)...', en:' items)...'},
+  txtItemsCountSuffix2: {th:' รายการ', en:' items'},
+  txtPreparingImport: {th:'กำลังเตรียมนำเข้า...', en:'Preparing to import...'},
+  txtImportDoneCreatedPrefix: {th:'นำเข้าเสร็จสิ้น: สร้างใหม่ ', en:'Import complete: created '},
+  txtImportDoneUpdatedPrefix: {th:', อัปเดต ', en:', updated '},
+  txtImportDoneSkippedPrefix: {th:', ข้าม (ซ้ำ) ', en:', skipped (duplicate) '},
+  txtImportDoneFailedPrefix: {th:', ล้มเหลว ', en:', failed '},
+  txtImportDoneMasterPrefix: {th:' — เพิ่มข้อมูลหลักสูตร/สาขา/แผนใหม่ ', en:' — added new program/department/plan master data: '},
+  txtImportCompleteBtn: {th:'นำเข้าเรียบร้อยแล้ว', en:'Import Complete'},
+  txtImportingPrefix: {th:'กำลังนำเข้า ', en:'Importing '},
+  txtImportErrorPrefix: {th:'เกิดข้อผิดพลาดระหว่างนำเข้า: ', en:'An error occurred during import: '},
+  txtSavingToSheetsPrefix: {th:'กำลังบันทึกลง Google Sheets (', en:'Saving to Google Sheets ('},
+  txtImportErrorPartialPrefix: {th:'เกิดข้อผิดพลาดระหว่างนำเข้า (บันทึกสำเร็จแล้ว: สร้างใหม่ ', en:'An error occurred during import (already saved successfully: created '},
+  txtImportErrorPartialMid: {th:', อัปเดต ', en:', updated '},
+  txtImportErrorPartialSuffix: {th:') — ', en:') — '},
+  txtRetryImportHint: {th:' ลองกดนำเข้าอีกครั้ง (รายการที่บันทึกไปแล้วจะถูกตรวจพบว่ามีอยู่แล้ว ไม่ซ้ำ)', en:' try clicking import again (records already saved will be detected as existing and will not be duplicated)'},
+  txtFailedItemsPrefix: {th:'⚠️ รายการที่บันทึกไม่สำเร็จ (', en:'⚠️ Items that failed to save ('},
+  btnViewDetails: {th:'ดูรายละเอียด', en:'View Details'},
+  btnHideDetails: {th:'ซ่อนรายละเอียด', en:'Hide Details'},
+  btnDownloadExcel: {th:'⬇ ดาวน์โหลด Excel', en:'⬇ Download Excel'},
+  hBulkImportProposal: {th:'📥 นำเข้าหัวข้อวิทยานิพนธ์ / ข้อมูลสอบเค้าโครง (เติมเฉพาะช่องว่าง)', en:'📥 Import Thesis Topic / Proposal Exam Data (Fills Empty Fields Only)'},
+  helpBulkImportProposal: {th:'อัปเดตเฉพาะนักศึกษาที่มีอยู่แล้วในระบบ (จับคู่ด้วยรหัสนักศึกษา) และเติมเฉพาะช่องที่ยังว่างอยู่เท่านั้น — จะไม่เขียนทับข้อมูลที่กรอกไว้แล้ว คอลัมน์ที่ต้องมี: รหัสนักศึกษา, หัวข้อวิทยานิพนธ์ (TH), หัวข้อวิทยานิพนธ์ (EN), วันที่สอบเค้าโครง, เวลาสอบเค้าโครง, สถานที่สอบเค้าโครง, ประธานสอบเค้าโครง, กรรมการสอบเค้าโครง (รูปแบบ "ชื่อ (ตำแหน่ง); ชื่อ (ตำแหน่ง)"), วันที่ส่งเค้าโครงแก้ไข, หมายเหตุสอบเค้าโครง', en:'Updates only students already in the system (matched by student ID) and fills only fields that are still empty — it will not overwrite data already entered. Required columns: Student ID, Thesis Title (TH), Thesis Title (EN), Proposal Exam Date, Proposal Exam Time, Proposal Exam Location, Proposal Chair, Proposal Committee (format "Name (Position); Name (Position)"), Proposal Revision Submission Date, Proposal Exam Note'},
+  txtMissingStudentIdCol: {th:'ไม่พบคอลัมน์ "รหัสนักศึกษา" ในไฟล์ (แถวแรกต้องเป็นหัวตาราง)', en:'Column "Student ID" not found in the file (the first row must be the header row)'},
+  txtPropFillPrefix: {th:' แถว — จะเติมข้อมูลให้ ', en:' rows total — will fill data for '},
+  txtPropSkipMid: {th:' คน, ข้าม ', en:' people, skipping '},
+  txtPropSkipSuffix: {th:' คน (มีข้อมูลครบอยู่แล้วทุกช่อง), ไม่พบรหัสในระบบ ', en:' people (already have all fields filled), student ID not found in the system: '},
+  txtPropNotFoundSuffix: {th:' คน', en:' people'},
+  txtStudentIdNotFoundSkip: {th:'❌ ไม่พบรหัสนักศึกษานี้ในระบบ — ข้าม', en:'❌ This student ID was not found in the system — skipped'},
+  txtAllFieldsFullSkip: {th:'⏭ มีข้อมูลครบอยู่แล้วทุกช่อง — ข้าม', en:'⏭ All fields already filled — skipped'},
+  txtWillFillPrefix: {th:'✅ จะเติม: ', en:'✅ Will fill: '},
+  txtPeopleCountSuffix: {th:' คน)', en:' people)'},
+  txtPeopleCountSuffix2: {th:' คน', en:' people'},
+  txtPropImportDonePrefix: {th:'นำเข้าเสร็จสิ้น: เติมข้อมูลให้ ', en:'Import complete: filled data for '},
+  txtRetryImportHintProposal: {th:' — ลองกดนำเข้าอีกครั้ง (ระบบเติมเฉพาะช่องว่าง จึงนำเข้าซ้ำได้โดยไม่ซ้ำซ้อน)', en:' — try clicking import again (the system only fills empty fields, so re-importing is safe and will not duplicate data)'},
+  propLbl_titleTh: {th:'หัวข้อ (TH)', en:'Title (TH)'},
+  propLbl_titleEn: {th:'หัวข้อ (EN)', en:'Title (EN)'},
+  propLbl_proposalDate: {th:'วันที่สอบเค้าโครง', en:'Proposal Exam Date'},
+  propLbl_proposalTime: {th:'เวลาสอบ', en:'Exam Time'},
+  propLbl_proposalLocation: {th:'สถานที่สอบ', en:'Exam Location'},
+  propLbl_proposalChair: {th:'ประธานกรรมการ', en:'Committee Chair'},
+  propLbl_proposalCommittee: {th:'กรรมการสอบ', en:'Exam Committee'},
+  propLbl_proposalRevisionDate: {th:'วันที่ส่งแก้ไข', en:'Revision Submission Date'},
+  propLbl_proposalNote: {th:'หมายเหตุ', en:'Note'},
+  hEditAdvisor: {th:'แก้ไขข้อมูลอาจารย์', en:'Edit Advisor Information'},
+  lblAdvisorNameRank: {th:'ชื่อ-ตำแหน่งทางวิชาการ', en:'Name - Academic Rank'},
+  optRankNone: {th:'ไม่ระบุ (ไม่คำนวณโควตา)', en:'Not specified (quota not calculated)'},
+  optRankDr: {th:'ดร. (โควตา 5 คน)', en:'Dr. (Quota: 5)'},
+  optRankAsstProf: {th:'ผศ. (โควตา 10 คน)', en:'Asst. Prof. (Quota: 10)'},
+  optRankAssocProf: {th:'รศ. (โควตา 10 คน)', en:'Assoc. Prof. (Quota: 10)'},
+  optRankProf: {th:'ศ. (โควตา 10 คน)', en:'Prof. (Quota: 10)'},
+  lblAdvisorRank: {th:'ตำแหน่งทางวิชาการ (ใช้คำนวณโควตาที่ปรึกษา)', en:'Academic Rank (used to calculate advisor quota)'},
+  lblAdvisorCanActAs: {th:'ทำหน้าที่ได้ (เลือกได้มากกว่า 1)', en:'Can Act As (select more than 1 if applicable)'},
+  chkCascadeAdvisorName: {th:'ปรับปรุงชื่อนี้ในข้อมูลนักศึกษาที่เคยบันทึกไว้แล้วด้วย', en:'Also update this name in previously saved student records'},
+  helpCascadeAdvisorName: {th:'ใช้เฉพาะกรณีแก้ไขตัวสะกดผิด — ถ้าเป็นการเปลี่ยนชื่อ/ตำแหน่งจริง (เช่น เปลี่ยนนามสกุล หรือได้ตำแหน่งทางวิชาการใหม่) ไม่ควรติ๊ก เพื่อให้ข้อมูลเก่ายังตรงกับคำสั่งสอบที่เคยออกไปแล้ว', en:'Use only to fix a spelling mistake — if this is an actual name/rank change (e.g. a new surname or a new academic rank), leave this unchecked so old records stay consistent with exam orders already issued'},
+  btnCancel: {th:'ยกเลิก', en:'Cancel'},
+  btnSave: {th:'บันทึก', en:'Save'},
+  txtNoDeptPinSet: {th:'ยังไม่มีสาขาไหนตั้งรหัสผ่านไว้', en:'No department has set a password yet'},
+  titleDisableDeptPin: {th:'ปิดใช้งานรหัสผ่านของสาขานี้', en:'Disable this department’s password'},
   lblGraduatedTerm: {th:'ภาคเรียนที่สำเร็จการศึกษา', en:'Graduation Term'},
   btnCancelForm: {th:'❌ ยกเลิก', en:'❌ Cancel'},
   btnSaveForm: {th:'💾 บันทึกข้อมูล', en:'💾 Save Data'},
@@ -2904,7 +3012,36 @@ var LANDING_I18N = {
   benefitAnywhere: {th:'ใช้งานได้ทุกที่ ทุกอุปกรณ์', en:'Access it anywhere, on any device'},
   benefitMulti: {th:'รองรับหลายสาขาวิชา หลายเจ้าหน้าที่', en:'Supports multiple departments and staff members'},
   footerBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
-  footerCopyright: {th:'© 2569 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'© 2026 Thesis Exam Records System'}
+  footerCopyright: {th:'© 2569 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'© 2026 Thesis Exam Records System'},
+  txtPurgeCloudOnly: {th:'ฟีเจอร์นี้ใช้ได้เฉพาะตอนเปิดใช้งาน "ระบบข้อมูลกลาง" เท่านั้น เพราะโหมดในเครื่องนี้ลบข้อมูลจริงทันทีอยู่แล้ว ไม่มีข้อมูลสะสมให้ล้าง', en:'This feature is only available when "Cloud Mode" is enabled, because local mode deletes data immediately and has no accumulated data to purge.'},
+  txtCheckingDeletedCount: {th:'กำลังตรวจสอบจำนวนรายการที่ถูกลบไว้...', en:'Checking the number of deleted items...'},
+  txtChecking: {th:'กำลังตรวจสอบ...', en:'Checking...'},
+  txtNoDeletedRowsFound: {th:'✅ ไม่พบรายการที่ถูกลบค้างอยู่ ไม่ต้องล้างข้อมูล', en:'✅ No pending deleted items found. No need to purge.'},
+  txtFoundDeletedRowsPrefix: {th:'พบรายการที่ถูกลบไว้ค้างอยู่ในชีททั้งหมด ', en:'Found a total of '},
+  txtFoundDeletedRowsMid: {th:' รายการ (รายการสอบ ', en:' item(s) pending deletion in the sheet (exam records: '},
+  txtFoundDeletedRowsMid2: {th:', ไฟล์แนบ ', en:', attached files: '},
+  txtFoundDeletedRowsMid3: {th:', เอกสารรับเข้า ', en:', intake documents: '},
+  btnPurgeConfirmPrefix: {th:'🗑️ ยืนยันล้างถาวร (', en:'🗑️ Confirm permanent purge ('},
+  txtPurging: {th:'กำลังล้างข้อมูล...', en:'Purging data...'},
+  txtPurgeDonePrefix: {th:'✅ ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว รวม ', en:'✅ Permanently purged deleted data successfully. Total: '},
+  txtCheckFailedPrefix: {th:'ตรวจสอบไม่สำเร็จ: ', en:'Check failed: '},
+  txtNoDriveFilesToCheck: {th:'ยังไม่มีไฟล์ที่อัปโหลดขึ้น Drive ในระบบให้ตรวจสอบ', en:'There are no files uploaded to Drive in the system to check yet.'},
+  txtReasonTrashed: {th:'ถูกย้ายไปถังขยะใน Drive', en:'Moved to Trash in Drive'},
+  txtReasonFileNotFound: {th:'ไม่พบไฟล์ (ถูกลบ/ย้าย/ไม่มีสิทธิ์เข้าถึงแล้ว)', en:'File not found (deleted, moved, or access no longer permitted)'},
+  txtCheckedFilesPrefix: {th:'ตรวจสอบแล้ว ', en:'Checked '},
+  txtCheckedFilesMid: {th:' ไฟล์ พบปัญหา ', en:' file(s), found issues in '},
+  txtCheckedFilesSuffix: {th:' ไฟล์', en:' file(s)'},
+  txtNoBrokenFiles: {th:'✅ ไม่พบไฟล์ที่มีปัญหา ทุกลิงก์ใช้งานได้ปกติ', en:'✅ No broken files found. All links are working normally.'},
+  txtNoLinkedStudentPrefix: {th:'(ไม่พบข้อมูลนักศึกษาที่เชื่อมกับไฟล์นี้ — เรคคอร์ด ', en:'(No student record linked to this file — record '},
+  secLbl_proposal: {th:'3.1 เค้าโครง', en:'3.1 Proposal'},
+  secLbl_defense: {th:'3.2 ป้องกัน/IS', en:'3.2 Defense/IS'},
+  secLbl_publication: {th:'หมวดที่ 5 ผลงานตีพิมพ์', en:'Section 5 Publication'},
+  secLbl_english: {th:'หมวดที่ 1.1 ผลภาษาอังกฤษ', en:'Section 1.1 English Result'},
+  secLbl_computer: {th:'หมวดที่ 1.1 ผลคอมพิวเตอร์', en:'Section 1.1 Computer Result'},
+  secLbl_qualifying: {th:'หมวดที่ 1.1 สอบวัดความรู้', en:'Section 1.1 Qualifying Exam'},
+  secLbl_book: {th:'หมวดที่ 6 เล่มฉบับสมบูรณ์', en:'Section 6 Complete Book'},
+  secLbl_advisorAppoint: {th:'หมวดที่ 2 คำสั่งแต่งตั้งที่ปรึกษา', en:'Section 2 Advisor Appointment Order'},
+  btnRemoveFromSystem: {th:'ลบรายการนี้ออกจากระบบ', en:'Remove this entry from the system'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -6861,32 +6998,32 @@ function openImportModal(){
   var root = document.getElementById('modalRoot');
   var backdrop = el('div',{class:'modal-backdrop'});
   var modal = el('div',{class:'modal', style:'width:min(980px,96vw);'});
-  modal.appendChild(el('h3',{text:'📥 นำเข้าข้อมูลจำนวนมาก (หมวดที่ 1: ข้อมูลพื้นฐานนักศึกษา)'}));
-  modal.appendChild(el('div',{class:'help', text:'อัปโหลดไฟล์ Excel (.xlsx) หรือ CSV ที่มีคอลัมน์: รหัสนักศึกษา, ชื่อ-นามสกุล, ระดับการศึกษา, แผนการเรียน, หลักสูตร, สาขาวิชา (ส่วนหมวดอื่นๆ กรอกทีหลังได้ตามปกติ)'}));
+  modal.appendChild(el('h3',{'data-i18n':'hBulkImportBasic', text:(i18nText('hBulkImportBasic')||'📥 นำเข้าข้อมูลจำนวนมาก (หมวดที่ 1: ข้อมูลพื้นฐานนักศึกษา)')}));
+  modal.appendChild(el('div',{class:'help', 'data-i18n':'helpBulkImportBasic', text:(i18nText('helpBulkImportBasic')||'อัปโหลดไฟล์ Excel (.xlsx) หรือ CSV ที่มีคอลัมน์: รหัสนักศึกษา, ชื่อ-นามสกุล, ระดับการศึกษา, แผนการเรียน, หลักสูตร, สาขาวิชา (ส่วนหมวดอื่นๆ กรอกทีหลังได้ตามปกติ)')}));
   modal.appendChild(el('div',{style:'margin:10px 0;'},[
-    el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'⬇ ดาวน์โหลดเทมเพลต Excel', onclick: downloadImportTemplate})
+    el('button',{type:'button', class:'btn btn-secondary btn-sm', 'data-i18n':'btnDownloadTemplate', text:(i18nText('btnDownloadTemplate')||'⬇ ดาวน์โหลดเทมเพลต Excel'), onclick: downloadImportTemplate})
   ]));
 
   var fileInput = el('input',{type:'file', id:'importFileInput', accept:'.xlsx,.xls,.csv'});
-  modal.appendChild(el('div',{class:'field'},[el('label',{text:'เลือกไฟล์'}), fileInput]));
+  modal.appendChild(el('div',{class:'field'},[el('label',{'data-i18n':'lblChooseFile', text:(i18nText('lblChooseFile')||'เลือกไฟล์')}), fileInput]));
 
   var dupSelect = el('select',{id:'importDupMode'});
-  dupSelect.appendChild(el('option',{value:'skip', text:'ข้ามแถวนั้น (แนะนำ)'}));
-  dupSelect.appendChild(el('option',{value:'update', text:'อัปเดตข้อมูลหมวด 1 ของแถวเดิม'}));
-  modal.appendChild(el('div',{class:'field'},[el('label',{text:'ถ้ารหัสนักศึกษาซ้ำกับข้อมูลที่มีอยู่แล้วในระบบ'}), dupSelect]));
+  dupSelect.appendChild(el('option',{value:'skip', text:(i18nText('optSkipDupRow')||'ข้ามแถวนั้น (แนะนำ)')}));
+  dupSelect.appendChild(el('option',{value:'update', text:(i18nText('optUpdateDupRow')||'อัปเดตข้อมูลหมวด 1 ของแถวเดิม')}));
+  modal.appendChild(el('div',{class:'field'},[el('label',{'data-i18n':'lblDupHandling', text:(i18nText('lblDupHandling')||'ถ้ารหัสนักศึกษาซ้ำกับข้อมูลที่มีอยู่แล้วในระบบ')}), dupSelect]));
 
   var addMasterChk = el('input',{type:'checkbox', id:'importAutoAddMaster', checked:'checked'});
   modal.appendChild(el('label',{style:'display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px;'},[
-    addMasterChk, document.createTextNode('เพิ่มหลักสูตร/สาขาวิชา/แผนการเรียนที่ยังไม่มีในระบบเข้า master data ให้อัตโนมัติ')
+    addMasterChk, document.createTextNode(i18nText('chkAutoAddMaster')||'เพิ่มหลักสูตร/สาขาวิชา/แผนการเรียนที่ยังไม่มีในระบบเข้า master data ให้อัตโนมัติ')
   ]));
 
   var previewBox = el('div',{id:'importPreviewBox', style:'margin-top:14px;'});
   modal.appendChild(previewBox);
 
-  var importBtn = el('button',{class:'btn btn-primary', text:'เริ่มนำเข้า', id:'btnConfirmImport', disabled:'disabled'});
+  var importBtn = el('button',{class:'btn btn-primary', 'data-i18n':'btnStartImport', text:(i18nText('btnStartImport')||'เริ่มนำเข้า'), id:'btnConfirmImport', disabled:'disabled'});
   importBtn.addEventListener('click', function(){ runImport(importBtn); });
   modal.appendChild(el('div',{class:'form-footer'},[
-    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }}),
+    el('button',{class:'btn btn-secondary', 'data-i18n':'btnCloseModal', text:(i18nText('btnCloseModal')||'ปิด'), onclick:function(){ backdrop.remove(); }}),
     importBtn
   ]));
 
@@ -6911,9 +7048,9 @@ function downloadImportTemplate(){
 }
 function handleImportFile(file, previewBox, importBtn){
   previewBox.innerHTML='';
-  previewBox.appendChild(el('div',{class:'help', text:'กำลังอ่านไฟล์...'}));
+  previewBox.appendChild(el('div',{class:'help', 'data-i18n':'txtReadingFile', text:(i18nText('txtReadingFile')||'กำลังอ่านไฟล์...')}));
   importBtn.setAttribute('disabled','disabled');
-  importBtn.textContent = 'เริ่มนำเข้า';
+  importBtn.textContent = (i18nText('btnStartImport')||'เริ่มนำเข้า');
   var reader = new FileReader();
   reader.onload = function(e){
     try{
@@ -6923,19 +7060,19 @@ function handleImportFile(file, previewBox, importBtn){
       processImportAoa(aoa, previewBox, importBtn);
     }catch(ex){
       previewBox.innerHTML='';
-      previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'อ่านไฟล์ไม่สำเร็จ: '+(ex && ex.message ? ex.message : ex)}));
+      previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtReadFileFailed')||'อ่านไฟล์ไม่สำเร็จ: ')+(ex && ex.message ? ex.message : ex)}));
     }
   };
   reader.onerror = function(){
     previewBox.innerHTML='';
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'อ่านไฟล์ไม่สำเร็จ'}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', 'data-i18n':'txtReadFileFailedPlain', text:(i18nText('txtReadFileFailedPlain')||'อ่านไฟล์ไม่สำเร็จ')}));
   };
   reader.readAsArrayBuffer(file);
 }
 function processImportAoa(aoa, previewBox, importBtn){
   if(!aoa || aoa.length===0){
     previewBox.innerHTML='';
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไฟล์นี้ไม่มีข้อมูล'}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', 'data-i18n':'txtFileHasNoData', text:(i18nText('txtFileHasNoData')||'ไฟล์นี้ไม่มีข้อมูล')}));
     return;
   }
   var headerRow = aoa[0];
@@ -6950,11 +7087,11 @@ function processImportAoa(aoa, previewBox, importBtn){
   var missingCols = IMPORT_COLUMNS.filter(function(c){ return colMap[c.key]===undefined; }).map(function(c){ return c.labels[0]; });
   if(missingCols.length>0){
     previewBox.innerHTML='';
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไม่พบคอลัมน์ที่จำเป็นในไฟล์ (แถวแรกต้องเป็นหัวตาราง): '+missingCols.join(', ')+' — แนะนำให้ดาวน์โหลดเทมเพลตแล้วกรอกตามรูปแบบ'}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtMissingColumnsPrefix')||'ไม่พบคอลัมน์ที่จำเป็นในไฟล์ (แถวแรกต้องเป็นหัวตาราง): ')+missingCols.join(', ')+(i18nText('txtMissingColumnsSuffix')||' — แนะนำให้ดาวน์โหลดเทมเพลตแล้วกรอกตามรูปแบบ')}));
     return;
   }
   previewBox.innerHTML='';
-  previewBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบข้อมูล...'}));
+  previewBox.appendChild(el('div',{class:'help', 'data-i18n':'txtValidatingData', text:(i18nText('txtValidatingData')||'กำลังตรวจสอบข้อมูล...')}));
   recordsGetAll().then(function(existingRows){
     var existingByStudentId = {};
     existingRows.forEach(function(r){ if(r.studentId) existingByStudentId[r.studentId]=r; });
@@ -6989,7 +7126,7 @@ function processImportAoa(aoa, previewBox, importBtn){
     renderImportPreview(previewBox, importBtn);
   }).catch(function(e){
     previewBox.innerHTML='';
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบข้อมูลไม่สำเร็จ: '+(e&&e.message?e.message:e)}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtValidateDataFailed')||'ตรวจสอบข้อมูลไม่สำเร็จ: ')+(e&&e.message?e.message:e)}));
   });
 }
 function renderImportPreview(previewBox, importBtn){
@@ -6997,23 +7134,23 @@ function renderImportPreview(previewBox, importBtn){
   var validRows = rows.filter(function(r){ return r.errors.length===0; });
   previewBox.innerHTML='';
   if(rows.length===0){
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไม่พบแถวข้อมูลในไฟล์ (นอกเหนือจากหัวตาราง)'}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', 'data-i18n':'txtNoDataRowsInFile', text:(i18nText('txtNoDataRowsInFile')||'ไม่พบแถวข้อมูลในไฟล์ (นอกเหนือจากหัวตาราง)')}));
     importBtn.setAttribute('disabled','disabled');
     return;
   }
   previewBox.appendChild(el('div',{class:'help', style:'font-weight:600;margin-bottom:8px;',
-    text:'พบทั้งหมด '+rows.length+' แถว — พร้อมนำเข้า '+validRows.length+' แถว, ข้ามเนื่องจากข้อมูลไม่ครบ '+(rows.length-validRows.length)+' แถว'}));
+    text:(i18nText('txtFoundRowsPrefix')||'พบทั้งหมด ')+rows.length+(i18nText('txtFoundRowsMid')||' แถว — พร้อมนำเข้า ')+validRows.length+(i18nText('txtFoundRowsMid2')||' แถว, ข้ามเนื่องจากข้อมูลไม่ครบ ')+(rows.length-validRows.length)+(i18nText('txtFoundRowsSuffix')||' แถว')}));
   var wrap = el('div',{style:'max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:8px;'});
   var table = el('table',{style:'font-size:12px;'});
   var theadTr = el('tr');
-  ['แถว','รหัส นศ.','ชื่อ-นามสกุล','ระดับ','แผน','หลักสูตร','สาขา','สถานะ'].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
+  [(i18nText('thRowNum')||'แถว'),(i18nText('thStudentIdShort')||'รหัส นศ.'),(i18nText('lblStudentName')||'ชื่อ-นามสกุล'),(i18nText('thDegreeShort')||'ระดับ'),(i18nText('thPlanShort')||'แผน'),(i18nText('lblProgram')||'หลักสูตร'),(i18nText('thDeptShort')||'สาขา'),(i18nText('thStatus')||'สถานะ')].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
   table.appendChild(el('thead',{},[theadTr]));
   var tbody = el('tbody');
   rows.forEach(function(r){
     var statusText, statusColor;
     if(r.errors.length>0){ statusText='❌ '+r.errors.join('; '); statusColor='#c0392b'; }
     else if(r.warnings.length>0){ statusText='⚠️ '+r.warnings.join('; '); statusColor='#b7860b'; }
-    else { statusText='✅ พร้อมนำเข้า'; statusColor='#1f8a4c'; }
+    else { statusText=(i18nText('txtReadyToImport')||'✅ พร้อมนำเข้า'); statusColor='#1f8a4c'; }
     tbody.appendChild(el('tr',{},[
       el('td',{text:String(r.rowNum)}), el('td',{text:r.studentId}), el('td',{text:r.studentName}),
       el('td',{text:r.degreeLevel}), el('td',{text:r.plan}), el('td',{text:r.program}), el('td',{text:r.department}),
@@ -7023,8 +7160,8 @@ function renderImportPreview(previewBox, importBtn){
   table.appendChild(tbody);
   wrap.appendChild(table);
   previewBox.appendChild(wrap);
-  if(validRows.length>0){ importBtn.removeAttribute('disabled'); importBtn.textContent='เริ่มนำเข้า ('+validRows.length+' รายการ)'; }
-  else { importBtn.setAttribute('disabled','disabled'); importBtn.textContent='เริ่มนำเข้า'; }
+  if(validRows.length>0){ importBtn.removeAttribute('disabled'); importBtn.textContent=(i18nText('btnStartImport')||'เริ่มนำเข้า')+' ('+validRows.length+(i18nText('txtItemsCountSuffix')||' รายการ)'); }
+  else { importBtn.setAttribute('disabled','disabled'); importBtn.textContent=(i18nText('btnStartImport')||'เริ่มนำเข้า'); }
 }
 function buildNewRecordFromImportRow(row){
   var now = Date.now();
@@ -7059,7 +7196,7 @@ function runImport(importBtn){
   var progressBox = document.getElementById('importPreviewBox');
   var progressEl = el('div',{class:'help', style:'margin-top:10px;font-weight:600;'});
   progressBox.appendChild(progressEl);
-  progressEl.textContent = 'กำลังเตรียมนำเข้า...';
+  progressEl.textContent = (i18nText('txtPreparingImport')||'กำลังเตรียมนำเข้า...');
 
   var newPrograms=[], newDepartments=[], newPlans=[];
   if(autoAddMaster){
@@ -7096,13 +7233,13 @@ function runImport(importBtn){
       renderMasterLists();
       renderList();
       var addedMasterCount = newPrograms.length+newDepartments.length+newPlans.length;
-      progressEl.textContent = 'นำเข้าเสร็จสิ้น: สร้างใหม่ '+created+' รายการ'
-        +(updated>0?', อัปเดต '+updated+' รายการ':'')
-        +(skipped>0?', ข้าม (ซ้ำ) '+skipped+' รายการ':'')
-        +(failed>0?', ล้มเหลว '+failed+' รายการ':'')
-        +(addedMasterCount>0?' — เพิ่มข้อมูลหลักสูตร/สาขา/แผนใหม่ '+addedMasterCount+' รายการ':'');
+      progressEl.textContent = (i18nText('txtImportDoneCreatedPrefix')||'นำเข้าเสร็จสิ้น: สร้างใหม่ ')+created+(i18nText('txtItemsCountSuffix2')||' รายการ')
+        +(updated>0?((i18nText('txtImportDoneUpdatedPrefix')||', อัปเดต ')+updated+(i18nText('txtItemsCountSuffix2')||' รายการ')):'')
+        +(skipped>0?((i18nText('txtImportDoneSkippedPrefix')||', ข้าม (ซ้ำ) ')+skipped+(i18nText('txtItemsCountSuffix2')||' รายการ')):'')
+        +(failed>0?((i18nText('txtImportDoneFailedPrefix')||', ล้มเหลว ')+failed+(i18nText('txtItemsCountSuffix2')||' รายการ')):'')
+        +(addedMasterCount>0?((i18nText('txtImportDoneMasterPrefix')||' — เพิ่มข้อมูลหลักสูตร/สาขา/แผนใหม่ ')+addedMasterCount+(i18nText('txtItemsCountSuffix2')||' รายการ')):'');
       toast(i18nText('toast045')||'นำเข้าข้อมูลเสร็จสิ้น');
-      importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
+      importBtn.textContent = (i18nText('txtImportCompleteBtn')||'นำเข้าเรียบร้อยแล้ว');
       if(failedDetails.length>0) renderImportFailedList(progressBox, failedDetails);
     });
   }
@@ -7112,7 +7249,7 @@ function runImport(importBtn){
     var chain = Promise.resolve();
     rows.forEach(function(r, idx){
       chain = chain.then(function(){
-        progressEl.textContent = 'กำลังนำเข้า '+(idx+1)+' / '+rows.length+' ('+r.studentId+')';
+        progressEl.textContent = (i18nText('txtImportingPrefix')||'กำลังนำเข้า ')+(idx+1)+' / '+rows.length+' ('+r.studentId+')';
         if(r.existing){
           if(dupMode==='skip'){ skipped++; return; }
           var rec = Object.assign({}, r.existing, {
@@ -7138,7 +7275,7 @@ function runImport(importBtn){
       });
     });
     chain.then(finishImport).catch(function(e){
-      progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า: '+(e&&e.message?e.message:e);
+      progressEl.textContent = (i18nText('txtImportErrorPrefix')||'เกิดข้อผิดพลาดระหว่างนำเข้า: ')+(e&&e.message?e.message:e);
     });
     return;
   }
@@ -7175,7 +7312,7 @@ function runImport(importBtn){
       }
     });
     appendCount = appendRows.length; updateCount = updateOps.length;
-    progressEl.textContent = 'กำลังบันทึกลง Google Sheets ('+(appendCount+updateCount)+' รายการ)...';
+    progressEl.textContent = (i18nText('txtSavingToSheetsPrefix')||'กำลังบันทึกลง Google Sheets (')+(appendCount+updateCount)+(i18nText('txtItemsCountSuffixEllipsis')||' รายการ)...');
     if(appendRows.length===0) appendDone = true;
     if(updateOps.length===0) updateDone = true;
     var writeChain = Promise.resolve();
@@ -7192,8 +7329,8 @@ function runImport(importBtn){
     var accountedFor = created+updated+skipped;
     failed = rows.length - accountedFor;
     renderList();
-    progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า (บันทึกสำเร็จแล้ว: สร้างใหม่ '+created+', อัปเดต '+updated
-      +') — '+reasonMsg+' ลองกดนำเข้าอีกครั้ง (รายการที่บันทึกไปแล้วจะถูกตรวจพบว่ามีอยู่แล้ว ไม่ซ้ำ)';
+    progressEl.textContent = (i18nText('txtImportErrorPartialPrefix')||'เกิดข้อผิดพลาดระหว่างนำเข้า (บันทึกสำเร็จแล้ว: สร้างใหม่ ')+created+(i18nText('txtImportErrorPartialMid')||', อัปเดต ')+updated
+      +(i18nText('txtImportErrorPartialSuffix')||') — ')+reasonMsg+(i18nText('txtRetryImportHint')||' ลองกดนำเข้าอีกครั้ง (รายการที่บันทึกไปแล้วจะถูกตรวจพบว่ามีอยู่แล้ว ไม่ซ้ำ)');
     if(failedDetails.length>0) renderImportFailedList(progressBox, failedDetails);
   });
 }
@@ -7244,19 +7381,19 @@ function openProposalImportModal(){
   var root = document.getElementById('modalRoot');
   var backdrop = el('div',{class:'modal-backdrop'});
   var modal = el('div',{class:'modal', style:'width:min(1040px,96vw);'});
-  modal.appendChild(el('h3',{text:'📥 นำเข้าหัวข้อวิทยานิพนธ์ / ข้อมูลสอบเค้าโครง (เติมเฉพาะช่องว่าง)'}));
-  modal.appendChild(el('div',{class:'help', text:'อัปเดตเฉพาะนักศึกษาที่มีอยู่แล้วในระบบ (จับคู่ด้วยรหัสนักศึกษา) และเติมเฉพาะช่องที่ยังว่างอยู่เท่านั้น — จะไม่เขียนทับข้อมูลที่กรอกไว้แล้ว คอลัมน์ที่ต้องมี: รหัสนักศึกษา, หัวข้อวิทยานิพนธ์ (TH), หัวข้อวิทยานิพนธ์ (EN), วันที่สอบเค้าโครง, เวลาสอบเค้าโครง, สถานที่สอบเค้าโครง, ประธานสอบเค้าโครง, กรรมการสอบเค้าโครง (รูปแบบ "ชื่อ (ตำแหน่ง); ชื่อ (ตำแหน่ง)"), วันที่ส่งเค้าโครงแก้ไข, หมายเหตุสอบเค้าโครง'}));
+  modal.appendChild(el('h3',{'data-i18n':'hBulkImportProposal', text:(i18nText('hBulkImportProposal')||'📥 นำเข้าหัวข้อวิทยานิพนธ์ / ข้อมูลสอบเค้าโครง (เติมเฉพาะช่องว่าง)')}));
+  modal.appendChild(el('div',{class:'help', 'data-i18n':'helpBulkImportProposal', text:(i18nText('helpBulkImportProposal')||'อัปเดตเฉพาะนักศึกษาที่มีอยู่แล้วในระบบ (จับคู่ด้วยรหัสนักศึกษา) และเติมเฉพาะช่องที่ยังว่างอยู่เท่านั้น — จะไม่เขียนทับข้อมูลที่กรอกไว้แล้ว คอลัมน์ที่ต้องมี: รหัสนักศึกษา, หัวข้อวิทยานิพนธ์ (TH), หัวข้อวิทยานิพนธ์ (EN), วันที่สอบเค้าโครง, เวลาสอบเค้าโครง, สถานที่สอบเค้าโครง, ประธานสอบเค้าโครง, กรรมการสอบเค้าโครง (รูปแบบ "ชื่อ (ตำแหน่ง); ชื่อ (ตำแหน่ง)"), วันที่ส่งเค้าโครงแก้ไข, หมายเหตุสอบเค้าโครง')}));
 
   var fileInput = el('input',{type:'file', id:'proposalImportFileInput', accept:'.xlsx,.xls,.csv'});
-  modal.appendChild(el('div',{class:'field'},[el('label',{text:'เลือกไฟล์'}), fileInput]));
+  modal.appendChild(el('div',{class:'field'},[el('label',{'data-i18n':'lblChooseFile', text:(i18nText('lblChooseFile')||'เลือกไฟล์')}), fileInput]));
 
   var previewBox = el('div',{id:'proposalImportPreviewBox', style:'margin-top:14px;'});
   modal.appendChild(previewBox);
 
-  var importBtn = el('button',{class:'btn btn-primary', text:'เริ่มนำเข้า', id:'btnConfirmProposalImport', disabled:'disabled'});
+  var importBtn = el('button',{class:'btn btn-primary', 'data-i18n':'btnStartImport', text:(i18nText('btnStartImport')||'เริ่มนำเข้า'), id:'btnConfirmProposalImport', disabled:'disabled'});
   importBtn.addEventListener('click', function(){ runProposalImport(importBtn); });
   modal.appendChild(el('div',{class:'form-footer'},[
-    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }}),
+    el('button',{class:'btn btn-secondary', 'data-i18n':'btnCloseModal', text:(i18nText('btnCloseModal')||'ปิด'), onclick:function(){ backdrop.remove(); }}),
     importBtn
   ]));
 
@@ -7264,7 +7401,7 @@ function openProposalImportModal(){
     var f = fileInput.files[0];
     if(!f) return;
     previewBox.innerHTML='';
-    previewBox.appendChild(el('div',{class:'help', text:'กำลังอ่านไฟล์...'}));
+    previewBox.appendChild(el('div',{class:'help', 'data-i18n':'txtReadingFile', text:(i18nText('txtReadingFile')||'กำลังอ่านไฟล์...')}));
     importBtn.setAttribute('disabled','disabled');
     var reader = new FileReader();
     reader.onload = function(e){
@@ -7275,12 +7412,12 @@ function openProposalImportModal(){
         processProposalImportAoa(aoa, previewBox, importBtn);
       }catch(ex){
         previewBox.innerHTML='';
-        previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'อ่านไฟล์ไม่สำเร็จ: '+(ex && ex.message ? ex.message : ex)}));
+        previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtReadFileFailed')||'อ่านไฟล์ไม่สำเร็จ: ')+(ex && ex.message ? ex.message : ex)}));
       }
     };
     reader.onerror = function(){
       previewBox.innerHTML='';
-      previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'อ่านไฟล์ไม่สำเร็จ'}));
+      previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', 'data-i18n':'txtReadFileFailedPlain', text:(i18nText('txtReadFileFailedPlain')||'อ่านไฟล์ไม่สำเร็จ')}));
     };
     reader.readAsArrayBuffer(f);
   });
@@ -7297,7 +7434,7 @@ var PROPOSAL_IMPORT_FIELD_LABELS = {
 function processProposalImportAoa(aoa, previewBox, importBtn){
   if(!aoa || aoa.length===0){
     previewBox.innerHTML='';
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไฟล์นี้ไม่มีข้อมูล'}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', 'data-i18n':'txtFileHasNoData', text:(i18nText('txtFileHasNoData')||'ไฟล์นี้ไม่มีข้อมูล')}));
     return;
   }
   var headerRow = aoa[0];
@@ -7311,11 +7448,11 @@ function processProposalImportAoa(aoa, previewBox, importBtn){
   });
   if(colMap.studentId===undefined){
     previewBox.innerHTML='';
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไม่พบคอลัมน์ "รหัสนักศึกษา" ในไฟล์ (แถวแรกต้องเป็นหัวตาราง)'}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', 'data-i18n':'txtMissingStudentIdCol', text:(i18nText('txtMissingStudentIdCol')||'ไม่พบคอลัมน์ "รหัสนักศึกษา" ในไฟล์ (แถวแรกต้องเป็นหัวตาราง)')}));
     return;
   }
   previewBox.innerHTML='';
-  previewBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบข้อมูล...'}));
+  previewBox.appendChild(el('div',{class:'help', 'data-i18n':'txtValidatingData', text:(i18nText('txtValidatingData')||'กำลังตรวจสอบข้อมูล...')}));
   recordsGetAll().then(function(existingRows){
     var latestByStudentId = {};
     existingRows.forEach(function(r){
@@ -7353,14 +7490,14 @@ function processProposalImportAoa(aoa, previewBox, importBtn){
     renderProposalImportPreview(previewBox, importBtn);
   }).catch(function(e){
     previewBox.innerHTML='';
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบข้อมูลไม่สำเร็จ: '+(e&&e.message?e.message:e)}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtValidateDataFailed')||'ตรวจสอบข้อมูลไม่สำเร็จ: ')+(e&&e.message?e.message:e)}));
   });
 }
 function renderProposalImportPreview(previewBox, importBtn){
   var rows = proposalImportParsedRows;
   previewBox.innerHTML='';
   if(rows.length===0){
-    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ไม่พบแถวข้อมูลในไฟล์ (นอกเหนือจากหัวตาราง)'}));
+    previewBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', 'data-i18n':'txtNoDataRowsInFile', text:(i18nText('txtNoDataRowsInFile')||'ไม่พบแถวข้อมูลในไฟล์ (นอกเหนือจากหัวตาราง)')}));
     importBtn.setAttribute('disabled','disabled');
     return;
   }
@@ -7368,20 +7505,20 @@ function renderProposalImportPreview(previewBox, importBtn){
   var noNewData = rows.filter(function(r){ return r.existing && Object.keys(r.fieldsToFill).length===0; });
   var notFound = rows.filter(function(r){ return !r.existing; });
   previewBox.appendChild(el('div',{class:'help', style:'font-weight:600;margin-bottom:8px;',
-    text:'พบทั้งหมด '+rows.length+' แถว — จะเติมข้อมูลให้ '+willFill.length+' คน, ข้าม '+noNewData.length+' คน (มีข้อมูลครบอยู่แล้วทุกช่อง), ไม่พบรหัสในระบบ '+notFound.length+' คน'}));
+    text:(i18nText('txtFoundRowsPrefix')||'พบทั้งหมด ')+rows.length+(i18nText('txtPropFillPrefix')||' แถว — จะเติมข้อมูลให้ ')+willFill.length+(i18nText('txtPropSkipMid')||' คน, ข้าม ')+noNewData.length+(i18nText('txtPropSkipSuffix')||' คน (มีข้อมูลครบอยู่แล้วทุกช่อง), ไม่พบรหัสในระบบ ')+notFound.length+(i18nText('txtPropNotFoundSuffix')||' คน')}));
   var wrap = el('div',{style:'max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:8px;'});
   var table = el('table',{style:'font-size:12px;'});
   var theadTr = el('tr');
-  ['แถว','รหัส นศ.','ชื่อ-นามสกุล','สถานะ'].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
+  [(i18nText('thRowNum')||'แถว'),(i18nText('thStudentIdShort')||'รหัส นศ.'),(i18nText('lblStudentName')||'ชื่อ-นามสกุล'),(i18nText('thStatus')||'สถานะ')].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
   table.appendChild(el('thead',{},[theadTr]));
   var tbody = el('tbody');
   rows.forEach(function(r){
     var statusText, statusColor;
-    if(!r.existing){ statusText='❌ ไม่พบรหัสนักศึกษานี้ในระบบ — ข้าม'; statusColor='#c0392b'; }
-    else if(Object.keys(r.fieldsToFill).length===0){ statusText='⏭ มีข้อมูลครบอยู่แล้วทุกช่อง — ข้าม'; statusColor='#6b7280'; }
+    if(!r.existing){ statusText=(i18nText('txtStudentIdNotFoundSkip')||'❌ ไม่พบรหัสนักศึกษานี้ในระบบ — ข้าม'); statusColor='#c0392b'; }
+    else if(Object.keys(r.fieldsToFill).length===0){ statusText=(i18nText('txtAllFieldsFullSkip')||'⏭ มีข้อมูลครบอยู่แล้วทุกช่อง — ข้าม'); statusColor='#6b7280'; }
     else {
-      var labels = Object.keys(r.fieldsToFill).map(function(k){ return PROPOSAL_IMPORT_FIELD_LABELS[k]||k; });
-      statusText='✅ จะเติม: '+labels.join(', '); statusColor='#1f8a4c';
+      var labels = Object.keys(r.fieldsToFill).map(function(k){ return (i18nText('propLbl_'+k)||PROPOSAL_IMPORT_FIELD_LABELS[k]||k); });
+      statusText=(i18nText('txtWillFillPrefix')||'✅ จะเติม: ')+labels.join(', '); statusColor='#1f8a4c';
     }
     tbody.appendChild(el('tr',{},[
       el('td',{text:String(r.rowNum)}), el('td',{text:r.studentId}), el('td',{text:r.studentName||'-'}),
@@ -7391,8 +7528,8 @@ function renderProposalImportPreview(previewBox, importBtn){
   table.appendChild(tbody);
   wrap.appendChild(table);
   previewBox.appendChild(wrap);
-  if(willFill.length>0){ importBtn.removeAttribute('disabled'); importBtn.textContent='เริ่มนำเข้า ('+willFill.length+' คน)'; }
-  else { importBtn.setAttribute('disabled','disabled'); importBtn.textContent='เริ่มนำเข้า'; }
+  if(willFill.length>0){ importBtn.removeAttribute('disabled'); importBtn.textContent=(i18nText('btnStartImport')||'เริ่มนำเข้า')+' ('+willFill.length+(i18nText('txtPeopleCountSuffix')||' คน)'); }
+  else { importBtn.setAttribute('disabled','disabled'); importBtn.textContent=(i18nText('btnStartImport')||'เริ่มนำเข้า'); }
 }
 function runProposalImport(importBtn){
   var rows = proposalImportParsedRows.filter(function(r){ return r.existing && Object.keys(r.fieldsToFill).length>0; });
@@ -7401,16 +7538,16 @@ function runProposalImport(importBtn){
   var progressBox = document.getElementById('proposalImportPreviewBox');
   var progressEl = el('div',{class:'help', style:'margin-top:10px;font-weight:600;'});
   progressBox.appendChild(progressEl);
-  progressEl.textContent = 'กำลังเตรียมนำเข้า...';
+  progressEl.textContent = (i18nText('txtPreparingImport')||'กำลังเตรียมนำเข้า...');
 
   var auditEntries = rows.map(function(r){ return makeAuditEntry('นำเข้าหัวข้อ/ข้อมูลสอบเค้าโครง (เติมช่องว่าง)', r.studentId, r.studentName); });
 
   function finishImport(updatedCount){
     return logAuditMany(auditEntries).then(function(){
       renderList();
-      progressEl.textContent = 'นำเข้าเสร็จสิ้น: เติมข้อมูลให้ '+updatedCount+' คน';
+      progressEl.textContent = (i18nText('txtPropImportDonePrefix')||'นำเข้าเสร็จสิ้น: เติมข้อมูลให้ ')+updatedCount+(i18nText('txtPeopleCountSuffix2')||' คน');
       toast(i18nText('toast045')||'นำเข้าข้อมูลเสร็จสิ้น');
-      importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
+      importBtn.textContent = (i18nText('txtImportCompleteBtn')||'นำเข้าเรียบร้อยแล้ว');
     });
   }
 
@@ -7419,7 +7556,7 @@ function runProposalImport(importBtn){
     var done = 0;
     rows.forEach(function(r, idx){
       chain = chain.then(function(){
-        progressEl.textContent = 'กำลังนำเข้า '+(idx+1)+' / '+rows.length+' ('+r.studentId+')';
+        progressEl.textContent = (i18nText('txtImportingPrefix')||'กำลังนำเข้า ')+(idx+1)+' / '+rows.length+' ('+r.studentId+')';
         var rec = Object.assign({}, r.existing, r.fieldsToFill, {updatedAt: Date.now()});
         return recordsPut(rec).then(function(){ done++; })
           .catch(function(e){ console.error('proposal import failed', r.studentId, e); });
@@ -7442,7 +7579,7 @@ function runProposalImport(importBtn){
       var rec = Object.assign({}, entry.rec, r.fieldsToFill, {updatedAt: Date.now()});
       updateOps.push({rowNumber:entry.rowNumber, rowArray:recordToRow(rec, cache.headers)});
     });
-    progressEl.textContent = 'กำลังบันทึกลง Google Sheets ('+updateOps.length+' รายการ)...';
+    progressEl.textContent = (i18nText('txtSavingToSheetsPrefix')||'กำลังบันทึกลง Google Sheets (')+updateOps.length+(i18nText('txtItemsCountSuffixEllipsis')||' รายการ)...');
     if(updateOps.length===0) return Promise.resolve();
     return sheetsBatchUpdateRows('Records', updateOps);
   }).then(function(){
@@ -7450,7 +7587,7 @@ function runProposalImport(importBtn){
     return finishImport(rows.length);
   }).catch(function(e){
     var reasonMsg = (e&&e.message?e.message:String(e));
-    progressEl.textContent = 'เกิดข้อผิดพลาดระหว่างนำเข้า: '+reasonMsg+' — ลองกดนำเข้าอีกครั้ง (ระบบเติมเฉพาะช่องว่าง จึงนำเข้าซ้ำได้โดยไม่ซ้ำซ้อน)';
+    progressEl.textContent = (i18nText('txtImportErrorPrefix')||'เกิดข้อผิดพลาดระหว่างนำเข้า: ')+reasonMsg+(i18nText('txtRetryImportHintProposal')||' — ลองกดนำเข้าอีกครั้ง (ระบบเติมเฉพาะช่องว่าง จึงนำเข้าซ้ำได้โดยไม่ซ้ำซ้อน)');
   });
 }
 /* แสดงรายการนำเข้าที่บันทึกไม่สำเร็จ (รหัส/ชื่อ/สาเหตุ) พร้อมปุ่มดูรายละเอียดและดาวน์โหลดเป็น Excel
@@ -7460,10 +7597,10 @@ function renderImportFailedList(container, details){
   if(old) old.remove();
   var box = el('div',{id:'importFailedBox', style:'margin-top:10px;border:1px solid var(--danger);border-radius:8px;padding:10px 12px;background:#fdecec;'});
   var headerRow = el('div',{style:'display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;'});
-  headerRow.appendChild(el('div',{style:'font-weight:600;color:var(--danger);', text:'⚠️ รายการที่บันทึกไม่สำเร็จ ('+details.length+' รายการ)'}));
+  headerRow.appendChild(el('div',{style:'font-weight:600;color:var(--danger);', text:(i18nText('txtFailedItemsPrefix')||'⚠️ รายการที่บันทึกไม่สำเร็จ (')+details.length+(i18nText('txtItemsCountSuffix2')||' รายการ')+')'}));
   var btnRow = el('div',{style:'display:flex;gap:8px;'});
-  var toggleBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'ดูรายละเอียด'});
-  var downloadBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', text:'⬇ ดาวน์โหลด Excel'});
+  var toggleBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', 'data-i18n':'btnViewDetails', text:(i18nText('btnViewDetails')||'ดูรายละเอียด')});
+  var downloadBtn = el('button',{type:'button', class:'btn btn-secondary btn-sm', 'data-i18n':'btnDownloadExcel', text:(i18nText('btnDownloadExcel')||'⬇ ดาวน์โหลด Excel')});
   btnRow.appendChild(toggleBtn); btnRow.appendChild(downloadBtn);
   headerRow.appendChild(btnRow);
   box.appendChild(headerRow);
@@ -7471,7 +7608,7 @@ function renderImportFailedList(container, details){
   var listWrap = el('div',{style:'display:none;max-height:260px;overflow:auto;margin-top:10px;border-top:1px solid #f3c8c3;padding-top:8px;'});
   var table = el('table',{style:'font-size:12px;'});
   var theadTr = el('tr');
-  ['รหัสนักศึกษา','ชื่อ-นามสกุล','สาเหตุ'].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
+  [(i18nText('lblStudentId')||'รหัสนักศึกษา'),(i18nText('lblStudentName')||'ชื่อ-นามสกุล'),(i18nText('thReason')||'สาเหตุ')].forEach(function(h){ theadTr.appendChild(el('th',{text:h})); });
   table.appendChild(el('thead',{},[theadTr]));
   var tbody = el('tbody');
   details.forEach(function(d){
@@ -7486,7 +7623,7 @@ function renderImportFailedList(container, details){
   toggleBtn.addEventListener('click', function(){
     var showing = listWrap.style.display !== 'none';
     listWrap.style.display = showing ? 'none' : 'block';
-    toggleBtn.textContent = showing ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
+    toggleBtn.textContent = showing ? (i18nText('btnViewDetails')||'ดูรายละเอียด') : (i18nText('btnHideDetails')||'ซ่อนรายละเอียด');
   });
   downloadBtn.addEventListener('click', function(){
     var wb = XLSX.utils.book_new();
@@ -7643,13 +7780,13 @@ function renderDeptPinSection(){
   if(!listEl) return;
   listEl.innerHTML='';
   if(!deptPins || deptPins.length===0){
-    listEl.appendChild(el('div',{class:'help', text:'ยังไม่มีสาขาไหนตั้งรหัสผ่านไว้'}));
+    listEl.appendChild(el('div',{class:'help', 'data-i18n':'txtNoDeptPinSet', text:(i18nText('txtNoDeptPinSet')||'ยังไม่มีสาขาไหนตั้งรหัสผ่านไว้')}));
     return;
   }
   deptPins.forEach(function(d){
     var chip = el('span',{class:'chip'},[
       el('span',{text:'✅ '+d.department}),
-      el('button',{type:'button', text:'✕', title:'ปิดใช้งานรหัสผ่านของสาขานี้', onclick:function(){ removeDeptPin(d.department); }})
+      el('button',{type:'button', text:'✕', title:(i18nText('titleDisableDeptPin')||'ปิดใช้งานรหัสผ่านของสาขานี้'), 'data-i18n-title':'titleDisableDeptPin', onclick:function(){ removeDeptPin(d.department); }})
     ]);
     listEl.appendChild(chip);
   });
@@ -8138,13 +8275,13 @@ function openAdvisorEditModal(advisor){
   var root = document.getElementById('modalRoot');
   var backdrop = el('div',{class:'modal-backdrop'});
   var modal = el('div',{class:'modal'});
-  modal.appendChild(el('h3',{text:'แก้ไขข้อมูลอาจารย์'}));
+  modal.appendChild(el('h3',{'data-i18n':'hEditAdvisor', text:(i18nText('hEditAdvisor')||'แก้ไขข้อมูลอาจารย์')}));
   var nameField = el('div',{class:'field'},[
-    el('label',{text:'ชื่อ-ตำแหน่งทางวิชาการ'}),
+    el('label',{'data-i18n':'lblAdvisorNameRank', text:(i18nText('lblAdvisorNameRank')||'ชื่อ-ตำแหน่งทางวิชาการ')}),
     el('input',{type:'text', id:'editAdvisorName', value:advisor.name})
   ]);
   modal.appendChild(nameField);
-  var rankOptions = [['','ไม่ระบุ (ไม่คำนวณโควตา)'],['ดร.','ดร. (โควตา 5 คน)'],['ผศ.','ผศ. (โควตา 10 คน)'],['รศ.','รศ. (โควตา 10 คน)'],['ศ.','ศ. (โควตา 10 คน)']];
+  var rankOptions = [['',(i18nText('optRankNone')||'ไม่ระบุ (ไม่คำนวณโควตา)')],['ดร.',(i18nText('optRankDr')||'ดร. (โควตา 5 คน)')],['ผศ.',(i18nText('optRankAsstProf')||'ผศ. (โควตา 10 คน)')],['รศ.',(i18nText('optRankAssocProf')||'รศ. (โควตา 10 คน)')],['ศ.',(i18nText('optRankProf')||'ศ. (โควตา 10 คน)')]];
   var rankSelect = el('select',{id:'editAdvisorRank'}, rankOptions.map(function(o){
     return el('option',{value:o[0], text:o[1]});
   }));
@@ -8154,11 +8291,11 @@ function openAdvisorEditModal(advisor){
      พอเปิดแก้ไขอีกครั้งกลับเห็น ศ. ถูกเลือกอยู่ (และถ้ากดบันทึกซ้ำโดยไม่สังเกต จะทับข้อมูลจริงเป็น ศ. ไปเลย) */
   rankSelect.value = advisor.rank || '';
   var rankField = el('div',{class:'field'},[
-    el('label',{text:'ตำแหน่งทางวิชาการ (ใช้คำนวณโควตาที่ปรึกษา)'}),
+    el('label',{'data-i18n':'lblAdvisorRank', text:(i18nText('lblAdvisorRank')||'ตำแหน่งทางวิชาการ (ใช้คำนวณโควตาที่ปรึกษา)')}),
     rankSelect
   ]);
   modal.appendChild(rankField);
-  var roleWrap = el('div',{class:'field'},[el('label',{text:'ทำหน้าที่ได้ (เลือกได้มากกว่า 1)'})]);
+  var roleWrap = el('div',{class:'field'},[el('label',{'data-i18n':'lblAdvisorCanActAs', text:(i18nText('lblAdvisorCanActAs')||'ทำหน้าที่ได้ (เลือกได้มากกว่า 1)')})]);
   var roleGroup = el('div',{class:'radio-group'});
   masterData.positions.forEach(function(p){
     var checked = (advisor.roles||[]).indexOf(p.name)>-1;
@@ -8177,14 +8314,14 @@ function openAdvisorEditModal(advisor){
   var cascadeField = el('div',{class:'field'},[
     el('label',{},[
       el('input',{type:'checkbox', id:'editAdvisorCascade'}),
-      document.createTextNode(' ปรับปรุงชื่อนี้ในข้อมูลนักศึกษาที่เคยบันทึกไว้แล้วด้วย')
+      document.createTextNode(' '+(i18nText('chkCascadeAdvisorName')||'ปรับปรุงชื่อนี้ในข้อมูลนักศึกษาที่เคยบันทึกไว้แล้วด้วย'))
     ]),
-    el('div',{class:'help', text:'ใช้เฉพาะกรณีแก้ไขตัวสะกดผิด — ถ้าเป็นการเปลี่ยนชื่อ/ตำแหน่งจริง (เช่น เปลี่ยนนามสกุล หรือได้ตำแหน่งทางวิชาการใหม่) ไม่ควรติ๊ก เพื่อให้ข้อมูลเก่ายังตรงกับคำสั่งสอบที่เคยออกไปแล้ว'})
+    el('div',{class:'help', 'data-i18n':'helpCascadeAdvisorName', text:(i18nText('helpCascadeAdvisorName')||'ใช้เฉพาะกรณีแก้ไขตัวสะกดผิด — ถ้าเป็นการเปลี่ยนชื่อ/ตำแหน่งจริง (เช่น เปลี่ยนนามสกุล หรือได้ตำแหน่งทางวิชาการใหม่) ไม่ควรติ๊ก เพื่อให้ข้อมูลเก่ายังตรงกับคำสั่งสอบที่เคยออกไปแล้ว')})
   ]);
   modal.appendChild(cascadeField);
   modal.appendChild(el('div',{class:'form-footer'},[
-    el('button',{class:'btn btn-secondary', text:'ยกเลิก', onclick:function(){ backdrop.remove(); }}),
-    el('button',{class:'btn btn-primary', text:'บันทึก', onclick:function(){
+    el('button',{class:'btn btn-secondary', 'data-i18n':'btnCancel', text:(i18nText('btnCancel')||'ยกเลิก'), onclick:function(){ backdrop.remove(); }}),
+    el('button',{class:'btn btn-primary', 'data-i18n':'btnSave', text:(i18nText('btnSave')||'บันทึก'), onclick:function(){
       var newName = document.getElementById('editAdvisorName').value.trim();
       var newRoles = Array.prototype.slice.call(modal.querySelectorAll('[data-edit-role]:checked')).map(function(c){ return c.value; });
       var newRank = document.getElementById('editAdvisorRank').value;
@@ -8463,12 +8600,12 @@ function purgeDeletedUI(){
   var resultBox = document.getElementById('purgeDeletedResult');
   resultBox.innerHTML='';
   if(!cloudModeEnabled){
-    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ฟีเจอร์นี้ใช้ได้เฉพาะตอนเปิดใช้งาน "ระบบข้อมูลกลาง" เท่านั้น เพราะโหมดในเครื่องนี้ลบข้อมูลจริงทันทีอยู่แล้ว ไม่มีข้อมูลสะสมให้ล้าง'}));
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', 'data-i18n':'txtPurgeCloudOnly', text:(i18nText('txtPurgeCloudOnly')||'ฟีเจอร์นี้ใช้ได้เฉพาะตอนเปิดใช้งาน "ระบบข้อมูลกลาง" เท่านั้น เพราะโหมดในเครื่องนี้ลบข้อมูลจริงทันทีอยู่แล้ว ไม่มีข้อมูลสะสมให้ล้าง')}));
     return;
   }
-  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบจำนวนรายการที่ถูกลบไว้...'}));
+  resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtCheckingDeletedCount', text:(i18nText('txtCheckingDeletedCount')||'กำลังตรวจสอบจำนวนรายการที่ถูกลบไว้...')}));
   var origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  btn.disabled = true; btn.textContent = (i18nText('txtChecking')||'กำลังตรวจสอบ...');
   ensureAuthed().then(function(){
     return Promise.all([fetchRecordsSheet(), fetchFilesSheet(), fetchDocIntakeSheet()]);
   }).then(function(results){
@@ -8481,27 +8618,27 @@ function purgeDeletedUI(){
     resultBox.innerHTML='';
     btn.disabled=false; btn.textContent=origText;
     if(total===0){
-      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบรายการที่ถูกลบค้างอยู่ ไม่ต้องล้างข้อมูล'}));
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', 'data-i18n':'txtNoDeletedRowsFound', text:(i18nText('txtNoDeletedRowsFound')||'✅ ไม่พบรายการที่ถูกลบค้างอยู่ ไม่ต้องล้างข้อมูล')}));
       return;
     }
-    resultBox.appendChild(el('div',{class:'help', text:'พบรายการที่ถูกลบไว้ค้างอยู่ในชีททั้งหมด '+total+' รายการ (รายการสอบ '+counts.records+', ไฟล์แนบ '+counts.files+', เอกสารรับเข้า '+counts.docIntake+')'}));
-    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;color:#c0392b;', text:'🗑️ ยืนยันล้างถาวร ('+total+' รายการ)'});
+    resultBox.appendChild(el('div',{class:'help', text:(i18nText('txtFoundDeletedRowsPrefix')||'พบรายการที่ถูกลบไว้ค้างอยู่ในชีททั้งหมด ')+total+(i18nText('txtFoundDeletedRowsMid')||' รายการ (รายการสอบ ')+counts.records+(i18nText('txtFoundDeletedRowsMid2')||', ไฟล์แนบ ')+counts.files+(i18nText('txtFoundDeletedRowsMid3')||', เอกสารรับเข้า ')+counts.docIntake+')'}));
+    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;color:#c0392b;', text:(i18nText('btnPurgeConfirmPrefix')||'🗑️ ยืนยันล้างถาวร (')+total+(i18nText('txtItemsCountSuffix')||' รายการ)')});
     confirmBtn.addEventListener('click', function(){
       if(!confirm((i18nText('confirmPurgeDeletedPrefix')||'ยืนยันลบแถวที่ถูกลบไว้ ')+total+(i18nText('confirmPurgeDeletedSuffix')||' รายการออกจากชีทถาวร? การกระทำนี้ไม่สามารถกู้คืนได้อีก (ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ)'))) return;
-      confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังล้างข้อมูล...';
+      confirmBtn.disabled = true; confirmBtn.textContent = (i18nText('txtPurging')||'กำลังล้างข้อมูล...');
       purgeAllDeletedRecords().then(function(res){
         resultBox.innerHTML='';
-        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว รวม '+res.total+' รายการ'}));
+        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:(i18nText('txtPurgeDonePrefix')||'✅ ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว รวม ')+res.total+(i18nText('txtItemsCountSuffix2')||' รายการ')}));
         toast(i18nText('toast063')||'ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว');
       }).catch(function(e){
         toast((i18nText('toastClearDataFailed')||'ล้างข้อมูลไม่สำเร็จ: ')+(e && e.message ? e.message : e), true);
-        confirmBtn.disabled=false; confirmBtn.textContent = '🗑️ ยืนยันล้างถาวร ('+total+' รายการ)';
+        confirmBtn.disabled=false; confirmBtn.textContent = (i18nText('btnPurgeConfirmPrefix')||'🗑️ ยืนยันล้างถาวร (')+total+(i18nText('txtItemsCountSuffix')||' รายการ)');
       });
     });
     resultBox.appendChild(confirmBtn);
   }).catch(function(e){
     resultBox.innerHTML='';
-    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtCheckFailedPrefix')||'ตรวจสอบไม่สำเร็จ: ')+(e && e.message ? e.message : e)}));
     btn.disabled=false; btn.textContent=origText;
   });
 }
@@ -8623,10 +8760,10 @@ function checkBrokenDriveFiles(){
   var btn = document.getElementById('btnCheckBrokenFiles');
   var resultBox = document.getElementById('brokenFilesResult');
   resultBox.innerHTML = '';
-  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtChecking', text:(i18nText('txtChecking')||'กำลังตรวจสอบ...')}));
   var origText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = 'กำลังตรวจสอบ...';
+  btn.textContent = (i18nText('txtChecking')||'กำลังตรวจสอบ...');
   ensureAuthed().then(function(){
     return Promise.all([getAllFilesAnyMode(), recordsGetAll()]);
   }).then(function(results){
@@ -8634,7 +8771,7 @@ function checkBrokenDriveFiles(){
     var driveFiles = allFiles.filter(function(f){ return f.driveFileId; });
     resultBox.innerHTML = '';
     if(driveFiles.length===0){
-      resultBox.appendChild(el('div',{class:'help', text:'ยังไม่มีไฟล์ที่อัปโหลดขึ้น Drive ในระบบให้ตรวจสอบ'}));
+      resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtNoDriveFilesToCheck', text:(i18nText('txtNoDriveFilesToCheck')||'ยังไม่มีไฟล์ที่อัปโหลดขึ้น Drive ในระบบให้ตรวจสอบ')}));
       return;
     }
     var recordById = {};
@@ -8646,29 +8783,29 @@ function checkBrokenDriveFiles(){
         .then(function(res){ return res.json(); })
         .then(function(data){
           checkedCount++;
-          if(data.trashed){ broken.push(Object.assign({reason:'ถูกย้ายไปถังขยะใน Drive'}, f)); }
+          if(data.trashed){ broken.push(Object.assign({reason:(i18nText('txtReasonTrashed')||'ถูกย้ายไปถังขยะใน Drive')}, f)); }
         })
         .catch(function(){
           checkedCount++;
-          broken.push(Object.assign({reason:'ไม่พบไฟล์ (ถูกลบ/ย้าย/ไม่มีสิทธิ์เข้าถึงแล้ว)'}, f));
+          broken.push(Object.assign({reason:(i18nText('txtReasonFileNotFound')||'ไม่พบไฟล์ (ถูกลบ/ย้าย/ไม่มีสิทธิ์เข้าถึงแล้ว)')}, f));
         });
     })).then(function(){
       resultBox.innerHTML='';
-      resultBox.appendChild(el('div',{class:'help', text:'ตรวจสอบแล้ว '+checkedCount+' ไฟล์ พบปัญหา '+broken.length+' ไฟล์'}));
+      resultBox.appendChild(el('div',{class:'help', text:(i18nText('txtCheckedFilesPrefix')||'ตรวจสอบแล้ว ')+checkedCount+(i18nText('txtCheckedFilesMid')||' ไฟล์ พบปัญหา ')+broken.length+(i18nText('txtCheckedFilesSuffix')||' ไฟล์')}));
       if(broken.length===0){
-        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบไฟล์ที่มีปัญหา ทุกลิงก์ใช้งานได้ปกติ'}));
+        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', 'data-i18n':'txtNoBrokenFiles', text:(i18nText('txtNoBrokenFiles')||'✅ ไม่พบไฟล์ที่มีปัญหา ทุกลิงก์ใช้งานได้ปกติ')}));
         return;
       }
       broken.forEach(function(f){
         var rec = recordById[f.recordId];
-        var studentTxt = rec ? (rec.studentId+' — '+rec.studentName) : ('(ไม่พบข้อมูลนักศึกษาที่เชื่อมกับไฟล์นี้ — เรคคอร์ด '+f.recordId+')');
-        var SECTION_LABELS = { proposal:'3.1 เค้าโครง', defense:'3.2 ป้องกัน/IS', publication:'หมวดที่ 5 ผลงานตีพิมพ์',
-          english:'หมวดที่ 1.1 ผลภาษาอังกฤษ', computer:'หมวดที่ 1.1 ผลคอมพิวเตอร์', qualifying:'หมวดที่ 1.1 สอบวัดความรู้',
-          book:'หมวดที่ 6 เล่มฉบับสมบูรณ์', advisorAppoint:'หมวดที่ 2 คำสั่งแต่งตั้งที่ปรึกษา' };
-        var sectionTxt = SECTION_LABELS[f.section] || 'หมวดที่ 6 เล่มฉบับสมบูรณ์';
+        var studentTxt = rec ? (rec.studentId+' — '+rec.studentName) : ((i18nText('txtNoLinkedStudentPrefix')||'(ไม่พบข้อมูลนักศึกษาที่เชื่อมกับไฟล์นี้ — เรคคอร์ด ')+f.recordId+')');
+        var SECTION_LABELS = { proposal:(i18nText('secLbl_proposal')||'3.1 เค้าโครง'), defense:(i18nText('secLbl_defense')||'3.2 ป้องกัน/IS'), publication:(i18nText('secLbl_publication')||'หมวดที่ 5 ผลงานตีพิมพ์'),
+          english:(i18nText('secLbl_english')||'หมวดที่ 1.1 ผลภาษาอังกฤษ'), computer:(i18nText('secLbl_computer')||'หมวดที่ 1.1 ผลคอมพิวเตอร์'), qualifying:(i18nText('secLbl_qualifying')||'หมวดที่ 1.1 สอบวัดความรู้'),
+          book:(i18nText('secLbl_book')||'หมวดที่ 6 เล่มฉบับสมบูรณ์'), advisorAppoint:(i18nText('secLbl_advisorAppoint')||'หมวดที่ 2 คำสั่งแต่งตั้งที่ปรึกษา') };
+        var sectionTxt = SECTION_LABELS[f.section] || (i18nText('secLbl_book')||'หมวดที่ 6 เล่มฉบับสมบูรณ์');
         var row = el('div',{class:'attach-item'},[
           el('span',{class:'name', text:'⚠️ '+f.name+' — '+studentTxt+' ('+sectionTxt+') — '+f.reason}),
-          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', text:'ลบรายการนี้ออกจากระบบ', onclick:function(){
+          el('button',{type:'button', class:'link-btn', style:'color:#c0392b', 'data-i18n':'btnRemoveFromSystem', text:(i18nText('btnRemoveFromSystem')||'ลบรายการนี้ออกจากระบบ'), onclick:function(){
             if(!confirm(i18nText('confirmDeleteMissingFileEntry')||'ลบรายการไฟล์นี้ออกจากระบบ? (ไม่กระทบไฟล์ต้นฉบับใน Drive เพราะหาไม่เจออยู่แล้ว) หลังลบสามารถแนบไฟล์ใหม่ทดแทนได้ที่หน้าบันทึกข้อมูลของนักศึกษาคนนี้')) return;
             filesDelete(f.id).then(function(){ row.remove(); toast(i18nText('toast024')||'ลบรายการแล้ว'); });
           }})
@@ -8678,7 +8815,7 @@ function checkBrokenDriveFiles(){
     });
   }).catch(function(e){
     resultBox.innerHTML='';
-    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+e}));
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtCheckFailedPrefix')||'ตรวจสอบไม่สำเร็จ: ')+e}));
   }).then(function(){
     btn.disabled = false;
     btn.textContent = origText;

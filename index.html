@@ -392,10 +392,13 @@ if('serviceWorker' in navigator){
   .landing-nav-links{display:flex;gap:22px;}
   .landing-nav-links a{color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;transition:color .15s;}
   .landing-nav-links a:hover{color:var(--primary);}
-  .landing-lang-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0;}
-  .landing-lang-toggle .lang-btn{border:none;background:#fff;color:var(--muted);font-weight:700;font-size:12.5px;padding:6px 12px;cursor:pointer;transition:background .15s,color .15s;}
-  .landing-lang-toggle .lang-btn.active{background:var(--primary);color:#fff;}
-  .landing-lang-toggle .lang-btn:not(.active):hover{background:#f3f4f8;}
+  .landing-lang-toggle,.lock-lang-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0;}
+  .landing-lang-toggle .lang-btn,.lock-lang-toggle .lang-btn{border:none;background:#fff;color:var(--muted);font-weight:700;font-size:12.5px;padding:6px 12px;cursor:pointer;transition:background .15s,color .15s;}
+  .landing-lang-toggle .lang-btn.active,.lock-lang-toggle .lang-btn.active{background:var(--primary);color:#fff;}
+  .landing-lang-toggle .lang-btn:not(.active):hover,.lock-lang-toggle .lang-btn:not(.active):hover{background:#f3f4f8;}
+  .lock-box{position:relative;}
+  .lock-box .lock-lang-toggle{position:absolute;top:14px;right:14px;}
+  #topbarLangToggle{margin-right:2px;}
   .btn-on-dark{background:#fff;color:var(--primary-dark);}
   .btn-on-dark:hover{filter:brightness(.96);}
   .btn-lg{padding:13px 26px;font-size:16px;}
@@ -511,39 +514,47 @@ if('serviceWorker' in navigator){
 
 <div id="lockScreen" class="lock-overlay">
   <div class="lock-box">
+    <div class="lock-lang-toggle">
+      <button type="button" class="lang-btn active" id="btnLockLangTH" data-lang="th">TH</button>
+      <button type="button" class="lang-btn" id="btnLockLangEN" data-lang="en">EN</button>
+    </div>
     <div class="lock-icon">🔒</div>
-    <h2 id="lockTitle">เข้าสู่ระบบ</h2>
+    <h2 id="lockTitle" data-i18n="lockTitleLogin">เข้าสู่ระบบ</h2>
     <div id="lockLoginForm">
-      <input type="password" id="lockPinInput" placeholder="กรอกรหัสผ่าน" autocomplete="current-password">
+      <input type="password" id="lockPinInput" placeholder="กรอกรหัสผ่าน" data-i18n-ph="lockPinPlaceholder" autocomplete="current-password">
       <div class="lock-error" id="lockError"></div>
-      <button type="button" class="btn btn-primary" id="btnLockSubmit">ปลดล็อก</button>
+      <button type="button" class="btn btn-primary" id="btnLockSubmit" data-i18n="lockSubmitBtn">ปลดล็อก</button>
       <div class="help" id="lockGoToAdminSetupWrap" style="display:none;margin-top:10px;">
-        <a href="javascript:void(0)" id="lockGoToAdminSetupLink">ยังไม่เคยตั้งรหัสแอดมินบนเครื่องนี้? ตั้งรหัสแอดมินที่นี่</a>
+        <a href="javascript:void(0)" id="lockGoToAdminSetupLink" data-i18n="lockGoToAdminSetupLink">ยังไม่เคยตั้งรหัสแอดมินบนเครื่องนี้? ตั้งรหัสแอดมินที่นี่</a>
       </div>
     </div>
     <div id="lockSetupForm" style="display:none;">
-      <div class="help" style="text-align:left;" id="lockSetupHelpText">ตั้งรหัสผ่านสำหรับเข้าใช้งานระบบนี้ครั้งแรก (อย่างน้อย 4 ตัวอักษร) โปรดจดจำไว้ให้ดี — หากลืมจะไม่สามารถกู้คืนได้ ต้องล้างข้อมูลเบราว์เซอร์ทั้งหมดเพื่อเริ่มใหม่</div>
-      <input type="password" id="lockSetupPin1" placeholder="ตั้งรหัสผ่าน" autocomplete="new-password">
-      <input type="password" id="lockSetupPin2" placeholder="ยืนยันรหัสผ่านอีกครั้ง" autocomplete="new-password">
+      <div class="help" style="text-align:left;" id="lockSetupHelpText" data-i18n="lockSetupHelpFirst">ตั้งรหัสผ่านสำหรับเข้าใช้งานระบบนี้ครั้งแรก (อย่างน้อย 4 ตัวอักษร) โปรดจดจำไว้ให้ดี — หากลืมจะไม่สามารถกู้คืนได้ ต้องล้างข้อมูลเบราว์เซอร์ทั้งหมดเพื่อเริ่มใหม่</div>
+      <input type="password" id="lockSetupPin1" placeholder="ตั้งรหัสผ่าน" data-i18n-ph="lockSetupPin1Placeholder" autocomplete="new-password">
+      <input type="password" id="lockSetupPin2" placeholder="ยืนยันรหัสผ่านอีกครั้ง" data-i18n-ph="lockSetupPin2Placeholder" autocomplete="new-password">
       <div class="lock-error" id="lockSetupError"></div>
-      <button type="button" class="btn btn-primary" id="btnLockSetupSubmit">ตั้งรหัสผ่านและเริ่มใช้งาน</button>
+      <button type="button" class="btn btn-primary" id="btnLockSetupSubmit" data-i18n="lockSetupSubmitBtn">ตั้งรหัสผ่านและเริ่มใช้งาน</button>
       <div class="help" id="lockBackToLoginWrap" style="display:none;margin-top:10px;">
-        <a href="javascript:void(0)" id="lockBackToLoginLink">← กลับไปหน้าเข้าสู่ระบบ</a>
+        <a href="javascript:void(0)" id="lockBackToLoginLink" data-i18n="lockBackToLoginLink">← กลับไปหน้าเข้าสู่ระบบ</a>
       </div>
     </div>
   </div>
 </div>
 
 <header class="topbar">
-  <div class="brand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
+  <div class="brand" data-i18n="navBrand"><span class="logo">🎓</span> ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์</div>
   <div class="topbar-right">
     <div class="global-search" id="globalSearchWrap">
-      <input type="text" id="globalSearchInput" placeholder="🔍 ค้นหานักศึกษา...">
+      <input type="text" id="globalSearchInput" placeholder="🔍 ค้นหานักศึกษา..." data-i18n-ph="topbarSearchPlaceholder">
       <div class="lookup-result-list" id="globalSearchResults" style="display:none;"></div>
     </div>
     <div class="drive-status" id="driveStatus"><span class="dot"></span><span id="driveStatusText">ยังไม่เชื่อมต่อ Google Drive</span></div>
     <div class="badge" id="roleBadge">เจ้าหน้าที่ (Admin)</div>
-    <button type="button" class="btn-lock-nav" id="btnLockNow">🔒 ล็อกระบบ</button>
+    <div class="lock-lang-toggle" id="topbarLangToggle">
+      <button type="button" class="lang-btn active" id="btnTopbarLangTH" data-lang="th">TH</button>
+      <button type="button" class="lang-btn" id="btnTopbarLangEN" data-lang="en">EN</button>
+    </div>
+    <button type="button" class="btn-lock-nav" id="btnLockNow" data-i18n="topbarLockBtn">🔒 ล็อกระบบ</button>
   </div>
 </header>
 <div id="offlineSyncBanner" style="display:none;background:#fef3c7;border-bottom:1px solid #f59e0b;padding:10px 20px;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;">
@@ -553,16 +564,16 @@ if('serviceWorker' in navigator){
 </div>
 <div class="app-layout">
 <nav class="tabs">
-  <button data-view="summary" class="active">📊 แดชบอร์ด</button>
-  <button data-view="docintake">📥 ลงทะเบียนรับเอกสาร</button>
-  <button data-view="dashboard">🔍 ตรวจสอบข้อมูล</button>
-  <button data-view="advisors">👨‍🏫 ที่ปรึกษา</button>
-  <button data-view="advisorlist">👥 รายชื่ออาจารย์</button>
-  <button data-view="form">📝 บันทึกข้อมูล</button>
-  <button data-view="list">📋 รายการทั้งหมด</button>
-  <button data-view="gradlist">📤 รายชื่อรอส่ง</button>
-  <button data-view="settings">⚙️ ตั้งค่า</button>
-  <button data-view="auditlog">📜 ประวัติการแก้ไข</button>
+  <button data-view="summary" class="active" data-i18n="navTabSummary">📊 แดชบอร์ด</button>
+  <button data-view="docintake" data-i18n="navTabDocintake">📥 ลงทะเบียนรับเอกสาร</button>
+  <button data-view="dashboard" data-i18n="navTabLookup">🔍 ตรวจสอบข้อมูล</button>
+  <button data-view="advisors" data-i18n="navTabAdvisors">👨‍🏫 ที่ปรึกษา</button>
+  <button data-view="advisorlist" data-i18n="navTabAdvisorlist">👥 รายชื่ออาจารย์</button>
+  <button data-view="form" data-i18n="navTabForm">📝 บันทึกข้อมูล</button>
+  <button data-view="list" data-i18n="navTabList">📋 รายการทั้งหมด</button>
+  <button data-view="gradlist" data-i18n="navTabGradlist">📤 รายชื่อรอส่ง</button>
+  <button data-view="settings" data-i18n="navTabSettings">⚙️ ตั้งค่า</button>
+  <button data-view="auditlog" data-i18n="navTabAuditlog">📜 ประวัติการแก้ไข</button>
 </nav>
 <main>
 
@@ -2411,17 +2422,50 @@ function bindLandingPageEvents(){
     var btn = document.getElementById(id);
     if(btn) btn.addEventListener('click', enterFromLandingPage);
   });
-  document.getElementById('btnLangTH').addEventListener('click', function(){ applyLandingLang('th'); });
-  document.getElementById('btnLangEN').addEventListener('click', function(){ applyLandingLang('en'); });
+  ['btnLangTH','btnLockLangTH','btnTopbarLangTH'].forEach(function(id){
+    var b=document.getElementById(id); if(b) b.addEventListener('click', function(){ applyLandingLang('th'); });
+  });
+  ['btnLangEN','btnLockLangEN','btnTopbarLangEN'].forEach(function(id){
+    var b=document.getElementById(id); if(b) b.addEventListener('click', function(){ applyLandingLang('en'); });
+  });
   var savedLang = 'th';
   try{ savedLang = localStorage.getItem(LANDING_LANG_KEY) || 'th'; }catch(e){}
   applyLandingLang(savedLang);
 }
-/* ===== หน้า Landing Page: สลับภาษาไทย/อังกฤษ (เฉพาะหน้านี้เท่านั้น ยังไม่รวมส่วนอื่นของระบบหลังล็อกอิน) =====
-   เก็บข้อความ 2 ภาษาไว้ใน LANDING_I18N คู่กับ data-i18n="คีย์" ที่ติดไว้บน element ที่ต้องการแปลในหน้า Landing
+/* ===== สลับภาษาไทย/อังกฤษ ของระบบ =====
+   เริ่มจากทำเฉพาะหน้า Landing Page ก่อน ตอนนี้ขยายมาครอบคลุมหน้าล็อกอิน (เข้าสู่ระบบ/ตั้งรหัสผ่าน) +
+   เมนูหลัก (nav) + แถบด้านบน (topbar) ด้วยแล้ว (ยังไม่รวมฟอร์ม/หัวข้อการ์ดในแต่ละหน้า จะขยายเพิ่มทีละนิดในรอบถัดไป)
+   เก็บข้อความ 2 ภาษาไว้ใน LANDING_I18N คู่กับ data-i18n="คีย์" (แทนที่ innerHTML) หรือ data-i18n-ph="คีย์" (แทนที่ placeholder)
+   ที่ติดไว้บน element ที่ต้องการแปล — ใช้ i18nText(key) เพื่อดึงข้อความตามภาษาปัจจุบันในโค้ด JS ส่วนอื่น (เช่น ข้อความที่ตั้งผ่าน textContent ตรง ๆ)
    จำภาษาที่เลือกไว้ใน localStorage (ต่อเบราว์เซอร์ ไม่ผูกกับบัญชี) เพื่อให้ยังเป็นภาษาเดิมเมื่อกลับมาเปิดใหม่ */
 var LANDING_LANG_KEY = 'thesisLandingLang';
 var LANDING_I18N = {
+  lockTitleLogin: {th:'เข้าสู่ระบบ', en:'Log In'},
+  lockTitleSetup: {th:'ตั้งค่าเริ่มต้น', en:'Initial Setup'},
+  lockTitleAdminSetup: {th:'ตั้งรหัสแอดมินสำหรับเครื่องนี้', en:'Set Admin Password for This Device'},
+  lockPinPlaceholder: {th:'กรอกรหัสผ่าน', en:'Enter password'},
+  lockSubmitBtn: {th:'ปลดล็อก', en:'Unlock'},
+  lockGoToAdminSetupLink: {th:'ยังไม่เคยตั้งรหัสแอดมินบนเครื่องนี้? ตั้งรหัสแอดมินที่นี่', en:'No admin password set on this device yet? Set one here'},
+  lockSetupHelpFirst: {th:'ตั้งรหัสผ่านสำหรับเข้าใช้งานระบบนี้ครั้งแรก (อย่างน้อย 4 ตัวอักษร) โปรดจดจำไว้ให้ดี — หากลืมจะไม่สามารถกู้คืนได้ ต้องล้างข้อมูลเบราว์เซอร์ทั้งหมดเพื่อเริ่มใหม่',
+    en:'Set a password to use this system for the first time (at least 4 characters). Please remember it well — if forgotten it cannot be recovered, and all browser data must be cleared to start over.'},
+  lockSetupHelpAdmin: {th:'ตั้งรหัสผ่านแอดมินสำหรับเครื่องนี้ (อย่างน้อย 4 ตัวอักษร) — จะใช้รหัสเดิมที่เคยตั้งไว้บนเครื่องอื่น หรือจะตั้งรหัสใหม่ก็ได้ โปรดจดจำไว้ให้ดี',
+    en:'Set an admin password for this device (at least 4 characters) — you may reuse a password already set on another device, or choose a new one. Please remember it well.'},
+  lockSetupPin1Placeholder: {th:'ตั้งรหัสผ่าน', en:'Set password'},
+  lockSetupPin2Placeholder: {th:'ยืนยันรหัสผ่านอีกครั้ง', en:'Confirm password'},
+  lockSetupSubmitBtn: {th:'ตั้งรหัสผ่านและเริ่มใช้งาน', en:'Set Password and Start'},
+  lockBackToLoginLink: {th:'← กลับไปหน้าเข้าสู่ระบบ', en:'← Back to Log In'},
+  topbarSearchPlaceholder: {th:'🔍 ค้นหานักศึกษา...', en:'🔍 Search students...'},
+  topbarLockBtn: {th:'🔒 ล็อกระบบ', en:'🔒 Lock System'},
+  navTabSummary: {th:'📊 แดชบอร์ด', en:'📊 Dashboard'},
+  navTabDocintake: {th:'📥 ลงทะเบียนรับเอกสาร', en:'📥 Register Documents'},
+  navTabLookup: {th:'🔍 ตรวจสอบข้อมูล', en:'🔍 Student Lookup'},
+  navTabAdvisors: {th:'👨‍🏫 ที่ปรึกษา', en:'👨‍🏫 Advisors'},
+  navTabAdvisorlist: {th:'👥 รายชื่ออาจารย์', en:'👥 Advisor List'},
+  navTabForm: {th:'📝 บันทึกข้อมูล', en:'📝 Record Data'},
+  navTabList: {th:'📋 รายการทั้งหมด', en:'📋 All Records'},
+  navTabGradlist: {th:'📤 รายชื่อรอส่ง', en:'📤 Pending Submission'},
+  navTabSettings: {th:'⚙️ ตั้งค่า', en:'⚙️ Settings'},
+  navTabAuditlog: {th:'📜 ประวัติการแก้ไข', en:'📜 Edit History'},
   navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   navFeatures: {th:'ฟีเจอร์', en:'Features'},
   navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},
@@ -2441,15 +2485,28 @@ var LANDING_I18N = {
   footerBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   footerCopyright: {th:'© 2569 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'© 2026 Thesis Exam Records System'}
 };
+function i18nText(key){
+  var lang = 'th';
+  try{ lang = localStorage.getItem(LANDING_LANG_KEY) || 'th'; }catch(e){}
+  if(lang!=='en') lang='th';
+  var entry = LANDING_I18N[key];
+  return entry ? (entry[lang] || entry.th || '') : '';
+}
 function applyLandingLang(lang){
   if(lang!=='en') lang='th';
   Object.keys(LANDING_I18N).forEach(function(key){
     var text = LANDING_I18N[key][lang];
-    document.querySelectorAll('#landingPage [data-i18n="'+key+'"]').forEach(function(elx){ elx.innerHTML = text; });
+    document.querySelectorAll('[data-i18n="'+key+'"]').forEach(function(elx){ elx.innerHTML = text; });
+    document.querySelectorAll('[data-i18n-ph="'+key+'"]').forEach(function(elx){ elx.placeholder = text; });
   });
-  document.getElementById('btnLangTH').classList.toggle('active', lang==='th');
-  document.getElementById('btnLangEN').classList.toggle('active', lang==='en');
+  [['btnLangTH','btnLangEN'],['btnLockLangTH','btnLockLangEN'],['btnTopbarLangTH','btnTopbarLangEN']].forEach(function(pair){
+    var thBtn=document.getElementById(pair[0]), enBtn=document.getElementById(pair[1]);
+    if(thBtn) thBtn.classList.toggle('active', lang==='th');
+    if(enBtn) enBtn.classList.toggle('active', lang==='en');
+  });
   try{ localStorage.setItem(LANDING_LANG_KEY, lang); }catch(e){}
+  /* ถ้าหน้าล็อกอินเปิดอยู่ ให้รีเฟรช textContent ที่ตั้งแบบ dynamic (ชื่อหัวข้อ/ข้อความช่วยเหลือ ที่สลับตามโหมด login/setup) ให้เป็นภาษาปัจจุบันด้วย */
+  if(typeof refreshLockFormLang==='function') refreshLockFormLang();
 }
 function renderLockForm(){
   var loginForm = document.getElementById('lockLoginForm');
@@ -2464,16 +2521,30 @@ function renderLockForm(){
      เข้าสู่ระบบด้วย เฉพาะตอนที่เครื่องนี้ยังไม่เคยตั้งรหัสแอดมิน (appPinHash ว่าง) เพื่อให้ตั้งรหัสแอดมินได้ทุกเครื่อง */
   if(appPinHash || viewerPinHash || (deptPins&&deptPins.length)){
     loginForm.style.display=''; setupForm.style.display='none';
-    document.getElementById('lockTitle').textContent='เข้าสู่ระบบ';
+    document.getElementById('lockTitle').textContent=i18nText('lockTitleLogin');
     goAdminSetupWrap.style.display = appPinHash ? 'none' : '';
     backToLoginWrap.style.display = 'none';
   } else {
     loginForm.style.display='none'; setupForm.style.display='';
-    document.getElementById('lockTitle').textContent='ตั้งค่าเริ่มต้น';
-    document.getElementById('lockSetupHelpText').textContent='ตั้งรหัสผ่านสำหรับเข้าใช้งานระบบนี้ครั้งแรก (อย่างน้อย 4 ตัวอักษร) โปรดจดจำไว้ให้ดี — หากลืมจะไม่สามารถกู้คืนได้ ต้องล้างข้อมูลเบราว์เซอร์ทั้งหมดเพื่อเริ่มใหม่';
+    document.getElementById('lockTitle').textContent=i18nText('lockTitleSetup');
+    document.getElementById('lockSetupHelpText').textContent=i18nText('lockSetupHelpFirst');
     backToLoginWrap.style.display='none';
   }
   showLockOverlay();
+}
+/* รีเฟรชข้อความของหน้าล็อกอินที่ตั้งแบบ dynamic ให้ตรงกับภาษาปัจจุบัน โดยไม่เปลี่ยนโหมดที่แสดงอยู่ (login/setup ครั้งแรก/ตั้งรหัสแอดมินเพิ่ม) */
+function refreshLockFormLang(){
+  var lockScreenEl = document.getElementById('lockScreen');
+  if(!lockScreenEl || lockScreenEl.style.display==='none') return;
+  var loginForm = document.getElementById('lockLoginForm');
+  var setupForm = document.getElementById('lockSetupForm');
+  if(loginForm.style.display!=='none'){
+    document.getElementById('lockTitle').textContent=i18nText('lockTitleLogin');
+  } else if(setupForm.style.display!=='none'){
+    var isAdminSetupOnExistingDevice = (viewerPinHash || (deptPins&&deptPins.length)) && !appPinHash && document.getElementById('lockBackToLoginWrap').style.display!=='none';
+    document.getElementById('lockTitle').textContent = isAdminSetupOnExistingDevice ? i18nText('lockTitleAdminSetup') : i18nText('lockTitleSetup');
+    document.getElementById('lockSetupHelpText').textContent = isAdminSetupOnExistingDevice ? i18nText('lockSetupHelpAdmin') : i18nText('lockSetupHelpFirst');
+  }
 }
 function bindLockEvents(){
   document.getElementById('btnLockSubmit').addEventListener('click', function(){
@@ -2493,8 +2564,8 @@ function bindLockEvents(){
   document.getElementById('lockGoToAdminSetupLink').addEventListener('click', function(){
     document.getElementById('lockLoginForm').style.display='none';
     document.getElementById('lockSetupForm').style.display='';
-    document.getElementById('lockTitle').textContent='ตั้งรหัสแอดมินสำหรับเครื่องนี้';
-    document.getElementById('lockSetupHelpText').textContent='ตั้งรหัสผ่านแอดมินสำหรับเครื่องนี้ (อย่างน้อย 4 ตัวอักษร) — จะใช้รหัสเดิมที่เคยตั้งไว้บนเครื่องอื่น หรือจะตั้งรหัสใหม่ก็ได้ โปรดจดจำไว้ให้ดี';
+    document.getElementById('lockTitle').textContent=i18nText('lockTitleAdminSetup');
+    document.getElementById('lockSetupHelpText').textContent=i18nText('lockSetupHelpAdmin');
     /* แสดงลิงก์กลับไปหน้าเข้าสู่ระบบเฉพาะตอนที่มีรหัสอื่นให้กลับไปเข้าสู่ระบบด้วยจริงๆ (เช่น รหัสดูอย่างเดียว) */
     document.getElementById('lockBackToLoginWrap').style.display = (viewerPinHash || (deptPins&&deptPins.length)) ? '' : 'none';
     document.getElementById('lockSetupPin1').value='';
@@ -2504,7 +2575,7 @@ function bindLockEvents(){
   document.getElementById('lockBackToLoginLink').addEventListener('click', function(){
     document.getElementById('lockSetupForm').style.display='none';
     document.getElementById('lockLoginForm').style.display='';
-    document.getElementById('lockTitle').textContent='เข้าสู่ระบบ';
+    document.getElementById('lockTitle').textContent=i18nText('lockTitleLogin');
     document.getElementById('lockPinInput').value='';
     document.getElementById('lockError').textContent='';
   });

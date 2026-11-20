@@ -3497,6 +3497,27 @@ function applyLandingLang(lang){
         : (currentRole==='viewer'||currentRole==='dept-viewer') ? (i18nText('txtRoleBadgeViewer')||'เจ้าหน้าที่ (ดูอย่างเดียว)') : (i18nText('txtRoleBadgeAdmin')||'เจ้าหน้าที่ (Admin)');
     }
   }catch(e){}
+  /* จุดสำคัญ: การ์ด/กราฟ/ตารางที่สร้างจากข้อมูลจริง (แดชบอร์ด, โดนัทหลักสูตร/สาขา, รายชื่อค้นหา, รายการรับเอกสาร, รายชื่อบัณฑิต,
+     รายชื่อที่ปรึกษา, คณะกรรมการ, ตั้งค่า) จะไม่รีเฟรชข้อความ/ชื่อภาษาอังกฤษให้เองตอนสลับภาษา เพราะฟังก์ชัน render ของหน้าเหล่านี้
+     ถูกเรียกจาก switchView() ตอนเปลี่ยนหน้าเท่านั้น ไม่ได้ผูกกับ [data-i18n] แบบข้อความคงที่ — จึงต้องเรียก render ซ้ำของ "หน้าที่กำลัง
+     แสดงอยู่ตอนนี้" ที่นี่ด้วย ให้ชื่อหลักสูตร/สาขา/แผน/ประเภทเอกสาร (และข้อความอื่นๆ ที่คำนวณสดเป็น textContent ตรงๆ) อัปเดตทันทีที่กดสลับภาษา
+     โดยไม่ต้องสลับหน้าไปมาก่อน — จงใจไม่รวม 'form' (จะไปสั่ง recordsGetAll()/refreshCloudMasterData() ซ้ำโดยไม่จำเป็น) */
+  try{
+    ['summary','dashboard','advisors','advisorlist','docintake','list','gradlist','settings','auditlog'].some(function(v){
+      var viewElx = document.getElementById('view-'+v);
+      if(!viewElx || viewElx.style.display==='none') return false;
+      if(v==='list' && typeof renderList==='function') renderList();
+      else if(v==='settings' && typeof renderMasterLists==='function') renderMasterLists();
+      else if(v==='advisorlist' && typeof computeAdvisorUsedCounts==='function') computeAdvisorUsedCounts().then(renderAdvisorList);
+      else if(v==='dashboard' && typeof renderDashboard==='function') renderDashboard();
+      else if(v==='summary' && typeof renderSummaryDashboard==='function') renderSummaryDashboard();
+      else if(v==='auditlog' && typeof renderAuditLog==='function') renderAuditLog();
+      else if(v==='advisors' && typeof computeAdvisorUsedCounts==='function') computeAdvisorUsedCounts().then(renderAdvisorLookupResults);
+      else if(v==='docintake' && typeof renderDocIntakeList==='function') renderDocIntakeList();
+      else if(v==='gradlist' && typeof renderGradList==='function') renderGradList();
+      return true;
+    });
+  }catch(e){}
 }
 function renderLockForm(){
   var loginForm = document.getElementById('lockLoginForm');

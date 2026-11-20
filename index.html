@@ -2306,9 +2306,9 @@ function openBulkAttachModal(){
 
   applyBtn.addEventListener('click', function(){
     var link = (linkInput.value||'').trim();
-    if(!link){ toast('กรุณาใส่ลิงก์ประกาศก่อน', true); return; }
+    if(!link){ toast(i18nText('toast001')||'กรุณาใส่ลิงก์ประกาศก่อน', true); return; }
     var ids = Object.keys(selectedIds);
-    if(ids.length===0){ toast('กรุณาเลือกนักศึกษาอย่างน้อย 1 คน', true); return; }
+    if(ids.length===0){ toast(i18nText('toast002')||'กรุณาเลือกนักศึกษาอย่างน้อย 1 คน', true); return; }
     var selectedRecs = allRows.filter(function(r){ return selectedIds[r.studentId]; });
     runBulkAttach(fieldSelect.value, link, resultSelect.value, selectedRecs, applyBtn, statusEl);
   });
@@ -2639,6 +2639,86 @@ var LANDING_I18N = {
   phGenericSearch: {th:'พิมพ์เพื่อค้นหา...', en:'Type to search...'},
   btnOpenLink: {th:'🔗 เปิดลิงก์', en:'🔗 Open Link'},
   txtDelete: {th:'ลบ', en:'Delete'},
+  toast001: {th:'กรุณาใส่ลิงก์ประกาศก่อน', en:'Please enter the announcement link first'},
+  toast002: {th:'กรุณาเลือกนักศึกษาอย่างน้อย 1 คน', en:'Please select at least 1 student'},
+  toast003: {th:'ตั้งรหัสผ่านเรียบร้อย ใช้รหัสนี้เข้าระบบครั้งต่อไป', en:'Password set successfully. Use this password to log in next time'},
+  toast004: {th:'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร', en:'Password must be at least 4 characters'},
+  toast005: {th:'รหัสผ่านทั้งสองช่องไม่ตรงกัน', en:'The two password fields do not match'},
+  toast006: {th:'ห้ามตั้งซ้ำกับรหัสผ่านของ Admin', en:'Cannot be the same as the Admin password'},
+  toast007: {th:'ตั้งรหัสผ่านดูอย่างเดียวเรียบร้อยแล้ว', en:'View-only password set successfully'},
+  toast008: {th:'ปิดใช้งานแล้ว', en:'Disabled'},
+  toast009: {th:'ยังไม่มีการตั้งรหัสผ่านไว้', en:'No password has been set yet'},
+  toast010: {th:'รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร', en:'New password must be at least 4 characters'},
+  toast011: {th:'รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน', en:'The two new password fields do not match'},
+  toast012: {th:'รหัสผ่านปัจจุบันไม่ถูกต้อง', en:'Current password is incorrect'},
+  toast013: {th:'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว', en:'Password changed successfully'},
+  toast014: {th:'ไม่มีรายการให้ส่งออกในขณะนี้', en:'No records to export right now'},
+  toast015: {th:'ไม่มีรายชื่อให้ส่งออกในขณะนี้ — ลองค้นหาหรือเลือกสาขา/ขั้นตอนก่อน', en:'No names to export right now — try searching or selecting a department/stage first'},
+  toast016: {th:'กรุณาเลือกวันที่รับเอกสาร', en:'Please select the document received date'},
+  toast017: {th:'กรุณาเลือกประเภทเอกสาร', en:'Please select the document type'},
+  toast018: {th:'กรุณากรอกชื่อ-นามสกุลนักศึกษา', en:'Please enter the student\'s full name'},
+  toast019: {th:'บันทึกรายการลงทะเบียนแล้ว และเพิ่มผลงานตีพิมพ์เข้าประวัตินักศึกษาแล้ว', en:'Registration record saved, and publication added to the student\'s history'},
+  toast020: {th:'บันทึกรายการลงทะเบียนแล้ว', en:'Registration record saved'},
+  toast021: {th:'อัปเดตสถานะแล้ว', en:'Status updated'},
+  toast022: {th:'กรุณาเลือกวันที่', en:'Please select a date'},
+  toast023: {th:'แก้ไขวันที่รับแล้ว (เลขรับเดิมไม่เปลี่ยนแปลง)', en:'Received date edited (the original intake number is unchanged)'},
+  toast024: {th:'ลบรายการแล้ว', en:'Record deleted'},
+  toast025: {th:'ไม่มีรายการให้ดาวน์โหลด', en:'No records to download'},
+  toast026: {th:'ยกเลิกเครื่องหมายแล้ว', en:'Mark removed'},
+  toast027: {th:'ไม่มีรายชื่อให้ส่งออกในขณะนี้', en:'No names to export right now'},
+  toast028: {th:'เก็บประวัติการสอบครั้งก่อนไว้แล้ว กรอกข้อมูลการสอบครั้งใหม่ได้เลย (บันทึกเมื่อกรอกเสร็จ)', en:'The previous exam record has been kept in history — you can now fill in the new exam data (it will save once completed)'},
+  toast029: {th:'กำลังค้นหาข้อมูลเดิมของนักศึกษา...', en:'Searching for the student\'s existing data...'},
+  toast030: {th:'เปิดข้อมูลเดิมของนักศึกษาคนนี้ให้แล้ว — เติมข้อมูลส่วนที่ยังไม่ได้กรอกได้เลย', en:'This student\'s existing data has been opened — you can now fill in any remaining fields'},
+  toast031: {th:'กรุณากรอกรหัสนักศึกษาก่อนค้นหา', en:'Please enter the student ID before searching'},
+  toast032: {th:'ไม่พบข้อมูลเดิมของรหัสนักศึกษานี้', en:'No existing data found for this student ID'},
+  toast033: {th:'พบข้อมูลเดิม — เติมข้อมูลหมวด 1, 1.1, 2 ให้แล้ว เลือกประเภทการสอบครั้งใหม่ในหมวดที่ 3 ได้เลย', en:'Existing data found — Sections 1, 1.1, and 2 have been filled in; you can now select the new exam type in Section 3'},
+  toast034: {th:'บันทึกข้อมูลเรียบร้อย', en:'Data saved successfully'},
+  toast035: {th:'รหัสนักศึกษานี้มีข้อมูลอยู่แล้วในระบบ — กรุณากลับไปหน้ารายการ แล้วกด "➕ เพิ่มการสอบใหม่" ที่แถวของนักศึกษาคนนี้แทน เพื่อเติมข้อมูลในแถวเดิม', en:'This student ID already has data in the system — please go back to the list page and click “➕ Add New Exam” on this student\'s row instead, to add data to the existing record'},
+  toast036: {th:'กำลังอัปโหลดไฟล์ขึ้น Drive...', en:'Uploading file to Drive...'},
+  toast037: {th:'แนบไฟล์และอัปโหลดขึ้น Drive สำเร็จ', en:'File attached and uploaded to Drive successfully'},
+  toast038: {th:'กรุณาวางลิงก์ก่อน', en:'Please paste the link first'},
+  toast039: {th:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', en:'The link must start with http:// or https://'},
+  toast040: {th:'แนบลิงก์เรียบร้อย', en:'Link attached successfully'},
+  toast041: {th:'ไม่พบไฟล์นี้', en:'File not found'},
+  toast042: {th:'ลบข้อมูลแล้ว', en:'Data deleted'},
+  toast043: {th:'ไม่มีข้อมูลให้ส่งออก', en:'No data to export'},
+  toast044: {th:'ส่งออกข้อมูลแล้ว', en:'Data exported'},
+  toast045: {th:'นำเข้าข้อมูลเสร็จสิ้น', en:'Data import complete'},
+  toast046: {th:'บันทึก Client ID แล้ว', en:'Client ID saved'},
+  toast047: {th:'บันทึก Spreadsheet ID แล้ว', en:'Spreadsheet ID saved'},
+  toast048: {th:'กรุณากรอกและบันทึก Spreadsheet ID ก่อนเปิดใช้งาน', en:'Please enter and save the Spreadsheet ID before enabling'},
+  toast049: {th:'กรุณากรอกและบันทึก Spreadsheet ID ก่อน', en:'Please enter and save the Spreadsheet ID first'},
+  toast050: {th:'กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', en:'Please select at least 1 role'},
+  toast051: {th:'มีชื่อนี้อยู่แล้วในรายการ', en:'This name already exists in the list'},
+  toast052: {th:'มีตำแหน่งนี้อยู่แล้วในรายการ', en:'This role already exists in the list'},
+  toast053: {th:'กรุณาเพิ่มรายชื่อสาขาในระบบก่อน', en:'Please add department names to the system first'},
+  toast054: {th:'ห้ามตั้งซ้ำกับรหัสผ่าน Admin หรือรหัสดูอย่างเดียวรวม', en:'Cannot be the same as the Admin password or the shared view-only password'},
+  toast055: {th:'รหัสผ่านนี้ถูกใช้กับสาขาอื่นอยู่แล้ว กรุณาตั้งรหัสอื่น', en:'This password is already used by another department — please choose a different one'},
+  toast056: {th:'กรุณากรอกชื่อตำแหน่ง', en:'Please enter the role name'},
+  toast057: {th:'ไม่มีรายชื่ออาจารย์ให้ส่งออก', en:'No advisor names to export'},
+  toast058: {th:'กรุณากรอกชื่อ', en:'Please enter a name'},
+  toast059: {th:'เชื่อมต่อ Google Drive สำเร็จ', en:'Connected to Google Drive successfully'},
+  toast060: {th:'กรุณากรอกและบันทึก Google OAuth Client ID ก่อน', en:'Please enter and save the Google OAuth Client ID first'},
+  toast061: {th:'โหลด Google Identity Services ไม่สำเร็จ ลองรีเฟรชหน้า', en:'Failed to load Google Identity Services — try refreshing the page'},
+  toast062: {th:'ออกจากระบบ Google Drive แล้ว', en:'Signed out of Google Drive'},
+  toast063: {th:'ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว', en:'Permanently deleted data purged successfully'},
+  toast064: {th:'เชื่อมต่อ Google Drive อัตโนมัติสำเร็จ', en:'Automatically connected to Google Drive successfully'},
+  toast065: {th:'ถึงกำหนดสำรองข้อมูลอัตโนมัติ (ทุก 12 ชม.) กรุณากด "เชื่อมต่อ Google Drive" ในหน้าตั้งค่าเพื่อสำรองข้อมูลล่าสุด', en:'Automatic backup is due (every 12 hrs) — please click “Connect Google Drive” in Settings to back up the latest data'},
+  toast066: {th:'ล้างประวัติที่ปรึกษาที่ผิดพลาดเรียบร้อยแล้ว', en:'Incorrect advisor history cleared successfully'},
+  toast067: {th:'กรุณาเลือกค่ามาตรฐานที่ถูกต้องก่อน', en:'Please select a valid standard value first'},
+  toast068: {th:'ซ่อมข้อมูลที่สลับตำแหน่งกันเรียบร้อยแล้ว', en:'Swapped data repaired successfully'},
+  toast069: {th:'กรุณากรอก Spreadsheet ID หรือลิงก์ก่อน', en:'Please enter the Spreadsheet ID or link first'},
+  toast070: {th:'กำลังตรวจสอบโครงสร้างชีท...', en:'Checking sheet structure...'},
+  toast071: {th:'สร้าง/ตรวจสอบโครงสร้างชีทกลางเรียบร้อยแล้ว พร้อมใช้งาน', en:'Central sheet structure created/verified successfully — ready to use'},
+  toast072: {th:'⚠️ ขาดการเชื่อมต่ออินเทอร์เน็ต ระบบสลับไปบันทึกข้อมูลในเครื่องนี้ชั่วคราวโดยอัตโนมัติ ข้อมูลจะไม่หายไปไหน — เมื่อเน็ตกลับมาระบบจะสลับกลับและแจ้งให้ซิงค์ข้อมูลอัตโนมัติ', en:'⚠️ Internet connection lost. The system has automatically switched to saving data on this device temporarily — nothing will be lost. When the connection returns, it will switch back and prompt you to sync automatically'},
+  toast073: {th:'✅ อินเทอร์เน็ตกลับมาแล้ว สลับกลับไปใช้ระบบข้อมูลกลางอัตโนมัติ', en:'✅ Internet connection restored — automatically switched back to the central data system'},
+  toast074: {th:'กำลังเตรียมย้ายข้อมูล...', en:'Preparing to migrate data...'},
+  toast075: {th:'กำลังย้ายข้อมูลตั้งต้น...', en:'Migrating master data...'},
+  toast076: {th:'ย้ายข้อมูลเข้าระบบกลางเรียบร้อยแล้ว — ไปที่ช่อง "เปิดใช้งานระบบข้อมูลกลาง" เพื่อเริ่มใช้งาน', en:'Data migrated to the central system successfully — go to “Enable Central Data System” to start using it'},
+  toast077: {th:'อัปโหลดไฟล์แนบขึ้น Drive สำเร็จ', en:'Attachment uploaded to Drive successfully'},
+  toast078: {th:'กำลังเตรียมข้อมูลสำรอง...', en:'Preparing backup data...'},
+  toast079: {th:'กำลังอัปโหลดไฟล์สำรองขึ้น Drive...', en:'Uploading backup file to Drive...'},
+  toast080: {th:'ไม่พบไฟล์สำรองข้อมูลบน Drive', en:'No backup files found on Drive'},
   navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   navFeatures: {th:'ฟีเจอร์', en:'Features'},
   navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},
@@ -2776,7 +2856,7 @@ function bindLockEvents(){
       currentRole = 'admin';
       hideLockOverlay();
       applyRoleUI();
-      toast('ตั้งรหัสผ่านเรียบร้อย ใช้รหัสนี้เข้าระบบครั้งต่อไป');
+      toast(i18nText('toast003')||'ตั้งรหัสผ่านเรียบร้อย ใช้รหัสนี้เข้าระบบครั้งต่อไป');
     });
   });
   document.getElementById('btnLockNow').addEventListener('click', function(){
@@ -2806,17 +2886,17 @@ function applyRoleUI(){
 function setViewerPin(){
   var p1 = document.getElementById('viewerPin1').value;
   var p2 = document.getElementById('viewerPin2').value;
-  if(p1.length<4){ toast('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
-  if(p1!==p2){ toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', true); return; }
+  if(p1.length<4){ toast(i18nText('toast004')||'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
+  if(p1!==p2){ toast(i18nText('toast005')||'รหัสผ่านทั้งสองช่องไม่ตรงกัน', true); return; }
   hashPin(p1).then(function(h){
-    if(h===appPinHash){ toast('ห้ามตั้งซ้ำกับรหัสผ่านของ Admin', true); throw new Error('stop'); }
+    if(h===appPinHash){ toast(i18nText('toast006')||'ห้ามตั้งซ้ำกับรหัสผ่านของ Admin', true); throw new Error('stop'); }
     viewerPinHash = h;
     return dbPut('meta',{key:'viewerPinHash', value:h});
   }).then(function(){
     document.getElementById('viewerPin1').value='';
     document.getElementById('viewerPin2').value='';
     renderViewerPinStatus();
-    toast('ตั้งรหัสผ่านดูอย่างเดียวเรียบร้อยแล้ว');
+    toast(i18nText('toast007')||'ตั้งรหัสผ่านดูอย่างเดียวเรียบร้อยแล้ว');
   }).catch(function(e){ if(e.message!=='stop') console.error(e); });
 }
 function removeViewerPin(){
@@ -2824,7 +2904,7 @@ function removeViewerPin(){
   viewerPinHash = null;
   dbPut('meta',{key:'viewerPinHash', value:null}).then(function(){
     renderViewerPinStatus();
-    toast('ปิดใช้งานแล้ว');
+    toast(i18nText('toast008')||'ปิดใช้งานแล้ว');
   });
 }
 function renderViewerPinStatus(){
@@ -2843,11 +2923,11 @@ function changePin(){
   var cur = document.getElementById('pin_current').value;
   var n1 = document.getElementById('pin_new1').value;
   var n2 = document.getElementById('pin_new2').value;
-  if(!appPinHash){ toast('ยังไม่มีการตั้งรหัสผ่านไว้', true); return; }
-  if(n1.length<4){ toast('รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
-  if(n1!==n2){ toast('รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน', true); return; }
+  if(!appPinHash){ toast(i18nText('toast009')||'ยังไม่มีการตั้งรหัสผ่านไว้', true); return; }
+  if(n1.length<4){ toast(i18nText('toast010')||'รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
+  if(n1!==n2){ toast(i18nText('toast011')||'รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน', true); return; }
   hashPin(cur).then(function(h){
-    if(h!==appPinHash){ toast('รหัสผ่านปัจจุบันไม่ถูกต้อง', true); throw new Error('stop'); }
+    if(h!==appPinHash){ toast(i18nText('toast012')||'รหัสผ่านปัจจุบันไม่ถูกต้อง', true); throw new Error('stop'); }
     return hashPin(n1);
   }).then(function(newHash){
     appPinHash = newHash;
@@ -2856,7 +2936,7 @@ function changePin(){
     document.getElementById('pin_current').value='';
     document.getElementById('pin_new1').value='';
     document.getElementById('pin_new2').value='';
-    toast('เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
+    toast(i18nText('toast013')||'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
   }).catch(function(e){ if(e.message!=='stop') console.error(e); });
 }
 function seedDefaultsIfEmpty(){
@@ -3796,7 +3876,7 @@ function renderTodayActionCard(list){
 /* ส่งออกลิสต์ "สิ่งที่ต้องทำวันนี้" ที่กำลังแสดงอยู่เป็นไฟล์ Excel ไว้ใช้ในที่ประชุม/ส่งต่องานได้ทันที
    โดยไม่ต้องพิมพ์หน้าจอหรือคัดลอกข้อความเอง */
 function exportTodayActionExcel(){
-  if(!lastTodayActionItems.length){ toast('ไม่มีรายการให้ส่งออกในขณะนี้', true); return; }
+  if(!lastTodayActionItems.length){ toast(i18nText('toast014')||'ไม่มีรายการให้ส่งออกในขณะนี้', true); return; }
   var aoa = [['ลำดับความสำคัญ','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','รายละเอียด']].concat(lastTodayActionItems.map(function(item){
     var r = item.rec || item.doc || {};
     return [(TODAY_ACTION_CAT_META[item.cat]||{}).label||'', r.studentId||'', r.studentName||'', r.department||'', item.text];
@@ -3887,7 +3967,7 @@ var lastLookupFilteredList = []; /* เก็บรายชื่อ นศ. �
    เพื่อให้ส่งออกครบทุกรายการที่ตรงเงื่อนไข ไม่ใช่แค่ที่แสดงอยู่ในหน้าปัจจุบัน */
 /* ส่งออกรายชื่อนักศึกษาที่กำลังแสดงอยู่ (ตามคำค้นหา/สาขา/ขั้นตอนที่เลือกไว้) เป็นไฟล์ Excel */
 function exportLookupListExcel(){
-  if(!lastLookupFilteredList.length){ toast('ไม่มีรายชื่อให้ส่งออกในขณะนี้ — ลองค้นหาหรือเลือกสาขา/ขั้นตอนก่อน', true); return; }
+  if(!lastLookupFilteredList.length){ toast(i18nText('toast015')||'ไม่มีรายชื่อให้ส่งออกในขณะนี้ — ลองค้นหาหรือเลือกสาขา/ขั้นตอนก่อน', true); return; }
   var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','หลักสูตร','สาขาวิชา','แผนการเรียน','สถานะ','ที่ปรึกษาหลัก','จำนวนรายการสอบ']].concat(
     lastLookupFilteredList.map(function(s){
       return [s.studentId||'', s.studentName||'', s.program||'', s.department||'', s.plan||'', s.status||'', s.mainAdvisor||'', s.count||0];
@@ -4766,9 +4846,9 @@ function addDocIntakeEntry(){
   var studentName = document.getElementById('di_studentName').value.trim();
   var department = document.getElementById('di_department').value.trim();
   var note = document.getElementById('di_note').value.trim();
-  if(!receivedDate){ toast('กรุณาเลือกวันที่รับเอกสาร', true); return; }
-  if(!docType){ toast('กรุณาเลือกประเภทเอกสาร', true); return; }
-  if(!studentName){ toast('กรุณากรอกชื่อ-นามสกุลนักศึกษา', true); return; }
+  if(!receivedDate){ toast(i18nText('toast016')||'กรุณาเลือกวันที่รับเอกสาร', true); return; }
+  if(!docType){ toast(i18nText('toast017')||'กรุณาเลือกประเภทเอกสาร', true); return; }
+  if(!studentName){ toast(i18nText('toast018')||'กรุณากรอกชื่อ-นามสกุลนักศึกษา', true); return; }
   var isGradRequest = (docType===GRADUATION_REQUEST_DOC_TYPE);
   var newPubs = isGradRequest ? getPublicationValues('di_publicationList') : [];
   var now = Date.now();
@@ -4785,10 +4865,10 @@ function addDocIntakeEntry(){
        (ไม่บล็อกการบันทึกเอกสารหลักแม้ขั้นตอนนี้จะพลาด — จะแจ้งเตือนแยกต่างหากแทน) */
     if(newPubs.length){
       return syncGraduationRequestPublications(studentId, studentName, department, newPubs)
-        .then(function(){ toast('บันทึกรายการลงทะเบียนแล้ว และเพิ่มผลงานตีพิมพ์เข้าประวัตินักศึกษาแล้ว'); })
+        .then(function(){ toast(i18nText('toast019')||'บันทึกรายการลงทะเบียนแล้ว และเพิ่มผลงานตีพิมพ์เข้าประวัตินักศึกษาแล้ว'); })
         .catch(function(e){ toast('บันทึกรายการลงทะเบียนแล้ว แต่เพิ่มผลงานตีพิมพ์เข้าประวัตินักศึกษาไม่สำเร็จ: '+e, true); });
     }
-    toast('บันทึกรายการลงทะเบียนแล้ว');
+    toast(i18nText('toast020')||'บันทึกรายการลงทะเบียนแล้ว');
   }).then(function(){
     document.getElementById('di_studentSearch').value='';
     document.getElementById('di_studentId').value='';
@@ -4870,7 +4950,7 @@ function renderDocIntakeList(){
       statusSel.value = r.status||'received';
       statusSel.addEventListener('change', function(){
         docIntakePut(Object.assign({}, r, {status:statusSel.value, updatedAt:Date.now()})).then(function(){
-          toast('อัปเดตสถานะแล้ว'); renderDocIntakeList();
+          toast(i18nText('toast021')||'อัปเดตสถานะแล้ว'); renderDocIntakeList();
         });
       });
       /* แก้ไข "วันที่รับ" ได้โดยตรงจากตาราง โดยไม่กระทบ "เลขรับ" (intakeNo) — ใช้ input type=date ในเซลล์แทนข้อความล้วน
@@ -4879,9 +4959,9 @@ function renderDocIntakeList(){
       var dateInput = el('input',{type:'date', value:r.receivedDate||'', style:'min-width:140px;'});
       dateInput.addEventListener('change', function(){
         var newDate = dateInput.value;
-        if(!newDate){ toast('กรุณาเลือกวันที่', true); dateInput.value = r.receivedDate||''; return; }
+        if(!newDate){ toast(i18nText('toast022')||'กรุณาเลือกวันที่', true); dateInput.value = r.receivedDate||''; return; }
         docIntakePut(Object.assign({}, r, {receivedDate:newDate, updatedAt:Date.now()})).then(function(){
-          toast('แก้ไขวันที่รับแล้ว (เลขรับเดิมไม่เปลี่ยนแปลง)'); renderDocIntakeList();
+          toast(i18nText('toast023')||'แก้ไขวันที่รับแล้ว (เลขรับเดิมไม่เปลี่ยนแปลง)'); renderDocIntakeList();
         });
       });
       var tr = el('tr',{},[
@@ -4903,11 +4983,11 @@ function renderDocIntakeList(){
 }
 function deleteDocIntakeConfirm(id){
   if(!confirm('ยืนยันลบรายการลงทะเบียนนี้?')) return;
-  docIntakeDelete(id).then(function(){ toast('ลบรายการแล้ว'); renderDocIntakeList(); });
+  docIntakeDelete(id).then(function(){ toast(i18nText('toast024')||'ลบรายการแล้ว'); renderDocIntakeList(); });
 }
 function exportDocIntakeExcel(){
   getFilteredDocIntake().then(function(rows){
-    if(rows.length===0){ toast('ไม่มีรายการให้ดาวน์โหลด', true); return; }
+    if(rows.length===0){ toast(i18nText('toast025')||'ไม่มีรายการให้ดาวน์โหลด', true); return; }
     var aoa = [['เลขรับ','วันที่รับ','ประเภทเอกสาร','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','สถานะ','หมายเหตุ']]
       .concat(rows.map(function(r){
         return [r.intakeNo||'', toBuddhistDateStr(r.receivedDate)||'', r.docType||'', r.studentId||'', r.studentName||'', r.department||'', docStatusLabel(r.status), r.note||''];
@@ -5000,7 +5080,7 @@ function renderGradList(){
 function gradListUnmark(r){
   if(!confirm('ยกเลิกเครื่องหมาย "ส่งแล้ว" ของ '+(r.studentName||r.studentId)+' หรือไม่? (รายชื่อนี้จะกลับไปอยู่ในแท็บ "รอส่ง" อีกครั้ง)')) return;
   recordsPut(Object.assign({}, r, {gradListSentAt:null, updatedAt:Date.now()})).then(function(){
-    toast('ยกเลิกเครื่องหมายแล้ว'); renderGradList();
+    toast(i18nText('toast026')||'ยกเลิกเครื่องหมายแล้ว'); renderGradList();
   });
 }
 function gradListExportRows(rows){
@@ -5023,14 +5103,14 @@ function getGradListSelectedRows(){
 function gradListExportOnly(){
   getGradListSelectedRows().then(function(res){
     var rows = res.selected.length>0 ? res.selected : res.all;
-    if(rows.length===0){ toast('ไม่มีรายชื่อให้ส่งออกในขณะนี้', true); return; }
+    if(rows.length===0){ toast(i18nText('toast027')||'ไม่มีรายชื่อให้ส่งออกในขณะนี้', true); return; }
     gradListExportRows(rows);
   });
 }
 function gradListExportAndMark(){
   getGradListSelectedRows().then(function(res){
     var rows = res.selected.length>0 ? res.selected : res.all;
-    if(rows.length===0){ toast('ไม่มีรายชื่อให้ส่งออกในขณะนี้', true); return; }
+    if(rows.length===0){ toast(i18nText('toast027')||'ไม่มีรายชื่อให้ส่งออกในขณะนี้', true); return; }
     if(!confirm('ส่งออก Excel '+rows.length+' รายชื่อ และทำเครื่องหมายว่า "ส่งแล้ว" เลยหรือไม่?\n(รายชื่อเหล่านี้จะไม่ขึ้นในแท็บ "รอส่ง" อีก จนกว่าจะยกเลิกเครื่องหมายในแท็บ "ส่งแล้ว")')) return;
     gradListExportRows(rows);
     var now = Date.now();
@@ -5520,7 +5600,7 @@ function startNewAttempt(prefix){
     renderAttachmentList('defense');
   }
   setSectionLocked(prefix, false);
-  toast('เก็บประวัติการสอบครั้งก่อนไว้แล้ว กรอกข้อมูลการสอบครั้งใหม่ได้เลย (บันทึกเมื่อกรอกเสร็จ)');
+  toast(i18nText('toast028')||'เก็บประวัติการสอบครั้งก่อนไว้แล้ว กรอกข้อมูลการสอบครั้งใหม่ได้เลย (บันทึกเมื่อกรอกเสร็จ)');
 }
 function resetExamSections(){
   setSectionLocked('p', false);
@@ -5618,7 +5698,7 @@ function newDraft(){
 /* กด "เพิ่มการสอบใหม่ / เพิ่มข้อมูล" ให้ นศ. คนหนึ่ง — ถ้ามีแถวเดิมอยู่แล้ว (1 แถวขึ้นไป) ให้เปิดแถวเดิมมาแก้ไข/เติมข้อมูลทันที
    (รวมแถวซ้ำให้อัตโนมัติถ้าพบมากกว่า 1 แถว — จะลบแถวซ้ำจริงตอนกดบันทึกสำเร็จเท่านั้น) ถ้าไม่พบเลยจึงสร้างแถวใหม่ */
 function startNewExamForStudent(studentId){
-  toast('กำลังค้นหาข้อมูลเดิมของนักศึกษา...');
+  toast(i18nText('toast029')||'กำลังค้นหาข้อมูลเดิมของนักศึกษา...');
   recordsGetByStudentId(studentId).then(function(rows){
     if(!rows || rows.length===0){
       newDraft();
@@ -5636,7 +5716,7 @@ function startNewExamForStudent(studentId){
     if(merged.obsoleteIds.length){
       toast('พบข้อมูลเดิมของนักศึกษาคนนี้ '+rows.length+' แถว ระบบรวมให้เป็นแถวเดียวแล้ว — กด "บันทึก" เพื่อยืนยันการรวมข้อมูล');
     } else {
-      toast('เปิดข้อมูลเดิมของนักศึกษาคนนี้ให้แล้ว — เติมข้อมูลส่วนที่ยังไม่ได้กรอกได้เลย');
+      toast(i18nText('toast030')||'เปิดข้อมูลเดิมของนักศึกษาคนนี้ให้แล้ว — เติมข้อมูลส่วนที่ยังไม่ได้กรอกได้เลย');
     }
   }).catch(function(e){ toast('ค้นหาข้อมูลเดิมไม่สำเร็จ: '+e, true); });
 }
@@ -5821,10 +5901,10 @@ function cancelForm(){
 /* ================= SEARCH EXISTING STUDENT ================= */
 function searchExistingStudent(){
   var sid = document.getElementById('f_studentId').value.trim();
-  if(!sid){ toast('กรุณากรอกรหัสนักศึกษาก่อนค้นหา', true); return; }
+  if(!sid){ toast(i18nText('toast031')||'กรุณากรอกรหัสนักศึกษาก่อนค้นหา', true); return; }
   recordsGetByStudentId(sid).then(function(rows){
     if(rows.length===0){
-      toast('ไม่พบข้อมูลเดิมของรหัสนักศึกษานี้', true);
+      toast(i18nText('toast032')||'ไม่พบข้อมูลเดิมของรหัสนักศึกษานี้', true);
       document.getElementById('studentHistoryBox').style.display='none';
       document.getElementById('studentHistoryList').innerHTML='';
       return;
@@ -5856,7 +5936,7 @@ function searchExistingStudent(){
   clearDynamicRows('publicationList');
   (rec.publications||[]).forEach(function(p){ addPublicationRow(p); });
     renderExamHistory(sid);
-    toast('พบข้อมูลเดิม — เติมข้อมูลหมวด 1, 1.1, 2 ให้แล้ว เลือกประเภทการสอบครั้งใหม่ในหมวดที่ 3 ได้เลย');
+    toast(i18nText('toast033')||'พบข้อมูลเดิม — เติมข้อมูลหมวด 1, 1.1, 2 ให้แล้ว เลือกประเภทการสอบครั้งใหม่ในหมวดที่ 3 ได้เลย');
   });
 }
 function renderExamHistory(studentId){
@@ -6075,14 +6155,14 @@ function saveRecord(){
     }));
   }).then(function(){
     logAudit(wasExisting?'แก้ไขข้อมูล':'สร้างข้อมูลใหม่', rec.studentId, rec.studentName);
-    toast('บันทึกข้อมูลเรียบร้อย');
+    toast(i18nText('toast034')||'บันทึกข้อมูลเรียบร้อย');
     refreshDocLinkSuggestions(); /* ให้ลิงก์ที่เพิ่งบันทึกโผล่เป็นตัวเลือกแนะนำทันทีสำหรับ นศ. คนถัดไปในประกาศเดียวกัน */
     refreshLocationUsage(); /* ให้สถานที่สอบที่เพิ่งบันทึกโผล่เป็นตัวเลือกแนะนำทันทีสำหรับ นศ. คนถัดไป */
     newDraft();
     switchView('list');
   }).catch(function(e){
     if(e && e.duplicate){
-      toast('รหัสนักศึกษานี้มีข้อมูลอยู่แล้วในระบบ — กรุณากลับไปหน้ารายการ แล้วกด "➕ เพิ่มการสอบใหม่" ที่แถวของนักศึกษาคนนี้แทน เพื่อเติมข้อมูลในแถวเดิม', true);
+      toast(i18nText('toast035')||'รหัสนักศึกษานี้มีข้อมูลอยู่แล้วในระบบ — กรุณากลับไปหน้ารายการ แล้วกด "➕ เพิ่มการสอบใหม่" ที่แถวของนักศึกษาคนนี้แทน เพื่อเติมข้อมูลในแถวเดิม', true);
       return;
     }
     if(e && e.silent) return;
@@ -6102,7 +6182,7 @@ function ensureAttachmentFolder(){
 function handleFileInput(section, fileList){
   var files = Array.prototype.slice.call(fileList);
   if(cloudModeEnabled){
-    toast('กำลังอัปโหลดไฟล์ขึ้น Drive...');
+    toast(i18nText('toast036')||'กำลังอัปโหลดไฟล์ขึ้น Drive...');
     ensureAuthed().then(function(){ return ensureAttachmentFolder(); }).then(function(folderId){
       return Promise.all(files.map(function(f){
         return driveUploadBlob(f, f.name, f.type, folderId).then(function(driveFile){
@@ -6114,7 +6194,7 @@ function handleFileInput(section, fileList){
           });
         });
       }));
-    }).then(function(){ renderAttachmentList(section); toast('แนบไฟล์และอัปโหลดขึ้น Drive สำเร็จ'); })
+    }).then(function(){ renderAttachmentList(section); toast(i18nText('toast037')||'แนบไฟล์และอัปโหลดขึ้น Drive สำเร็จ'); })
       .catch(function(e){ toast('อัปโหลดไฟล์ไม่สำเร็จ: '+e, true); });
     return;
   }
@@ -6135,8 +6215,8 @@ function handleLinkAdd(section){
   var urlInput = document.getElementById(prefix+'linkInput');
   var nameInput = document.getElementById(prefix+'linkName');
   var url = urlInput.value.trim();
-  if(!url){ toast('กรุณาวางลิงก์ก่อน', true); return; }
-  if(!/^https?:\/\//i.test(url)){ toast('ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', true); return; }
+  if(!url){ toast(i18nText('toast038')||'กรุณาวางลิงก์ก่อน', true); return; }
+  if(!/^https?:\/\//i.test(url)){ toast(i18nText('toast039')||'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', true); return; }
   var name = nameInput.value.trim() || url;
   filesPut({
     id: uuid(), recordId: currentDraftId, section: section,
@@ -6145,7 +6225,7 @@ function handleLinkAdd(section){
   }).then(function(){
     urlInput.value=''; nameInput.value='';
     renderAttachmentList(section);
-    toast('แนบลิงก์เรียบร้อย');
+    toast(i18nText('toast040')||'แนบลิงก์เรียบร้อย');
   }).catch(function(e){ toast('แนบลิงก์ไม่สำเร็จ: '+e, true); });
 }
 function renderAttachmentList(section){
@@ -6194,7 +6274,7 @@ function downloadFile(id){
     } else if(f.driveLink){
       window.open(f.driveLink, '_blank');
     } else {
-      toast('ไม่พบไฟล์นี้', true);
+      toast(i18nText('toast041')||'ไม่พบไฟล์นี้', true);
     }
   });
 }
@@ -6376,7 +6456,7 @@ function deleteRecordConfirm(id){
       filesGetByRecordId(id).then(function(files){ return Promise.all(files.map(function(f){ return filesDelete(f.id); })); })
     ]).then(function(){
       logAudit('ลบข้อมูล', existing ? existing.studentId : '', existing ? existing.studentName : '');
-      toast('ลบข้อมูลแล้ว'); renderList();
+      toast(i18nText('toast042')||'ลบข้อมูลแล้ว'); renderList();
     });
   });
 }
@@ -6475,7 +6555,7 @@ function toExportRows(r){
 }
 function exportData(format){
   getFilteredRecords().then(function(rows){
-    if(rows.length===0){ toast('ไม่มีข้อมูลให้ส่งออก', true); return; }
+    if(rows.length===0){ toast(i18nText('toast043')||'ไม่มีข้อมูลให้ส่งออก', true); return; }
     var data = [].concat.apply([], rows.map(toExportRows));
     var headers = EXPORT_COLUMNS.map(function(c){ return c[1]; });
     var keys = EXPORT_COLUMNS.map(function(c){ return c[0]; });
@@ -6535,7 +6615,7 @@ function exportData(format){
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
     }
-    toast('ส่งออกข้อมูลแล้ว');
+    toast(i18nText('toast044')||'ส่งออกข้อมูลแล้ว');
   });
 }
 function dateStamp(){
@@ -6830,7 +6910,7 @@ function runImport(importBtn){
         +(skipped>0?', ข้าม (ซ้ำ) '+skipped+' รายการ':'')
         +(failed>0?', ล้มเหลว '+failed+' รายการ':'')
         +(addedMasterCount>0?' — เพิ่มข้อมูลหลักสูตร/สาขา/แผนใหม่ '+addedMasterCount+' รายการ':'');
-      toast('นำเข้าข้อมูลเสร็จสิ้น');
+      toast(i18nText('toast045')||'นำเข้าข้อมูลเสร็จสิ้น');
       importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
       if(failedDetails.length>0) renderImportFailedList(progressBox, failedDetails);
     });
@@ -7138,7 +7218,7 @@ function runProposalImport(importBtn){
     return logAuditMany(auditEntries).then(function(){
       renderList();
       progressEl.textContent = 'นำเข้าเสร็จสิ้น: เติมข้อมูลให้ '+updatedCount+' คน';
-      toast('นำเข้าข้อมูลเสร็จสิ้น');
+      toast(i18nText('toast045')||'นำเข้าข้อมูลเสร็จสิ้น');
       importBtn.textContent = 'นำเข้าเรียบร้อยแล้ว';
     });
   }
@@ -7256,7 +7336,7 @@ function bindSettingsEvents(){
   document.getElementById('s_clientId').value = googleClientId;
   document.getElementById('btnSaveClientId').addEventListener('click', function(){
     googleClientId = document.getElementById('s_clientId').value.trim();
-    saveGoogleClientId().then(function(){ toast('บันทึก Client ID แล้ว'); initGsiClient(); });
+    saveGoogleClientId().then(function(){ toast(i18nText('toast046')||'บันทึก Client ID แล้ว'); initGsiClient(); });
   });
   document.getElementById('s_autoBackup').addEventListener('change', function(e){
     autoBackupEnabled = e.target.checked;
@@ -7280,12 +7360,12 @@ function bindSettingsEvents(){
     var raw = document.getElementById('s_sheetId').value.trim();
     sheetId = extractSheetId(raw);
     document.getElementById('s_sheetId').value = sheetId;
-    dbPut('meta',{key:'sheetId', value:sheetId}).then(function(){ toast('บันทึก Spreadsheet ID แล้ว'); });
+    dbPut('meta',{key:'sheetId', value:sheetId}).then(function(){ toast(i18nText('toast047')||'บันทึก Spreadsheet ID แล้ว'); });
   });
   document.getElementById('btnInitSheet').addEventListener('click', initSheetStructure);
   document.getElementById('s_cloudMode').checked = !!cloudModeEnabled;
   document.getElementById('s_cloudMode').addEventListener('change', function(e){
-    if(e.target.checked && !sheetId){ toast('กรุณากรอกและบันทึก Spreadsheet ID ก่อนเปิดใช้งาน', true); e.target.checked=false; return; }
+    if(e.target.checked && !sheetId){ toast(i18nText('toast048')||'กรุณากรอกและบันทึก Spreadsheet ID ก่อนเปิดใช้งาน', true); e.target.checked=false; return; }
     cloudModeEnabled = e.target.checked;
     dbPut('meta',{key:'cloudModeEnabled', value:cloudModeEnabled}).then(function(){
       toast(cloudModeEnabled ? 'เปิดใช้งานระบบข้อมูลกลางแล้ว' : 'ปิดใช้งานระบบข้อมูลกลางแล้ว กลับไปใช้ข้อมูลในเครื่องนี้');
@@ -7295,7 +7375,7 @@ function bindSettingsEvents(){
   });
   document.getElementById('btnMigrateToCloud').addEventListener('click', migrateLocalDataToCloud);
   document.getElementById('btnOpenSheetShare').addEventListener('click', function(){
-    if(!sheetId){ toast('กรุณากรอกและบันทึก Spreadsheet ID ก่อน', true); return; }
+    if(!sheetId){ toast(i18nText('toast049')||'กรุณากรอกและบันทึก Spreadsheet ID ก่อน', true); return; }
     window.open('https://docs.google.com/spreadsheets/d/'+sheetId+'/edit', '_blank');
   });
   document.getElementById('btnOpenTestUsers').addEventListener('click', function(){
@@ -7312,10 +7392,10 @@ function bindSettingsEvents(){
     var name = input.value.trim();
     if(!name) return;
     var roles = Array.prototype.slice.call(document.querySelectorAll('#m_advisor_roles input:checked')).map(function(c){ return c.value; });
-    if(roles.length===0){ toast('กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
+    if(roles.length===0){ toast(i18nText('toast050')||'กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
     var rank = document.getElementById('m_advisor_rank').value;
     withFreshMasterData(function(){
-      if(masterData.advisors.some(function(a){ return a.name===name; })){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return {__skip:true}; }
+      if(masterData.advisors.some(function(a){ return a.name===name; })){ toast(i18nText('toast051')||'มีชื่อนี้อยู่แล้วในรายการ', true); return {__skip:true}; }
       masterData.advisors.push({name:name, roles:roles, rank:rank});
       return Promise.resolve();
     }).then(function(result){
@@ -7338,7 +7418,7 @@ function bindSettingsEvents(){
     var slot = document.getElementById('m_position_slot').value;
     if(!name) return;
     withFreshMasterData(function(){
-      if(masterData.positions.some(function(p){ return p.name===name; })){ toast('มีตำแหน่งนี้อยู่แล้วในรายการ', true); return {__skip:true}; }
+      if(masterData.positions.some(function(p){ return p.name===name; })){ toast(i18nText('toast052')||'มีตำแหน่งนี้อยู่แล้วในรายการ', true); return {__skip:true}; }
       masterData.positions.push({name:name, slot:slot});
       return Promise.resolve();
     }).then(function(result){
@@ -7387,12 +7467,12 @@ function setDeptPin(){
   var dept = document.getElementById('deptPin_department').value;
   var p1 = document.getElementById('deptPin_pin1').value;
   var p2 = document.getElementById('deptPin_pin2').value;
-  if(!dept){ toast('กรุณาเพิ่มรายชื่อสาขาในระบบก่อน', true); return; }
-  if(p1.length<4){ toast('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
-  if(p1!==p2){ toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', true); return; }
+  if(!dept){ toast(i18nText('toast053')||'กรุณาเพิ่มรายชื่อสาขาในระบบก่อน', true); return; }
+  if(p1.length<4){ toast(i18nText('toast004')||'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร', true); return; }
+  if(p1!==p2){ toast(i18nText('toast005')||'รหัสผ่านทั้งสองช่องไม่ตรงกัน', true); return; }
   hashPin(p1).then(function(h){
-    if(h===appPinHash || h===viewerPinHash){ toast('ห้ามตั้งซ้ำกับรหัสผ่าน Admin หรือรหัสดูอย่างเดียวรวม', true); throw new Error('stop'); }
-    if((deptPins||[]).some(function(d){ return d.pinHash===h && d.department!==dept; })){ toast('รหัสผ่านนี้ถูกใช้กับสาขาอื่นอยู่แล้ว กรุณาตั้งรหัสอื่น', true); throw new Error('stop'); }
+    if(h===appPinHash || h===viewerPinHash){ toast(i18nText('toast054')||'ห้ามตั้งซ้ำกับรหัสผ่าน Admin หรือรหัสดูอย่างเดียวรวม', true); throw new Error('stop'); }
+    if((deptPins||[]).some(function(d){ return d.pinHash===h && d.department!==dept; })){ toast(i18nText('toast055')||'รหัสผ่านนี้ถูกใช้กับสาขาอื่นอยู่แล้ว กรุณาตั้งรหัสอื่น', true); throw new Error('stop'); }
     deptPins = (deptPins||[]).filter(function(d){ return d.department!==dept; });
     deptPins.push({department:dept, pinHash:h});
     return dbPut('meta',{key:'deptPins', value:deptPins});
@@ -7408,7 +7488,7 @@ function removeDeptPin(dept){
   deptPins = (deptPins||[]).filter(function(d){ return d.department!==dept; });
   dbPut('meta',{key:'deptPins', value:deptPins}).then(function(){
     renderDeptPinSection();
-    toast('ปิดใช้งานแล้ว');
+    toast(i18nText('toast008')||'ปิดใช้งานแล้ว');
   });
 }
 function renderAdvisorRoleCheckboxes(){
@@ -7458,8 +7538,8 @@ function openPositionEditModal(pos){
     el('button',{class:'btn btn-primary', text:'บันทึก', onclick:function(){
       var newName = document.getElementById('editPositionName').value.trim();
       var newSlot = document.getElementById('editPositionSlot').value;
-      if(!newName){ toast('กรุณากรอกชื่อตำแหน่ง', true); return; }
-      if(newName!==pos.name && masterData.positions.some(function(p){ return p.name===newName; })){ toast('มีตำแหน่งนี้อยู่แล้วในรายการ', true); return; }
+      if(!newName){ toast(i18nText('toast056')||'กรุณากรอกชื่อตำแหน่ง', true); return; }
+      if(newName!==pos.name && masterData.positions.some(function(p){ return p.name===newName; })){ toast(i18nText('toast052')||'มีตำแหน่งนี้อยู่แล้วในรายการ', true); return; }
       backdrop.remove();
       updatePosition(pos.name, newName, newSlot);
     }})
@@ -7697,7 +7777,7 @@ function renderAdvisorWorkloadTable(){
    ชื่อปัจจุบันในระบบหรือยัง หรือควรเพิ่มเป็นชื่อเก่า (alias) แทน */
 function exportAdvisorListExcel(){
   var all = masterData.advisors || [];
-  if(!all.length){ toast('ไม่มีรายชื่ออาจารย์ให้ส่งออก', true); return; }
+  if(!all.length){ toast(i18nText('toast057')||'ไม่มีรายชื่ออาจารย์ให้ส่งออก', true); return; }
   var aoa = [['ชื่อปัจจุบัน','ตำแหน่งทางวิชาการ','บทบาท','ชื่อเก่า/alias']].concat(all.map(function(a){
     return [a.name||'', a.rank||'', (a.roles||[]).join(', '), (a.aliases||[]).join(', ')];
   }));
@@ -7709,7 +7789,7 @@ function exportAdvisorListExcel(){
 }
 function exportAdvisorWorkloadExcel(){
   var rows = sortAdvisorWorkloadRows(advisorWorkloadRows());
-  if(!rows.length){ toast('ไม่มีรายชื่ออาจารย์ให้ส่งออก', true); return; }
+  if(!rows.length){ toast(i18nText('toast057')||'ไม่มีรายชื่ออาจารย์ให้ส่งออก', true); return; }
   var aoa = [['ชื่ออาจารย์','ตำแหน่ง','ที่ปรึกษา (ใช้)','ที่ปรึกษา (โควตา)','เกินโควตา','กรรมการสอบ (ครั้ง)','รวมภาระงาน']].concat(rows.map(function(r){
     return [r.name, r.rank||'', advisorWorkloadNumText(r.used), r.max||'', r.over?'ใช่':'', r.committee, advisorWorkloadNumText(r.total)];
   }));
@@ -7918,9 +7998,9 @@ function openAdvisorEditModal(advisor){
       var newRoles = Array.prototype.slice.call(modal.querySelectorAll('[data-edit-role]:checked')).map(function(c){ return c.value; });
       var newRank = document.getElementById('editAdvisorRank').value;
       var doCascade = document.getElementById('editAdvisorCascade').checked;
-      if(!newName){ toast('กรุณากรอกชื่อ', true); return; }
-      if(newRoles.length===0){ toast('กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
-      if(newName!==advisor.name && masterData.advisors.some(function(a){ return a.name===newName; })){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
+      if(!newName){ toast(i18nText('toast058')||'กรุณากรอกชื่อ', true); return; }
+      if(newRoles.length===0){ toast(i18nText('toast050')||'กรุณาเลือกตำแหน่งอย่างน้อย 1 ตำแหน่ง', true); return; }
+      if(newName!==advisor.name && masterData.advisors.some(function(a){ return a.name===newName; })){ toast(i18nText('toast051')||'มีชื่อนี้อยู่แล้วในรายการ', true); return; }
       backdrop.remove();
       updateAdvisor(advisor.name, newName, newRoles, newRank, doCascade);
     }})
@@ -7990,7 +8070,7 @@ function renderChipList(containerId, key){
           /* พิมพ์ชื่อที่ตรงกับรายการที่มีอยู่แล้วเป๊ะ (เช่น "แผน1 แบบวิชาการ(วิทยานิพนธ์)" -> "แผน 1 แบบวิชาการ (วิทยานิพนธ์)")
              แทนที่จะบล็อกไว้เฉยๆ ให้ถือเป็นการ "รวมรายการซ้ำ" — ยกเว้นอาจารย์ เพราะชื่อซ้ำกันเป๊ะอาจเป็นคนละคนโดยบังเอิญ
              จึงยังคงให้แก้ไขผ่านช่องแก้ไขชื่อทีละคน หรือลบ/เพิ่มเองแทน */
-          if(key==='advisors'){ toast('มีชื่อนี้อยู่แล้วในรายการ', true); return; }
+          if(key==='advisors'){ toast(i18nText('toast051')||'มีชื่อนี้อยู่แล้วในรายการ', true); return; }
           if(!confirm('มี "'+newVal+'" อยู่ในรายการอยู่แล้ว ต้องการรวม "'+val+'" เข้ากับ "'+newVal+'" หรือไม่?\nข้อมูลที่เคยบันทึกไว้ด้วยชื่อ "'+val+'" ทั้งหมดจะถูกเปลี่ยนเป็น "'+newVal+'" และรายการซ้ำจะถูกลบออก')) return;
           mergeMasterItem(key, val, newVal);
           return;
@@ -8150,7 +8230,7 @@ function initGsiClient(){
         tokenExpiresAt = Date.now() + (resp.expires_in||3600)*1000;
         saveDriveToken();
         updateDriveStatusUI(true);
-        toast('เชื่อมต่อ Google Drive สำเร็จ');
+        toast(i18nText('toast059')||'เชื่อมต่อ Google Drive สำเร็จ');
         if(cloudModeEnabled) refreshCloudMasterData();
       }
     });
@@ -8166,16 +8246,16 @@ function updateDriveStatusUI(connected){
 }
 function bindGoogleButtons(){
   document.getElementById('btnSignIn').addEventListener('click', function(){
-    if(!googleClientId){ toast('กรุณากรอกและบันทึก Google OAuth Client ID ก่อน', true); return; }
+    if(!googleClientId){ toast(i18nText('toast060')||'กรุณากรอกและบันทึก Google OAuth Client ID ก่อน', true); return; }
     if(!tokenClient) initGsiClient();
-    if(!tokenClient){ toast('โหลด Google Identity Services ไม่สำเร็จ ลองรีเฟรชหน้า', true); return; }
+    if(!tokenClient){ toast(i18nText('toast061')||'โหลด Google Identity Services ไม่สำเร็จ ลองรีเฟรชหน้า', true); return; }
     tokenClient.requestAccessToken({prompt: accessToken ? '' : 'consent'});
   });
   document.getElementById('btnSignOut').addEventListener('click', function(){
     if(accessToken && google.accounts && google.accounts.oauth2){ google.accounts.oauth2.revoke(accessToken, function(){}); }
     clearDriveToken();
     updateDriveStatusUI(false);
-    toast('ออกจากระบบ Google Drive แล้ว');
+    toast(i18nText('toast062')||'ออกจากระบบ Google Drive แล้ว');
   });
   document.getElementById('btnBackupNow').addEventListener('click', function(){ backupNow(false); });
   document.getElementById('btnRestore').addEventListener('click', openRestorePicker);
@@ -8221,7 +8301,7 @@ function purgeDeletedUI(){
       purgeAllDeletedRecords().then(function(res){
         resultBox.innerHTML='';
         resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว รวม '+res.total+' รายการ'}));
-        toast('ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว');
+        toast(i18nText('toast063')||'ล้างข้อมูลที่ถูกลบถาวรเรียบร้อยแล้ว');
       }).catch(function(e){
         toast('ล้างข้อมูลไม่สำเร็จ: '+(e && e.message ? e.message : e), true);
         confirmBtn.disabled=false; confirmBtn.textContent = '🗑️ ยืนยันล้างถาวร ('+total+' รายการ)';
@@ -8278,7 +8358,7 @@ function attemptSilentReconnect(){
           tokenExpiresAt = Date.now() + (resp.expires_in||3600)*1000;
           saveDriveToken();
           updateDriveStatusUI(true);
-          toast('เชื่อมต่อ Google Drive อัตโนมัติสำเร็จ');
+          toast(i18nText('toast064')||'เชื่อมต่อ Google Drive อัตโนมัติสำเร็จ');
           if(cloudModeEnabled) refreshCloudMasterData();
         }
       }).requestAccessToken({prompt:''});
@@ -8286,7 +8366,7 @@ function attemptSilentReconnect(){
   });
 }
 function remindManualReconnect(){
-  toast('ถึงกำหนดสำรองข้อมูลอัตโนมัติ (ทุก 12 ชม.) กรุณากด "เชื่อมต่อ Google Drive" ในหน้าตั้งค่าเพื่อสำรองข้อมูลล่าสุด', true);
+  toast(i18nText('toast065')||'ถึงกำหนดสำรองข้อมูลอัตโนมัติ (ทุก 12 ชม.) กรุณากด "เชื่อมต่อ Google Drive" ในหน้าตั้งค่าเพื่อสำรองข้อมูลล่าสุด', true);
 }
 /* Google จำกัดสิทธิ์ของ "test user" (ตอนแอปยังไม่ publish จริง) ไว้ 7 วันต่อการล็อกอิน 1 ครั้ง
    ฟังก์ชันนี้เตือนล่วงหน้าตั้งแต่วันที่ 6 เพื่อไม่ให้เจ้าหน้าที่ถูกตัดสิทธิ์แบบไม่ทันตั้งตัว */
@@ -8399,7 +8479,7 @@ function checkBrokenDriveFiles(){
           el('span',{class:'name', text:'⚠️ '+f.name+' — '+studentTxt+' ('+sectionTxt+') — '+f.reason}),
           el('button',{type:'button', class:'link-btn', style:'color:#c0392b', text:'ลบรายการนี้ออกจากระบบ', onclick:function(){
             if(!confirm('ลบรายการไฟล์นี้ออกจากระบบ? (ไม่กระทบไฟล์ต้นฉบับใน Drive เพราะหาไม่เจออยู่แล้ว) หลังลบสามารถแนบไฟล์ใหม่ทดแทนได้ที่หน้าบันทึกข้อมูลของนักศึกษาคนนี้')) return;
-            filesDelete(f.id).then(function(){ row.remove(); toast('ลบรายการแล้ว'); });
+            filesDelete(f.id).then(function(){ row.remove(); toast(i18nText('toast024')||'ลบรายการแล้ว'); });
           }})
         ]);
         resultBox.appendChild(row);
@@ -8455,7 +8535,7 @@ function scanBogusAdvisorHistory(){
       })).then(function(){
         resultBox.innerHTML='';
         resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ลบประวัติที่ผิดพลาดออกแล้ว '+totalBogus+' รายการ จาก '+affected.length+' นักศึกษา'}));
-        toast('ล้างประวัติที่ปรึกษาที่ผิดพลาดเรียบร้อยแล้ว');
+        toast(i18nText('toast066')||'ล้างประวัติที่ปรึกษาที่ผิดพลาดเรียบร้อยแล้ว');
       }).catch(function(e){
         toast('ลบไม่สำเร็จ: '+(e && e.message ? e.message : e), true);
         confirmBtn.disabled=false; confirmBtn.textContent = '🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด ('+totalBogus+' รายการ)';
@@ -8537,7 +8617,7 @@ function checkMismatchedMasterFields(){
         var fixBtn = el('button',{type:'button', class:'btn btn-secondary', text:'แก้ไขทั้งหมด '+g.students.length+' รายการเป็นค่านี้'});
         fixBtn.addEventListener('click', function(){
           var newVal = sel.value;
-          if(!newVal){ toast('กรุณาเลือกค่ามาตรฐานที่ถูกต้องก่อน', true); return; }
+          if(!newVal){ toast(i18nText('toast067')||'กรุณาเลือกค่ามาตรฐานที่ถูกต้องก่อน', true); return; }
           if(!confirm('แก้ไขช่อง "'+g.label+'" ของนักศึกษา '+g.students.length+' คน จาก "'+g.value+'" เป็น "'+newVal+'"?')) return;
           fixBtn.disabled = true; fixBtn.textContent = 'กำลังแก้ไข...';
           Promise.all(g.students.map(function(r){
@@ -8639,7 +8719,7 @@ function scanSwappedGradTermData(){
         invalidateRecordsSheetCache();
         resultBox.innerHTML='';
         resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ซ่อมข้อมูลเรียบร้อยแล้ว '+affected.length+' คน'}));
-        toast('ซ่อมข้อมูลที่สลับตำแหน่งกันเรียบร้อยแล้ว');
+        toast(i18nText('toast068')||'ซ่อมข้อมูลที่สลับตำแหน่งกันเรียบร้อยแล้ว');
       }).catch(function(e){
         toast('ซ่อมไม่สำเร็จ: '+(e && e.message ? e.message : e), true);
         confirmBtn.disabled=false; confirmBtn.textContent = '🛠️ ยืนยันซ่อมข้อมูล ('+affected.length+' คน)';
@@ -9328,9 +9408,9 @@ function filesDelete(id){
 function initSheetStructure(){
   var raw = document.getElementById('s_sheetId').value.trim();
   sheetId = extractSheetId(raw);
-  if(!sheetId){ toast('กรุณากรอก Spreadsheet ID หรือลิงก์ก่อน', true); return; }
+  if(!sheetId){ toast(i18nText('toast069')||'กรุณากรอก Spreadsheet ID หรือลิงก์ก่อน', true); return; }
   dbPut('meta',{key:'sheetId', value:sheetId});
-  toast('กำลังตรวจสอบโครงสร้างชีท...');
+  toast(i18nText('toast070')||'กำลังตรวจสอบโครงสร้างชีท...');
   ensureAuthed().then(function(){
     return sheetsFetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'?fields=sheets.properties.title');
   }).then(function(res){ return res.json(); }).then(function(data){
@@ -9380,7 +9460,7 @@ function initSheetStructure(){
       }));
     });
   }).then(function(){
-    toast('สร้าง/ตรวจสอบโครงสร้างชีทกลางเรียบร้อยแล้ว พร้อมใช้งาน');
+    toast(i18nText('toast071')||'สร้าง/ตรวจสอบโครงสร้างชีทกลางเรียบร้อยแล้ว พร้อมใช้งาน');
   }).catch(function(e){ toast('ตั้งค่าโครงสร้างชีทไม่สำเร็จ: '+e, true); });
 }
 /* ---- master data on the shared sheet ---- */
@@ -9421,7 +9501,7 @@ function handleGoneOffline(){
     cloudModeEnabled = false;
     dbPut('meta',{key:'cloudModeEnabled', value:false});
     dbPut('meta',{key:'autoSwitchedOfflineMode', value:true});
-    toast('⚠️ ขาดการเชื่อมต่ออินเทอร์เน็ต ระบบสลับไปบันทึกข้อมูลในเครื่องนี้ชั่วคราวโดยอัตโนมัติ ข้อมูลจะไม่หายไปไหน — เมื่อเน็ตกลับมาระบบจะสลับกลับและแจ้งให้ซิงค์ข้อมูลอัตโนมัติ', true);
+    toast(i18nText('toast072')||'⚠️ ขาดการเชื่อมต่ออินเทอร์เน็ต ระบบสลับไปบันทึกข้อมูลในเครื่องนี้ชั่วคราวโดยอัตโนมัติ ข้อมูลจะไม่หายไปไหน — เมื่อเน็ตกลับมาระบบจะสลับกลับและแจ้งให้ซิงค์ข้อมูลอัตโนมัติ', true);
     hideOfflineSyncBanner();
     var s_cm = document.getElementById('s_cloudMode'); if(s_cm) s_cm.checked = false;
   }
@@ -9433,7 +9513,7 @@ function handleBackOnline(){
     dbPut('meta',{key:'cloudModeEnabled', value:true});
     dbPut('meta',{key:'autoSwitchedOfflineMode', value:false});
     var s_cm = document.getElementById('s_cloudMode'); if(s_cm) s_cm.checked = true;
-    toast('✅ อินเทอร์เน็ตกลับมาแล้ว สลับกลับไปใช้ระบบข้อมูลกลางอัตโนมัติ');
+    toast(i18nText('toast073')||'✅ อินเทอร์เน็ตกลับมาแล้ว สลับกลับไปใช้ระบบข้อมูลกลางอัตโนมัติ');
     renderList(); renderAllSelects();
   }
   checkPendingOfflineSync();
@@ -9456,14 +9536,14 @@ function initOfflineDetection(){
   document.getElementById('btnDismissOfflineBanner').addEventListener('click', hideOfflineSyncBanner);
 }
 function migrateLocalDataToCloud(){
-  if(!sheetId){ toast('กรุณากรอกและบันทึก Spreadsheet ID ก่อน', true); return; }
+  if(!sheetId){ toast(i18nText('toast049')||'กรุณากรอกและบันทึก Spreadsheet ID ก่อน', true); return; }
   if(!confirm('จะย้ายข้อมูลทั้งหมดในเครื่องนี้ (รายการสอบ + ไฟล์แนบ + ข้อมูลตั้งต้น) ขึ้นชีทกลางที่ตั้งค่าไว้ ควรทำจากเครื่องที่มีข้อมูลล่าสุด/มากที่สุดเพียงครั้งเดียว ดำเนินการต่อหรือไม่?')) return;
-  toast('กำลังเตรียมย้ายข้อมูล...');
+  toast(i18nText('toast074')||'กำลังเตรียมย้ายข้อมูล...');
   ensureAuthed().then(function(){
     return Promise.all([dbGetAll('records'), dbGetAll('files')]);
   }).then(function(results){
     var localRecords = results[0], localFiles = results[1];
-    toast('กำลังย้ายข้อมูลตั้งต้น...');
+    toast(i18nText('toast075')||'กำลังย้ายข้อมูลตั้งต้น...');
     return saveMasterDataToCloud().then(function(){
       toast('กำลังย้ายรายการสอบ ('+localRecords.length+' รายการ)...');
       var wasCloud = cloudModeEnabled;
@@ -9494,7 +9574,7 @@ function migrateLocalDataToCloud(){
       }).then(function(){ cloudModeEnabled = wasCloud; });
     });
   }).then(function(){
-    toast('ย้ายข้อมูลเข้าระบบกลางเรียบร้อยแล้ว — ไปที่ช่อง "เปิดใช้งานระบบข้อมูลกลาง" เพื่อเริ่มใช้งาน');
+    toast(i18nText('toast076')||'ย้ายข้อมูลเข้าระบบกลางเรียบร้อยแล้ว — ไปที่ช่อง "เปิดใช้งานระบบข้อมูลกลาง" เพื่อเริ่มใช้งาน');
   }).catch(function(e){ toast('ย้ายข้อมูลไม่สำเร็จ: '+e, true); });
 }
 
@@ -9516,13 +9596,13 @@ function uploadAttachmentToDrive(fileId, section){
         return dbPut('files', f);
       });
     });
-  }).then(function(){ renderAttachmentList(section); toast('อัปโหลดไฟล์แนบขึ้น Drive สำเร็จ'); })
+  }).then(function(){ renderAttachmentList(section); toast(i18nText('toast077')||'อัปโหลดไฟล์แนบขึ้น Drive สำเร็จ'); })
   .catch(function(e){ toast('อัปโหลดไม่สำเร็จ: '+e, true); });
 }
 
 function backupNow(isAuto){
   ensureAuthed().then(function(){
-    toast('กำลังเตรียมข้อมูลสำรอง...');
+    toast(i18nText('toast078')||'กำลังเตรียมข้อมูลสำรอง...');
     if(cloudModeEnabled){
       // In cloud mode, the sheet + Drive are already the source of truth and file bytes
       // already live on Drive — the backup only needs to snapshot the metadata/records.
@@ -9551,7 +9631,7 @@ function backupNow(isAuto){
     var folderIdHolder = {id:null};
     return ensureDriveFolder('ThesisManagerBackups').then(function(folderId){
       folderIdHolder.id = folderId;
-      toast('กำลังอัปโหลดไฟล์สำรองขึ้น Drive...');
+      toast(i18nText('toast079')||'กำลังอัปโหลดไฟล์สำรองขึ้น Drive...');
       return driveUploadBlob(blob, 'thesis-backup-'+dateStamp()+'.json', 'application/json', folderId);
     }).then(function(){
       return cleanupOldBackups(folderIdHolder.id);
@@ -9606,7 +9686,7 @@ function openRestorePicker(){
   }).then(function(res){ return res.json(); })
   .then(function(data){
     var files = data.files||[];
-    if(files.length===0){ toast('ไม่พบไฟล์สำรองข้อมูลบน Drive', true); return; }
+    if(files.length===0){ toast(i18nText('toast080')||'ไม่พบไฟล์สำรองข้อมูลบน Drive', true); return; }
     showBackupListModal(files);
   }).catch(function(e){ toast('โหลดรายการสำรองไม่สำเร็จ: '+e, true); });
 }

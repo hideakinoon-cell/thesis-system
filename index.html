@@ -559,8 +559,8 @@ if('serviceWorker' in navigator){
 </header>
 <div id="offlineSyncBanner" style="display:none;background:#fef3c7;border-bottom:1px solid #f59e0b;padding:10px 20px;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;">
   <span id="offlineSyncBannerText" style="color:#92400e;font-size:14px;"></span>
-  <button type="button" class="btn btn-primary btn-sm" id="btnSyncOfflineNow">🔄 ซิงค์ข้อมูลตอนนี้</button>
-  <button type="button" class="link-btn" id="btnDismissOfflineBanner">ปิด</button>
+  <button type="button" class="btn btn-primary btn-sm" id="btnSyncOfflineNow" data-i18n="btnSyncOfflineNow">🔄 ซิงค์ข้อมูลตอนนี้</button>
+  <button type="button" class="link-btn" id="btnDismissOfflineBanner" data-i18n="btnCloseModal">ปิด</button>
 </div>
 <div class="app-layout">
 <nav class="tabs">
@@ -2337,18 +2337,18 @@ function runBulkAttach(field, link, resultVal, selectedRecs, applyBtn, statusEl)
   var resultField = BULK_ATTACH_FIELD_MAP[field].resultField;
   var changeLabel = 'แนบลิงก์ประกาศ ('+BULK_ATTACH_FIELD_MAP[field].label+')'+(resultVal?' + ตั้งผลสอบ':'');
   applyBtn.setAttribute('disabled','disabled');
-  statusEl.textContent = 'กำลังบันทึก...';
+  statusEl.textContent = (i18nText('txtSavingEllipsis')||'กำลังบันทึก...');
   var auditEntries = [];
 
   function finish(count){
-    statusEl.textContent = 'แนบลิงก์ให้ '+count+' คน เรียบร้อยแล้ว';
+    statusEl.textContent = (i18nText('txtAttachLinkStatusPrefix')||'แนบลิงก์ให้ ')+count+(i18nText('txtAttachLinkStatusSuffix')||' คน เรียบร้อยแล้ว');
     toast((i18nText('toastAnnounceLinkedPrefix')||'แนบลิงก์ประกาศให้ ')+count+(i18nText('toastAnnounceLinkedSuffix')||' คนเรียบร้อยแล้ว'));
     refreshDocLinkSuggestions();
     renderList();
-    applyBtn.textContent = 'แนบเรียบร้อยแล้ว';
+    applyBtn.textContent = (i18nText('txtAttachedDone')||'แนบเรียบร้อยแล้ว');
   }
   function fail(e){
-    statusEl.textContent = 'เกิดข้อผิดพลาด: '+(e&&e.message?e.message:e);
+    statusEl.textContent = (i18nText('txtErrorOccurredPrefix')||'เกิดข้อผิดพลาด: ')+(e&&e.message?e.message:e);
     applyBtn.removeAttribute('disabled');
   }
 
@@ -3270,7 +3270,48 @@ var LANDING_I18N = {
   lblAutoBackup12h: {th:'สำรองข้อมูลขึ้น Drive อัตโนมัติทุก 12 ชั่วโมง', en:'Automatically back up to Drive every 12 hours'},
   helpAutoBackup: {th:'ทำงานเฉพาะขณะเปิดหน้าเว็บนี้ค้างไว้และเชื่อมต่อ Google Drive อยู่เท่านั้น ถ้าปิดแท็บ/ปิดเครื่อง หรือหลุดการเชื่อมต่อ จะไม่มีการสำรองอัตโนมัติเกิดขึ้นจนกว่าจะเปิดและเชื่อมต่อใหม่', en:'Only works while this page stays open and Google Drive remains connected. If the tab/device is closed, or the connection drops, no automatic backup will happen until it is reopened and reconnected.'},
   lblBackupKeepCount: {th:'เก็บไฟล์สำรองล่าสุดไว้กี่ไฟล์', en:'Number of Recent Backups to Keep'},
-  helpBackupKeepCount: {th:'ไฟล์สำรองเก่าที่เกินจำนวนนี้จะถูกลบออกจาก Drive อัตโนมัติทุกครั้งที่สำรองข้อมูลสำเร็จ เพื่อไม่ให้พื้นที่ Drive บานปลาย', en:'Older backup files beyond this count are automatically deleted from Drive every time a backup succeeds, to keep Drive storage from growing unbounded.'}
+  helpBackupKeepCount: {th:'ไฟล์สำรองเก่าที่เกินจำนวนนี้จะถูกลบออกจาก Drive อัตโนมัติทุกครั้งที่สำรองข้อมูลสำเร็จ เพื่อไม่ให้พื้นที่ Drive บานปลาย', en:'Older backup files beyond this count are automatically deleted from Drive every time a backup succeeds, to keep Drive storage from growing unbounded.'},
+  txtSavingEllipsis: {th:'กำลังบันทึก...', en:'Saving...'},
+  txtAttachedDone: {th:'แนบเรียบร้อยแล้ว', en:'Attached'},
+  txtErrorOccurredPrefix: {th:'เกิดข้อผิดพลาด: ', en:'An error occurred: '},
+  txtAttachLinkStatusPrefix: {th:'แนบลิงก์ให้ ', en:'Attached link for '},
+  txtAttachLinkStatusSuffix: {th:' คน เรียบร้อยแล้ว', en:' people'},
+  txtEnterPinPlease: {th:'กรุณากรอกรหัสผ่าน', en:'Please enter the password'},
+  txtIncorrectPin: {th:'รหัสผ่านไม่ถูกต้อง', en:'Incorrect password'},
+  txtViewerPinActive: {th:'✅ เปิดใช้งานอยู่ — เจ้าหน้าที่ที่มีรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารได้เท่านั้น', en:'✅ Active — staff with this password will only see the "Check Data" page and can only download documents.'},
+  txtViewerPinNotSet: {th:'ยังไม่ได้ตั้งรหัสผ่านดูอย่างเดียว', en:'A view-only password has not been set yet.'},
+  txtRoleBadgeDeptViewerPrefix: {th:'เจ้าหน้าที่สาขา (ดูอย่างเดียว) — ', en:'Department Staff (View Only) — '},
+  txtRoleBadgeViewer: {th:'เจ้าหน้าที่ (ดูอย่างเดียว)', en:'Staff (View Only)'},
+  txtRoleBadgeAdmin: {th:'เจ้าหน้าที่ (Admin)', en:'Staff (Admin)'},
+  txtLoadingEllipsis: {th:'กำลังโหลด...', en:'Loading...'},
+  txtLoadHistoryFailedPrefix: {th:'โหลดประวัติไม่สำเร็จ: ', en:'Failed to load history: '},
+  txtNoAuditHistoryMatch: {th:'ไม่พบประวัติที่ตรงกับคำค้นหา', en:'No history matching this search was found.'},
+  txtNoAuditHistoryYet: {th:'ยังไม่มีประวัติการแก้ไขข้อมูล', en:'No edit history yet.'},
+  txtLookupPromptEmpty: {th:'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา หรือเลือกสาขาวิชา/ขั้นตอนเพื่อดูรายชื่อ', en:'Type a student ID or name to search, or choose a department/stage to view the list.'},
+  txtNoStudentMatchStage: {th:'ไม่พบนักศึกษาที่ตรงกับขั้นตอนที่เลือก', en:'No students matching the selected stage were found.'},
+  txtAdvisorInlinePrefix: {th:' • ที่ปรึกษา: ', en:' • Advisor: '},
+  txtExamItemsCountSuffix: {th:' รายการสอบ', en:' exam entries'},
+  valMissingStudentId: {th:'กรุณากรอกรหัสนักศึกษา', en:'Please enter the student ID'},
+  valMissingStudentName: {th:'กรุณากรอกชื่อ-นามสกุล', en:'Please enter the full name'},
+  valMissingProgram: {th:'กรุณาเลือกหลักสูตร', en:'Please select a program'},
+  valMissingDepartment: {th:'กรุณาเลือกสาขาวิชา', en:'Please select a department'},
+  valMissingProposalTime: {th:'กรุณาระบุเวลาสอบเค้าโครง (3.1)', en:'Please specify the proposal exam time (3.1)'},
+  valMissingProposalChair: {th:'กรุณาเลือกประธานกรรมการ (3.1)', en:'Please select the committee chair (3.1)'},
+  valDupCommitteeProposalPrefix: {th:'พบชื่อ "', en:'The name "'},
+  valDupCommitteeProposalSuffix: {th:'" ซ้ำในคณะกรรมการสอบเค้าโครง (3.1) กรุณาตรวจสอบ', en:'" is duplicated in the proposal exam committee (3.1) — please check'},
+  valMissingDefenseTime: {th:'กรุณาระบุเวลาสอบป้องกัน (3.2)', en:'Please specify the defense exam time (3.2)'},
+  valMissingDefenseChair: {th:'กรุณาเลือกประธานกรรมการ (3.2)', en:'Please select the committee chair (3.2)'},
+  valDupCommitteeDefensePrefix: {th:'พบชื่อ "', en:'The name "'},
+  valDupCommitteeDefenseSuffix: {th:'" ซ้ำในคณะกรรมการสอบป้องกัน/IS (3.2) กรุณาตรวจสอบ', en:'" is duplicated in the defense/IS exam committee (3.2) — please check'},
+  txtDateNotSpecified: {th:'ยังไม่ระบุวันที่', en:'Date not specified yet'},
+  txtCurrentlyEditingThisEntry: {th:' (กำลังแก้ไขรายการนี้อยู่)', en:' (currently editing this entry)'},
+  txtStatusGraduated: {th:'สำเร็จการศึกษาแล้ว', en:'Graduated'},
+  txtStatusOverdueBook: {th:'เลยกำหนดส่งเล่มฉบับสมบูรณ์', en:'Overdue for Final Thesis Submission'},
+  txtStatusWithdrawnAdvisor: {th:'ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่', en:'Advisor Withdrawn, Not Yet Reassigned'},
+  txtStatusStudying: {th:'กำลังศึกษา', en:'Studying'},
+  txtOfflineSyncBannerPrefix: {th:'📶 อินเทอร์เน็ตกลับมาแล้ว มีข้อมูล ', en:'📶 Internet connection restored — there are '},
+  txtOfflineSyncBannerSuffix: {th:' รายการที่บันทึกไว้ตอนออฟไลน์ในเครื่องนี้ ยังไม่ถูกซิงค์เข้าชีทกลาง', en:' entries saved on this device while offline that have not been synced to the central sheet yet'},
+  btnSyncOfflineNow: {th:'🔄 ซิงค์ข้อมูลตอนนี้', en:'🔄 Sync Now'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -3346,13 +3387,13 @@ function refreshLockFormLang(){
 function bindLockEvents(){
   document.getElementById('btnLockSubmit').addEventListener('click', function(){
     var pin = document.getElementById('lockPinInput').value;
-    if(!pin){ document.getElementById('lockError').textContent='กรุณากรอกรหัสผ่าน'; return; }
+    if(!pin){ document.getElementById('lockError').textContent=(i18nText('txtEnterPinPlease')||'กรุณากรอกรหัสผ่าน'); return; }
     hashPin(pin).then(function(h){
       var deptMatch = (deptPins||[]).filter(function(d){ return d.pinHash===h; })[0];
       if(h===appPinHash){ currentRole='admin'; currentDeptRestriction=null; hideLockOverlay(); applyRoleUI(); }
       else if(viewerPinHash && h===viewerPinHash){ currentRole='viewer'; currentDeptRestriction=null; hideLockOverlay(); applyRoleUI(); }
       else if(deptMatch){ currentRole='dept-viewer'; currentDeptRestriction=deptMatch.department; hideLockOverlay(); applyRoleUI(); }
-      else { document.getElementById('lockError').textContent='รหัสผ่านไม่ถูกต้อง'; }
+      else { document.getElementById('lockError').textContent=(i18nText('txtIncorrectPin')||'รหัสผ่านไม่ถูกต้อง'); }
     });
   });
   document.getElementById('lockPinInput').addEventListener('keydown', function(e){
@@ -3380,8 +3421,8 @@ function bindLockEvents(){
     var p1 = document.getElementById('lockSetupPin1').value;
     var p2 = document.getElementById('lockSetupPin2').value;
     var err = document.getElementById('lockSetupError');
-    if(p1.length<4){ err.textContent='รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
-    if(p1!==p2){ err.textContent='รหัสผ่านทั้งสองช่องไม่ตรงกัน'; return; }
+    if(p1.length<4){ err.textContent=(i18nText('toast004')||'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'); return; }
+    if(p1!==p2){ err.textContent=(i18nText('toast005')||'รหัสผ่านทั้งสองช่องไม่ตรงกัน'); return; }
     err.textContent='';
     hashPin(p1).then(function(h){
       appPinHash = h;
@@ -3410,8 +3451,8 @@ function applyRoleUI(){
   });
   var badge = document.getElementById('roleBadge');
   if(badge){
-    badge.textContent = currentRole==='dept-viewer' ? 'เจ้าหน้าที่สาขา (ดูอย่างเดียว) — '+currentDeptRestriction
-      : isViewer ? 'เจ้าหน้าที่ (ดูอย่างเดียว)' : 'เจ้าหน้าที่ (Admin)';
+    badge.textContent = currentRole==='dept-viewer' ? (i18nText('txtRoleBadgeDeptViewerPrefix')||'เจ้าหน้าที่สาขา (ดูอย่างเดียว) — ')+currentDeptRestriction
+      : isViewer ? (i18nText('txtRoleBadgeViewer')||'เจ้าหน้าที่ (ดูอย่างเดียว)') : (i18nText('txtRoleBadgeAdmin')||'เจ้าหน้าที่ (Admin)');
   }
   /* หน้าแดชบอร์ดสรุปข้อมูลให้ขึ้นเป็นหน้าแรกเสมอทันทีหลังปลดล็อกรหัสผ่านสำเร็จ ไม่ว่าจะเป็นสิทธิ์ใดก็ตาม
      (applyRoleUI() ถูกเรียกเฉพาะตอนล็อกอิน/ตั้งรหัสผ่านสำเร็จเท่านั้น จึงใช้จุดนี้เป็นตัวควบคุมหน้าที่แสดงหลังเข้าระบบ) */
@@ -3446,10 +3487,10 @@ function renderViewerPinStatus(){
   var btnRemove = document.getElementById('btnRemoveViewerPin');
   if(!el2 || !btnRemove) return;
   if(viewerPinHash){
-    el2.textContent = '✅ เปิดใช้งานอยู่ — เจ้าหน้าที่ที่มีรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารได้เท่านั้น';
+    el2.textContent = (i18nText('txtViewerPinActive')||'✅ เปิดใช้งานอยู่ — เจ้าหน้าที่ที่มีรหัสนี้จะเห็นเฉพาะหน้า "ตรวจสอบข้อมูล" และดาวน์โหลดเอกสารได้เท่านั้น');
     btnRemove.style.display='';
   } else {
-    el2.textContent = 'ยังไม่ได้ตั้งรหัสผ่านดูอย่างเดียว';
+    el2.textContent = (i18nText('txtViewerPinNotSet')||'ยังไม่ได้ตั้งรหัสผ่านดูอย่างเดียว');
     btnRemove.style.display='none';
   }
 }
@@ -3728,7 +3769,7 @@ function onLookupSearchInput(){
   if(q){
     var emptyEl = document.getElementById('lookupEmpty');
     document.getElementById('lookupResultList').innerHTML='';
-    emptyEl.textContent = 'กำลังค้นหา...';
+    emptyEl.textContent = (i18nText('txtSearching')||'กำลังค้นหา...');
     emptyEl.classList.add('is-loading');
     emptyEl.style.display='';
   }
@@ -4436,13 +4477,13 @@ function formatAuditTs(ts){
 function renderAuditLog(){
   var emptyBox = document.getElementById('auditLogEmpty');
   document.getElementById('auditLogList').innerHTML='';
-  emptyBox.textContent = 'กำลังโหลด...';
+  emptyBox.textContent = (i18nText('txtLoadingEllipsis')||'กำลังโหลด...');
   emptyBox.style.display='';
   auditLogGetAll().then(function(entries){
     auditLogCache = entries.slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
     renderAuditLogFiltered();
   }).catch(function(e){
-    emptyBox.textContent = 'โหลดประวัติไม่สำเร็จ: '+(e && e.message ? e.message : e);
+    emptyBox.textContent = (i18nText('txtLoadHistoryFailedPrefix')||'โหลดประวัติไม่สำเร็จ: ')+(e && e.message ? e.message : e);
     emptyBox.style.display='';
   });
 }
@@ -4458,7 +4499,7 @@ function renderAuditLogFiltered(){
     });
   }
   if(entries.length===0){
-    emptyBox.textContent = q ? 'ไม่พบประวัติที่ตรงกับคำค้นหา' : 'ยังไม่มีประวัติการแก้ไขข้อมูล';
+    emptyBox.textContent = q ? (i18nText('txtNoAuditHistoryMatch')||'ไม่พบประวัติที่ตรงกับคำค้นหา') : (i18nText('txtNoAuditHistoryYet')||'ยังไม่มีประวัติการแก้ไขข้อมูล');
     emptyBox.style.display='';
     return;
   }
@@ -4491,7 +4532,7 @@ function getStudentSummaries(){
       /* รวม plan/mainAdvisor/status เข้ามาด้วย (เดิมมีแค่ studentId/studentName/program/department/count) เพื่อให้หน้า
          "ตรวจสอบข้อมูลนักศึกษา" แสดงข้อมูลสรุปได้ครบเหมือนตารางของหน้า "ค้นหาตามสาขา" เดิม หลังรวมสองหน้าเป็นหน้าเดียว */
       return { studentId:sid, studentName:r.studentName, program:r.program, department:r.department, count:counts[sid],
-        plan:r.plan, mainAdvisor:r.mainAdvisor, status:studentStatusLabel(r) };
+        plan:r.plan, mainAdvisor:r.mainAdvisor, status:studentStatusLabel(r), statusTh:studentStatusLabelTh(r) };
     }).sort(function(a,b){ return (a.studentName||'').localeCompare(b.studentName||'', 'th'); });
   });
 }
@@ -4504,7 +4545,7 @@ function exportLookupListExcel(){
   if(!lastLookupFilteredList.length){ toast(i18nText('toast015')||'ไม่มีรายชื่อให้ส่งออกในขณะนี้ — ลองค้นหาหรือเลือกสาขา/ขั้นตอนก่อน', true); return; }
   var aoa = [['รหัสนักศึกษา','ชื่อ-นามสกุล','หลักสูตร','สาขาวิชา','แผนการเรียน','สถานะ','ที่ปรึกษาหลัก','จำนวนรายการสอบ']].concat(
     lastLookupFilteredList.map(function(s){
-      return [s.studentId||'', s.studentName||'', s.program||'', s.department||'', s.plan||'', s.status||'', s.mainAdvisor||'', s.count||0];
+      return [s.studentId||'', s.studentName||'', s.program||'', s.department||'', s.plan||'', s.statusTh||'', s.mainAdvisor||'', s.count||0];
     })
   );
   var wb = XLSX.utils.book_new();
@@ -4525,7 +4566,7 @@ function renderLookupList(){
      เลือกสาขาก็ดูได้ เพื่อให้เห็นของค้างทุกสาขารวมกันในคราวเดียว ไม่ต้องไล่เลือกทีละสาขา */
   if(!q && !deptFilter && !stageFilter){
     container.innerHTML='';
-    emptyEl.textContent = 'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา หรือเลือกสาขาวิชา/ขั้นตอนเพื่อดูรายชื่อ';
+    emptyEl.textContent = (i18nText('txtLookupPromptEmpty')||'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา หรือเลือกสาขาวิชา/ขั้นตอนเพื่อดูรายชื่อ');
     emptyEl.classList.remove('is-loading');
     emptyEl.style.display='';
     pagerEl.style.display='none';
@@ -4559,7 +4600,7 @@ function renderLookupList(){
     }
     lastLookupFilteredList = list;
     container.innerHTML='';
-    emptyEl.textContent = stageFilter ? 'ไม่พบนักศึกษาที่ตรงกับขั้นตอนที่เลือก' : 'ไม่พบนักศึกษาที่ตรงกับคำค้นหา';
+    emptyEl.textContent = stageFilter ? (i18nText('txtNoStudentMatchStage')||'ไม่พบนักศึกษาที่ตรงกับขั้นตอนที่เลือก') : (i18nText('txtNoStudentFoundForSearch')||'ไม่พบนักศึกษาที่ตรงกับคำค้นหา');
     emptyEl.classList.remove('is-loading');
     emptyEl.style.display = (list.length===0) ? '' : 'none';
 
@@ -4573,10 +4614,10 @@ function renderLookupList(){
     pageItems.forEach(function(s){
       var item = el('div',{class:'lookup-item'},[
         el('div',{class:'li-main'},[
-          el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
-          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program||'-')+' / '+(s.department||'-')+(s.plan?' ('+s.plan+')':'')+' • '+s.status+(s.mainAdvisor?' • ที่ปรึกษา: '+s.mainAdvisor:'')})
+          el('span',{class:'li-name', text:s.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)')}),
+          el('span',{class:'li-sub', text:s.studentId+' • '+(s.program||'-')+' / '+(s.department||'-')+(s.plan?' ('+s.plan+')':'')+' • '+s.status+(s.mainAdvisor?(i18nText('txtAdvisorInlinePrefix')||' • ที่ปรึกษา: ')+s.mainAdvisor:'')})
         ]),
-        el('span',{class:'li-count', text:s.count+' รายการสอบ'})
+        el('span',{class:'li-count', text:s.count+(i18nText('txtExamItemsCountSuffix')||' รายการสอบ')})
       ]);
       item.addEventListener('click', function(){
         document.querySelectorAll('.lookup-item').forEach(function(x){ x.classList.remove('active'); });
@@ -4592,7 +4633,7 @@ function renderLookupList(){
     if(list.length===0){
       pageInfoEl.textContent = '';
     } else {
-      pageInfoEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+pageItems.length)+' จาก '+list.length+' คน (หน้า '+(lookupListPage+1)+'/'+totalPages+')';
+      pageInfoEl.textContent = (i18nText('txtShowingRangePrefix')||'แสดง ')+(startIdx+1)+'-'+(startIdx+pageItems.length)+(i18nText('txtShowingRangeMid')||' จาก ')+list.length+(i18nText('txtShowingRangePeopleMid')||' คน (หน้า ')+(lookupListPage+1)+'/'+totalPages+')';
     }
     prevBtn.disabled = lookupListPage<=0;
     nextBtn.disabled = lookupListPage>=totalPages-1;
@@ -6515,14 +6556,14 @@ function renderExamHistory(studentId){
     if(rows.length===0){ box.style.display='none'; list.innerHTML=''; return; }
     var blocks = [];
     rows.forEach(function(r){
-      if(recHasProposalData(r)) blocks.push({typeTxt:'สอบเค้าโครง', date:r.proposalDate, result:r.proposalResult, id:r.id});
-      if(recHasDefenseData(r)) blocks.push({typeTxt:'สอบป้องกัน/IS', date:r.defenseDate, result:r.defenseResult, id:r.id});
+      if(recHasProposalData(r)) blocks.push({typeTxt:(i18nText('txtExamTypeProposal')||'สอบเค้าโครง'), date:r.proposalDate, result:r.proposalResult, id:r.id});
+      if(recHasDefenseData(r)) blocks.push({typeTxt:(i18nText('txtExamTypeDefense')||'สอบป้องกัน/IS'), date:r.defenseDate, result:r.defenseResult, id:r.id});
     });
     blocks.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
     list.innerHTML='';
     blocks.forEach(function(r){
       var resultClass = r.result==='ผ่าน' ? 'pass' : (r.result==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail');
-      var label = r.typeTxt+' — '+(r.date||'ยังไม่ระบุวันที่')+(r.id===currentDraftId && editingExisting?' (กำลังแก้ไขรายการนี้อยู่)':'');
+      var label = r.typeTxt+' — '+(r.date||(i18nText('txtDateNotSpecified')||'ยังไม่ระบุวันที่'))+(r.id===currentDraftId && editingExisting?(i18nText('txtCurrentlyEditingThisEntry')||' (กำลังแก้ไขรายการนี้อยู่)'):'');
       var row = el('div',{class:'attach-item'},[
         el('span',{class:'name', text:label}),
         el('span',{class:'result-tag '+resultClass, text: r.result||'-'})
@@ -6535,10 +6576,10 @@ function renderExamHistory(studentId){
 
 /* ================= VALIDATE / COLLECT / SAVE ================= */
 function validateForm(){
-  if(!document.getElementById('f_studentId').value.trim()) return 'กรุณากรอกรหัสนักศึกษา';
-  if(!document.getElementById('f_studentName').value.trim()) return 'กรุณากรอกชื่อ-นามสกุล';
-  if(!document.getElementById('f_program').value) return 'กรุณาเลือกหลักสูตร';
-  if(!document.getElementById('f_department').value) return 'กรุณาเลือกสาขาวิชา';
+  if(!document.getElementById('f_studentId').value.trim()) return (i18nText('valMissingStudentId')||'กรุณากรอกรหัสนักศึกษา');
+  if(!document.getElementById('f_studentName').value.trim()) return (i18nText('valMissingStudentName')||'กรุณากรอกชื่อ-นามสกุล');
+  if(!document.getElementById('f_program').value) return (i18nText('valMissingProgram')||'กรุณาเลือกหลักสูตร');
+  if(!document.getElementById('f_department').value) return (i18nText('valMissingDepartment')||'กรุณาเลือกสาขาวิชา');
   /* ตั้งแต่หมวดที่ 2 ลงไป (ที่ปรึกษาหลัก/หัวข้อ, หมวด 3.1/3.2, บว.25) ไม่บังคับกรอกก่อนบันทึกอีกต่อไป
      เพราะนักศึกษาบางคนยังไม่มีที่ปรึกษา/ยังไม่ถึงกำหนดสอบ แต่ผ่านเกณฑ์อื่น (เช่น คอมพิวเตอร์/ภาษาอังกฤษ) แล้ว
      จึงต้องบันทึกข้อมูลบางส่วนไว้ก่อนได้ แล้วค่อยกลับมาเติมส่วนที่เหลือทีหลัง
@@ -6547,16 +6588,16 @@ function validateForm(){
   var pFilled = sectionHasData('p');
   var dFilled = sectionHasData('d');
   if(pFilled){
-    if(!document.getElementById('p_examTime').value) return 'กรุณาระบุเวลาสอบเค้าโครง (3.1)';
-    if(!document.getElementById('p_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.1)';
+    if(!document.getElementById('p_examTime').value) return (i18nText('valMissingProposalTime')||'กรุณาระบุเวลาสอบเค้าโครง (3.1)');
+    if(!document.getElementById('p_chair').value) return (i18nText('valMissingProposalChair')||'กรุณาเลือกประธานกรรมการ (3.1)');
     var pDup = findDuplicateCommitteeName('p');
-    if(pDup) return 'พบชื่อ "'+pDup+'" ซ้ำในคณะกรรมการสอบเค้าโครง (3.1) กรุณาตรวจสอบ';
+    if(pDup) return (i18nText('valDupCommitteeProposalPrefix')||'พบชื่อ "')+pDup+(i18nText('valDupCommitteeProposalSuffix')||'" ซ้ำในคณะกรรมการสอบเค้าโครง (3.1) กรุณาตรวจสอบ');
   }
   if(dFilled){
-    if(!document.getElementById('d_examTime').value) return 'กรุณาระบุเวลาสอบป้องกัน (3.2)';
-    if(!document.getElementById('d_chair').value) return 'กรุณาเลือกประธานกรรมการ (3.2)';
+    if(!document.getElementById('d_examTime').value) return (i18nText('valMissingDefenseTime')||'กรุณาระบุเวลาสอบป้องกัน (3.2)');
+    if(!document.getElementById('d_chair').value) return (i18nText('valMissingDefenseChair')||'กรุณาเลือกประธานกรรมการ (3.2)');
     var dDup = findDuplicateCommitteeName('d');
-    if(dDup) return 'พบชื่อ "'+dDup+'" ซ้ำในคณะกรรมการสอบป้องกัน/IS (3.2) กรุณาตรวจสอบ';
+    if(dDup) return (i18nText('valDupCommitteeDefensePrefix')||'พบชื่อ "')+dDup+(i18nText('valDupCommitteeDefenseSuffix')||'" ซ้ำในคณะกรรมการสอบป้องกัน/IS (3.2) กรุณาตรวจสอบ');
   }
   return null;
 }
@@ -6902,6 +6943,13 @@ function getFilteredRecords(){
 /* สถานะโดยสรุปของนักศึกษา 1 คน ไว้ใช้แสดงในตาราง "ค้นหาตามสาขาวิชา" — อิงเกณฑ์เดียวกับที่ใช้คำนวณในหน้าแดชบอร์ดสรุป
    (เลยกำหนดส่งเล่ม/ถอนที่ปรึกษา/สำเร็จการศึกษา) เพื่อให้ความหมายตรงกันทั้งระบบ */
 function studentStatusLabel(r){
+  if(r.graduated) return (i18nText('txtStatusGraduated')||'สำเร็จการศึกษาแล้ว');
+  if(isOverdueRec(r)) return (i18nText('txtStatusOverdueBook')||'เลยกำหนดส่งเล่มฉบับสมบูรณ์');
+  if(studentHasWithdrawnAdvisor(r)) return (i18nText('txtStatusWithdrawnAdvisor')||'ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่');
+  return (i18nText('txtStatusStudying')||'กำลังศึกษา');
+}
+/* ใช้เฉพาะตอนส่งออก Excel เท่านั้น — คงเป็นภาษาไทยเสมอไม่ว่าจะสลับภาษาหน้าจอเป็นอะไร (เหมือน docStatusLabelTh/gradListTermLabelTh) */
+function studentStatusLabelTh(r){
   if(r.graduated) return 'สำเร็จการศึกษาแล้ว';
   if(isOverdueRec(r)) return 'เลยกำหนดส่งเล่มฉบับสมบูรณ์';
   if(studentHasWithdrawnAdvisor(r)) return 'ถอนที่ปรึกษา ยังไม่แต่งตั้งใหม่';
@@ -10050,7 +10098,7 @@ function showOfflineSyncBanner(count){
   var box = document.getElementById('offlineSyncBanner');
   var text = document.getElementById('offlineSyncBannerText');
   if(!box || !text) return;
-  text.textContent = '📶 อินเทอร์เน็ตกลับมาแล้ว มีข้อมูล '+count+' รายการที่บันทึกไว้ตอนออฟไลน์ในเครื่องนี้ ยังไม่ถูกซิงค์เข้าชีทกลาง';
+  text.textContent = (i18nText('txtOfflineSyncBannerPrefix')||'📶 อินเทอร์เน็ตกลับมาแล้ว มีข้อมูล ')+count+(i18nText('txtOfflineSyncBannerSuffix')||' รายการที่บันทึกไว้ตอนออฟไลน์ในเครื่องนี้ ยังไม่ถูกซิงค์เข้าชีทกลาง');
   box.style.display = 'flex';
 }
 function hideOfflineSyncBanner(){

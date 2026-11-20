@@ -3081,7 +3081,27 @@ var LANDING_I18N = {
   btnViewProfile: {th:'ดูโปรไฟล์', en:'View Profile'},
   txtNoMissingPlanStudents: {th:'✅ ไม่พบนักศึกษาที่ขาดข้อมูลแผนการเรียน', en:'✅ No students missing study plan data were found.'},
   txtFoundMissingPlanPrefix: {th:'พบนักศึกษาที่ไม่มีข้อมูลแผนการเรียน ', en:'Found students missing study plan data: '},
-  btnEditShort: {th:'แก้ไข', en:'Edit'}
+  btnEditShort: {th:'แก้ไข', en:'Edit'},
+  txtNoStudentFoundForSearch: {th:'ไม่พบนักศึกษาที่ตรงกับคำค้นหา', en:'No students matching this search were found.'},
+  txtDeptNotSpecified: {th:'ไม่ระบุสาขา', en:'Department not specified'},
+  txtNoExamDataThisTerm: {th:'ยังไม่มีข้อมูลการสอบในภาคเรียนนี้', en:'No exam data for this term yet.'},
+  txtNoAdvisorWorkloadData: {th:'ยังไม่มีข้อมูลภาระงานที่ปรึกษา', en:'No advisor workload data yet.'},
+  txtNoRegisteredStudentsThisTerm: {th:'ยังไม่มีนักศึกษาลงทะเบียน/รักษาสภาพในภาคเรียนนี้', en:'No students registered/on leave status for this term yet.'},
+  txtStatusLeave: {th:'รักษาสภาพ', en:'On Leave Status'},
+  txtStatusRegistered: {th:'ลงทะเบียน', en:'Registered'},
+  optAllYears: {th:'ทุกปี', en:'All Years'},
+  txtNoTermDataToShow: {th:'ยังไม่มีข้อมูลภาคเรียนให้แสดง (ยังไม่มีการกรอกภาคเรียนที่สอบจบ/สำเร็จการศึกษา)', en:'No term data to show yet (no exam/graduation term has been recorded).'},
+  txtShowingTermPrefix: {th:'กำลังแสดง: ', en:'Showing: '},
+  txtShowingTermMid: {th:' — เทียบกับภาคเรียนก่อนหน้า (', en:' — compared to the previous term ('},
+  txtOnlyLeaveFilterSuffix: {th:' · กรองเฉพาะรักษาสภาพ', en:' · Filtered to On Leave Status only'},
+  txtTrendIncreasePrefix: {th:'เพิ่มขึ้น ', en:'Increased by '},
+  txtTrendIncreaseSuffix: {th:' คน (ภาคก่อนไม่มีข้อมูล)', en:' (no data for the previous term)'},
+  txtTrendNoChange: {th:'— ไม่มีการเปลี่ยนแปลง', en:'— No change'},
+  txtTrendSameAsPrev: {th:'— เท่ากับภาคก่อน', en:'— Same as previous term'},
+  txtTrendPctVsPrevSuffix: {th:'% เทียบภาคก่อนหน้า', en:'% vs. previous term'},
+  txtProgramNotSpecified: {th:'ไม่ระบุหลักสูตร', en:'Program not specified'},
+  txtPlanNotSpecified: {th:'ไม่ระบุแผน', en:'Study plan not specified'},
+  txtNoDataGeneric: {th:'ยังไม่มีข้อมูล', en:'No data yet.'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -3469,15 +3489,15 @@ function onDashSearchInput(){
       }).slice(0,8);
       resultsBox.innerHTML='';
       if(!matches.length){
-        resultsBox.appendChild(el('div',{class:'empty-state', style:'padding:16px;font-size:13px;', text:'ไม่พบนักศึกษาที่ตรงกับคำค้นหา'}));
+        resultsBox.appendChild(el('div',{class:'empty-state', style:'padding:16px;font-size:13px;', 'data-i18n':'txtNoStudentFoundForSearch', text:(i18nText('txtNoStudentFoundForSearch')||'ไม่พบนักศึกษาที่ตรงกับคำค้นหา')}));
         resultsBox.style.display='';
         return;
       }
       matches.forEach(function(s){
         var item = el('div',{class:'lookup-item'},[
           el('div',{class:'li-main'},[
-            el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
-            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||'ไม่ระบุสาขา')})
+            el('span',{class:'li-name', text:s.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)')}),
+            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||(i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา'))})
           ])
         ]);
         item.addEventListener('click', function(){
@@ -3506,15 +3526,15 @@ function onGlobalSearchInput(){
       }).slice(0,8);
       resultsBox.innerHTML='';
       if(!matches.length){
-        resultsBox.appendChild(el('div',{class:'empty-state', style:'padding:16px;font-size:13px;', text:'ไม่พบนักศึกษาที่ตรงกับคำค้นหา'}));
+        resultsBox.appendChild(el('div',{class:'empty-state', style:'padding:16px;font-size:13px;', 'data-i18n':'txtNoStudentFoundForSearch', text:(i18nText('txtNoStudentFoundForSearch')||'ไม่พบนักศึกษาที่ตรงกับคำค้นหา')}));
         resultsBox.style.display='';
         return;
       }
       matches.forEach(function(s){
         var item = el('div',{class:'lookup-item'},[
           el('div',{class:'li-main'},[
-            el('span',{class:'li-name', text:s.studentName||'(ไม่ระบุชื่อ)'}),
-            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||'ไม่ระบุสาขา')})
+            el('span',{class:'li-name', text:s.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)')}),
+            el('span',{class:'li-sub', text:s.studentId+' • '+(s.department||(i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา'))})
           ])
         ]);
         item.addEventListener('click', function(){
@@ -3776,7 +3796,7 @@ function renderDeptMiniDonuts(containerId, deptBuckets){
   wrap.innerHTML = '';
   var deptKeys = Object.keys(deptBuckets).sort(function(a,b){ return deptBuckets[b].total-deptBuckets[a].total; });
   if(deptKeys.length===0){
-    wrap.appendChild(el('div',{class:'chart-empty-msg', style:'height:auto;padding:20px 0;', text:'ยังไม่มีข้อมูลการสอบในภาคเรียนนี้'}));
+    wrap.appendChild(el('div',{class:'chart-empty-msg', style:'height:auto;padding:20px 0;', 'data-i18n':'txtNoExamDataThisTerm', text:(i18nText('txtNoExamDataThisTerm')||'ยังไม่มีข้อมูลการสอบในภาคเรียนนี้')}));
     return;
   }
   deptKeys.forEach(function(dept, idx){
@@ -3785,7 +3805,7 @@ function renderDeptMiniDonuts(containerId, deptBuckets){
     var card = el('div',{class:'dash-dept-mini-card'},[
       el('div',{class:'dash-mini-chart-body'},[ el('canvas',{id:canvasId}) ]),
       el('div',{class:'name', text:dept}),
-      el('div',{class:'total', text:b.total+' คน'})
+      el('div',{class:'total', text:b.total+(i18nText('txtPeopleCountSuffix2')||' คน')})
     ]);
     wrap.appendChild(card);
     var labels = ['ผ่าน','ผ่านแบบมีเงื่อนไข','ไม่ผ่าน','รอผล'];
@@ -3809,7 +3829,7 @@ function renderAdvisorRankTable(){
     .slice(0,5);
   tbody.innerHTML = '';
   if(ranked.length===0){
-    tbody.appendChild(el('tr',{},[ el('td',{colspan:3, class:'chart-empty-msg', style:'height:auto;padding:14px 0;', text:'ยังไม่มีข้อมูลภาระงานที่ปรึกษา'}) ]));
+    tbody.appendChild(el('tr',{},[ el('td',{colspan:3, class:'chart-empty-msg', style:'height:auto;padding:14px 0;', 'data-i18n':'txtNoAdvisorWorkloadData', text:(i18nText('txtNoAdvisorWorkloadData')||'ยังไม่มีข้อมูลภาระงานที่ปรึกษา')}) ]));
     return;
   }
   ranked.forEach(function(x, idx){
@@ -3818,7 +3838,7 @@ function renderAdvisorRankTable(){
     tbody.appendChild(el('tr',{},[
       el('td',{},[ el('span',{class:'dash-rank-badge', text:String(idx+1)}) ]),
       el('td',{text:x.advisor.name}),
-      el('td',{text: usedTxt+(max?('/'+max+' คน'):' คน')})
+      el('td',{text: usedTxt+(max?('/'+max+(i18nText('txtPeopleCountSuffix2')||' คน')):(i18nText('txtPeopleCountSuffix2')||' คน'))})
     ]));
   });
 }
@@ -3827,7 +3847,7 @@ function renderDashRecentTable(termStudents){
   var tbody = document.getElementById('dashRecentTbody');
   tbody.innerHTML = '';
   if(termStudents.length===0){
-    tbody.appendChild(el('tr',{},[ el('td',{colspan:6, class:'chart-empty-msg', style:'height:auto;padding:14px 0;', text:'ยังไม่มีนักศึกษาลงทะเบียน/รักษาสภาพในภาคเรียนนี้'}) ]));
+    tbody.appendChild(el('tr',{},[ el('td',{colspan:6, class:'chart-empty-msg', style:'height:auto;padding:14px 0;', 'data-i18n':'txtNoRegisteredStudentsThisTerm', text:(i18nText('txtNoRegisteredStudentsThisTerm')||'ยังไม่มีนักศึกษาลงทะเบียน/รักษาสภาพในภาคเรียนนี้')}) ]));
     return;
   }
   var rows = termStudents.slice().sort(function(a,b){
@@ -3841,9 +3861,9 @@ function renderDashRecentTable(termStudents){
       el('td',{text:r.studentId||'-'}),
       el('td',{text:r.studentName||'-'}),
       el('td',{text:r.department||'-'}),
-      el('td',{},[ el('span',{class:'dash-status-pill '+(isLeave?'leave':'reg'), text: isLeave?'รักษาสภาพ':'ลงทะเบียน'}) ]),
+      el('td',{},[ el('span',{class:'dash-status-pill '+(isLeave?'leave':'reg'), text: isLeave?(i18nText('txtStatusLeave')||'รักษาสภาพ'):(i18nText('txtStatusRegistered')||'ลงทะเบียน')}) ]),
       el('td',{text: r.defenseDate ? toBuddhistDateStr(r.defenseDate) : '-'}),
-      el('td',{text: r.defenseResult || (r.defenseDate ? 'รอผล' : '-')})
+      el('td',{text: r.defenseResult || (r.defenseDate ? (i18nText('txtPendingResult')||'รอผล') : '-')})
     ]));
   });
 }
@@ -3865,7 +3885,7 @@ function renderSummaryDashboard(){
     var dashYearsSet = {};
     studentsAll.forEach(function(r){ recordAcademicYears(r).forEach(function(y){ dashYearsSet[y]=true; }); });
     var dashYearOptions = Object.keys(dashYearsSet).sort(function(a,b){ return b-a; });
-    fillSelect(document.getElementById('dashYearFilter'), dashYearOptions, 'ทุกปี');
+    fillSelect(document.getElementById('dashYearFilter'), dashYearOptions, i18nText('optAllYears')||'ทุกปี');
 
     /* อ่านค่าตัวกรองปัจจุบันแล้วกรอง students ก่อนคำนวณทุกช่องด้านล่าง (ใช้ร่วมกันทั้งแผงใหม่) */
     var fDept = document.getElementById('dashDeptFilter').value||'';
@@ -3903,7 +3923,7 @@ function renderSummaryDashboard(){
     var dashTermCaption = document.getElementById('dashTermCaption');
 
     if(!selectedTerm){
-      dashTermCaption.textContent = 'ยังไม่มีข้อมูลภาคเรียนให้แสดง (ยังไม่มีการกรอกภาคเรียนที่สอบจบ/สำเร็จการศึกษา)';
+      dashTermCaption.textContent = i18nText('txtNoTermDataToShow')||'ยังไม่มีข้อมูลภาคเรียนให้แสดง (ยังไม่มีการกรอกภาคเรียนที่สอบจบ/สำเร็จการศึกษา)';
       ['miniRegCount','miniLeaveCount','miniExamCount'].forEach(function(id){ document.getElementById(id).textContent='0'; });
       renderDeptMiniDonuts('deptMiniDonutsWrap', {});
       document.getElementById('dashTrendCallout').innerHTML = '';
@@ -3914,7 +3934,7 @@ function renderSummaryDashboard(){
       var curStats = termStats[selectedTerm] || emptyTermBucket();
       var prevStats = termStats[prevTerm] || emptyTermBucket();
 
-      dashTermCaption.textContent = 'กำลังแสดง: '+gradListTermLabel(selectedTerm)+' — เทียบกับภาคเรียนก่อนหน้า ('+gradListTermLabel(prevTerm)+')'+(onlyLeave?' · กรองเฉพาะรักษาสภาพ':'');
+      dashTermCaption.textContent = (i18nText('txtShowingTermPrefix')||'กำลังแสดง: ')+gradListTermLabel(selectedTerm)+(i18nText('txtShowingTermMid')||' — เทียบกับภาคเรียนก่อนหน้า (')+gradListTermLabel(prevTerm)+')'+(onlyLeave?(i18nText('txtOnlyLeaveFilterSuffix')||' · กรองเฉพาะรักษาสภาพ'):'');
 
       document.getElementById('miniRegCount').textContent = curStats.regCount;
       document.getElementById('miniLeaveCount').textContent = curStats.leaveCount;
@@ -3927,7 +3947,7 @@ function renderSummaryDashboard(){
       /* โดนัทเล็กแยกตามสาขา — เฉพาะคนที่มีผลสอบป้องกัน/IS แล้วในภาคเรียนนี้ */
       var deptBuckets = {};
       termStudents.filter(recHasDefenseData).forEach(function(r){
-        var dept = r.department || 'ไม่ระบุสาขา';
+        var dept = r.department || (i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา');
         if(!deptBuckets[dept]) deptBuckets[dept] = {total:0};
         var result = r.defenseResult || 'รอผล';
         deptBuckets[dept][result] = (deptBuckets[dept][result]||0)+1;
@@ -3947,10 +3967,10 @@ function renderSummaryDashboard(){
       var arrow = diff>0 ? '▲' : (diff<0 ? '▼' : '—');
       var calloutText;
       if(prevStats.examCount===0){
-        calloutText = diff>0 ? ('▲ เพิ่มขึ้น '+diff+' คน (ภาคก่อนไม่มีข้อมูล)') : '— ไม่มีการเปลี่ยนแปลง';
+        calloutText = diff>0 ? ('▲ '+(i18nText('txtTrendIncreasePrefix')||'เพิ่มขึ้น ')+diff+(i18nText('txtTrendIncreaseSuffix')||' คน (ภาคก่อนไม่มีข้อมูล)')) : (i18nText('txtTrendNoChange')||'— ไม่มีการเปลี่ยนแปลง');
       } else {
         var pct = Math.round((diff/prevStats.examCount)*100);
-        calloutText = (pct===0?'— เท่ากับภาคก่อน':(arrow+' '+(pct>0?'+':'')+pct+'% เทียบภาคก่อนหน้า'));
+        calloutText = (pct===0?(i18nText('txtTrendSameAsPrev')||'— เท่ากับภาคก่อน'):(arrow+' '+(pct>0?'+':'')+pct+(i18nText('txtTrendPctVsPrevSuffix')||'% เทียบภาคก่อนหน้า')));
       }
       calloutBox.innerHTML = '';
       calloutBox.appendChild(el('span',{class:'dash-trend-callout '+dirClass, text:calloutText}));
@@ -3968,12 +3988,12 @@ function renderSummaryDashboard(){
       });
       return m;
     }
-    var byProgram = groupCount(function(r){ return r.program; }, 'ไม่ระบุหลักสูตร');
+    var byProgram = groupCount(function(r){ return r.program; }, i18nText('txtProgramNotSpecified')||'ไม่ระบุหลักสูตร');
     var programKeys = Object.keys(byProgram).sort(function(a,b){ return byProgram[b]-byProgram[a]; });
     renderOrUpdateDonutChart('chartDemoProgram','demoProgram', programKeys, programKeys.map(function(k){ return byProgram[k]; }), SUMMARY_CHART_COLORS.program);
 
-    var byDept = groupCount(function(r){ return r.department; }, 'ไม่ระบุสาขา');
-    var byPlan = groupCount(function(r){ return r.plan; }, 'ไม่ระบุแผน');
+    var byDept = groupCount(function(r){ return r.department; }, i18nText('txtDeptNotSpecified')||'ไม่ระบุสาขา');
+    var byPlan = groupCount(function(r){ return r.plan; }, i18nText('txtPlanNotSpecified')||'ไม่ระบุแผน');
 
     /* barDemoDept/barDemoPlan เป็น <div> ธรรมดา (ไม่ใช่ <canvas>) ใช้แถบพาสเทลแบบย่อ ไม่ต้องพึ่ง Chart.js/อินเทอร์เน็ต
        เพื่อให้ยังเห็นข้อมูลได้แม้ออฟไลน์ — ต่างจากโดนัทหลักสูตรที่ใช้ Chart.js ตามตัวอย่างต้นแบบ */
@@ -3981,7 +4001,7 @@ function renderSummaryDashboard(){
       var box = document.getElementById(containerId);
       box.innerHTML = '';
       var keys = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
-      if(keys.length===0){ box.appendChild(el('div',{class:'chart-empty-msg', style:'height:auto;padding:14px 0;', text:'ยังไม่มีข้อมูล'})); return; }
+      if(keys.length===0){ box.appendChild(el('div',{class:'chart-empty-msg', style:'height:auto;padding:14px 0;', 'data-i18n':'txtNoDataGeneric', text:(i18nText('txtNoDataGeneric')||'ยังไม่มีข้อมูล')})); return; }
       var max = Math.max.apply(null, keys.map(function(k){ return counts[k]; }));
       keys.forEach(function(k, idx){
         var pct = (counts[k]/max*100).toFixed(1);

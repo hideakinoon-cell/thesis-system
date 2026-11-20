@@ -1261,40 +1261,40 @@ if('serviceWorker' in navigator){
 <section id="view-list" style="display:none;">
   <div class="card">
     <div class="toolbar">
-      <input type="text" id="listSearch" placeholder="ค้นหา รหัส/ชื่อ/สาขา/หัวข้อ">
+      <input type="text" id="listSearch" placeholder="ค้นหา รหัส/ชื่อ/สาขา/หัวข้อ" data-i18n-ph="listSearchPlaceholder">
       <select id="listFilterType">
-        <option value="">ทุกประเภทการสอบ</option>
-        <option value="proposal">สอบเค้าโครง</option>
-        <option value="defense">สอบป้องกัน/IS</option>
+        <option value="" data-i18n="listFilterTypeAll">ทุกประเภทการสอบ</option>
+        <option value="proposal" data-i18n="listFilterTypeProposal">สอบเค้าโครง</option>
+        <option value="defense" data-i18n="listFilterTypeDefense">สอบป้องกัน/IS</option>
       </select>
       <select id="listFilterResult">
-        <option value="">ทุกผลสอบ</option>
-        <option value="ผ่าน">ผ่าน</option>
-        <option value="ผ่านแบบมีเงื่อนไข">ผ่านแบบมีเงื่อนไข</option>
-        <option value="ไม่ผ่าน">ไม่ผ่าน</option>
-        <option value="รอผล">รอผล (สอบแล้วยังไม่มีผล)</option>
+        <option value="" data-i18n="listResultAll">ทุกผลสอบ</option>
+        <option value="ผ่าน" data-i18n="listResultPass">ผ่าน</option>
+        <option value="ผ่านแบบมีเงื่อนไข" data-i18n="listResultCond">ผ่านแบบมีเงื่อนไข</option>
+        <option value="ไม่ผ่าน" data-i18n="listResultFail">ไม่ผ่าน</option>
+        <option value="รอผล" data-i18n="listResultPending">รอผล (สอบแล้วยังไม่มีผล)</option>
       </select>
       <div class="spacer"></div>
-      <button class="btn btn-secondary btn-sm" id="btnExportCsv">⬇ CSV</button>
-      <button class="btn btn-accent btn-sm" id="btnExportXlsx">⬇ Excel</button>
-      <button class="btn btn-secondary btn-sm" id="btnImportBulk">📥 นำเข้าข้อมูล</button>
-      <button class="btn btn-secondary btn-sm" id="btnImportProposal">📥 นำเข้าหัวข้อ/เค้าโครง (เติมช่องว่าง)</button>
-      <button class="btn btn-secondary btn-sm" id="btnBulkAttachLink">📎 แนบลิงก์ประกาศ (กลุ่ม)</button>
-      <button class="btn btn-primary btn-sm" id="btnNewFromList">＋ เพิ่มข้อมูลใหม่</button>
+      <button class="btn btn-secondary btn-sm" id="btnExportCsv" data-i18n="btnExportCsv">⬇ CSV</button>
+      <button class="btn btn-accent btn-sm" id="btnExportXlsx" data-i18n="btnExportXlsx">⬇ Excel</button>
+      <button class="btn btn-secondary btn-sm" id="btnImportBulk" data-i18n="btnImportBulk">📥 นำเข้าข้อมูล</button>
+      <button class="btn btn-secondary btn-sm" id="btnImportProposal" data-i18n="btnImportProposal">📥 นำเข้าหัวข้อ/เค้าโครง (เติมช่องว่าง)</button>
+      <button class="btn btn-secondary btn-sm" id="btnBulkAttachLink" data-i18n="btnBulkAttachLink">📎 แนบลิงก์ประกาศ (กลุ่ม)</button>
+      <button class="btn btn-primary btn-sm" id="btnNewFromList" data-i18n="btnNewFromList">＋ เพิ่มข้อมูลใหม่</button>
     </div>
     <div style="overflow-x:auto;">
     <table>
       <thead>
-        <tr><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>สาขาวิชา</th><th>ประเภทสอบ</th><th>วันที่สอบ</th><th>ผลสอบ</th><th>ไฟล์แนบ</th><th>จัดการ</th></tr>
+        <tr><th data-i18n="thStudentId">รหัสนักศึกษา</th><th data-i18n="thStudentName">ชื่อ - นามสกุล</th><th data-i18n="thDepartment">สาขาวิชา</th><th data-i18n="thExamType">ประเภทสอบ</th><th data-i18n="thExamDate">วันที่สอบ</th><th data-i18n="thExamResult">ผลสอบ</th><th data-i18n="thAttachments">ไฟล์แนบ</th><th data-i18n="thActions">จัดการ</th></tr>
       </thead>
       <tbody id="listTbody"></tbody>
     </table>
     </div>
-    <div class="empty-state" id="listEmpty" style="display:none;">ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย</div>
+    <div class="empty-state" id="listEmpty" style="display:none;" data-i18n="listEmptyState">ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย</div>
     <div id="listPagination" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
       <span id="listPageInfo" class="help"></span>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnListPrev">‹ ก่อนหน้า</button>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnListNext">ถัดไป ›</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnListPrev" data-i18n="btnListPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnListNext" data-i18n="btnListNext">ถัดไป ›</button>
     </div>
   </div>
 </section>
@@ -2495,6 +2495,32 @@ var LANDING_I18N = {
   secSettingsPurgeDeleted: {th:'🗑️ ล้างข้อมูลที่ถูกลบถาวร (ลดขนาดชีทกลาง)', en:'🗑️ Purge Permanently Deleted Data (Reduce Central Sheet Size)'},
   secSettingsMasterData: {th:'ข้อมูลตั้งต้น (Master Data)', en:'Master Data'},
   secAuditlogTitle: {th:'📜 ประวัติการแก้ไขข้อมูล', en:'📜 Edit History'},
+  listSearchPlaceholder: {th:'ค้นหา รหัส/ชื่อ/สาขา/หัวข้อ', en:'Search ID/name/department/topic'},
+  listFilterTypeAll: {th:'ทุกประเภทการสอบ', en:'All Exam Types'},
+  listFilterTypeProposal: {th:'สอบเค้าโครง', en:'Proposal Exam'},
+  listFilterTypeDefense: {th:'สอบป้องกัน/IS', en:'Defense/IS Exam'},
+  listResultAll: {th:'ทุกผลสอบ', en:'All Results'},
+  listResultPass: {th:'ผ่าน', en:'Pass'},
+  listResultCond: {th:'ผ่านแบบมีเงื่อนไข', en:'Conditional Pass'},
+  listResultFail: {th:'ไม่ผ่าน', en:'Fail'},
+  listResultPending: {th:'รอผล (สอบแล้วยังไม่มีผล)', en:'Pending (Exam Taken, No Result Yet)'},
+  btnExportCsv: {th:'⬇ CSV', en:'⬇ CSV'},
+  btnExportXlsx: {th:'⬇ Excel', en:'⬇ Excel'},
+  btnImportBulk: {th:'📥 นำเข้าข้อมูล', en:'📥 Import Data'},
+  btnImportProposal: {th:'📥 นำเข้าหัวข้อ/เค้าโครง (เติมช่องว่าง)', en:'📥 Import Topic/Proposal (Fill Blanks)'},
+  btnBulkAttachLink: {th:'📎 แนบลิงก์ประกาศ (กลุ่ม)', en:'📎 Attach Announcement Link (Bulk)'},
+  btnNewFromList: {th:'＋ เพิ่มข้อมูลใหม่', en:'＋ Add New Record'},
+  thStudentId: {th:'รหัสนักศึกษา', en:'Student ID'},
+  thStudentName: {th:'ชื่อ - นามสกุล', en:'Name'},
+  thDepartment: {th:'สาขาวิชา', en:'Department'},
+  thExamType: {th:'ประเภทสอบ', en:'Exam Type'},
+  thExamDate: {th:'วันที่สอบ', en:'Exam Date'},
+  thExamResult: {th:'ผลสอบ', en:'Result'},
+  thAttachments: {th:'ไฟล์แนบ', en:'Attachments'},
+  thActions: {th:'จัดการ', en:'Actions'},
+  listEmptyState: {th:'ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย', en:'No data yet — start recording new data'},
+  btnListPrev: {th:'‹ ก่อนหน้า', en:'‹ Previous'},
+  btnListNext: {th:'ถัดไป ›', en:'Next ›'},
   navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   navFeatures: {th:'ฟีเจอร์', en:'Features'},
   navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},

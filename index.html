@@ -903,7 +903,7 @@ if('serviceWorker' in navigator){
       </div>
       <div class="field">
         <label><span data-i18n="lblStudentName">ชื่อ - นามสกุล</span> <span class="req">*</span></label>
-        <input type="text" id="f_studentName" placeholder="นายสมศักดิ์ รักเรียน">
+        <input type="text" id="f_studentName" placeholder="นายสมศักดิ์ รักเรียน" data-i18n-ph="phStudentNameExample">
       </div>
       <div class="field">
         <label><span data-i18n="lblDegreeLevel">ระดับการศึกษา</span> <span class="req">*</span></label>
@@ -3425,7 +3425,8 @@ var LANDING_I18N = {
   impWarnDeptNotFoundPrefix: {th:'สาขาวิชา "', en:'Department "'},
   impWarnDeptNotFoundSuffix: {th:'" ยังไม่มีในระบบ', en:'" does not exist in the system yet'},
   impWarnExistingPrefix: {th:'รหัสนี้มีอยู่แล้วในระบบ (', en:'This ID already exists in the system ('},
-  impWarnExistingSuffix: {th:')', en:')'}
+  impWarnExistingSuffix: {th:')', en:')'},
+  phStudentNameExample: {th:'นายสมศักดิ์ รักเรียน', en:'e.g. Somsak Rakrian'}
 };
 function i18nText(key){
   var lang = 'th';

@@ -3041,7 +3041,47 @@ var LANDING_I18N = {
   secLbl_qualifying: {th:'หมวดที่ 1.1 สอบวัดความรู้', en:'Section 1.1 Qualifying Exam'},
   secLbl_book: {th:'หมวดที่ 6 เล่มฉบับสมบูรณ์', en:'Section 6 Complete Book'},
   secLbl_advisorAppoint: {th:'หมวดที่ 2 คำสั่งแต่งตั้งที่ปรึกษา', en:'Section 2 Advisor Appointment Order'},
-  btnRemoveFromSystem: {th:'ลบรายการนี้ออกจากระบบ', en:'Remove this entry from the system'}
+  btnRemoveFromSystem: {th:'ลบรายการนี้ออกจากระบบ', en:'Remove this entry from the system'},
+  txtNoBogusHistory: {th:'✅ ไม่พบประวัติที่ผิดพลาด ข้อมูลถูกต้องอยู่แล้ว', en:'✅ No faulty history entries found. The data is already correct.'},
+  txtFoundBogusHistoryPrefix: {th:'พบประวัติที่ขึ้นผิดพลาด ', en:'Found '},
+  txtFoundBogusHistoryMid: {th:' รายการ ใน ', en:' faulty history entries in '},
+  txtFoundBogusHistorySuffix: {th:' นักศึกษา:', en:' student(s):'},
+  btnPurgeBogusHistoryConfirmPrefix: {th:'🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด (', en:'🗑️ Confirm deleting all faulty entries ('},
+  txtDeleting: {th:'กำลังลบ...', en:'Deleting...'},
+  txtBogusHistoryDeletedPrefix: {th:'✅ ลบประวัติที่ผิดพลาดออกแล้ว ', en:'✅ Faulty history entries deleted: '},
+  txtBogusHistoryDeletedMid: {th:' รายการ จาก ', en:' entries from '},
+  txtBogusHistoryDeletedSuffix: {th:' นักศึกษา', en:' student(s)'},
+  txtNoMismatchedFields: {th:'✅ ไม่พบค่าที่สะกดไม่ตรงกับรายการมาตรฐาน ข้อมูลทุกคนตรงกันดีแล้ว', en:'✅ No values mismatching the standard list were found. Everyone’s data is already consistent.'},
+  txtFoundMismatchedPrefix: {th:'พบค่าที่ไม่ตรงกับรายการมาตรฐาน ', en:'Found '},
+  txtFoundMismatchedMid: {th:' รายการ กระทบนักศึกษารวม ', en:' mismatched value(s), affecting a total of '},
+  txtFoundMismatchedSuffix: {th:' คน:', en:' student(s):'},
+  txtMismatchNotStandardMid: {th:': "', en:': "'},
+  txtMismatchNotStandardSuffix: {th:'" — ไม่ตรงกับรายการมาตรฐาน (พบ ', en:'" — does not match the standard list (found in '},
+  txtMismatchFoundPeopleSuffix: {th:' คน)', en:' student(s))'},
+  optSelectCorrectStandardValue: {th:'— เลือกค่ามาตรฐานที่ถูกต้อง —', en:'— Select the correct standard value —'},
+  btnFixAllToValuePrefix: {th:'แก้ไขทั้งหมด ', en:'Fix all '},
+  btnFixAllToValueSuffix: {th:' รายการเป็นค่านี้', en:' item(s) to this value'},
+  txtEditing: {th:'กำลังแก้ไข...', en:'Updating...'},
+  txtNoStandardListPrefix: {th:'(ยังไม่มีรายการมาตรฐานของ', en:'(There is no standard list for '},
+  txtNoStandardListSuffix: {th:'ในระบบให้เลือกแก้ไข)', en:' in the system to choose from)'},
+  mismatchLbl_department: {th:'สาขาวิชา', en:'Department'},
+  mismatchLbl_program: {th:'หลักสูตร', en:'Program'},
+  mismatchLbl_plan: {th:'แผนการศึกษา', en:'Study Plan'},
+  txtNoSwapColumnsFound: {th:'ไม่พบคอลัมน์ที่เกี่ยวข้องในชีท (อาจยังไม่เคยมีการซ่อม header หรือยังไม่เคยใช้ฟีเจอร์นี้) — ไม่มีอะไรต้องซ่อม', en:'The relevant columns were not found in the sheet (the header may never have needed repair, or this feature has never been used) — nothing to repair.'},
+  txtNoSwappedData: {th:'✅ ไม่พบข้อมูลที่สลับตำแหน่งกัน', en:'✅ No swapped data found.'},
+  txtFoundSwappedPrefix: {th:'พบนักศึกษาที่ข้อมูลสลับตำแหน่งกัน ', en:'Found students with swapped data: '},
+  txtGradTermWillBecomePrefix: {th:' (ภาคเรียนที่สำเร็จการศึกษาจะกลายเป็น "', en:' (graduation term will become "'},
+  txtEmptyParen: {th:'(ว่าง)', en:'(empty)'},
+  txtGradTermWillBecomeSuffix: {th:'")', en:'")'},
+  btnConfirmRepairPrefix: {th:'🛠️ ยืนยันซ่อมข้อมูล (', en:'🛠️ Confirm data repair ('},
+  txtRepairing: {th:'กำลังซ่อม...', en:'Repairing...'},
+  txtRepairDonePrefix: {th:'✅ ซ่อมข้อมูลเรียบร้อยแล้ว ', en:'✅ Data repaired successfully: '},
+  txtNoWithdrawnAdvisorStudents: {th:'✅ ไม่พบนักศึกษาที่ค้างเรื่องที่ปรึกษา', en:'✅ No students with a pending advisor issue were found.'},
+  txtFoundWithdrawnAdvisorPrefix: {th:'พบนักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่ ', en:'Found students who withdrew an advisor but have not appointed a new one: '},
+  btnViewProfile: {th:'ดูโปรไฟล์', en:'View Profile'},
+  txtNoMissingPlanStudents: {th:'✅ ไม่พบนักศึกษาที่ขาดข้อมูลแผนการเรียน', en:'✅ No students missing study plan data were found.'},
+  txtFoundMissingPlanPrefix: {th:'พบนักศึกษาที่ไม่มีข้อมูลแผนการเรียน ', en:'Found students missing study plan data: '},
+  btnEditShort: {th:'แก้ไข', en:'Edit'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -8833,9 +8873,9 @@ function scanBogusAdvisorHistory(){
   var btn = document.getElementById('btnScanBogusAdvisorHistory');
   var resultBox = document.getElementById('bogusAdvisorHistoryResult');
   resultBox.innerHTML='';
-  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtChecking', text:(i18nText('txtChecking')||'กำลังตรวจสอบ...')}));
   var origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  btn.disabled = true; btn.textContent = (i18nText('txtChecking')||'กำลังตรวจสอบ...');
   recordsGetAll().then(function(allRecords){
     var affected = allRecords.map(function(r){
       var hist = r.advisorHistory||[];
@@ -8845,34 +8885,34 @@ function scanBogusAdvisorHistory(){
     resultBox.innerHTML='';
     btn.disabled=false; btn.textContent=origText;
     if(affected.length===0){
-      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบประวัติที่ผิดพลาด ข้อมูลถูกต้องอยู่แล้ว'}));
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', 'data-i18n':'txtNoBogusHistory', text:(i18nText('txtNoBogusHistory')||'✅ ไม่พบประวัติที่ผิดพลาด ข้อมูลถูกต้องอยู่แล้ว')}));
       return;
     }
     var totalBogus = affected.reduce(function(s,x){ return s+x.bogusCount; }, 0);
-    resultBox.appendChild(el('div',{class:'help', text:'พบประวัติที่ขึ้นผิดพลาด '+totalBogus+' รายการ ใน '+affected.length+' นักศึกษา:'}));
+    resultBox.appendChild(el('div',{class:'help', text:(i18nText('txtFoundBogusHistoryPrefix')||'พบประวัติที่ขึ้นผิดพลาด ')+totalBogus+(i18nText('txtFoundBogusHistoryMid')||' รายการ ใน ')+affected.length+(i18nText('txtFoundBogusHistorySuffix')||' นักศึกษา:')}));
     affected.forEach(function(x){
-      resultBox.appendChild(el('div',{class:'help', style:'margin:2px 0;', text:'• '+x.rec.studentId+' — '+(x.rec.studentName||'(ไม่ระบุชื่อ)')+' ('+x.bogusCount+' รายการ)'}));
+      resultBox.appendChild(el('div',{class:'help', style:'margin:2px 0;', text:'• '+x.rec.studentId+' — '+(x.rec.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)'))+' ('+x.bogusCount+(i18nText('txtItemsCountSuffix2')||' รายการ')+')'}));
     });
-    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;color:#c0392b;', text:'🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด ('+totalBogus+' รายการ)'});
+    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;color:#c0392b;', text:(i18nText('btnPurgeBogusHistoryConfirmPrefix')||'🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด (')+totalBogus+(i18nText('txtItemsCountSuffix2')||' รายการ')+')'});
     confirmBtn.addEventListener('click', function(){
       if(!confirm((i18nText('confirmPurgeBogusHistoryP1')||'ยืนยันลบประวัติที่ขึ้นผิดพลาด ')+totalBogus+(i18nText('confirmPurgeBogusHistoryP2')||' รายการ จาก ')+affected.length+(i18nText('confirmPurgeBogusHistoryP3')||' นักศึกษา? ระบบจะลบเฉพาะรายการที่ตรวจพบว่าไม่ใช่การเปลี่ยนแปลงจริง ประวัติการเปลี่ยนแปลงที่ปรึกษาจริงจะไม่ถูกแตะต้อง'))) return;
-      confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังลบ...';
+      confirmBtn.disabled = true; confirmBtn.textContent = (i18nText('txtDeleting')||'กำลังลบ...');
       Promise.all(affected.map(function(x){
         var updated = Object.assign({}, x.rec, {advisorHistory: x.genuine});
         return recordsPut(updated);
       })).then(function(){
         resultBox.innerHTML='';
-        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ลบประวัติที่ผิดพลาดออกแล้ว '+totalBogus+' รายการ จาก '+affected.length+' นักศึกษา'}));
+        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:(i18nText('txtBogusHistoryDeletedPrefix')||'✅ ลบประวัติที่ผิดพลาดออกแล้ว ')+totalBogus+(i18nText('txtBogusHistoryDeletedMid')||' รายการ จาก ')+affected.length+(i18nText('txtBogusHistoryDeletedSuffix')||' นักศึกษา')}));
         toast(i18nText('toast066')||'ล้างประวัติที่ปรึกษาที่ผิดพลาดเรียบร้อยแล้ว');
       }).catch(function(e){
         toast((i18nText('toastDeleteFailed')||'ลบไม่สำเร็จ: ')+(e && e.message ? e.message : e), true);
-        confirmBtn.disabled=false; confirmBtn.textContent = '🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด ('+totalBogus+' รายการ)';
+        confirmBtn.disabled=false; confirmBtn.textContent = (i18nText('btnPurgeBogusHistoryConfirmPrefix')||'🗑️ ยืนยันลบประวัติที่ผิดทั้งหมด (')+totalBogus+(i18nText('txtItemsCountSuffix2')||' รายการ')+')';
       });
     });
     resultBox.appendChild(confirmBtn);
   }).catch(function(e){
     resultBox.innerHTML='';
-    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtCheckFailedPrefix')||'ตรวจสอบไม่สำเร็จ: ')+(e && e.message ? e.message : e)}));
     btn.disabled=false; btn.textContent=origText;
   });
 }
@@ -8883,17 +8923,17 @@ function scanBogusAdvisorHistory(){
    กรองตามสาขา/หลักสูตร/แผนในหน้าแดชบอร์ดหรือหน้าค้นหาตามสาขาวิชาเลย (ตัวกรองเทียบข้อความแบบตรงเป๊ะ) ทำให้ดูเหมือนข้อมูล
    หายไปทั้งที่จริงๆ มีอยู่ครบ */
 var MISMATCH_FIELD_DEFS = [
-  {key:'department', label:'สาขาวิชา'},
-  {key:'program', label:'หลักสูตร'},
-  {key:'plan', label:'แผนการศึกษา'}
+  {key:'department', labelKey:'mismatchLbl_department', labelDefault:'สาขาวิชา'},
+  {key:'program', labelKey:'mismatchLbl_program', labelDefault:'หลักสูตร'},
+  {key:'plan', labelKey:'mismatchLbl_plan', labelDefault:'แผนการศึกษา'}
 ];
 function checkMismatchedMasterFields(){
   var btn = document.getElementById('btnCheckMismatchedMasterFields');
   var resultBox = document.getElementById('mismatchedMasterFieldsResult');
   resultBox.innerHTML = '';
-  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtChecking', text:(i18nText('txtChecking')||'กำลังตรวจสอบ...')}));
   var origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  btn.disabled = true; btn.textContent = (i18nText('txtChecking')||'กำลังตรวจสอบ...');
   recordsGetAll().then(function(allRecords){
     resultBox.innerHTML = '';
     btn.disabled = false; btn.textContent = origText;
@@ -8909,30 +8949,31 @@ function checkMismatchedMasterFields(){
 
     var groups = {}; /* key: field+'::'+value -> {field,label,value,students:[rec,...]} */
     MISMATCH_FIELD_DEFS.forEach(function(def){
+      var label = i18nText(def.labelKey)||def.labelDefault;
       var standardList = masterData[def.key+'s'] || [];
       students.forEach(function(r){
         var val = (r[def.key]||'').trim();
         if(!val) return; /* ไม่กรอกไว้เลย ไม่ถือว่าสะกดผิด แค่ยังไม่ระบุ */
         if(standardList.indexOf(val)>-1) return; /* ตรงกับรายการมาตรฐานอยู่แล้ว */
         var gkey = def.key+'::'+val;
-        if(!groups[gkey]) groups[gkey] = {field:def.key, label:def.label, value:val, standardList:standardList, students:[]};
+        if(!groups[gkey]) groups[gkey] = {field:def.key, label:label, value:val, standardList:standardList, students:[]};
         groups[gkey].students.push(r);
       });
     });
     var groupKeys = Object.keys(groups).sort(function(a,b){ return groups[b].students.length - groups[a].students.length; });
     if(groupKeys.length===0){
-      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบค่าที่สะกดไม่ตรงกับรายการมาตรฐาน ข้อมูลทุกคนตรงกันดีแล้ว'}));
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', 'data-i18n':'txtNoMismatchedFields', text:(i18nText('txtNoMismatchedFields')||'✅ ไม่พบค่าที่สะกดไม่ตรงกับรายการมาตรฐาน ข้อมูลทุกคนตรงกันดีแล้ว')}));
       return;
     }
     var totalAffected = groupKeys.reduce(function(s,k){ return s+groups[k].students.length; }, 0);
-    resultBox.appendChild(el('div',{class:'help', text:'พบค่าที่ไม่ตรงกับรายการมาตรฐาน '+groupKeys.length+' รายการ กระทบนักศึกษารวม '+totalAffected+' คน:'}));
+    resultBox.appendChild(el('div',{class:'help', text:(i18nText('txtFoundMismatchedPrefix')||'พบค่าที่ไม่ตรงกับรายการมาตรฐาน ')+groupKeys.length+(i18nText('txtFoundMismatchedMid')||' รายการ กระทบนักศึกษารวม ')+totalAffected+(i18nText('txtFoundMismatchedSuffix')||' คน:')}));
     groupKeys.forEach(function(gkey){
       var g = groups[gkey];
       var box = el('div',{class:'card', style:'background:#fff8ec;border-color:#f0d9a8;margin-top:10px;padding:12px 14px;'});
-      box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:'⚠️ '+g.label+': "'+g.value+'" — ไม่ตรงกับรายการมาตรฐาน (พบ '+g.students.length+' คน)'}));
+      box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:'⚠️ '+g.label+(i18nText('txtMismatchNotStandardMid')||': "')+g.value+(i18nText('txtMismatchNotStandardSuffix')||'" — ไม่ตรงกับรายการมาตรฐาน (พบ ')+g.students.length+(i18nText('txtMismatchFoundPeopleSuffix')||' คน)')}));
       var listBox = el('div',{style:'margin-bottom:8px;'});
       g.students.forEach(function(r){
-        var row = el('div',{class:'help', style:'margin:2px 0;cursor:pointer;', text:'• '+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')});
+        var row = el('div',{class:'help', style:'margin:2px 0;cursor:pointer;', text:'• '+r.studentId+' — '+(r.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)'))});
         row.addEventListener('click', function(){ switchView('dashboard'); selectLookupStudent(r.studentId); });
         listBox.appendChild(row);
       });
@@ -8940,14 +8981,14 @@ function checkMismatchedMasterFields(){
       if(g.standardList.length){
         var fixRow = el('div',{style:'display:flex;gap:8px;align-items:center;flex-wrap:wrap;'});
         var sel = el('select',{style:'max-width:260px;'});
-        sel.appendChild(el('option',{value:'', text:'— เลือกค่ามาตรฐานที่ถูกต้อง —'}));
+        sel.appendChild(el('option',{value:'', 'data-i18n':'optSelectCorrectStandardValue', text:(i18nText('optSelectCorrectStandardValue')||'— เลือกค่ามาตรฐานที่ถูกต้อง —')}));
         g.standardList.forEach(function(opt){ sel.appendChild(el('option',{value:opt, text:opt})); });
-        var fixBtn = el('button',{type:'button', class:'btn btn-secondary', text:'แก้ไขทั้งหมด '+g.students.length+' รายการเป็นค่านี้'});
+        var fixBtn = el('button',{type:'button', class:'btn btn-secondary', text:(i18nText('btnFixAllToValuePrefix')||'แก้ไขทั้งหมด ')+g.students.length+(i18nText('btnFixAllToValueSuffix')||' รายการเป็นค่านี้')});
         fixBtn.addEventListener('click', function(){
           var newVal = sel.value;
           if(!newVal){ toast(i18nText('toast067')||'กรุณาเลือกค่ามาตรฐานที่ถูกต้องก่อน', true); return; }
           if(!confirm((i18nText('confirmBulkEditFieldP1')||'แก้ไขช่อง "')+g.label+(i18nText('confirmBulkEditFieldP2')||'" ของนักศึกษา ')+g.students.length+(i18nText('confirmBulkEditFieldP3')||' คน จาก "')+g.value+(i18nText('confirmBulkEditFieldP4')||'" เป็น "')+newVal+(i18nText('confirmBulkEditFieldP5')||'"?'))) return;
-          fixBtn.disabled = true; fixBtn.textContent = 'กำลังแก้ไข...';
+          fixBtn.disabled = true; fixBtn.textContent = (i18nText('txtEditing')||'กำลังแก้ไข...');
           Promise.all(g.students.map(function(r){
             var updated = Object.assign({}, r); updated[g.field] = newVal; updated.updatedAt = Date.now();
             return recordsPut(updated);
@@ -8958,20 +8999,20 @@ function checkMismatchedMasterFields(){
             box.remove();
           }).catch(function(e){
             toast((i18nText('toastEditFailed')||'แก้ไขไม่สำเร็จ: ')+(e && e.message ? e.message : e), true);
-            fixBtn.disabled = false; fixBtn.textContent = 'แก้ไขทั้งหมด '+g.students.length+' รายการเป็นค่านี้';
+            fixBtn.disabled = false; fixBtn.textContent = (i18nText('btnFixAllToValuePrefix')||'แก้ไขทั้งหมด ')+g.students.length+(i18nText('btnFixAllToValueSuffix')||' รายการเป็นค่านี้');
           });
         });
         fixRow.appendChild(sel);
         fixRow.appendChild(fixBtn);
         box.appendChild(fixRow);
       } else {
-        box.appendChild(el('div',{class:'help', text:'(ยังไม่มีรายการมาตรฐานของ'+g.label+'ในระบบให้เลือกแก้ไข)'}));
+        box.appendChild(el('div',{class:'help', text:(i18nText('txtNoStandardListPrefix')||'(ยังไม่มีรายการมาตรฐานของ')+g.label+(i18nText('txtNoStandardListSuffix')||'ในระบบให้เลือกแก้ไข)')}));
       }
       resultBox.appendChild(box);
     });
   }).catch(function(e){
     resultBox.innerHTML='';
-    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtCheckFailedPrefix')||'ตรวจสอบไม่สำเร็จ: ')+(e && e.message ? e.message : e)}));
     btn.disabled=false; btn.textContent=origText;
   });
 }
@@ -8988,9 +9029,9 @@ function scanSwappedGradTermData(){
   var btn = document.getElementById('btnScanSwappedGradTerm');
   var resultBox = document.getElementById('swappedGradTermResult');
   resultBox.innerHTML='';
-  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtChecking', text:(i18nText('txtChecking')||'กำลังตรวจสอบ...')}));
   var origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  btn.disabled = true; btn.textContent = (i18nText('txtChecking')||'กำลังตรวจสอบ...');
   function looksLikeJsonArray(s){
     if(!s) return false;
     var t = String(s).trim();
@@ -9004,7 +9045,7 @@ function scanSwappedGradTermData(){
     var gradIdx = headers.indexOf('graduatedTerm');
     var advIdx = headers.indexOf('advisorHistoryJson');
     if(gradIdx===-1 || advIdx===-1){
-      resultBox.appendChild(el('div',{class:'help', text:'ไม่พบคอลัมน์ที่เกี่ยวข้องในชีท (อาจยังไม่เคยมีการซ่อม header หรือยังไม่เคยใช้ฟีเจอร์นี้) — ไม่มีอะไรต้องซ่อม'}));
+      resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtNoSwapColumnsFound', text:(i18nText('txtNoSwapColumnsFound')||'ไม่พบคอลัมน์ที่เกี่ยวข้องในชีท (อาจยังไม่เคยมีการซ่อม header หรือยังไม่เคยใช้ฟีเจอร์นี้) — ไม่มีอะไรต้องซ่อม')}));
       return;
     }
     var affected = [];
@@ -9027,17 +9068,17 @@ function scanSwappedGradTermData(){
       }
     }
     if(affected.length===0){
-      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบข้อมูลที่สลับตำแหน่งกัน'}));
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', 'data-i18n':'txtNoSwappedData', text:(i18nText('txtNoSwappedData')||'✅ ไม่พบข้อมูลที่สลับตำแหน่งกัน')}));
       return;
     }
-    resultBox.appendChild(el('div',{class:'help', text:'พบนักศึกษาที่ข้อมูลสลับตำแหน่งกัน '+affected.length+' คน:'}));
+    resultBox.appendChild(el('div',{class:'help', text:(i18nText('txtFoundSwappedPrefix')||'พบนักศึกษาที่ข้อมูลสลับตำแหน่งกัน ')+affected.length+(i18nText('txtPeopleCountSuffix2')||' คน')+':'}));
     affected.forEach(function(x){
-      resultBox.appendChild(el('div',{class:'help', style:'margin:2px 0;', text:'• '+x.rec.studentId+' — '+(x.rec.studentName||'(ไม่ระบุชื่อ)')+' (ภาคเรียนที่สำเร็จการศึกษาจะกลายเป็น "'+(x.fixedGrad||'(ว่าง)')+'")'}));
+      resultBox.appendChild(el('div',{class:'help', style:'margin:2px 0;', text:'• '+x.rec.studentId+' — '+(x.rec.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)'))+(i18nText('txtGradTermWillBecomePrefix')||' (ภาคเรียนที่สำเร็จการศึกษาจะกลายเป็น "')+(x.fixedGrad||(i18nText('txtEmptyParen')||'(ว่าง)'))+(i18nText('txtGradTermWillBecomeSuffix')||'")')}));
     });
-    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;', text:'🛠️ ยืนยันซ่อมข้อมูล ('+affected.length+' คน)'});
+    var confirmBtn = el('button',{type:'button', class:'btn btn-secondary', style:'margin-top:10px;', text:(i18nText('btnConfirmRepairPrefix')||'🛠️ ยืนยันซ่อมข้อมูล (')+affected.length+(i18nText('txtPeopleCountSuffix')||' คน)')});
     confirmBtn.addEventListener('click', function(){
       if(!confirm((i18nText('confirmSwapBackPrefix')||'ยืนยันสลับค่ากลับให้ถูกตำแหน่งสำหรับ ')+affected.length+(i18nText('confirmSwapBackSuffix')||' คน?'))) return;
-      confirmBtn.disabled = true; confirmBtn.textContent = 'กำลังซ่อม...';
+      confirmBtn.disabled = true; confirmBtn.textContent = (i18nText('txtRepairing')||'กำลังซ่อม...');
       Promise.all(affected.map(function(x){
         var newRow = x.row.slice();
         newRow[gradIdx] = x.fixedGrad;
@@ -9046,17 +9087,17 @@ function scanSwappedGradTermData(){
       })).then(function(){
         invalidateRecordsSheetCache();
         resultBox.innerHTML='';
-        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ซ่อมข้อมูลเรียบร้อยแล้ว '+affected.length+' คน'}));
+        resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:(i18nText('txtRepairDonePrefix')||'✅ ซ่อมข้อมูลเรียบร้อยแล้ว ')+affected.length+(i18nText('txtPeopleCountSuffix2')||' คน')}));
         toast(i18nText('toast068')||'ซ่อมข้อมูลที่สลับตำแหน่งกันเรียบร้อยแล้ว');
       }).catch(function(e){
         toast((i18nText('toastRepairFailed')||'ซ่อมไม่สำเร็จ: ')+(e && e.message ? e.message : e), true);
-        confirmBtn.disabled=false; confirmBtn.textContent = '🛠️ ยืนยันซ่อมข้อมูล ('+affected.length+' คน)';
+        confirmBtn.disabled=false; confirmBtn.textContent = (i18nText('btnConfirmRepairPrefix')||'🛠️ ยืนยันซ่อมข้อมูล (')+affected.length+(i18nText('txtPeopleCountSuffix')||' คน)');
       });
     });
     resultBox.appendChild(confirmBtn);
   }).catch(function(e){
     resultBox.innerHTML='';
-    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtCheckFailedPrefix')||'ตรวจสอบไม่สำเร็จ: ')+(e && e.message ? e.message : e)}));
     btn.disabled=false; btn.textContent=origText;
   });
 }
@@ -9065,9 +9106,9 @@ function scanWithdrawnAdvisorStudents(){
   var btn = document.getElementById('btnScanWithdrawnAdvisor');
   var resultBox = document.getElementById('withdrawnAdvisorResult');
   resultBox.innerHTML='';
-  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtChecking', text:(i18nText('txtChecking')||'กำลังตรวจสอบ...')}));
   var origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  btn.disabled = true; btn.textContent = (i18nText('txtChecking')||'กำลังตรวจสอบ...');
   recordsGetAll().then(function(allRecords){
     var affected = allRecords.filter(studentHasWithdrawnAdvisor);
     /* เจ้าหน้าที่สาขาให้เห็นเฉพาะสาขาของตัวเอง เช่นเดียวกับหน้าตรวจสอบข้อมูลอื่นๆ */
@@ -9075,14 +9116,14 @@ function scanWithdrawnAdvisorStudents(){
     resultBox.innerHTML='';
     btn.disabled=false; btn.textContent=origText;
     if(affected.length===0){
-      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบนักศึกษาที่ค้างเรื่องที่ปรึกษา'}));
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', 'data-i18n':'txtNoWithdrawnAdvisorStudents', text:(i18nText('txtNoWithdrawnAdvisorStudents')||'✅ ไม่พบนักศึกษาที่ค้างเรื่องที่ปรึกษา')}));
       return;
     }
-    resultBox.appendChild(el('div',{class:'help', text:'พบนักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่ '+affected.length+' คน:'}));
+    resultBox.appendChild(el('div',{class:'help', text:(i18nText('txtFoundWithdrawnAdvisorPrefix')||'พบนักศึกษาที่ถอนที่ปรึกษาแล้วยังไม่แต่งตั้งใหม่ ')+affected.length+(i18nText('txtPeopleCountSuffix2')||' คน')+':'}));
     affected.forEach(function(r){
       resultBox.appendChild(el('div',{class:'attach-item'},[
-        el('span',{class:'name', text:'⚠️ '+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+(r.program||'-')+' / '+(r.department||'-')+')'}),
-        el('button',{type:'button', class:'link-btn', text:'ดูโปรไฟล์', onclick:function(){
+        el('span',{class:'name', text:'⚠️ '+r.studentId+' — '+(r.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)'))+' ('+(r.program||'-')+' / '+(r.department||'-')+')'}),
+        el('button',{type:'button', class:'link-btn', 'data-i18n':'btnViewProfile', text:(i18nText('btnViewProfile')||'ดูโปรไฟล์'), onclick:function(){
           switchView('dashboard');
           document.getElementById('lookupSearch').value = r.studentId;
           selectLookupStudent(r.studentId);
@@ -9091,7 +9132,7 @@ function scanWithdrawnAdvisorStudents(){
     });
   }).catch(function(e){
     resultBox.innerHTML='';
-    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtCheckFailedPrefix')||'ตรวจสอบไม่สำเร็จ: ')+(e && e.message ? e.message : e)}));
     btn.disabled=false; btn.textContent=origText;
   });
 }
@@ -9105,23 +9146,23 @@ function scanMissingPlanStudents(){
   var btn = document.getElementById('btnScanMissingPlan');
   var resultBox = document.getElementById('missingPlanResult');
   resultBox.innerHTML='';
-  resultBox.appendChild(el('div',{class:'help', text:'กำลังตรวจสอบ...'}));
+  resultBox.appendChild(el('div',{class:'help', 'data-i18n':'txtChecking', text:(i18nText('txtChecking')||'กำลังตรวจสอบ...')}));
   var origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+  btn.disabled = true; btn.textContent = (i18nText('txtChecking')||'กำลังตรวจสอบ...');
   recordsGetAll().then(function(allRecords){
     var affected = allRecords.filter(function(r){ return !r.plan; });
     if(currentDeptRestriction) affected = affected.filter(function(r){ return r.department===currentDeptRestriction; });
     resultBox.innerHTML='';
     btn.disabled=false; btn.textContent=origText;
     if(affected.length===0){
-      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', text:'✅ ไม่พบนักศึกษาที่ขาดข้อมูลแผนการเรียน'}));
+      resultBox.appendChild(el('div',{class:'help', style:'color:var(--accent);font-weight:600;', 'data-i18n':'txtNoMissingPlanStudents', text:(i18nText('txtNoMissingPlanStudents')||'✅ ไม่พบนักศึกษาที่ขาดข้อมูลแผนการเรียน')}));
       return;
     }
-    resultBox.appendChild(el('div',{class:'help', text:'พบนักศึกษาที่ไม่มีข้อมูลแผนการเรียน '+affected.length+' คน:'}));
+    resultBox.appendChild(el('div',{class:'help', text:(i18nText('txtFoundMissingPlanPrefix')||'พบนักศึกษาที่ไม่มีข้อมูลแผนการเรียน ')+affected.length+(i18nText('txtPeopleCountSuffix2')||' คน')+':'}));
     affected.forEach(function(r){
       resultBox.appendChild(el('div',{class:'attach-item'},[
-        el('span',{class:'name', text:'⚠️ '+r.studentId+' — '+(r.studentName||'(ไม่ระบุชื่อ)')+' ('+(r.program||'-')+' / '+(r.department||'-')+')'}),
-        el('button',{type:'button', class:'link-btn', text:'แก้ไข', onclick:function(){
+        el('span',{class:'name', text:'⚠️ '+r.studentId+' — '+(r.studentName||(i18nText('txtNoName')||'(ไม่ระบุชื่อ)'))+' ('+(r.program||'-')+' / '+(r.department||'-')+')'}),
+        el('button',{type:'button', class:'link-btn', 'data-i18n':'btnEditShort', text:(i18nText('btnEditShort')||'แก้ไข'), onclick:function(){
           recordsGet(r.id).then(loadRecordIntoForm);
           switchView('form');
         }})
@@ -9129,7 +9170,7 @@ function scanMissingPlanStudents(){
     });
   }).catch(function(e){
     resultBox.innerHTML='';
-    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:'ตรวจสอบไม่สำเร็จ: '+(e && e.message ? e.message : e)}));
+    resultBox.appendChild(el('div',{class:'help', style:'color:#c0392b;', text:(i18nText('txtCheckFailedPrefix')||'ตรวจสอบไม่สำเร็จ: ')+(e && e.message ? e.message : e)}));
     btn.disabled=false; btn.textContent=origText;
   });
 }

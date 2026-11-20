@@ -292,6 +292,9 @@ if('serviceWorker' in navigator){
   .result-tag.pass{background:#e5f4ec;color:var(--accent);}
   .result-tag.cond{background:#fdf0e0;color:var(--warn);}
   .result-tag.fail{background:#fdeceb;color:var(--danger);}
+  .result-tag.pending{background:#eef1f6;color:var(--muted);}
+  .result-tag.notsent{background:#fdeceb;color:var(--danger);}
+  .result-tag.na{background:#eef1f6;color:var(--muted);}
   .doc-status-tag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12.5px;font-weight:600;white-space:nowrap;}
   .doc-status-tag.received{background:#e6f0fb;color:#2f6fb3;}
   .doc-status-tag.in_progress{background:#fdf0e0;color:var(--warn);}
@@ -4035,6 +4038,27 @@ function kvFileLink(label, file){
 }
 /* ตรวจสอบความครบถ้วนของข้อมูลหลักที่ควรมีก่อนปิดเคสของนักศึกษาคนหนึ่ง — คืนค่าเป็นรายการข้อความภาษาไทย
    ของสิ่งที่ยังขาด (ไม่ใช่การบังคับกรอก แค่ช่วยเจ้าหน้าที่เช็คก่อนถือว่าเคสนี้เรียบร้อย) */
+/* สรุปสถานะผลสอบของทั้ง 2 ขั้นตอน (3.1 สอบเค้าโครงวิทยานิพนธ์ "3 บทแรก" / 3.2 สอบป้องกันวิทยานิพนธ์-IS "5 บท") ให้เห็น
+   ชัดเจนในหน้าเดียวที่หน้าตรวจสอบข้อมูล แทนที่จะต้องไล่ดูการ์ดประวัติการสอบทีละใบ — ถ้านักศึกษายังไม่เคยกรอกข้อมูลสอบ
+   ขั้นตอนนั้นเลย จะขึ้น "ยังไม่ส่ง" ให้เห็นชัด (ไม่ใช่ปล่อยว่างจนดูเหมือนไม่มีอะไรต้องติดตาม) ยกเว้นแผน ข (การค้นคว้าอิสระ)
+   ซึ่งไม่มีขั้นตอนสอบเค้าโครงแบบเป็นทางการ จึงขึ้น "ไม่มีขั้นตอนนี้" แทน */
+function examStageStatusBadge(stage, rec){
+  if(stage==='proposal'){
+    if(isIndependentStudyPlan(rec.plan)) return {text:'ไม่มีขั้นตอนนี้ (แผน ข)', cls:'na'};
+    if(!recHasProposalData(rec)) return {text:'ยังไม่ส่ง', cls:'notsent'};
+    if(!rec.proposalResult) return {text:'รอผล', cls:'pending'};
+    return {text:rec.proposalResult, cls: rec.proposalResult==='ผ่าน' ? 'pass' : (rec.proposalResult==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail')};
+  }
+  if(!recHasDefenseData(rec)) return {text:'ยังไม่ส่ง', cls:'notsent'};
+  if(!rec.defenseResult) return {text:'รอผล', cls:'pending'};
+  return {text:rec.defenseResult, cls: rec.defenseResult==='ผ่าน' ? 'pass' : (rec.defenseResult==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail')};
+}
+function kvBadge(label, badge){
+  return el('div',{class:'kv-item'},[
+    el('span',{class:'k', text:label}),
+    el('span',{class:'v'},[ el('span',{class:'result-tag '+badge.cls, text:badge.text}) ])
+  ]);
+}
 function computeMissingItems(rec){
   var missing = [];
   if(!rec.mainAdvisor) missing.push('ยังไม่ระบุอาจารย์ที่ปรึกษาหลัก');
@@ -4073,6 +4097,15 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
     el('div',{style:'font-size:13px;color:#555;margin-bottom:6px;', text:'รหัสนักศึกษา '+latest.studentId})
   ]);
   wrap.appendChild(printTitle);
+
+  var examStatusCard = el('div',{class:'card section-card', style:'border-left:4px solid var(--primary);'},[
+    el('h3',{text:'🎯 สถานะผลสอบ'}),
+    el('div',{class:'kv-grid'},[
+      kvBadge('สอบเค้าโครงวิทยานิพนธ์ (3 บท)', examStageStatusBadge('proposal', latest)),
+      kvBadge('สอบป้องกันวิทยานิพนธ์/IS (5 บท)', examStageStatusBadge('defense', latest))
+    ])
+  ]);
+  wrap.appendChild(examStatusCard);
 
   var missingItems = computeMissingItems(latest);
   var completenessCard = el('div',{class:'card section-card', style:'border-left:4px solid '+(missingItems.length?'var(--warn)':'var(--accent)')+';'},[

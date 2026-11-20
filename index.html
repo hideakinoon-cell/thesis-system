@@ -681,7 +681,7 @@ if('serviceWorker' in navigator){
       <h3 style="margin:0;" data-i18n="secLookupTitle">🔍 ตรวจสอบข้อมูลนักศึกษา</h3>
       <button type="button" class="btn btn-secondary btn-sm" id="btnExportLookupList">📥 ส่งออก Excel</button>
     </div>
-    <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา...">
+    <input type="text" id="lookupSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา..." data-i18n-ph="phLookupSearch">
     <div class="grid" style="max-width:680px;margin-top:10px;">
       <div class="field">
         <label>หรือเลือกสาขาวิชาเพื่อดูรายชื่อทั้งหมด</label>
@@ -719,7 +719,7 @@ if('serviceWorker' in navigator){
   <div class="card">
     <h3 data-i18n="secAdvisorSearch">👨‍🏫 ค้นหาอาจารย์ที่ปรึกษา</h3>
     <div class="help" style="margin-bottom:10px;">แสดงเฉพาะผู้ที่มีตำแหน่งที่ปรึกษาหลักหรือที่ปรึกษาร่วม ไม่รวมผู้ที่มีแค่ตำแหน่งประธาน/กรรมการสอบ (เช่น กรรมการสอบจากภายนอก) — จัดการรายชื่อทั้งหมดได้ที่หน้าตั้งค่า</div>
-    <input type="text" id="advisorLookupSearch" placeholder="พิมพ์ชื่ออาจารย์ที่ปรึกษาเพื่อค้นหา...">
+    <input type="text" id="advisorLookupSearch" placeholder="พิมพ์ชื่ออาจารย์ที่ปรึกษาเพื่อค้นหา..." data-i18n-ph="phAdvisorLookupSearch">
     <div class="lookup-result-list" id="advisorLookupResultList"></div>
     <div class="empty-state" id="advisorLookupEmpty" style="display:none;"></div>
     <div id="advisorLookupPagination" style="display:none;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
@@ -766,7 +766,7 @@ if('serviceWorker' in navigator){
     <div class="help" style="margin:10px 0 4px;">เลือกตำแหน่งที่อาจารย์ท่านนี้ทำหน้าที่ได้ (เลือกได้มากกว่า 1 ตำแหน่ง):</div>
     <div class="radio-group" id="m_advisor_roles"></div>
     <div class="field" style="max-width:340px;margin-top:14px;">
-      <input type="text" id="m_advisor_search" placeholder="🔍 ค้นหาชื่ออาจารย์...">
+      <input type="text" id="m_advisor_search" placeholder="🔍 ค้นหาชื่ออาจารย์..." data-i18n-ph="phAdvisorNameSearch">
     </div>
     <div class="help" id="m_advisor_count" style="margin:6px 0 2px;"></div>
     <div class="chip-list" id="m_advisors" style="margin-top:8px;"></div>
@@ -796,7 +796,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="field" style="position:relative;margin-top:8px;">
       <label>ค้นหานักศึกษา (รหัส/ชื่อ)</label>
-      <input type="text" id="di_studentSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหาในระบบ...">
+      <input type="text" id="di_studentSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหาในระบบ..." data-i18n-ph="phDiStudentSearch">
       <div id="di_studentSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:30;background:#fff;max-height:240px;overflow-y:auto;box-shadow:var(--shadow-md);border:1px solid var(--border);border-radius:9px;margin-top:4px;padding:6px;"></div>
     </div>
     <div class="field-row-with-btn" style="flex-wrap:wrap;gap:14px;margin-top:6px;">
@@ -834,7 +834,7 @@ if('serviceWorker' in navigator){
           <option value="done">🟢 ดำเนินการเสร็จสิ้น</option>
         </select>
       </div>
-      <div class="field" style="min-width:200px;"><label>ค้นหาชื่อ/รหัส</label><input type="text" id="di_filterSearch" placeholder="พิมพ์เพื่อค้นหา..."></div>
+      <div class="field" style="min-width:200px;"><label data-i18n="lblSearchNameOrId">ค้นหาชื่อ/รหัส</label><input type="text" id="di_filterSearch" placeholder="พิมพ์เพื่อค้นหา..." data-i18n-ph="phGenericSearch"></div>
     </div>
   </div>
 
@@ -1930,10 +1930,14 @@ function checkAdvisorNameMismatch(hostEl, value){
 function buildSearchSelect(hostEl, list, placeholder){
   hostEl.classList.add('combo');
   hostEl.innerHTML = '';
-  var input = el('input',{type:'text', class:'combo-input', placeholder:placeholder||'พิมพ์เพื่อค้นหา...', autocomplete:'off'});
+  var input = el('input',{type:'text', class:'combo-input', placeholder:(i18nText(placeholder)||placeholder||'พิมพ์เพื่อค้นหา...'), autocomplete:'off'});
   var dropdown = el('div',{class:'combo-dropdown'});
   hostEl.appendChild(input);
   hostEl.appendChild(dropdown);
+  /* เก็บ key/ข้อความของ placeholder และ input element ไว้ เพื่อให้สลับภาษาแล้วรีเฟรช placeholder ของช่องค้นหานี้ได้
+     (ครอบคลุมทั้งคอมโบที่สร้างตอนโหลดหน้าแรก และที่สร้างใหม่ภายหลัง เช่น แถวที่ปรึกษาร่วม/กรรมการ) */
+  hostEl._phArg = placeholder;
+  hostEl._inputEl = input;
   hostEl._list = list||[];
   hostEl._extra = [];
   hostEl._value = '';
@@ -1965,7 +1969,7 @@ function buildSearchSelect(hostEl, list, placeholder){
     dropdown.innerHTML='';
     activeIndex = -1;
     if(currentMatches.length===0){
-      dropdown.appendChild(el('div',{class:'combo-empty', text:'ไม่พบชื่อที่ตรงกัน'}));
+      dropdown.appendChild(el('div',{class:'combo-empty', text:(i18nText('comboNoMatch')||'ไม่พบชื่อที่ตรงกัน')}));
     } else {
       currentMatches.slice(0,50).forEach(function(name){
         dropdown.appendChild(el('div',{
@@ -1997,7 +2001,7 @@ function buildSearchSelect(hostEl, list, placeholder){
       if(allOptions().indexOf(typed)>-1){ hostEl._value = typed; }
       else {
         input.value = hostEl._value || '';
-        toast('กรุณาเลือกชื่อจากรายการค้นหาเท่านั้น', true);
+        toast(i18nText('toastSelectFromListOnly')||'กรุณาเลือกชื่อจากรายการค้นหาเท่านั้น', true);
       }
       closeDropdown();
     }, 180);
@@ -2614,6 +2618,25 @@ var LANDING_I18N = {
   lblGraduatedTerm: {th:'ภาคเรียนที่สำเร็จการศึกษา', en:'Graduation Term'},
   btnCancelForm: {th:'❌ ยกเลิก', en:'❌ Cancel'},
   btnSaveForm: {th:'💾 บันทึกข้อมูล', en:'💾 Save Data'},
+  phSearchProgram: {th:'พิมพ์เพื่อค้นหาหลักสูตร...', en:'Type to search programs...'},
+  phSearchDepartment: {th:'พิมพ์เพื่อค้นหาสาขาวิชา...', en:'Type to search departments...'},
+  phSearchMainAdvisor: {th:'พิมพ์ชื่ออาจารย์ที่ปรึกษาหลัก...', en:"Type main advisor's name..."},
+  phSearchChair: {th:'พิมพ์ชื่อประธานกรรมการ...', en:"Type committee chair's name..."},
+  phSearchCoAdvisor: {th:'ระบุชื่ออาจารย์ร่วม', en:'Specify co-advisor name'},
+  phSearchCommitteeMember: {th:'ระบุชื่อกรรมการ', en:'Specify committee member name'},
+  optSpecifyPosition: {th:'ระบุตำแหน่ง', en:'Specify Role'},
+  filterAllDept: {th:'ทุกสาขา', en:'All Departments'},
+  filterAllProgram: {th:'ทุกหลักสูตร', en:'All Programs'},
+  filterAllPlan: {th:'ทุกแผน', en:'All Plans'},
+  selectStudyPlan: {th:'เลือกแผนการเรียน', en:'Select Study Plan'},
+  comboNoMatch: {th:'ไม่พบชื่อที่ตรงกัน', en:'No matching name found'},
+  toastSelectFromListOnly: {th:'กรุณาเลือกชื่อจากรายการค้นหาเท่านั้น', en:'Please select a name from the search list only'},
+  phLookupSearch: {th:'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหา...', en:'Type student ID or name to search...'},
+  phAdvisorLookupSearch: {th:'พิมพ์ชื่ออาจารย์ที่ปรึกษาเพื่อค้นหา...', en:"Type advisor's name to search..."},
+  phAdvisorNameSearch: {th:'🔍 ค้นหาชื่ออาจารย์...', en:'🔍 Search advisor name...'},
+  phDiStudentSearch: {th:'พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหาในระบบ...', en:'Type student ID or name to search the system...'},
+  lblSearchNameOrId: {th:'ค้นหาชื่อ/รหัส', en:'Search Name/ID'},
+  phGenericSearch: {th:'พิมพ์เพื่อค้นหา...', en:'Type to search...'},
   navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   navFeatures: {th:'ฟีเจอร์', en:'Features'},
   navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},
@@ -2655,6 +2678,15 @@ function applyLandingLang(lang){
   try{ localStorage.setItem(LANDING_LANG_KEY, lang); }catch(e){}
   /* ถ้าหน้าล็อกอินเปิดอยู่ ให้รีเฟรช textContent ที่ตั้งแบบ dynamic (ชื่อหัวข้อ/ข้อความช่วยเหลือ ที่สลับตามโหมด login/setup) ให้เป็นภาษาปัจจุบันด้วย */
   if(typeof refreshLockFormLang==='function') refreshLockFormLang();
+  /* รีเฟรช placeholder ของช่องค้นหาแบบ combo (หลักสูตร/สาขา/อาจารย์ที่ปรึกษา/ประธาน/กรรมการ ฯลฯ) ทั้งที่มีอยู่แล้วตอนโหลดหน้า
+     และที่เพิ่งถูกสร้างเพิ่มภายหลัง (เช่น แถวที่ปรึกษาร่วม/กรรมการที่เพิ่มเอง) ให้เป็นภาษาปัจจุบัน */
+  try{
+    document.querySelectorAll('.combo').forEach(function(hostEl){
+      if(hostEl._phArg && hostEl._inputEl){ hostEl._inputEl.placeholder = i18nText(hostEl._phArg) || hostEl._phArg; }
+    });
+  }catch(e){}
+  /* รีเฟรชตัวเลือก "ทุกสาขา/ทุกหลักสูตร/ทุกแผน" ในตัวกรอง และ placeholder ของ select ปกติ (เช่น ตำแหน่งกรรมการ, แผนการเรียน) ให้เป็นภาษาปัจจุบันด้วย */
+  try{ if(typeof renderAllSelects==='function') renderAllSelects(); }catch(e){}
 }
 function renderLockForm(){
   var loginForm = document.getElementById('lockLoginForm');
@@ -5071,16 +5103,16 @@ function ensureSearchSelect(id, list, placeholder){
 function renderAllSelects(){
   initDocLinkAutocompletes();
   initLocationAutocompletes();
-  fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, 'ทุกสาขา');
-  fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, 'ทุกสาขา');
-  fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, 'ทุกหลักสูตร');
-  fillSelect(document.getElementById('dashPlanFilter'), masterData.plans, 'ทุกแผน');
-  ensureSearchSelect('f_program', masterData.programs, 'พิมพ์เพื่อค้นหาหลักสูตร...');
-  ensureSearchSelect('f_department', masterData.departments, 'พิมพ์เพื่อค้นหาสาขาวิชา...');
-  fillSelect(document.getElementById('f_plan'), masterData.plans, 'เลือกแผนการเรียน');
-  ensureSearchSelect('f_mainAdvisor', advisorNamesByRole(positionsBySlot('mainAdvisor')), 'พิมพ์ชื่ออาจารย์ที่ปรึกษาหลัก...');
-  ensureSearchSelect('p_chair', advisorNamesByRole(positionsBySlot('chair')), 'พิมพ์ชื่อประธานกรรมการ...');
-  ensureSearchSelect('d_chair', advisorNamesByRole(positionsBySlot('chair')), 'พิมพ์ชื่อประธานกรรมการ...');
+  fillSelect(document.getElementById('lookupDeptFilter'), masterData.departments, i18nText('filterAllDept'));
+  fillSelect(document.getElementById('dashDeptFilter'), masterData.departments, i18nText('filterAllDept'));
+  fillSelect(document.getElementById('dashProgramFilter'), masterData.programs, i18nText('filterAllProgram'));
+  fillSelect(document.getElementById('dashPlanFilter'), masterData.plans, i18nText('filterAllPlan'));
+  ensureSearchSelect('f_program', masterData.programs, 'phSearchProgram');
+  ensureSearchSelect('f_department', masterData.departments, 'phSearchDepartment');
+  fillSelect(document.getElementById('f_plan'), masterData.plans, i18nText('selectStudyPlan'));
+  ensureSearchSelect('f_mainAdvisor', advisorNamesByRole(positionsBySlot('mainAdvisor')), 'phSearchMainAdvisor');
+  ensureSearchSelect('p_chair', advisorNamesByRole(positionsBySlot('chair')), 'phSearchChair');
+  ensureSearchSelect('d_chair', advisorNamesByRole(positionsBySlot('chair')), 'phSearchChair');
   document.querySelectorAll('#coAdvisorList .combo').forEach(function(combo){
     combo.setOptions(advisorNamesByRole(positionsBySlot('coAdvisor')));
   });
@@ -5088,7 +5120,7 @@ function renderAllSelects(){
     var nameCombo = row.querySelector('.combo');
     var posSel = row.querySelector('select');
     if(nameCombo) nameCombo.setOptions(allAdvisorNames());
-    if(posSel) fillSelect(posSel, allPositionNames(), 'ระบุตำแหน่ง');
+    if(posSel) fillSelect(posSel, allPositionNames(), i18nText('optSpecifyPosition'));
   });
   renderDocIntakeSelects();
 }
@@ -5156,9 +5188,9 @@ function allPositionNames(){ return masterData.positions.map(function(p){ return
 function addCommitteeRow(containerId, existingName, existingPosition){
   var container = document.getElementById(containerId);
   var row = el('div',{class:'multi-row'});
-  var nameCombo = buildSearchSelect(el('div',{}), allAdvisorNames(), 'ระบุชื่อกรรมการ');
+  var nameCombo = buildSearchSelect(el('div',{}), allAdvisorNames(), 'phSearchCommitteeMember');
   var posSel = el('select',{});
-  fillSelect(posSel, allPositionNames(), 'ระบุตำแหน่ง');
+  fillSelect(posSel, allPositionNames(), i18nText('optSpecifyPosition'));
   var rm = el('button',{type:'button', class:'icon-btn', title:'ลบ', onclick:function(){ row.remove(); }, text:'✕'});
   row.appendChild(nameCombo); row.appendChild(posSel); row.appendChild(rm);
   container.appendChild(row);
@@ -5350,7 +5382,7 @@ function syncGraduationRequestPublications(studentId, studentName, department, n
 
 /* ================= FORM: EXAM TYPE ================= */
 function bindFormEvents(){
-  document.getElementById('btnAddCoAdvisor').addEventListener('click', function(){ addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor'); });
+  document.getElementById('btnAddCoAdvisor').addEventListener('click', function(){ addDynamicRow('coAdvisorList','phSearchCoAdvisor','coAdvisor'); });
   document.getElementById('f_mainAdvisor').addEventListener('change', updateMainAdvisorQuotaHint);
   document.getElementById('p_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('p_committeeList'); });
   document.getElementById('d_btnAddCommittee').addEventListener('click', function(){ addCommitteeRow('d_committeeList'); });
@@ -5694,7 +5726,7 @@ function loadRecordIntoForm(rec){
   setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
   updateMainAdvisorQuotaHint();
   clearDynamicRows('coAdvisorList');
-  (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c), !!(c && typeof c==='object' && c.isExternal)); });
+  (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','phSearchCoAdvisor','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c), !!(c && typeof c==='object' && c.isExternal)); });
   document.getElementById('f_titleTh').value = rec.titleTh||'';
   document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');
@@ -5815,7 +5847,7 @@ function searchExistingStudent(){
     setSelectValueWithFallback(document.getElementById('f_mainAdvisor'), rec.mainAdvisor||'');
     updateMainAdvisorQuotaHint();
     clearDynamicRows('coAdvisorList');
-    (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','ระบุชื่ออาจารย์ร่วม','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c), !!(c && typeof c==='object' && c.isExternal)); });
+    (rec.coAdvisors||[]).forEach(function(c){ var r=addDynamicRow('coAdvisorList','phSearchCoAdvisor','coAdvisor', typeof c==='object'?c:null); setSelectValueWithFallback(r.querySelector('.combo'), coAdvisorNameOf(c), !!(c && typeof c==='object' && c.isExternal)); });
     document.getElementById('f_titleTh').value = rec.titleTh||'';
     document.getElementById('f_titleEn').value = rec.titleEn||'';
   clearDynamicRows('publicationList');

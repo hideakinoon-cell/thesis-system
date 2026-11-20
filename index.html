@@ -781,57 +781,57 @@ if('serviceWorker' in navigator){
 <section id="view-docintake" style="display:none;">
   <div class="card">
     <h3 data-i18n="secDocIntakeTitle">📥 ลงทะเบียนรับเอกสาร</h3>
-    <div class="help" style="margin-bottom:10px;">บันทึกเอกสารที่นักศึกษาส่งมา เช่น บว.04 (ขอแต่งตั้งอาจารย์ที่ปรึกษา) — พิมพ์ค้นหารหัส/ชื่อนักศึกษาที่มีข้อมูลอยู่แล้วในระบบเพื่อดึงชื่อ-สาขาอัตโนมัติ หรือกรอกเองได้ถ้ายังไม่มีข้อมูลนักศึกษาคนนี้ในระบบ</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="diHelpMain">บันทึกเอกสารที่นักศึกษาส่งมา เช่น บว.04 (ขอแต่งตั้งอาจารย์ที่ปรึกษา) — พิมพ์ค้นหารหัส/ชื่อนักศึกษาที่มีข้อมูลอยู่แล้วในระบบเพื่อดึงชื่อ-สาขาอัตโนมัติ หรือกรอกเองได้ถ้ายังไม่มีข้อมูลนักศึกษาคนนี้ในระบบ</div>
     <div class="field-row-with-btn" style="flex-wrap:wrap;gap:14px;">
-      <div class="field" style="min-width:110px;"><label>เลขรับเอกสาร</label><input type="text" id="di_intakeNo" readonly style="background:#f4f6fa;font-weight:600;text-align:center;"></div>
-      <div class="field" style="min-width:150px;"><label>วันที่รับเอกสาร</label><input type="date" id="di_receivedDate"></div>
-      <div class="field" style="min-width:220px;flex:1 1 220px;"><label>ประเภทเอกสาร</label><select id="di_docType"></select></div>
-      <div class="field" style="min-width:170px;"><label>สถานะ</label>
+      <div class="field" style="min-width:110px;"><label data-i18n="lblIntakeNo">เลขรับเอกสาร</label><input type="text" id="di_intakeNo" readonly style="background:#f4f6fa;font-weight:600;text-align:center;"></div>
+      <div class="field" style="min-width:150px;"><label data-i18n="lblReceivedDate">วันที่รับเอกสาร</label><input type="date" id="di_receivedDate"></div>
+      <div class="field" style="min-width:220px;flex:1 1 220px;"><label data-i18n="lblDocTypeField">ประเภทเอกสาร</label><select id="di_docType"></select></div>
+      <div class="field" style="min-width:170px;"><label data-i18n="thStatus">สถานะ</label>
         <select id="di_status">
-          <option value="received">🔵 รับเรื่องแล้ว</option>
-          <option value="in_progress">🟠 กำลังดำเนินการ</option>
-          <option value="done">🟢 ดำเนินการเสร็จสิ้น</option>
+          <option value="received" data-i18n="optStatusReceived">🔵 รับเรื่องแล้ว</option>
+          <option value="in_progress" data-i18n="optStatusInProgress">🟠 กำลังดำเนินการ</option>
+          <option value="done" data-i18n="optStatusDone">🟢 ดำเนินการเสร็จสิ้น</option>
         </select>
       </div>
     </div>
     <div class="field" style="position:relative;margin-top:8px;">
-      <label>ค้นหานักศึกษา (รหัส/ชื่อ)</label>
+      <label data-i18n="lblSearchStudentIdName">ค้นหานักศึกษา (รหัส/ชื่อ)</label>
       <input type="text" id="di_studentSearch" placeholder="พิมพ์รหัสนักศึกษาหรือชื่อ-นามสกุลเพื่อค้นหาในระบบ..." data-i18n-ph="phDiStudentSearch">
       <div id="di_studentSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:30;background:#fff;max-height:240px;overflow-y:auto;box-shadow:var(--shadow-md);border:1px solid var(--border);border-radius:9px;margin-top:4px;padding:6px;"></div>
     </div>
     <div class="field-row-with-btn" style="flex-wrap:wrap;gap:14px;margin-top:6px;">
-      <div class="field" style="min-width:140px;"><label>รหัสนักศึกษา</label><input type="text" id="di_studentId"></div>
-      <div class="field" style="min-width:200px;flex:1 1 200px;"><label>ชื่อ-นามสกุล</label><input type="text" id="di_studentName"></div>
+      <div class="field" style="min-width:140px;"><label data-i18n="lblStudentId">รหัสนักศึกษา</label><input type="text" id="di_studentId"></div>
+      <div class="field" style="min-width:200px;flex:1 1 200px;"><label data-i18n="lblStudentName">ชื่อ-นามสกุล</label><input type="text" id="di_studentName"></div>
       <div class="field" style="min-width:180px;flex:1 1 180px;">
-        <label>สาขาวิชา</label>
+        <label data-i18n="lblDepartment">สาขาวิชา</label>
         <input type="text" id="di_department" list="di_departmentList">
         <datalist id="di_departmentList"></datalist>
       </div>
     </div>
-    <div class="field" style="margin-top:6px;"><label>หมายเหตุ (ถ้ามี)</label><input type="text" id="di_note" placeholder="เช่น ชื่ออาจารย์ที่ขอแต่งตั้งเป็นที่ปรึกษา"></div>
+    <div class="field" style="margin-top:6px;"><label data-i18n="lblNoteOptional">หมายเหตุ (ถ้ามี)</label><input type="text" id="di_note" placeholder="เช่น ชื่ออาจารย์ที่ขอแต่งตั้งเป็นที่ปรึกษา" data-i18n-ph="phDiNoteExample"></div>
     <div class="field full" id="di_publicationSection" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">
-      <label>ผลงานตีพิมพ์ (แนบมากับคำร้องขอสำเร็จการศึกษา)</label>
-      <div class="help" style="margin-bottom:8px;">กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน — เมื่อบันทึกรายการ ระบบจะนำไปรวมกับหมวดที่ 5 ในประวัตินักศึกษาคนนี้ให้อัตโนมัติ ไม่ต้องไปกรอกซ้ำอีกที่หน้าบันทึกข้อมูล</div>
+      <label data-i18n="lblDiPublicationAttach">ผลงานตีพิมพ์ (แนบมากับคำร้องขอสำเร็จการศึกษา)</label>
+      <div class="help" style="margin-bottom:8px;" data-i18n="diHelpPublication">กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน — เมื่อบันทึกรายการ ระบบจะนำไปรวมกับหมวดที่ 5 ในประวัตินักศึกษาคนนี้ให้อัตโนมัติ ไม่ต้องไปกรอกซ้ำอีกที่หน้าบันทึกข้อมูล</div>
       <div class="multi-row-list" id="di_publicationList"></div>
-      <button type="button" class="link-btn" id="btnAddDiPublication" style="margin-top:8px;text-align:left;">＋ เพิ่มผลงานตีพิมพ์</button>
+      <button type="button" class="link-btn" id="btnAddDiPublication" style="margin-top:8px;text-align:left;" data-i18n="btnAddPublication">＋ เพิ่มผลงานตีพิมพ์</button>
     </div>
-    <div style="margin-top:14px;"><button type="button" class="btn btn-primary" id="btnAddDocIntake">➕ บันทึกรายการ</button></div>
+    <div style="margin-top:14px;"><button type="button" class="btn btn-primary" id="btnAddDocIntake" data-i18n="btnSaveDocIntakeEntry">➕ บันทึกรายการ</button></div>
   </div>
 
   <div class="card" style="margin-top:16px;">
     <h3 data-i18n="secDocIntakeFilter">🔎 ตัวกรอง</h3>
     <div class="dash-filter-row">
-      <div class="field"><label>ตั้งแต่วันที่</label><input type="date" id="di_filterFrom"></div>
-      <div class="field"><label>ถึงวันที่</label><input type="date" id="di_filterTo"></div>
-      <div class="field"><label>ประเภทเอกสาร</label><select id="di_filterDocType"></select></div>
-      <div class="field"><label>สาขาวิชา</label><select id="di_filterDept"></select></div>
+      <div class="field"><label data-i18n="lblDateFrom">ตั้งแต่วันที่</label><input type="date" id="di_filterFrom"></div>
+      <div class="field"><label data-i18n="lblDateTo">ถึงวันที่</label><input type="date" id="di_filterTo"></div>
+      <div class="field"><label data-i18n="lblDocTypeField">ประเภทเอกสาร</label><select id="di_filterDocType"></select></div>
+      <div class="field"><label data-i18n="lblDepartment">สาขาวิชา</label><select id="di_filterDept"></select></div>
       <div class="field">
-        <label>สถานะ</label>
+        <label data-i18n="thStatus">สถานะ</label>
         <select id="di_filterStatus">
-          <option value="">ทุกสถานะ</option>
-          <option value="received">🔵 รับเรื่องแล้ว</option>
-          <option value="in_progress">🟠 กำลังดำเนินการ</option>
-          <option value="done">🟢 ดำเนินการเสร็จสิ้น</option>
+          <option value="" data-i18n="optAllStatuses">ทุกสถานะ</option>
+          <option value="received" data-i18n="optStatusReceived">🔵 รับเรื่องแล้ว</option>
+          <option value="in_progress" data-i18n="optStatusInProgress">🟠 กำลังดำเนินการ</option>
+          <option value="done" data-i18n="optStatusDone">🟢 ดำเนินการเสร็จสิ้น</option>
         </select>
       </div>
       <div class="field" style="min-width:200px;"><label data-i18n="lblSearchNameOrId">ค้นหาชื่อ/รหัส</label><input type="text" id="di_filterSearch" placeholder="พิมพ์เพื่อค้นหา..." data-i18n-ph="phGenericSearch"></div>
@@ -841,21 +841,21 @@ if('serviceWorker' in navigator){
   <div class="card" style="margin-top:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
       <h3 style="margin:0;" data-i18n="secDocIntakeList">📋 รายการที่ลงทะเบียน</h3>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnExportDocIntake">⬇ Excel</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnExportDocIntake" data-i18n="btnExportXlsx">⬇ Excel</button>
     </div>
     <div style="overflow-x:auto;margin-top:12px;">
     <table>
       <thead>
-        <tr><th>เลขรับ</th><th>วันที่รับ</th><th>ประเภทเอกสาร</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>สถานะ</th><th>หมายเหตุ</th><th>จัดการ</th></tr>
+        <tr><th data-i18n="thIntakeNoShort">เลขรับ</th><th data-i18n="thReceivedDateShort">วันที่รับ</th><th data-i18n="lblDocTypeField">ประเภทเอกสาร</th><th data-i18n="thStudentId">รหัสนักศึกษา</th><th data-i18n="thStudentName">ชื่อ-นามสกุล</th><th data-i18n="thDepartment">สาขาวิชา</th><th data-i18n="thStatus">สถานะ</th><th data-i18n="thNote">หมายเหตุ</th><th data-i18n="thActions">จัดการ</th></tr>
       </thead>
       <tbody id="docIntakeTbody"></tbody>
     </table>
     </div>
-    <div class="empty-state" id="docIntakeEmpty" style="display:none;">ยังไม่มีรายการลงทะเบียน — เริ่มบันทึกรายการใหม่ได้ที่ด้านบน</div>
+    <div class="empty-state" id="docIntakeEmpty" style="display:none;" data-i18n="txtNoDocIntakeEntries">ยังไม่มีรายการลงทะเบียน — เริ่มบันทึกรายการใหม่ได้ที่ด้านบน</div>
     <div id="diListPagination" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:12px;">
       <span id="diListPageInfo" class="help"></span>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnDiListPrev">‹ ก่อนหน้า</button>
-      <button type="button" class="btn btn-secondary btn-sm" id="btnDiListNext">ถัดไป ›</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnDiListPrev" data-i18n="btnListPrev">‹ ก่อนหน้า</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnDiListNext" data-i18n="btnListNext">ถัดไป ›</button>
     </div>
   </div>
 </section>
@@ -3215,7 +3215,30 @@ var LANDING_I18N = {
   thAdvisorRankCol: {th:'ตำแหน่ง', en:'Rank'},
   thAdvisorQuotaUsedCol: {th:'ที่ปรึกษา (ใช้/โควตา)', en:'Advisees (Used/Quota)'},
   thAdvisorCommitteeCol: {th:'กรรมการสอบ', en:'Committee'},
-  thAdvisorTotalCol: {th:'รวม', en:'Total'}
+  thAdvisorTotalCol: {th:'รวม', en:'Total'},
+  diHelpMain: {th:'บันทึกเอกสารที่นักศึกษาส่งมา เช่น บว.04 (ขอแต่งตั้งอาจารย์ที่ปรึกษา) — พิมพ์ค้นหารหัส/ชื่อนักศึกษาที่มีข้อมูลอยู่แล้วในระบบเพื่อดึงชื่อ-สาขาอัตโนมัติ หรือกรอกเองได้ถ้ายังไม่มีข้อมูลนักศึกษาคนนี้ในระบบ', en:"Record documents submitted by students, such as the advisor-appointment request form — type a student ID or name already in the system to auto-fill their name/department, or enter it manually if this student isn't in the system yet."},
+  lblIntakeNo: {th:'เลขรับเอกสาร', en:'Intake No.'},
+  lblReceivedDate: {th:'วันที่รับเอกสาร', en:'Date Received'},
+  lblDocTypeField: {th:'ประเภทเอกสาร', en:'Document Type'},
+  optStatusReceived: {th:'🔵 รับเรื่องแล้ว', en:'🔵 Received'},
+  optStatusInProgress: {th:'🟠 กำลังดำเนินการ', en:'🟠 In Progress'},
+  optStatusDone: {th:'🟢 ดำเนินการเสร็จสิ้น', en:'🟢 Completed'},
+  lblSearchStudentIdName: {th:'ค้นหานักศึกษา (รหัส/ชื่อ)', en:'Search Student (ID/Name)'},
+  lblNoteOptional: {th:'หมายเหตุ (ถ้ามี)', en:'Note (if any)'},
+  phDiNoteExample: {th:'เช่น ชื่ออาจารย์ที่ขอแต่งตั้งเป็นที่ปรึกษา', en:"e.g. name of the advisor being requested"},
+  lblDiPublicationAttach: {th:'ผลงานตีพิมพ์ (แนบมากับคำร้องขอสำเร็จการศึกษา)', en:'Publications (attached to the graduation request)'},
+  diHelpPublication: {th:'กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน — เมื่อบันทึกรายการ ระบบจะนำไปรวมกับหมวดที่ 5 ในประวัตินักศึกษาคนนี้ให้อัตโนมัติ ไม่ต้องไปกรอกซ้ำอีกที่หน้าบันทึกข้อมูล', en:"Fill in only if the work has already been published (optional) — more than one may be added. When saved, these are automatically merged into Section 5 of this student's history, so there's no need to re-enter them on the record form."},
+  btnSaveDocIntakeEntry: {th:'➕ บันทึกรายการ', en:'➕ Save Entry'},
+  lblDateFrom: {th:'ตั้งแต่วันที่', en:'From Date'},
+  lblDateTo: {th:'ถึงวันที่', en:'To Date'},
+  optAllStatuses: {th:'ทุกสถานะ', en:'All Statuses'},
+  optAllDocTypes: {th:'ทุกประเภท', en:'All Types'},
+  optSelectDocType: {th:'เลือกประเภทเอกสาร', en:'Select Document Type'},
+  thIntakeNoShort: {th:'เลขรับ', en:'Intake No.'},
+  thReceivedDateShort: {th:'วันที่รับ', en:'Date Received'},
+  thNote: {th:'หมายเหตุ', en:'Note'},
+  txtNoDocIntakeEntries: {th:'ยังไม่มีรายการลงทะเบียน — เริ่มบันทึกรายการใหม่ได้ที่ด้านบน', en:'No registered entries yet — start by saving a new entry above.'},
+  txtNoStudentMatchDocIntake: {th:'ไม่พบนักศึกษาที่ตรงกับคำค้นหาในระบบ — กรอกข้อมูลเองด้านล่างได้', en:"No student matching this search was found in the system — you can enter the details manually below."}
 };
 function i18nText(key){
   var lang = 'th';
@@ -5270,14 +5293,17 @@ function renderStudentProfile(latest, examRecords, filesByRecord){
    เพราะเอกสารบางประเภท (เช่น บว.04 ขอแต่งตั้งที่ปรึกษา) มักถูกส่งมา "ก่อน" ที่จะมีแถวข้อมูลการสอบใดๆ เกิดขึ้นเลย
    ค้นหานักศึกษาจากข้อมูลที่มีอยู่แล้วใน records เพื่อดึงชื่อ/สาขาอัตโนมัติ แต่ยังกรอกเองได้เสมอถ้ายังไม่มีข้อมูล */
 var DOC_STATUS_LABELS = { received:'🔵 รับเรื่องแล้ว', in_progress:'🟠 กำลังดำเนินการ', done:'🟢 ดำเนินการเสร็จสิ้น' };
-function docStatusLabel(s){ return DOC_STATUS_LABELS[s] || s || '-'; }
+var DOC_STATUS_LABEL_KEYS = { received:'optStatusReceived', in_progress:'optStatusInProgress', done:'optStatusDone' };
+function docStatusLabel(s){ return (i18nText(DOC_STATUS_LABEL_KEYS[s])||DOC_STATUS_LABELS[s]) || s || '-'; }
+/* ใช้เฉพาะตอนส่งออก Excel เท่านั้น — คงเป็นภาษาไทยเสมอไม่ว่าจะสลับภาษาหน้าจอเป็นอะไร (ไม่ต่างจากหัวคอลัมน์/ชื่อไฟล์ Excel อื่นๆ ในระบบ) */
+function docStatusLabelTh(s){ return DOC_STATUS_LABELS[s] || s || '-'; }
 
 function renderDocIntakeSelects(){
   var docTypeSel = document.getElementById('di_docType');
   if(!docTypeSel) return; // section อยู่ใน DOM เสมอ แต่กันไว้เผื่อยังไม่โหลด
-  fillSelect(docTypeSel, masterData.documentTypes||[], 'เลือกประเภทเอกสาร');
-  fillSelect(document.getElementById('di_filterDocType'), masterData.documentTypes||[], 'ทุกประเภท');
-  fillSelect(document.getElementById('di_filterDept'), masterData.departments||[], 'ทุกสาขา');
+  fillSelect(docTypeSel, masterData.documentTypes||[], i18nText('optSelectDocType')||'เลือกประเภทเอกสาร');
+  fillSelect(document.getElementById('di_filterDocType'), masterData.documentTypes||[], i18nText('optAllDocTypes')||'ทุกประเภท');
+  fillSelect(document.getElementById('di_filterDept'), masterData.departments||[], i18nText('filterAllDept')||'ทุกสาขา');
   toggleDiPublicationSection();
   var deptList = document.getElementById('di_departmentList');
   if(deptList){
@@ -5318,7 +5344,7 @@ function renderDocIntakeStudentSearchResults(){
     }).slice(0,20);
     container.innerHTML='';
     if(matches.length===0){
-      container.appendChild(el('div',{class:'empty-state', style:'padding:10px;', text:'ไม่พบนักศึกษาที่ตรงกับคำค้นหาในระบบ — กรอกข้อมูลเองด้านล่างได้'}));
+      container.appendChild(el('div',{class:'empty-state', style:'padding:10px;', 'data-i18n':'txtNoStudentMatchDocIntake', text:(i18nText('txtNoStudentMatchDocIntake')||'ไม่พบนักศึกษาที่ตรงกับคำค้นหาในระบบ — กรอกข้อมูลเองด้านล่างได้')}));
     } else {
       matches.forEach(function(s){
         var item = el('div',{class:'lookup-item', style:'margin-bottom:6px;'},[
@@ -5437,7 +5463,7 @@ function renderDocIntakeList(){
     if(allRows.length===0){
       pageInfoEl.textContent = '';
     } else {
-      pageInfoEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+rows.length)+' จาก '+allRows.length+' รายการ (หน้า '+(diListPage+1)+'/'+totalPages+')';
+      pageInfoEl.textContent = (i18nText('txtShowingRangePrefix')||'แสดง ')+(startIdx+1)+'-'+(startIdx+rows.length)+(i18nText('txtShowingRangeMid')||' จาก ')+allRows.length+(i18nText('txtShowingRangeItemsMid')||' รายการ (หน้า ')+(diListPage+1)+'/'+totalPages+')';
     }
     prevBtn.disabled = diListPage<=0;
     nextBtn.disabled = diListPage>=totalPages-1;
@@ -5445,9 +5471,9 @@ function renderDocIntakeList(){
 
     rows.forEach(function(r){
       var statusSel = el('select',{},[
-        el('option',{value:'received', text:'🔵 รับเรื่องแล้ว'}),
-        el('option',{value:'in_progress', text:'🟠 กำลังดำเนินการ'}),
-        el('option',{value:'done', text:'🟢 ดำเนินการเสร็จสิ้น'})
+        el('option',{value:'received', text:(i18nText('optStatusReceived')||'🔵 รับเรื่องแล้ว')}),
+        el('option',{value:'in_progress', text:(i18nText('optStatusInProgress')||'🟠 กำลังดำเนินการ')}),
+        el('option',{value:'done', text:(i18nText('optStatusDone')||'🟢 ดำเนินการเสร็จสิ้น')})
       ]);
       statusSel.value = r.status||'received';
       statusSel.addEventListener('change', function(){
@@ -5492,7 +5518,7 @@ function exportDocIntakeExcel(){
     if(rows.length===0){ toast(i18nText('toast025')||'ไม่มีรายการให้ดาวน์โหลด', true); return; }
     var aoa = [['เลขรับ','วันที่รับ','ประเภทเอกสาร','รหัสนักศึกษา','ชื่อ-นามสกุล','สาขาวิชา','สถานะ','หมายเหตุ']]
       .concat(rows.map(function(r){
-        return [r.intakeNo||'', toBuddhistDateStr(r.receivedDate)||'', r.docType||'', r.studentId||'', r.studentName||'', r.department||'', docStatusLabel(r.status), r.note||''];
+        return [r.intakeNo||'', toBuddhistDateStr(r.receivedDate)||'', r.docType||'', r.studentId||'', r.studentName||'', r.department||'', docStatusLabelTh(r.status), r.note||''];
       }));
     var wb = XLSX.utils.book_new();
     var ws = XLSX.utils.aoa_to_sheet(aoa);

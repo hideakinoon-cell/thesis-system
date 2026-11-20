@@ -596,7 +596,7 @@ if('serviceWorker' in navigator){
         <select id="dashProgramFilter"><option value="">ทุกหลักสูตร</option></select>
       </div>
       <div class="field">
-        <label>แผนการเรียน</label>
+        <label data-i18n="lblStudyPlan">แผนการเรียน</label>
         <select id="dashPlanFilter"><option value="">ทุกแผน</option></select>
       </div>
       <div class="field">
@@ -895,52 +895,52 @@ if('serviceWorker' in navigator){
     <h3 data-i18n="secForm1">หมวดที่ 1: ข้อมูลนักศึกษา</h3>
     <div class="grid">
       <div class="field">
-        <label>รหัสนักศึกษา <span class="req">*</span></label>
+        <label><span data-i18n="lblStudentId">รหัสนักศึกษา</span> <span class="req">*</span></label>
         <div class="field-row-with-btn">
           <input type="text" id="f_studentId" placeholder="66010xxx">
           <button type="button" class="btn btn-secondary btn-sm" id="btnFindStudent">🔍 ค้นหาข้อมูลเดิม</button>
         </div>
       </div>
       <div class="field">
-        <label>ชื่อ - นามสกุล <span class="req">*</span></label>
+        <label><span data-i18n="lblStudentName">ชื่อ - นามสกุล</span> <span class="req">*</span></label>
         <input type="text" id="f_studentName" placeholder="นายสมศักดิ์ รักเรียน">
       </div>
       <div class="field">
-        <label>ระดับการศึกษา <span class="req">*</span></label>
+        <label><span data-i18n="lblDegreeLevel">ระดับการศึกษา</span> <span class="req">*</span></label>
         <div class="radio-group" id="g_degreeLevel">
-          <label><input type="radio" name="degreeLevel" value="ปริญญาโท" checked> ปริญญาโท</label>
-          <label><input type="radio" name="degreeLevel" value="ปริญญาเอก"> ปริญญาเอก</label>
+          <label><input type="radio" name="degreeLevel" value="ปริญญาโท" checked> <span data-i18n="optMasters">ปริญญาโท</span></label>
+          <label><input type="radio" name="degreeLevel" value="ปริญญาเอก"> <span data-i18n="optDoctoral">ปริญญาเอก</span></label>
         </div>
       </div>
       <div class="field">
-        <label>แผนการเรียน</label>
+        <label data-i18n="lblStudyPlan">แผนการเรียน</label>
         <select id="f_plan"></select>
       </div>
       <div class="field">
-        <label>หลักสูตร <span class="req">*</span></label>
+        <label><span data-i18n="lblProgram">หลักสูตร</span> <span class="req">*</span></label>
         <div id="f_program" class="combo"></div>
       </div>
       <div class="field">
-        <label>สาขาวิชา <span class="req">*</span></label>
+        <label><span data-i18n="lblDepartment">สาขาวิชา</span> <span class="req">*</span></label>
         <div id="f_department" class="combo"></div>
       </div>
     </div>
 
-    <h4>หมวดที่ 1.1: เกณฑ์สำเร็จการศึกษา</h4>
+    <h4 data-i18n="secForm1_1">หมวดที่ 1.1: เกณฑ์สำเร็จการศึกษา</h4>
     <div class="grid">
       <div class="field full">
-        <label>ผลภาษาอังกฤษ</label>
+        <label data-i18n="lblEnglishResult">ผลภาษาอังกฤษ</label>
         <div class="radio-group" id="g_englishResult">
-          <label><input type="radio" name="englishResult" value="สอบผ่าน"> สอบผ่าน</label>
-          <label><input type="radio" name="englishResult" value="เรียนผ่าน"> เรียนผ่าน</label>
-          <label><input type="radio" name="englishResult" value="อบรม"> อบรม</label>
-          <label><input type="radio" name="englishResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
-          <label><input type="radio" name="englishResult" value="ยกเว้น/เทียบเท่า"> ยกเว้น/เทียบเท่า
-            <input type="text" id="f_englishScore" placeholder="คะแนน" disabled>
+          <label><input type="radio" name="englishResult" value="สอบผ่าน"> <span data-i18n="optExamPass">สอบผ่าน</span></label>
+          <label><input type="radio" name="englishResult" value="เรียนผ่าน"> <span data-i18n="optPassedCourse">เรียนผ่าน</span></label>
+          <label><input type="radio" name="englishResult" value="อบรม"> <span data-i18n="optTrained">อบรม</span></label>
+          <label><input type="radio" name="englishResult" value="ไม่ผ่าน"> <span data-i18n="optFail">ไม่ผ่าน</span></label>
+          <label><input type="radio" name="englishResult" value="ยกเว้น/เทียบเท่า"> <span data-i18n="optExempt">ยกเว้น/เทียบเท่า</span>
+            <input type="text" id="f_englishScore" placeholder="คะแนน" data-i18n-ph="scorePlaceholder" disabled>
           </label>
         </div>
-        <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบภาษาอังกฤษ</div>
-        <div class="combo" style="margin-top:8px;"><input type="text" id="f_englishDocLink" placeholder="ลิงก์เอกสารแนบผลภาษาอังกฤษ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
+        <div class="help"><span data-i18n="helpNoEnglishRequired">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบภาษาอังกฤษ</span></div>
+        <div class="combo" style="margin-top:8px;"><input type="text" id="f_englishDocLink" placeholder="ลิงก์เอกสารแนบผลภาษาอังกฤษ (เช่น ลิงก์ Google Drive) — ถ้ามี" data-i18n-ph="phEnglishDocLink"></div>
         <div class="attach-box" style="margin-top:8px;">
           <input type="file" id="eng_fileInput" multiple>
           <div class="attach-link-row">
@@ -952,15 +952,15 @@ if('serviceWorker' in navigator){
         </div>
       </div>
       <div class="field full">
-        <label>ผลคอมพิวเตอร์</label>
+        <label data-i18n="lblComputerResult">ผลคอมพิวเตอร์</label>
         <div class="radio-group" id="g_computerResult">
-          <label><input type="radio" name="computerResult" value="สอบผ่าน"> สอบผ่าน</label>
-          <label><input type="radio" name="computerResult" value="เรียนผ่าน"> เรียนผ่าน</label>
-          <label><input type="radio" name="computerResult" value="อบรม"> อบรม</label>
-          <label><input type="radio" name="computerResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+          <label><input type="radio" name="computerResult" value="สอบผ่าน"> <span data-i18n="optExamPass">สอบผ่าน</span></label>
+          <label><input type="radio" name="computerResult" value="เรียนผ่าน"> <span data-i18n="optPassedCourse">เรียนผ่าน</span></label>
+          <label><input type="radio" name="computerResult" value="อบรม"> <span data-i18n="optTrained">อบรม</span></label>
+          <label><input type="radio" name="computerResult" value="ไม่ผ่าน"> <span data-i18n="optFail">ไม่ผ่าน</span></label>
         </div>
-        <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบคอมพิวเตอร์</div>
-        <div class="combo" style="margin-top:8px;"><input type="text" id="f_computerDocLink" placeholder="ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
+        <div class="help"><span data-i18n="helpNoComputerRequired">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบคอมพิวเตอร์</span></div>
+        <div class="combo" style="margin-top:8px;"><input type="text" id="f_computerDocLink" placeholder="ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี" data-i18n-ph="phComputerDocLink"></div>
         <div class="attach-box" style="margin-top:8px;">
           <input type="file" id="comp_fileInput" multiple>
           <div class="attach-link-row">
@@ -972,14 +972,14 @@ if('serviceWorker' in navigator){
         </div>
       </div>
       <div class="field full">
-        <label>การสอบวัดความรู้</label>
+        <label data-i18n="lblQualifyingExam">การสอบวัดความรู้</label>
         <div class="radio-group">
-          <label><input type="radio" name="qualifyingExam" value="ผ่านสอบประมวลความรู้ (ป.โท)"> ผ่านสอบประมวลความรู้ (ป.โท)</label>
-          <label><input type="radio" name="qualifyingExam" value="ผ่านสอบวัดคุณสมบัติ (ป.เอก)"> ผ่านสอบวัดคุณสมบัติ (ป.เอก)</label>
-          <label><input type="radio" name="qualifyingExam" value="ยังไม่ผ่าน/อยู่ระหว่างรอผล"> ยังไม่ผ่าน / อยู่ระหว่างรอผล</label>
+          <label><input type="radio" name="qualifyingExam" value="ผ่านสอบประมวลความรู้ (ป.โท)"> <span data-i18n="optQualMaster">ผ่านสอบประมวลความรู้ (ป.โท)</span></label>
+          <label><input type="radio" name="qualifyingExam" value="ผ่านสอบวัดคุณสมบัติ (ป.เอก)"> <span data-i18n="optQualDoctoral">ผ่านสอบวัดคุณสมบัติ (ป.เอก)</span></label>
+          <label><input type="radio" name="qualifyingExam" value="ยังไม่ผ่าน/อยู่ระหว่างรอผล"> <span data-i18n="optQualPending">ยังไม่ผ่าน / อยู่ระหว่างรอผล</span></label>
         </div>
-        <div class="help">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบวัดความรู้</div>
-        <div class="combo" style="margin-top:8px;"><input type="text" id="f_qualifyingDocLink" placeholder="ลิงก์เอกสารแนบการสอบวัดความรู้ (เช่น ลิงก์ Google Drive) — ถ้ามี"></div>
+        <div class="help"><span data-i18n="helpNoQualRequired">ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบวัดความรู้</span></div>
+        <div class="combo" style="margin-top:8px;"><input type="text" id="f_qualifyingDocLink" placeholder="ลิงก์เอกสารแนบการสอบวัดความรู้ (เช่น ลิงก์ Google Drive) — ถ้ามี" data-i18n-ph="phQualDocLink"></div>
         <div class="attach-box" style="margin-top:8px;">
           <input type="file" id="qual_fileInput" multiple>
           <div class="attach-link-row">
@@ -997,21 +997,21 @@ if('serviceWorker' in navigator){
     <h3 data-i18n="secForm2">หมวดที่ 2: อาจารย์ที่ปรึกษา &amp; หัวข้อ</h3>
     <div class="grid">
       <div class="field full">
-        <label>อาจารย์ที่ปรึกษาหลัก</label>
+        <label data-i18n="lblMainAdvisor">อาจารย์ที่ปรึกษาหลัก</label>
         <div id="f_mainAdvisor" class="combo"></div>
         <div class="help" id="f_mainAdvisorQuotaHint" style="margin-top:4px;"></div>
       </div>
       <div class="field">
-        <label>อาจารย์ที่ปรึกษาร่วม</label>
+        <label data-i18n="lblCoAdvisor">อาจารย์ที่ปรึกษาร่วม</label>
         <div class="multi-row-list" id="coAdvisorList"></div>
-        <button type="button" class="link-btn" id="btnAddCoAdvisor" style="margin-top:8px;text-align:left;">＋ เพิ่มอาจารย์ร่วม</button>
+        <button type="button" class="link-btn" id="btnAddCoAdvisor" style="margin-top:8px;text-align:left;" data-i18n="btnAddCoAdvisor">＋ เพิ่มอาจารย์ร่วม</button>
       </div>
       <div class="field full">
-        <label>หมายเหตุการเปลี่ยนแปลงที่ปรึกษา (ถ้ามี)</label>
-        <input type="text" id="f_advisorChangeNote" placeholder="เช่น อาจารย์เดิมลาศึกษาต่อ, เปลี่ยนหัวข้อวิจัย — กรอกเฉพาะกรณีที่กำลังเปลี่ยน/ถอนที่ปรึกษาในการบันทึกครั้งนี้">
+        <label data-i18n="lblAdvisorChangeNote">หมายเหตุการเปลี่ยนแปลงที่ปรึกษา (ถ้ามี)</label>
+        <input type="text" id="f_advisorChangeNote" placeholder="เช่น อาจารย์เดิมลาศึกษาต่อ, เปลี่ยนหัวข้อวิจัย — กรอกเฉพาะกรณีที่กำลังเปลี่ยน/ถอนที่ปรึกษาในการบันทึกครั้งนี้" data-i18n-ph="phAdvisorChangeNote">
       </div>
       <div class="field full">
-        <h4>แนบเอกสาร (เช่น คำสั่งแต่งตั้งอาจารย์ที่ปรึกษา)</h4>
+        <h4 data-i18n="secAttachAdvisorAppoint">แนบเอกสาร (เช่น คำสั่งแต่งตั้งอาจารย์ที่ปรึกษา)</h4>
         <div class="attach-box">
           <input type="file" id="advapt_fileInput" multiple>
           <div class="attach-link-row">
@@ -1023,49 +1023,49 @@ if('serviceWorker' in navigator){
         </div>
       </div>
       <div class="field full">
-        <label>หัวข้อวิทยานิพนธ์ (TH)</label>
-        <textarea id="f_titleTh" placeholder="การพัฒนาแอปพลิเคชันระบบจัดการข้อมูล..."></textarea>
+        <label data-i18n="lblTitleTh">หัวข้อวิทยานิพนธ์ (TH)</label>
+        <textarea id="f_titleTh" placeholder="การพัฒนาแอปพลิเคชันระบบจัดการข้อมูล..." data-i18n-ph="phTitleTh"></textarea>
       </div>
       <div class="field full">
-        <label>หัวข้อวิทยานิพนธ์ (EN)</label>
-        <textarea id="f_titleEn" placeholder="Development of an Application for Data Management..."></textarea>
+        <label data-i18n="lblTitleEn">หัวข้อวิทยานิพนธ์ (EN)</label>
+        <textarea id="f_titleEn" placeholder="Development of an Application for Data Management..." data-i18n-ph="phTitleEn"></textarea>
       </div>
     </div>
   </div>
 
   <div class="card" id="formSec3">
     <h3 data-i18n="secForm3">หมวดที่ 3: กำหนดการสอบและผลสอบ</h3>
-    <div class="help">กรอกข้อมูลใน "3.1" หรือ "3.2" เพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (1 รายการ = การสอบ 1 ครั้ง) ถ้านักศึกษาเคยสอบมาก่อน หรือจะบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนเดิม ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 แล้วกด "＋ เพิ่มข้อมูลใหม่" เพื่อเริ่มรายการใหม่ — ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม เมื่อกด "แก้ไข" รายการที่เคยบันทึกไว้ ส่วนที่ไม่ตรงกับประเภทเดิมจะถูกล็อกไว้เพื่อป้องกันการเขียนทับ</div>
+    <div class="help" data-i18n="helpSec3Intro">กรอกข้อมูลใน "3.1" หรือ "3.2" เพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (1 รายการ = การสอบ 1 ครั้ง) ถ้านักศึกษาเคยสอบมาก่อน หรือจะบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนเดิม ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 แล้วกด "＋ เพิ่มข้อมูลใหม่" เพื่อเริ่มรายการใหม่ — ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม เมื่อกด "แก้ไข" รายการที่เคยบันทึกไว้ ส่วนที่ไม่ตรงกับประเภทเดิมจะถูกล็อกไว้เพื่อป้องกันการเขียนทับ</div>
 
     <div id="studentHistoryBox" style="display:none;margin-top:14px;">
-      <h4>ประวัติการสอบของนักศึกษาคนนี้</h4>
+      <h4 data-i18n="hdrStudentExamHistory">ประวัติการสอบของนักศึกษาคนนี้</h4>
       <div id="studentHistoryList"></div>
     </div>
 
     <div class="exam-subsection" id="sub-proposal">
-      <h4 class="exam-subsection-title">3.1 การสอบเค้าโครงวิทยานิพนธ์</h4>
+      <h4 class="exam-subsection-title" data-i18n="hdrSub31">3.1 การสอบเค้าโครงวิทยานิพนธ์</h4>
       <div class="locked-note" id="sub-proposal-lockMsg" style="display:none;"></div>
       <div class="conflict-note" id="sub-proposal-conflictMsg" style="display:none;"></div>
       <div class="grid cols-3">
-        <div class="field"><label>วันที่สอบเค้าโครง</label><input type="date" id="p_date"></div>
-        <div class="field"><label>เวลาสอบ</label><input type="text" id="p_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
-        <div class="field"><label>สถานที่สอบ</label><div class="combo"><input type="text" id="p_location" placeholder="เช่น ห้องประชุม 301"></div></div>
-        <div class="field"><label>ประธานกรรมการ</label><div id="p_chair" class="combo"></div></div>
+        <div class="field"><label data-i18n="lblProposalDate">วันที่สอบเค้าโครง</label><input type="date" id="p_date"></div>
+        <div class="field"><label data-i18n="lblExamTime">เวลาสอบ</label><input type="text" id="p_examTime" placeholder="เช่น 09.00 - 12.00 น." data-i18n-ph="phExamTime"></div>
+        <div class="field"><label data-i18n="lblExamLocation">สถานที่สอบ</label><div class="combo"><input type="text" id="p_location" placeholder="เช่น ห้องประชุม 301" data-i18n-ph="phExamLocation"></div></div>
+        <div class="field"><label data-i18n="lblChairPerson">ประธานกรรมการ</label><div id="p_chair" class="combo"></div></div>
         <div class="field full">
-          <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
-          <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
+          <label data-i18n="lblCommittee">กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
+          <div class="help" style="margin:0 0 6px;" data-i18n="helpCommitteeRow">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
           <div class="multi-row-list" id="p_committeeList"></div>
-          <button type="button" class="link-btn" id="p_btnAddCommittee" style="margin-top:8px;text-align:left;">＋ เพิ่มกรรมการ</button>
+          <button type="button" class="link-btn" id="p_btnAddCommittee" style="margin-top:8px;text-align:left;" data-i18n="btnAddCommittee">＋ เพิ่มกรรมการ</button>
         </div>
         <div class="field full">
-          <label>ผลประเมิน</label>
+          <label data-i18n="lblEvalResult">ผลประเมิน</label>
           <div class="radio-group">
-            <label><input type="radio" name="proposalResult" value="ผ่าน"> ผ่าน</label>
-            <label><input type="radio" name="proposalResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+            <label><input type="radio" name="proposalResult" value="ผ่าน"> <span data-i18n="txtPass">ผ่าน</span></label>
+            <label><input type="radio" name="proposalResult" value="ไม่ผ่าน"> <span data-i18n="txtFail">ไม่ผ่าน</span></label>
           </div>
         </div>
       </div>
-      <h4>แนบเอกสาร (เช่น คำสั่งสอบเค้าโครง)</h4>
+      <h4 data-i18n="secAttachProposalOrder">แนบเอกสาร (เช่น คำสั่งสอบเค้าโครง)</h4>
       <div class="attach-box">
         <input type="file" id="p_fileInput" multiple>
         <div class="attach-link-row">
@@ -1081,15 +1081,15 @@ if('serviceWorker' in navigator){
          (บว.25 มักถูกกรอก/อัปเดตก่อนหรือหลังช่วงที่ข้อมูลสอบ 3.1 ถูกล็อกไปแล้ว จึงต้องแก้ไขได้อิสระ ไม่ขึ้นกับสถานะล็อกของ 3.1)
          แสดงเป็นกล่องแยกถาวร ไม่ซ่อนใต้ปุ่ม + อีกต่อไป เพื่อให้เจ้าหน้าที่เห็น/กรอกได้ง่ายขึ้น -->
     <div class="revision-track-box" id="p_bw25Wrap">
-      <label>ส่งแบบฟอร์ม บว.25 (สำหรับแผน ข — ไม่บังคับ)</label>
-      <div class="help" style="margin:0 0 6px;">(แบบเสนอเค้าโครงการค้นคว้าอิสระ และขออนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข เท่านั้น วิทยานิพนธ์ไม่ต้องใช้)</div>
+      <label data-i18n="lblBw25">ส่งแบบฟอร์ม บว.25 (สำหรับแผน ข — ไม่บังคับ)</label>
+      <div class="help" style="margin:0 0 6px;" data-i18n="helpBw25">(แบบเสนอเค้าโครงการค้นคว้าอิสระ และขออนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข เท่านั้น วิทยานิพนธ์ไม่ต้องใช้)</div>
       <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
         <div class="radio-group">
-          <label><input type="radio" name="proposalBw25Status" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
-          <label><input type="radio" name="proposalBw25Status" value="ส่งแล้ว"> ส่งแล้ว</label>
+          <label><input type="radio" name="proposalBw25Status" value="ยังไม่ส่ง" checked> <span data-i18n="txtNotSubmitted">ยังไม่ส่ง</span></label>
+          <label><input type="radio" name="proposalBw25Status" value="ส่งแล้ว"> <span data-i18n="txtSubmitted">ส่งแล้ว</span></label>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <label style="font-size:13.5px;font-weight:600;color:#374151;">วันที่อนุมัติหัวข้อ</label>
+          <label style="font-size:13.5px;font-weight:600;color:#374151;" data-i18n="lblTopicApprovalDate">วันที่อนุมัติหัวข้อ</label>
           <input type="date" id="p_bw25Date">
         </div>
       </div>
@@ -1100,40 +1100,40 @@ if('serviceWorker' in navigator){
     <div class="revision-track-box" id="p_revisionTrackBox">
       <div class="grid cols-3">
         <div class="field">
-          <label>ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์</label>
+          <label data-i18n="lblProposalRevisionStatus">ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์</label>
           <div class="radio-group">
-            <label><input type="radio" name="proposalRevisionStatus" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
-            <label><input type="radio" name="proposalRevisionStatus" value="ส่งแล้ว"> ส่งแล้ว</label>
+            <label><input type="radio" name="proposalRevisionStatus" value="ยังไม่ส่ง" checked> <span data-i18n="txtNotSubmitted">ยังไม่ส่ง</span></label>
+            <label><input type="radio" name="proposalRevisionStatus" value="ส่งแล้ว"> <span data-i18n="txtSubmitted">ส่งแล้ว</span></label>
           </div>
         </div>
-        <div class="field"><label>วันที่ส่งแก้ไข</label><input type="date" id="p_revisionDate"></div>
+        <div class="field"><label data-i18n="lblRevisionDate">วันที่ส่งแก้ไข</label><input type="date" id="p_revisionDate"></div>
       </div>
-      <div class="help" style="margin-top:6px;">ติ๊กอัปเดตสถานะนี้ได้ตลอด แม้ข้อมูลการสอบ 3.1 ด้านบนจะถูกล็อกไว้แล้ว</div>
+      <div class="help" style="margin-top:6px;" data-i18n="helpRevisionAnytime">ติ๊กอัปเดตสถานะนี้ได้ตลอด แม้ข้อมูลการสอบ 3.1 ด้านบนจะถูกล็อกไว้แล้ว</div>
     </div>
 
     <div class="exam-subsection" id="sub-defense">
-      <h4 class="exam-subsection-title">3.2 การสอบป้องกันวิทยานิพนธ์ / การค้นคว้าอิสระ (IS)</h4>
+      <h4 class="exam-subsection-title" data-i18n="hdrSub32">3.2 การสอบป้องกันวิทยานิพนธ์ / การค้นคว้าอิสระ (IS)</h4>
       <div class="locked-note" id="sub-defense-lockMsg" style="display:none;"></div>
       <div class="conflict-note" id="sub-defense-conflictMsg" style="display:none;"></div>
       <div class="grid cols-3" style="margin-bottom:14px;">
         <div class="field full">
-          <label>สถานะการลงทะเบียน/รักษาสภาพในภาคเรียนที่สอบจบ</label>
+          <label data-i18n="lblRegOrLeaveStatus">สถานะการลงทะเบียน/รักษาสภาพในภาคเรียนที่สอบจบ</label>
           <div class="radio-group">
-            <label><input type="radio" name="examTermStatus" value="ลงทะเบียน" checked> ลงทะเบียน</label>
-            <label><input type="radio" name="examTermStatus" value="รักษาสภาพ"> รักษาสภาพการเป็นนักศึกษา</label>
+            <label><input type="radio" name="examTermStatus" value="ลงทะเบียน" checked> <span data-i18n="optRegistered">ลงทะเบียน</span></label>
+            <label><input type="radio" name="examTermStatus" value="รักษาสภาพ"> <span data-i18n="optOnLeave">รักษาสภาพการเป็นนักศึกษา</span></label>
           </div>
         </div>
         <div class="field">
-          <label>ภาคเรียนที่สอบจบ</label>
+          <label data-i18n="lblExamTerm">ภาคเรียนที่สอบจบ</label>
           <div style="display:flex;gap:8px;">
             <select id="f_examTermSemester" style="flex:1;">
-              <option value="">ภาคเรียน</option>
+              <option value="" data-i18n="optSemesterPlaceholder">ภาคเรียน</option>
               <option value="1">1</option>
               <option value="2">2</option>
-              <option value="3">ฤดูร้อน</option>
+              <option value="3" data-i18n="optSummerTerm">ฤดูร้อน</option>
             </select>
             <select id="f_examTermYear" style="flex:1.3;">
-              <option value="">ปีการศึกษา (พ.ศ.)</option>
+              <option value="" data-i18n="optAcademicYear">ปีการศึกษา (พ.ศ.)</option>
               <option value="2555">2555</option><option value="2556">2556</option><option value="2557">2557</option>
               <option value="2558">2558</option><option value="2559">2559</option><option value="2560">2560</option>
               <option value="2561">2561</option><option value="2562">2562</option><option value="2563">2563</option>
@@ -1146,29 +1146,29 @@ if('serviceWorker' in navigator){
         </div>
       </div>
       <div class="grid cols-3">
-        <div class="field"><label>วันที่สอบป้องกัน</label><input type="date" id="d_date"></div>
-        <div class="field"><label>เวลาสอบ</label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น."></div>
-        <div class="field"><label>สถานที่สอบ</label><div class="combo"><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301"></div></div>
-        <div class="field"><label>ประธานกรรมการ</label><div id="d_chair" class="combo"></div></div>
+        <div class="field"><label data-i18n="lblDefenseDate">วันที่สอบป้องกัน</label><input type="date" id="d_date"></div>
+        <div class="field"><label data-i18n="lblExamTime">เวลาสอบ</label><input type="text" id="d_examTime" placeholder="เช่น 09.00 - 12.00 น." data-i18n-ph="phExamTime"></div>
+        <div class="field"><label data-i18n="lblExamLocation">สถานที่สอบ</label><div class="combo"><input type="text" id="d_location" placeholder="เช่น ห้องประชุม 301" data-i18n-ph="phExamLocation"></div></div>
+        <div class="field"><label data-i18n="lblChairPerson">ประธานกรรมการ</label><div id="d_chair" class="combo"></div></div>
         <div class="field full">
-          <label>กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
-          <div class="help" style="margin:0 0 6px;">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
+          <label data-i18n="lblCommittee">กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)</label>
+          <div class="help" style="margin:0 0 6px;" data-i18n="helpCommitteeRow">แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้</div>
           <div class="multi-row-list" id="d_committeeList"></div>
-          <button type="button" class="link-btn" id="d_btnAddCommittee" style="margin-top:8px;text-align:left;">＋ เพิ่มกรรมการ</button>
+          <button type="button" class="link-btn" id="d_btnAddCommittee" style="margin-top:8px;text-align:left;" data-i18n="btnAddCommittee">＋ เพิ่มกรรมการ</button>
         </div>
-        <div class="field"><label>คะแนนเต็ม</label><input type="number" id="d_fullScore" min="0"></div>
-        <div class="field"><label>คะแนนที่สอบได้</label><input type="number" id="d_obtainedScore" min="0"></div>
-        <div class="field"><label>กำหนดส่งเล่ม</label><input type="date" id="d_dueDate"></div>
+        <div class="field"><label data-i18n="lblFullScore">คะแนนเต็ม</label><input type="number" id="d_fullScore" min="0"></div>
+        <div class="field"><label data-i18n="lblObtainedScore">คะแนนที่สอบได้</label><input type="number" id="d_obtainedScore" min="0"></div>
+        <div class="field"><label data-i18n="lblBookDueDate">กำหนดส่งเล่ม</label><input type="date" id="d_dueDate"></div>
         <div class="field full">
-          <label>ผลการประเมิน</label>
+          <label data-i18n="lblFinalEvalResult">ผลการประเมิน</label>
           <div class="radio-group">
-            <label><input type="radio" name="defenseResult" value="ผ่าน"> ผ่าน</label>
-            <label><input type="radio" name="defenseResult" value="ผ่านแบบมีเงื่อนไข"> ผ่านแบบมีเงื่อนไข</label>
-            <label><input type="radio" name="defenseResult" value="ไม่ผ่าน"> ไม่ผ่าน</label>
+            <label><input type="radio" name="defenseResult" value="ผ่าน"> <span data-i18n="txtPass">ผ่าน</span></label>
+            <label><input type="radio" name="defenseResult" value="ผ่านแบบมีเงื่อนไข"> <span data-i18n="txtCond">ผ่านแบบมีเงื่อนไข</span></label>
+            <label><input type="radio" name="defenseResult" value="ไม่ผ่าน"> <span data-i18n="txtFail">ไม่ผ่าน</span></label>
           </div>
         </div>
       </div>
-      <h4>แนบเอกสาร (เช่น คำสั่งสอบป้องกัน)</h4>
+      <h4 data-i18n="secAttachDefenseOrder">แนบเอกสาร (เช่น คำสั่งสอบป้องกัน)</h4>
       <div class="attach-box">
         <input type="file" id="d_fileInput" multiple>
         <div class="attach-link-row">
@@ -1183,12 +1183,12 @@ if('serviceWorker' in navigator){
 
   <div class="card" id="formSec5">
     <h3 data-i18n="secForm5">หมวดที่ 5: การเผยแพร่ผลงานวิจัย</h3>
-    <div class="help" style="margin-bottom:10px;">กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน</div>
+    <div class="help" style="margin-bottom:10px;" data-i18n="helpSec5Intro">กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน</div>
     <div class="field full">
       <div class="multi-row-list" id="publicationList"></div>
-      <button type="button" class="link-btn" id="btnAddPublication" style="margin-top:8px;text-align:left;">＋ เพิ่มผลงานตีพิมพ์</button>
+      <button type="button" class="link-btn" id="btnAddPublication" style="margin-top:8px;text-align:left;" data-i18n="btnAddPublication">＋ เพิ่มผลงานตีพิมพ์</button>
     </div>
-    <h4>แนบไฟล์ผลงาน (เช่น บทความที่ตีพิมพ์แล้ว, เล่มประชุมวิชาการ)</h4>
+    <h4 data-i18n="secAttachPublication">แนบไฟล์ผลงาน (เช่น บทความที่ตีพิมพ์แล้ว, เล่มประชุมวิชาการ)</h4>
     <div class="attach-box">
       <input type="file" id="pub_fileInput" multiple>
       <div class="attach-link-row">
@@ -1204,16 +1204,16 @@ if('serviceWorker' in navigator){
     <h3 data-i18n="secForm6">หมวดที่ 6: การส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</h3>
     <div class="grid">
       <div class="field">
-        <label>สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ</label>
+        <label data-i18n="lblBookSubmitStatus">สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ</label>
         <div class="radio-group">
-          <label><input type="radio" name="bookSubmitStatus" value="ยังไม่ส่ง" checked> ยังไม่ส่ง</label>
-          <label><input type="radio" name="bookSubmitStatus" value="ส่งแล้ว"> ส่งแล้ว</label>
+          <label><input type="radio" name="bookSubmitStatus" value="ยังไม่ส่ง" checked> <span data-i18n="txtNotSubmitted">ยังไม่ส่ง</span></label>
+          <label><input type="radio" name="bookSubmitStatus" value="ส่งแล้ว"> <span data-i18n="txtSubmitted">ส่งแล้ว</span></label>
         </div>
       </div>
-      <div class="field"><label>วันที่ส่งเล่ม</label><input type="date" id="f_bookSubmitDate"></div>
+      <div class="field"><label data-i18n="lblBookSubmitDate">วันที่ส่งเล่ม</label><input type="date" id="f_bookSubmitDate"></div>
       <div class="field full">
-        <label>ไฟล์เล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</label>
-        <input type="text" id="f_bookDocLink" placeholder="ลิงก์เอกสารแนบเล่มฉบับสมบูรณ์ (เช่น ลิงก์ Google Drive) — ถ้ามี">
+        <label data-i18n="lblBookFile">ไฟล์เล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์</label>
+        <input type="text" id="f_bookDocLink" placeholder="ลิงก์เอกสารแนบเล่มฉบับสมบูรณ์ (เช่น ลิงก์ Google Drive) — ถ้ามี" data-i18n-ph="phBookDocLink">
         <div class="attach-box" style="margin-top:8px;">
           <input type="file" id="book_fileInput" multiple>
           <div class="attach-link-row">
@@ -1225,19 +1225,19 @@ if('serviceWorker' in navigator){
         </div>
       </div>
       <div class="field">
-        <label><input type="checkbox" id="f_graduated" style="width:auto;margin-right:6px;"> สำเร็จการศึกษาแล้ว</label>
+        <label><input type="checkbox" id="f_graduated" style="width:auto;margin-right:6px;"> <span data-i18n="chkGraduated">สำเร็จการศึกษาแล้ว</span></label>
       </div>
       <div class="field">
-        <label>ภาคเรียนที่สำเร็จการศึกษา</label>
+        <label data-i18n="lblGraduatedTerm">ภาคเรียนที่สำเร็จการศึกษา</label>
         <div style="display:flex;gap:8px;">
           <select id="f_graduatedTermSemester" style="flex:1;">
-            <option value="">ภาคเรียน</option>
+            <option value="" data-i18n="optSemesterPlaceholder">ภาคเรียน</option>
             <option value="1">1</option>
             <option value="2">2</option>
-            <option value="3">ฤดูร้อน</option>
+            <option value="3" data-i18n="optSummerTerm">ฤดูร้อน</option>
           </select>
           <select id="f_graduatedTermYear" style="flex:1.3;">
-            <option value="">ปีการศึกษา (พ.ศ.)</option>
+            <option value="" data-i18n="optAcademicYear">ปีการศึกษา (พ.ศ.)</option>
             <option value="2555">2555</option><option value="2556">2556</option><option value="2557">2557</option>
             <option value="2558">2558</option><option value="2559">2559</option><option value="2560">2560</option>
             <option value="2561">2561</option><option value="2562">2562</option><option value="2563">2563</option>
@@ -1252,8 +1252,8 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="form-footer">
-    <button type="button" class="btn btn-secondary" id="btnCancelForm">❌ ยกเลิก</button>
-    <button type="button" class="btn btn-primary" id="btnSaveForm">💾 บันทึกข้อมูล</button>
+    <button type="button" class="btn btn-secondary" id="btnCancelForm" data-i18n="btnCancelForm">❌ ยกเลิก</button>
+    <button type="button" class="btn btn-primary" id="btnSaveForm" data-i18n="btnSaveForm">💾 บันทึกข้อมูล</button>
   </div>
 </section>
 
@@ -2524,6 +2524,96 @@ var LANDING_I18N = {
   attachLinkPlaceholder: {th:'วางลิงก์เอกสาร (เช่น Google Drive)', en:'Paste document link (e.g. Google Drive)'},
   attachLinkNamePlaceholder: {th:'ชื่อเอกสาร (ไม่บังคับ)', en:'Document name (optional)'},
   attachAddLinkBtn: {th:'🔗 แนบลิงก์', en:'🔗 Attach Link'},
+  lblStudentId: {th:'รหัสนักศึกษา', en:'Student ID'},
+  lblStudentName: {th:'ชื่อ - นามสกุล', en:'Full Name'},
+  lblDegreeLevel: {th:'ระดับการศึกษา', en:'Degree Level'},
+  optMasters: {th:'ปริญญาโท', en:"Master's"},
+  optDoctoral: {th:'ปริญญาเอก', en:'Doctoral'},
+  lblStudyPlan: {th:'แผนการเรียน', en:'Study Plan'},
+  lblProgram: {th:'หลักสูตร', en:'Program'},
+  lblDepartment: {th:'สาขาวิชา', en:'Department'},
+  secForm1_1: {th:'หมวดที่ 1.1: เกณฑ์สำเร็จการศึกษา', en:'Section 1.1: Graduation Criteria'},
+  lblEnglishResult: {th:'ผลภาษาอังกฤษ', en:'English Result'},
+  optExamPass: {th:'สอบผ่าน', en:'Passed Exam'},
+  optPassedCourse: {th:'เรียนผ่าน', en:'Passed Course'},
+  optTrained: {th:'อบรม', en:'Trained'},
+  optFail: {th:'ไม่ผ่าน', en:'Fail'},
+  optExempt: {th:'ยกเว้น/เทียบเท่า', en:'Exempt/Equivalent'},
+  scorePlaceholder: {th:'คะแนน', en:'Score'},
+  helpNoEnglishRequired: {th:'ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบภาษาอังกฤษ', en:'Optional — leave blank for plans that do not require an English exam'},
+  phEnglishDocLink: {th:'ลิงก์เอกสารแนบผลภาษาอังกฤษ (เช่น ลิงก์ Google Drive) — ถ้ามี', en:'English result document link (e.g. Google Drive link) — if any'},
+  lblComputerResult: {th:'ผลคอมพิวเตอร์', en:'Computer Result'},
+  helpNoComputerRequired: {th:'ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบคอมพิวเตอร์', en:'Optional — leave blank for plans that do not require a computer exam'},
+  phComputerDocLink: {th:'ลิงก์เอกสารแนบผลคอมพิวเตอร์ (เช่น ลิงก์ Google Drive) — ถ้ามี', en:'Computer result document link (e.g. Google Drive link) — if any'},
+  lblQualifyingExam: {th:'การสอบวัดความรู้', en:'Qualifying Exam'},
+  optQualMaster: {th:'ผ่านสอบประมวลความรู้ (ป.โท)', en:"Passed Comprehensive Exam (Master's)"},
+  optQualDoctoral: {th:'ผ่านสอบวัดคุณสมบัติ (ป.เอก)', en:'Passed Qualifying Exam (Doctoral)'},
+  optQualPending: {th:'ยังไม่ผ่าน / อยู่ระหว่างรอผล', en:'Not Yet Passed / Awaiting Result'},
+  helpNoQualRequired: {th:'ไม่บังคับเลือก — เว้นว่างไว้ได้สำหรับแผนที่ไม่ต้องสอบวัดความรู้', en:'Optional — leave blank for plans that do not require a qualifying exam'},
+  phQualDocLink: {th:'ลิงก์เอกสารแนบการสอบวัดความรู้ (เช่น ลิงก์ Google Drive) — ถ้ามี', en:'Qualifying exam document link (e.g. Google Drive link) — if any'},
+  lblMainAdvisor: {th:'อาจารย์ที่ปรึกษาหลัก', en:'Main Advisor'},
+  lblCoAdvisor: {th:'อาจารย์ที่ปรึกษาร่วม', en:'Co-Advisor'},
+  btnAddCoAdvisor: {th:'＋ เพิ่มอาจารย์ร่วม', en:'＋ Add Co-Advisor'},
+  lblAdvisorChangeNote: {th:'หมายเหตุการเปลี่ยนแปลงที่ปรึกษา (ถ้ามี)', en:'Advisor Change Note (if any)'},
+  phAdvisorChangeNote: {th:'เช่น อาจารย์เดิมลาศึกษาต่อ, เปลี่ยนหัวข้อวิจัย — กรอกเฉพาะกรณีที่กำลังเปลี่ยน/ถอนที่ปรึกษาในการบันทึกครั้งนี้',
+    en:'e.g. former advisor on study leave, changed research topic — fill in only when changing/withdrawing an advisor in this record'},
+  secAttachAdvisorAppoint: {th:'แนบเอกสาร (เช่น คำสั่งแต่งตั้งอาจารย์ที่ปรึกษา)', en:'Attach Documents (e.g. Advisor Appointment Order)'},
+  lblTitleTh: {th:'หัวข้อวิทยานิพนธ์ (TH)', en:'Thesis Title (TH)'},
+  phTitleTh: {th:'การพัฒนาแอปพลิเคชันระบบจัดการข้อมูล...', en:'Development of a Data Management Application...'},
+  lblTitleEn: {th:'หัวข้อวิทยานิพนธ์ (EN)', en:'Thesis Title (EN)'},
+  phTitleEn: {th:'Development of an Application for Data Management...', en:'Development of an Application for Data Management...'},
+  helpSec3Intro: {th:'กรอกข้อมูลใน "3.1" หรือ "3.2" เพียงส่วนเดียวต่อการบันทึก 1 ครั้ง (1 รายการ = การสอบ 1 ครั้ง) ถ้านักศึกษาเคยสอบมาก่อน หรือจะบันทึกการสอบอีกประเภทหนึ่งให้นักศึกษาคนเดิม ให้กด "ค้นหาข้อมูลเดิม" ในหมวดที่ 1 แล้วกด "＋ เพิ่มข้อมูลใหม่" เพื่อเริ่มรายการใหม่ — ระบบจะบันทึกเป็นรายการสอบเพิ่มอีกรายการโดยไม่ทับข้อมูลเดิม เมื่อกด "แก้ไข" รายการที่เคยบันทึกไว้ ส่วนที่ไม่ตรงกับประเภทเดิมจะถูกล็อกไว้เพื่อป้องกันการเขียนทับ',
+    en:'Fill in only "3.1" or "3.2" per save (1 record = 1 exam). If the student has a prior exam, or you are recording another exam type for the same student, click "Find Existing Record" in Section 1 then "＋ Add New Record" to start a new entry — the system adds it as another exam record without overwriting existing data. When editing a previously saved record, the section that does not match its original type is locked to prevent accidental overwrites.'},
+  hdrStudentExamHistory: {th:'ประวัติการสอบของนักศึกษาคนนี้', en:"This Student's Exam History"},
+  hdrSub31: {th:'3.1 การสอบเค้าโครงวิทยานิพนธ์', en:'3.1 Thesis Proposal Exam'},
+  lblProposalDate: {th:'วันที่สอบเค้าโครง', en:'Proposal Exam Date'},
+  lblExamTime: {th:'เวลาสอบ', en:'Exam Time'},
+  phExamTime: {th:'เช่น 09.00 - 12.00 น.', en:'e.g. 09:00 - 12:00'},
+  lblExamLocation: {th:'สถานที่สอบ', en:'Exam Location'},
+  phExamLocation: {th:'เช่น ห้องประชุม 301', en:'e.g. Meeting Room 301'},
+  lblChairPerson: {th:'ประธานกรรมการ', en:'Committee Chair'},
+  lblCommittee: {th:'กรรมการสอบ (นอกเหนือจากประธาน/ที่ปรึกษาหลัก-ร่วม)', en:'Examination Committee (other than chair/main-co advisors)'},
+  helpCommitteeRow: {th:'แต่ละแถวเลือกทั้งชื่อและตำแหน่งในกรรมการชุดนี้', en:'Select both name and role in this committee for each row'},
+  btnAddCommittee: {th:'＋ เพิ่มกรรมการ', en:'＋ Add Committee Member'},
+  lblEvalResult: {th:'ผลประเมิน', en:'Evaluation Result'},
+  txtPass: {th:'ผ่าน', en:'Pass'},
+  txtFail: {th:'ไม่ผ่าน', en:'Fail'},
+  txtCond: {th:'ผ่านแบบมีเงื่อนไข', en:'Conditional Pass'},
+  secAttachProposalOrder: {th:'แนบเอกสาร (เช่น คำสั่งสอบเค้าโครง)', en:'Attach Documents (e.g. Proposal Exam Order)'},
+  lblBw25: {th:'ส่งแบบฟอร์ม บว.25 (สำหรับแผน ข — ไม่บังคับ)', en:'Submit Form Bor.Wor.25 (For Plan B — Optional)'},
+  helpBw25: {th:'(แบบเสนอเค้าโครงการค้นคว้าอิสระ และขออนุมัติหัวข้อการค้นคว้าอิสระ — สำหรับแผน ข เท่านั้น วิทยานิพนธ์ไม่ต้องใช้)',
+    en:'(Independent study proposal and topic approval form — for Plan B only; not required for a thesis)'},
+  txtNotSubmitted: {th:'ยังไม่ส่ง', en:'Not Submitted'},
+  txtSubmitted: {th:'ส่งแล้ว', en:'Submitted'},
+  lblTopicApprovalDate: {th:'วันที่อนุมัติหัวข้อ', en:'Topic Approval Date'},
+  lblProposalRevisionStatus: {th:'ส่งผลสอบแก้ไขเค้าโครงวิทยานิพนธ์', en:'Proposal Revision Submission Status'},
+  lblRevisionDate: {th:'วันที่ส่งแก้ไข', en:'Revision Submission Date'},
+  helpRevisionAnytime: {th:'ติ๊กอัปเดตสถานะนี้ได้ตลอด แม้ข้อมูลการสอบ 3.1 ด้านบนจะถูกล็อกไว้แล้ว', en:'This status can be updated anytime, even while the 3.1 exam data above is locked'},
+  hdrSub32: {th:'3.2 การสอบป้องกันวิทยานิพนธ์ / การค้นคว้าอิสระ (IS)', en:'3.2 Thesis Defense / Independent Study (IS) Exam'},
+  lblRegOrLeaveStatus: {th:'สถานะการลงทะเบียน/รักษาสภาพในภาคเรียนที่สอบจบ', en:'Registration/Leave Status in the Term of Completion'},
+  optRegistered: {th:'ลงทะเบียน', en:'Registered'},
+  optOnLeave: {th:'รักษาสภาพการเป็นนักศึกษา', en:'Maintaining Student Status'},
+  lblExamTerm: {th:'ภาคเรียนที่สอบจบ', en:'Term of Completion'},
+  optSemesterPlaceholder: {th:'ภาคเรียน', en:'Semester'},
+  optSummerTerm: {th:'ฤดูร้อน', en:'Summer'},
+  optAcademicYear: {th:'ปีการศึกษา (พ.ศ.)', en:'Academic Year (B.E.)'},
+  lblDefenseDate: {th:'วันที่สอบป้องกัน', en:'Defense Exam Date'},
+  lblFullScore: {th:'คะแนนเต็ม', en:'Full Score'},
+  lblObtainedScore: {th:'คะแนนที่สอบได้', en:'Obtained Score'},
+  lblBookDueDate: {th:'กำหนดส่งเล่ม', en:'Book Submission Due Date'},
+  lblFinalEvalResult: {th:'ผลการประเมิน', en:'Final Evaluation Result'},
+  secAttachDefenseOrder: {th:'แนบเอกสาร (เช่น คำสั่งสอบป้องกัน)', en:'Attach Documents (e.g. Defense Exam Order)'},
+  helpSec5Intro: {th:'กรอกเฉพาะกรณีที่ผลงานได้รับการตีพิมพ์แล้ว (ไม่บังคับ) เพิ่มได้มากกว่า 1 ผลงาน', en:'Fill in only if a work has already been published (optional); more than one work may be added'},
+  btnAddPublication: {th:'＋ เพิ่มผลงานตีพิมพ์', en:'＋ Add Publication'},
+  secAttachPublication: {th:'แนบไฟล์ผลงาน (เช่น บทความที่ตีพิมพ์แล้ว, เล่มประชุมวิชาการ)', en:'Attach Work Files (e.g. published article, conference proceedings)'},
+  lblBookSubmitStatus: {th:'สถานะการส่งเล่มวิทยานิพนธ์/การค้นคว้าอิสระ', en:'Thesis/Independent Study Book Submission Status'},
+  lblBookSubmitDate: {th:'วันที่ส่งเล่ม', en:'Book Submission Date'},
+  lblBookFile: {th:'ไฟล์เล่มวิทยานิพนธ์/การค้นคว้าอิสระฉบับสมบูรณ์', en:'Final Thesis/Independent Study Book File'},
+  phBookDocLink: {th:'ลิงก์เอกสารแนบเล่มฉบับสมบูรณ์ (เช่น ลิงก์ Google Drive) — ถ้ามี', en:'Final book document link (e.g. Google Drive link) — if any'},
+  chkGraduated: {th:'สำเร็จการศึกษาแล้ว', en:'Graduated'},
+  lblGraduatedTerm: {th:'ภาคเรียนที่สำเร็จการศึกษา', en:'Graduation Term'},
+  btnCancelForm: {th:'❌ ยกเลิก', en:'❌ Cancel'},
+  btnSaveForm: {th:'💾 บันทึกข้อมูล', en:'💾 Save Data'},
   navBrand: {th:'🎓 ระบบจัดเก็บข้อมูลการสอบวิทยานิพนธ์', en:'🎓 Thesis Exam Records System'},
   navFeatures: {th:'ฟีเจอร์', en:'Features'},
   navEnter: {th:'เข้าสู่ระบบ', en:'Log In'},

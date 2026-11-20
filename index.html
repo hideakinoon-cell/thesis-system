@@ -3405,7 +3405,27 @@ var LANDING_I18N = {
   btnOpenSheetShare: {th:'🔗 เปิดชีทกลาง (ตรวจสอบ/แก้ไขสิทธิ์แชร์)', en:'🔗 Open Central Sheet (Check/Edit Sharing Permissions)'},
   btnOpenTestUsers: {th:'🔗 เปิดหน้า Test users (Google Cloud Console)', en:'🔗 Open Test Users Page (Google Cloud Console)'},
   helpPurgeDeleted: {th:'การกดปุ่ม "ลบ" ในหน้าต่างๆ ของระบบข้อมูลกลางเป็นการ "ซ่อน" รายการเท่านั้น (แถวเดิมยังค้างอยู่ในชีท Google Sheets เผื่อกู้คืน/ตรวจสอบย้อนหลังได้) เมื่อมีการลบ/นำเข้าข้อมูลบ่อยๆ แถวที่ซ่อนไว้จะสะสมมากขึ้นเรื่อยๆ ทำให้ทุกครั้งที่เปิดหน้ารายการต้องโหลดข้อมูลมากกว่าที่เห็นจริง และรู้สึกช้าลง เครื่องมือนี้จะลบแถวที่ถูกซ่อนไว้เหล่านั้นออกจากชีท (Records/Files/DocIntake) อย่างถาวร <strong>ไม่สามารถกู้คืนได้อีก</strong> ข้อมูลที่ยังไม่ถูกลบจะไม่ได้รับผลกระทบใดๆ', en:'Clicking "Delete" on various pages of the central data system only "hides" the item (the original row still remains in the Google Sheets, in case it needs to be restored or audited later). With frequent deletes/imports, hidden rows accumulate more and more, making every list page load more data than what is actually shown and feel slower. This tool permanently deletes those hidden rows from the sheet (Records/Files/DocIntake). <strong>This cannot be undone.</strong> Data that has not been deleted will not be affected in any way.'},
-  btnPurgeDeletedLabel: {th:'🗑️ ล้างข้อมูลที่ถูกลบถาวร', en:'🗑️ Purge Permanently Deleted Data'}
+  btnPurgeDeletedLabel: {th:'🗑️ ล้างข้อมูลที่ถูกลบถาวร', en:'🗑️ Purge Permanently Deleted Data'},
+  errClientIdNotSet: {th:'ยังไม่ได้ตั้งค่า Google OAuth Client ID', en:'Google OAuth Client ID has not been set yet'},
+  errGsiLoadFailed: {th:'โหลด Google Identity Services ไม่สำเร็จ', en:'Failed to load Google Identity Services'},
+  impErrNoStudentId: {th:'ไม่มีรหัสนักศึกษา', en:'Missing student ID'},
+  impErrDupRowPrefix: {th:'รหัสนักศึกษาซ้ำกับแถวที่ ', en:'Student ID duplicates row '},
+  impErrDupRowSuffix: {th:' ในไฟล์เดียวกัน', en:' in the same file'},
+  impErrNoStudentName: {th:'ไม่มีชื่อ-นามสกุล', en:'Missing first-last name'},
+  impWarnNoDegreeLevel: {th:'ไม่ระบุระดับการศึกษา ใช้ค่าเริ่มต้น "ปริญญาโท"', en:'Degree level not specified, using default "Master\'s degree"'},
+  impWarnUnknownDegreePrefix: {th:'ระดับการศึกษา "', en:'Degree level "'},
+  impWarnUnknownDegreeSuffix: {th:'" ไม่รู้จัก ใช้ค่าเริ่มต้น "ปริญญาโท"', en:'" not recognized, using default "Master\'s degree"'},
+  impErrNoPlan: {th:'ไม่มีแผนการเรียน', en:'Missing study plan'},
+  impWarnPlanNotFoundPrefix: {th:'แผนการเรียน "', en:'Study plan "'},
+  impWarnPlanNotFoundSuffix: {th:'" ยังไม่มีในระบบ', en:'" does not exist in the system yet'},
+  impErrNoProgram: {th:'ไม่มีหลักสูตร', en:'Missing program'},
+  impWarnProgramNotFoundPrefix: {th:'หลักสูตร "', en:'Program "'},
+  impWarnProgramNotFoundSuffix: {th:'" ยังไม่มีในระบบ', en:'" does not exist in the system yet'},
+  impErrNoDepartment: {th:'ไม่มีสาขาวิชา', en:'Missing department'},
+  impWarnDeptNotFoundPrefix: {th:'สาขาวิชา "', en:'Department "'},
+  impWarnDeptNotFoundSuffix: {th:'" ยังไม่มีในระบบ', en:'" does not exist in the system yet'},
+  impWarnExistingPrefix: {th:'รหัสนี้มีอยู่แล้วในระบบ (', en:'This ID already exists in the system ('},
+  impWarnExistingSuffix: {th:')', en:')'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -3439,6 +3459,20 @@ function applyLandingLang(lang){
   }catch(e){}
   /* รีเฟรชตัวเลือก "ทุกสาขา/ทุกหลักสูตร/ทุกแผน" ในตัวกรอง และ placeholder ของ select ปกติ (เช่น ตำแหน่งกรรมการ, แผนการเรียน) ให้เป็นภาษาปัจจุบันด้วย */
   try{ if(typeof renderAllSelects==='function') renderAllSelects(); }catch(e){}
+  /* สถานะ Drive บนแถบบน (driveStatusText) และป้ายบทบาทผู้ใช้ (roleBadge) ตั้งค่าแบบ textContent ตรง ไม่ได้ผูกกับ [data-i18n]
+     เพราะข้อความขึ้นกับสถานะปัจจุบัน (เชื่อมต่อ Drive แล้วหรือยัง / บทบาทใด) จึงต้องรีเฟรชแยกตรงนี้ให้ตรงกับภาษาที่เลือกใหม่ด้วย
+     ไม่เรียก applyRoleUI() ตรงๆ เพราะฟังก์ชันนั้นมีผลข้างเคียงเปลี่ยนหน้าไปแดชบอร์ดสรุปข้อมูลเสมอ */
+  try{
+    var driveStatusElx = document.getElementById('driveStatus');
+    if(driveStatusElx) updateDriveStatusUI(driveStatusElx.classList.contains('on'));
+  }catch(e){}
+  try{
+    var roleBadgeElx = document.getElementById('roleBadge');
+    if(roleBadgeElx && typeof currentRole!=='undefined' && currentRole){
+      roleBadgeElx.textContent = currentRole==='dept-viewer' ? (i18nText('txtRoleBadgeDeptViewerPrefix')||'เจ้าหน้าที่สาขา (ดูอย่างเดียว) — ')+currentDeptRestriction
+        : (currentRole==='viewer'||currentRole==='dept-viewer') ? (i18nText('txtRoleBadgeViewer')||'เจ้าหน้าที่ (ดูอย่างเดียว)') : (i18nText('txtRoleBadgeAdmin')||'เจ้าหน้าที่ (Admin)');
+    }
+  }catch(e){}
 }
 function renderLockForm(){
   var loginForm = document.getElementById('lockLoginForm');
@@ -7486,21 +7520,21 @@ function processImportAoa(aoa, previewBox, importBtn){
       var studentId = get('studentId'), studentName = get('studentName'), degreeRaw = get('degreeLevel'),
           plan = get('plan'), program = get('program'), department = get('department');
       var errors=[], warnings=[];
-      if(!studentId) errors.push('ไม่มีรหัสนักศึกษา');
-      else if(seenInFile[studentId]) errors.push('รหัสนักศึกษาซ้ำกับแถวที่ '+seenInFile[studentId]+' ในไฟล์เดียวกัน');
+      if(!studentId) errors.push(i18nText('impErrNoStudentId')||'ไม่มีรหัสนักศึกษา');
+      else if(seenInFile[studentId]) errors.push((i18nText('impErrDupRowPrefix')||'รหัสนักศึกษาซ้ำกับแถวที่ ')+seenInFile[studentId]+(i18nText('impErrDupRowSuffix')||' ในไฟล์เดียวกัน'));
       if(studentId) seenInFile[studentId] = i+1;
-      if(!studentName) errors.push('ไม่มีชื่อ-นามสกุล');
+      if(!studentName) errors.push(i18nText('impErrNoStudentName')||'ไม่มีชื่อ-นามสกุล');
       var dl = normalizeDegreeLevelForImport(degreeRaw);
-      if(!degreeRaw){ dl.value='ปริญญาโท'; warnings.push('ไม่ระบุระดับการศึกษา ใช้ค่าเริ่มต้น "ปริญญาโท"'); }
-      else if(!dl.recognized){ dl.value='ปริญญาโท'; warnings.push('ระดับการศึกษา "'+degreeRaw+'" ไม่รู้จัก ใช้ค่าเริ่มต้น "ปริญญาโท"'); }
-      if(!plan) errors.push('ไม่มีแผนการเรียน');
-      else if(masterData.plans.indexOf(plan)===-1) warnings.push('แผนการเรียน "'+plan+'" ยังไม่มีในระบบ');
-      if(!program) errors.push('ไม่มีหลักสูตร');
-      else if(masterData.programs.indexOf(program)===-1) warnings.push('หลักสูตร "'+program+'" ยังไม่มีในระบบ');
-      if(!department) errors.push('ไม่มีสาขาวิชา');
-      else if(masterData.departments.indexOf(department)===-1) warnings.push('สาขาวิชา "'+department+'" ยังไม่มีในระบบ');
+      if(!degreeRaw){ dl.value='ปริญญาโท'; warnings.push(i18nText('impWarnNoDegreeLevel')||'ไม่ระบุระดับการศึกษา ใช้ค่าเริ่มต้น "ปริญญาโท"'); }
+      else if(!dl.recognized){ dl.value='ปริญญาโท'; warnings.push((i18nText('impWarnUnknownDegreePrefix')||'ระดับการศึกษา "')+degreeRaw+(i18nText('impWarnUnknownDegreeSuffix')||'" ไม่รู้จัก ใช้ค่าเริ่มต้น "ปริญญาโท"')); }
+      if(!plan) errors.push(i18nText('impErrNoPlan')||'ไม่มีแผนการเรียน');
+      else if(masterData.plans.indexOf(plan)===-1) warnings.push((i18nText('impWarnPlanNotFoundPrefix')||'แผนการเรียน "')+plan+(i18nText('impWarnPlanNotFoundSuffix')||'" ยังไม่มีในระบบ'));
+      if(!program) errors.push(i18nText('impErrNoProgram')||'ไม่มีหลักสูตร');
+      else if(masterData.programs.indexOf(program)===-1) warnings.push((i18nText('impWarnProgramNotFoundPrefix')||'หลักสูตร "')+program+(i18nText('impWarnProgramNotFoundSuffix')||'" ยังไม่มีในระบบ'));
+      if(!department) errors.push(i18nText('impErrNoDepartment')||'ไม่มีสาขาวิชา');
+      else if(masterData.departments.indexOf(department)===-1) warnings.push((i18nText('impWarnDeptNotFoundPrefix')||'สาขาวิชา "')+department+(i18nText('impWarnDeptNotFoundSuffix')||'" ยังไม่มีในระบบ'));
       var existing = studentId ? existingByStudentId[studentId] : null;
-      if(existing) warnings.push('รหัสนี้มีอยู่แล้วในระบบ ('+(existing.studentName||'-')+')');
+      if(existing) warnings.push((i18nText('impWarnExistingPrefix')||'รหัสนี้มีอยู่แล้วในระบบ (')+(existing.studentName||'-')+(i18nText('impWarnExistingSuffix')||')'));
       rows.push({rowNum:i+1, studentId:studentId, studentName:studentName, degreeLevel:dl.value,
         plan:plan, program:program, department:department, existing:existing||null, errors:errors, warnings:warnings});
     }
@@ -9031,9 +9065,9 @@ function purgeDeletedUI(){
 function ensureAuthed(){
   return new Promise(function(resolve, reject){
     if(accessToken && Date.now() < tokenExpiresAt - 5000){ resolve(); return; }
-    if(!googleClientId){ reject('ยังไม่ได้ตั้งค่า Google OAuth Client ID'); return; }
+    if(!googleClientId){ reject(i18nText('errClientIdNotSet')||'ยังไม่ได้ตั้งค่า Google OAuth Client ID'); return; }
     if(!tokenClient) initGsiClient();
-    if(!tokenClient){ reject('โหลด Google Identity Services ไม่สำเร็จ'); return; }
+    if(!tokenClient){ reject(i18nText('errGsiLoadFailed')||'โหลด Google Identity Services ไม่สำเร็จ'); return; }
     var origCb = tokenClient.callback;
     google.accounts.oauth2.initTokenClient({
       client_id: googleClientId,

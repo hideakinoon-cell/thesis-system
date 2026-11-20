@@ -1910,8 +1910,8 @@ function showAdvisorMismatchWarning(hostEl, oldName, newName){
   if(!hostEl || !hostEl.parentNode) return;
   var inMultiRow = hostEl.parentNode.classList && hostEl.parentNode.classList.contains('multi-row');
   var box = el('div',{style:'color:#b45309;font-size:13px;margin-top:4px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 8px;'+(inMultiRow?'flex-basis:100%;':'')});
-  box.appendChild(document.createTextNode('⚠️ "'+oldName+'" มีการเปลี่ยนชื่อ/ตำแหน่งทางวิชาการเป็น "'+newName+'" แล้ว — '));
-  var btn = el('button',{type:'button', text:'ใช้ชื่อปัจจุบัน', style:'color:#2563eb;text-decoration:underline;background:none;border:none;cursor:pointer;font-size:13px;padding:0;font-family:inherit;'});
+  box.appendChild(document.createTextNode('⚠️ "'+oldName+'"'+(i18nText('txtAdvisorRenamedMid')||' มีการเปลี่ยนชื่อ/ตำแหน่งทางวิชาการเป็น "')+newName+(i18nText('txtAdvisorRenamedSuffix')||'" แล้ว — ')));
+  var btn = el('button',{type:'button', 'data-i18n':'btnUseCurrentName', text:(i18nText('btnUseCurrentName')||'ใช้ชื่อปัจจุบัน'), style:'color:#2563eb;text-decoration:underline;background:none;border:none;cursor:pointer;font-size:13px;padding:0;font-family:inherit;'});
   btn.addEventListener('click', function(){
     if(hostEl.setValueWithFallback) hostEl.setValueWithFallback(newName);
     clearAdvisorMismatchWarning(hostEl);
@@ -2027,6 +2027,8 @@ function buildSearchSelect(hostEl, list, placeholder){
 var docLinkUsage = { englishDocLink:{}, computerDocLink:{}, qualifyingDocLink:{} };
 var DOC_LINK_FIELDS = ['englishDocLink','computerDocLink','qualifyingDocLink'];
 var DOC_LINK_FIELD_LABELS = { englishDocLink:'ผลภาษาอังกฤษ', computerDocLink:'ผลคอมพิวเตอร์', qualifyingDocLink:'การสอบวัดความรู้' };
+var DOC_LINK_FIELD_LABEL_KEYS = { englishDocLink:'lblEnglishResult', computerDocLink:'lblComputerResult', qualifyingDocLink:'lblQualifyingExam' };
+function docLinkFieldLabel(field){ return i18nText(DOC_LINK_FIELD_LABEL_KEYS[field])||DOC_LINK_FIELD_LABELS[field]||''; }
 function refreshDocLinkSuggestions(){
   return recordsGetAll().then(function(rows){
     var usage = { englishDocLink:{}, computerDocLink:{}, qualifyingDocLink:{} };
@@ -2051,15 +2053,15 @@ function openDocLinkStudentsModal(en, field){
   var root = document.getElementById('modalRoot');
   var backdrop = el('div',{class:'modal-backdrop'});
   var modal = el('div',{class:'modal'});
-  modal.appendChild(el('h3',{text:'รายชื่อ นศ. ที่ใช้ลิงก์นี้ — '+(DOC_LINK_FIELD_LABELS[field]||'')}));
+  modal.appendChild(el('h3',{text:(i18nText('txtStudentsUsingThisLinkPrefix')||'รายชื่อ นศ. ที่ใช้ลิงก์นี้ — ')+docLinkFieldLabel(field)}));
   modal.appendChild(el('div',{class:'help', style:'margin-bottom:10px;word-break:break-all;', text:en.link}));
   var sorted = (en.students||[]).slice().sort(function(a,b){
     return (a.department||'').localeCompare(b.department||'','th') || (a.studentName||'').localeCompare(b.studentName||'','th');
   });
   var box = el('div');
-  box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:'ทั้งหมด '+sorted.length+' คน'}));
+  box.appendChild(el('div',{style:'font-weight:600;margin-bottom:6px;', text:(i18nText('txtTotalPeoplePrefix')||'ทั้งหมด ')+sorted.length+(i18nText('txtPeopleCountSuffix2')||' คน')}));
   if(!sorted.length){
-    box.appendChild(el('div',{class:'help', text:'— ไม่มี —'}));
+    box.appendChild(el('div',{class:'help', 'data-i18n':'txtNoneDash', text:(i18nText('txtNoneDash')||'— ไม่มี —')}));
   } else {
     sorted.forEach(function(s){
       box.appendChild(el('div',{style:'padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:14px;'},[
@@ -2069,7 +2071,7 @@ function openDocLinkStudentsModal(en, field){
   }
   modal.appendChild(box);
   modal.appendChild(el('div',{class:'form-footer'},[
-    el('button',{class:'btn btn-secondary', text:'ปิด', onclick:function(){ backdrop.remove(); }})
+    el('button',{class:'btn btn-secondary', 'data-i18n':'btnCloseModal', text:(i18nText('btnCloseModal')||'ปิด'), onclick:function(){ backdrop.remove(); }})
   ]));
   backdrop.appendChild(modal);
   backdrop.addEventListener('click', function(e){ if(e.target===backdrop) backdrop.remove(); });
@@ -2097,14 +2099,14 @@ function attachDocLinkAutocomplete(inputId, field){
     dropdown.innerHTML = '';
     if(!matches.length){ closeDropdown(); return; }
     matches.slice(0,20).forEach(function(en){
-      var namesTxt = en.names.slice(0,4).join(', ') + (en.names.length>4 ? ' และอื่นๆ' : '');
+      var namesTxt = en.names.slice(0,4).join(', ') + (en.names.length>4 ? (i18nText('txtAndOthers')||' และอื่นๆ') : '');
       var metaEl = el('div',{class:'link-suggest-meta'});
-      metaEl.appendChild(document.createTextNode('🔁 ใช้แล้ว '+en.count+' คน: '+namesTxt));
+      metaEl.appendChild(document.createTextNode((i18nText('txtUsedByPrefix')||'🔁 ใช้แล้ว ')+en.count+(i18nText('txtUsedByMid')||' คน: ')+namesTxt));
       if(en.names.length>4){
         metaEl.appendChild(document.createTextNode(' '));
         metaEl.appendChild(el('span',{
           style:'color:var(--primary);text-decoration:underline;cursor:pointer;',
-          text:'ดูรายชื่อทั้งหมด',
+          'data-i18n':'btnViewAllNames', text:(i18nText('btnViewAllNames')||'ดูรายชื่อทั้งหมด'),
           onmousedown:function(ev){ ev.preventDefault(); ev.stopPropagation(); },
           onclick:function(ev){ ev.stopPropagation(); openDocLinkStudentsModal(en, field); closeDropdown(); }
         }));
@@ -2177,7 +2179,7 @@ function attachLocationAutocomplete(inputId){
         onclick:function(){ input.value = en.location; closeDropdown(); input.dispatchEvent(new Event('change',{bubbles:true})); }
       },[
         el('div',{text:en.location}),
-        el('div',{class:'link-suggest-meta', text:'เคยใช้ '+en.count+' ครั้ง'})
+        el('div',{class:'link-suggest-meta', text:(i18nText('txtUsedTimesPrefix')||'เคยใช้ ')+en.count+(i18nText('txtUsedTimesSuffix')||' ครั้ง')})
       ]));
     });
     dropdown.style.display='block';
@@ -3101,7 +3103,52 @@ var LANDING_I18N = {
   txtTrendPctVsPrevSuffix: {th:'% เทียบภาคก่อนหน้า', en:'% vs. previous term'},
   txtProgramNotSpecified: {th:'ไม่ระบุหลักสูตร', en:'Program not specified'},
   txtPlanNotSpecified: {th:'ไม่ระบุแผน', en:'Study plan not specified'},
-  txtNoDataGeneric: {th:'ยังไม่มีข้อมูล', en:'No data yet.'}
+  txtNoDataGeneric: {th:'ยังไม่มีข้อมูล', en:'No data yet.'},
+  txtAdvisorRenamedMid: {th:' มีการเปลี่ยนชื่อ/ตำแหน่งทางวิชาการเป็น "', en:' has changed name/academic rank to "'},
+  txtAdvisorRenamedSuffix: {th:'" แล้ว — ', en:'" — '},
+  btnUseCurrentName: {th:'ใช้ชื่อปัจจุบัน', en:'Use Current Name'},
+  txtStudentsUsingThisLinkPrefix: {th:'รายชื่อ นศ. ที่ใช้ลิงก์นี้ — ', en:'Students using this link — '},
+  txtTotalPeoplePrefix: {th:'ทั้งหมด ', en:'Total: '},
+  txtNoneDash: {th:'— ไม่มี —', en:'— None —'},
+  txtAndOthers: {th:' และอื่นๆ', en:' and others'},
+  txtUsedByPrefix: {th:'🔁 ใช้แล้ว ', en:'🔁 Used by '},
+  txtUsedByMid: {th:' คน: ', en:' people: '},
+  btnViewAllNames: {th:'ดูรายชื่อทั้งหมด', en:'View All Names'},
+  txtUsedTimesPrefix: {th:'เคยใช้ ', en:'Used '},
+  txtUsedTimesSuffix: {th:' ครั้ง', en:' time(s)'},
+  txtExternalLabel: {th:'ภายนอก', en:'External'},
+  titleScreeningPassedDate: {th:'วันที่กลั่นกรองผ่าน', en:'Screening Passed Date'},
+  txtExternalCoAdvisorPrefix: {th:' (ภายนอก', en:' (External'},
+  txtScreeningPassedPrefix: {th:' • กลั่นกรองผ่าน ', en:' • Screening passed '},
+  txtScreeningDateNotSpecified: {th:' • ยังไม่ระบุวันที่กลั่นกรอง', en:' • Screening date not specified'},
+  txtConflictTypeProposal: {th:'เค้าโครงวิทยานิพนธ์ (3.1)', en:'Thesis Proposal (3.1)'},
+  txtConflictTypeDefense: {th:'ป้องกันวิทยานิพนธ์/IS (3.2)', en:'Thesis/IS Defense (3.2)'},
+  txtConflictScheduledForPrefix: {th:' ถูกจัดสอบ', en:' is scheduled for the '},
+  txtConflictScheduledForSuffix: {th:'ให้ ', en:' exam of '},
+  txtUnknownName: {th:'(ไม่ทราบชื่อ)', en:'(Unknown name)'},
+  txtConflictSameDay: {th:'ในวันเดียวกัน', en:'on the same day'},
+  txtConflictTimePrefix: {th:' เวลา ', en:' at '},
+  txtConflictAlsoSuffix: {th:' ด้วย', en:' as well'},
+  txtCommitteeScheduleConflictTitle: {th:'⚠️ พบวันเวลาสอบซ้ำซ้อนของกรรมการสอบ:', en:'⚠️ Found overlapping exam schedules for committee member(s):'},
+  phPublicationVenue: {th:'ชื่อวารสาร/การประชุมวิชาการ', en:'Journal/Conference Name'},
+  phPublicationYear: {th:'ปีที่ตีพิมพ์', en:'Publication Year'},
+  phPublicationLink: {th:'ลิงก์ผลงาน (URL)', en:'Publication Link (URL)'},
+  txtSectionLockedDefault: {th:'ส่วนนี้มีข้อมูลบันทึกไว้แล้ว จึงล็อกไว้ป้องกันการแก้ไขโดยไม่ตั้งใจ', en:'This section already has data saved, so it is locked to prevent accidental edits.'},
+  btnUnlockToEdit: {th:'🔓 ปลดล็อกเพื่อแก้ไขข้อมูลเดิม', en:'🔓 Unlock to Edit Existing Data'},
+  btnSaveNewAttempt: {th:'➕ บันทึกการสอบซ้ำครั้งใหม่', en:'➕ Record a New Attempt'},
+  txtSectionLockedProposal: {th:'ส่วน 3.1 (การสอบเค้าโครง) มีข้อมูลบันทึกไว้แล้ว', en:'Section 3.1 (Proposal Exam) already has data saved.'},
+  txtSectionLockedDefense: {th:'ส่วน 3.2 (การสอบป้องกัน/IS) มีข้อมูลบันทึกไว้แล้ว', en:'Section 3.2 (Defense/IS Exam) already has data saved.'},
+  txtNoAttachedFiles: {th:'ยังไม่มีไฟล์แนบ', en:'No attached files yet.'},
+  btnOpenInDrive: {th:'📂 เปิดใน Drive', en:'📂 Open in Drive'},
+  btnSendToDrive: {th:'☁️ ส่งไป Drive', en:'☁️ Send to Drive'},
+  txtLoadingData: {th:'กำลังโหลดข้อมูล...', en:'Loading data...'},
+  txtShowingRangePrefix: {th:'แสดง ', en:'Showing '},
+  txtShowingRangeMid: {th:' จาก ', en:' of '},
+  txtShowingRangeItemsMid: {th:' รายการ (หน้า ', en:' item(s) (page '},
+  txtExamTypeProposal: {th:'สอบเค้าโครง', en:'Proposal Exam'},
+  txtExamTypeDefense: {th:'สอบป้องกัน/IS', en:'Defense/IS Exam'},
+  txtFilesCountSuffix: {th:' ไฟล์', en:' file(s)'},
+  btnAddNewExam: {th:'➕ เพิ่มการสอบใหม่', en:'➕ Add New Exam'}
 };
 function i18nText(key){
   var lang = 'th';
@@ -5606,9 +5653,9 @@ function addDynamicRow(containerId, placeholder, slot, initial){
     /* อาจารย์ที่ปรึกษาร่วมจากภายนอก ต้องผ่านการกลั่นกรองก่อนเสมอ — ระบุเป็นรายบุคคลต่อการมอบหมายแต่ละครั้ง (ไม่ผูกกับชื่ออาจารย์ถาวร) */
     var extCheck = el('input',{type:'checkbox', class:'co-external-check'});
     var extLabel = el('label',{style:'white-space:nowrap;font-size:13px;display:flex;align-items:center;gap:4px;margin:0 6px;'},[
-      extCheck, document.createTextNode('ภายนอก')
+      extCheck, document.createTextNode(i18nText('txtExternalLabel')||'ภายนอก')
     ]);
-    var dateInput = el('input',{type:'date', class:'co-external-date', style:'display:none;max-width:150px;', title:'วันที่กลั่นกรองผ่าน'});
+    var dateInput = el('input',{type:'date', class:'co-external-date', style:'display:none;max-width:150px;', title:(i18nText('titleScreeningPassedDate')||'วันที่กลั่นกรองผ่าน'), 'data-i18n-title':'titleScreeningPassedDate'});
     extCheck.addEventListener('change', function(e){
       dateInput.style.display = e.target.checked ? '' : 'none';
       if(!e.target.checked) dateInput.value='';
@@ -5648,7 +5695,7 @@ function coAdvisorDisplayOf(c){
   if(typeof c==='string') return c;
   if(!c) return '';
   var s = c.name||'';
-  if(c.isExternal) s += ' (ภายนอก'+(c.externalApprovedDate?' • กลั่นกรองผ่าน '+c.externalApprovedDate:' • ยังไม่ระบุวันที่กลั่นกรอง')+')';
+  if(c.isExternal) s += (i18nText('txtExternalCoAdvisorPrefix')||' (ภายนอก')+(c.externalApprovedDate?(i18nText('txtScreeningPassedPrefix')||' • กลั่นกรองผ่าน ')+c.externalApprovedDate:(i18nText('txtScreeningDateNotSpecified')||' • ยังไม่ระบุวันที่กลั่นกรอง'))+')';
   return s;
 }
 function clearDynamicRows(containerId){ document.getElementById(containerId).innerHTML=''; }
@@ -5751,8 +5798,8 @@ function checkCommitteeScheduleConflict(prefix){
     (rows||[]).forEach(function(r){
       if(!r || r.id===excludeId) return;
       [
-        {type:'proposal', typeTxt:'เค้าโครงวิทยานิพนธ์ (3.1)', date:r.proposalDate, time:r.proposalTime, chair:r.proposalChair, committee:r.proposalCommittee},
-        {type:'defense', typeTxt:'ป้องกันวิทยานิพนธ์/IS (3.2)', date:r.defenseDate, time:r.defenseTime, chair:r.defenseChair, committee:r.defenseCommittee}
+        {type:'proposal', typeTxt:(i18nText('txtConflictTypeProposal')||'เค้าโครงวิทยานิพนธ์ (3.1)'), date:r.proposalDate, time:r.proposalTime, chair:r.proposalChair, committee:r.proposalCommittee},
+        {type:'defense', typeTxt:(i18nText('txtConflictTypeDefense')||'ป้องกันวิทยานิพนธ์/IS (3.2)'), date:r.defenseDate, time:r.defenseTime, chair:r.defenseChair, committee:r.defenseCommittee}
       ].forEach(function(entry){
         if(!entry.date || entry.date!==date) return;
         var otherRange = parseExamTimeRange(entry.time);
@@ -5768,14 +5815,14 @@ function checkCommitteeScheduleConflict(prefix){
           var key = nm+'|'+r.id+'|'+entry.type;
           if(seen[key]) return;
           seen[key] = true;
-          msgs.push(nm+' ถูกจัดสอบ'+entry.typeTxt+'ให้ '+(r.studentName||'(ไม่ทราบชื่อ)')+' ('+(r.studentId||'-')+') ในวันเดียวกัน'+(entry.time?(' เวลา '+entry.time):'')+' ด้วย');
+          msgs.push(nm+(i18nText('txtConflictScheduledForPrefix')||' ถูกจัดสอบ')+entry.typeTxt+(i18nText('txtConflictScheduledForSuffix')||'ให้ ')+(r.studentName||(i18nText('txtUnknownName')||'(ไม่ทราบชื่อ)'))+' ('+(r.studentId||'-')+') '+(i18nText('txtConflictSameDay')||'ในวันเดียวกัน')+(entry.time?((i18nText('txtConflictTimePrefix')||' เวลา ')+entry.time):'')+(i18nText('txtConflictAlsoSuffix')||' ด้วย'));
         });
       });
     });
     if(msgs.length===0){ msgBox.style.display='none'; msgBox.innerHTML=''; return; }
     msgBox.style.display='';
     msgBox.innerHTML='';
-    msgBox.appendChild(el('div',{class:'cn-title', text:'⚠️ พบวันเวลาสอบซ้ำซ้อนของกรรมการสอบ:'}));
+    msgBox.appendChild(el('div',{class:'cn-title', 'data-i18n':'txtCommitteeScheduleConflictTitle', text:(i18nText('txtCommitteeScheduleConflictTitle')||'⚠️ พบวันเวลาสอบซ้ำซ้อนของกรรมการสอบ:')}));
     msgs.forEach(function(m){ msgBox.appendChild(el('div',{class:'cn-row', text:'• '+m})); });
   }).catch(function(){ /* เงียบไว้ ไม่ให้ error ของการเช็คกระทบการกรอกฟอร์มหลัก */ });
 }
@@ -5792,10 +5839,10 @@ function debouncedCheckCommitteeScheduleConflict(prefix){
 function addPublicationRow(existing, containerId){
   var container = document.getElementById(containerId||'publicationList');
   var row = el('div',{class:'multi-row'});
-  var venue = el('input',{type:'text', placeholder:'ชื่อวารสาร/การประชุมวิชาการ', value:(existing&&existing.venue)||''});
-  var year = el('input',{type:'text', class:'pub-year', placeholder:'ปีที่ตีพิมพ์'});
+  var venue = el('input',{type:'text', placeholder:(i18nText('phPublicationVenue')||'ชื่อวารสาร/การประชุมวิชาการ'), 'data-i18n-ph':'phPublicationVenue', value:(existing&&existing.venue)||''});
+  var year = el('input',{type:'text', class:'pub-year', placeholder:(i18nText('phPublicationYear')||'ปีที่ตีพิมพ์'), 'data-i18n-ph':'phPublicationYear'});
   if(existing && existing.year) year.value = existing.year;
-  var link = el('input',{type:'text', placeholder:'ลิงก์ผลงาน (URL)', value:(existing&&existing.link)||''});
+  var link = el('input',{type:'text', placeholder:(i18nText('phPublicationLink')||'ลิงก์ผลงาน (URL)'), 'data-i18n-ph':'phPublicationLink', value:(existing&&existing.link)||''});
   var rm = el('button',{type:'button', class:'icon-btn', title:(i18nText('txtDelete')||'ลบ'), 'data-i18n-title':'txtDelete', onclick:function(){ row.remove(); }, text:'✕'});
   row.appendChild(venue); row.appendChild(year); row.appendChild(link); row.appendChild(rm);
   container.appendChild(row);
@@ -5935,10 +5982,10 @@ function setSectionLocked(prefix, locked, lockedMsgTxt){
   if(locked){
     msg.style.display = '';
     msg.innerHTML = '';
-    msg.appendChild(document.createTextNode('🔒 '+(lockedMsgTxt||'ส่วนนี้มีข้อมูลบันทึกไว้แล้ว จึงล็อกไว้ป้องกันการแก้ไขโดยไม่ตั้งใจ')+' '));
-    var unlockBtn = el('button',{type:'button', class:'link-btn', text:'🔓 ปลดล็อกเพื่อแก้ไขข้อมูลเดิม', onclick:function(){ setSectionLocked(prefix, false); }});
+    msg.appendChild(document.createTextNode('🔒 '+(lockedMsgTxt||(i18nText('txtSectionLockedDefault')||'ส่วนนี้มีข้อมูลบันทึกไว้แล้ว จึงล็อกไว้ป้องกันการแก้ไขโดยไม่ตั้งใจ'))+' '));
+    var unlockBtn = el('button',{type:'button', class:'link-btn', 'data-i18n':'btnUnlockToEdit', text:(i18nText('btnUnlockToEdit')||'🔓 ปลดล็อกเพื่อแก้ไขข้อมูลเดิม'), onclick:function(){ setSectionLocked(prefix, false); }});
     msg.appendChild(unlockBtn);
-    var retakeBtn = el('button',{type:'button', class:'link-btn', style:'margin-left:10px;', text:'➕ บันทึกการสอบซ้ำครั้งใหม่', onclick:function(){ startNewAttempt(prefix); }});
+    var retakeBtn = el('button',{type:'button', class:'link-btn', style:'margin-left:10px;', 'data-i18n':'btnSaveNewAttempt', text:(i18nText('btnSaveNewAttempt')||'➕ บันทึกการสอบซ้ำครั้งใหม่'), onclick:function(){ startNewAttempt(prefix); }});
     msg.appendChild(retakeBtn);
   } else {
     msg.style.display = 'none';
@@ -6261,8 +6308,8 @@ function loadRecordIntoForm(rec){
     document.getElementById('d_dueDate').value = rec.defenseDueDate||'';
     var dr = document.querySelector('input[name=defenseResult][value="'+rec.defenseResult+'"]'); if(dr) dr.checked=true;
   }
-  setSectionLocked('p', recHasProposalData(rec), 'ส่วน 3.1 (การสอบเค้าโครง) มีข้อมูลบันทึกไว้แล้ว');
-  setSectionLocked('d', recHasDefenseData(rec), 'ส่วน 3.2 (การสอบป้องกัน/IS) มีข้อมูลบันทึกไว้แล้ว');
+  setSectionLocked('p', recHasProposalData(rec), i18nText('txtSectionLockedProposal')||'ส่วน 3.1 (การสอบเค้าโครง) มีข้อมูลบันทึกไว้แล้ว');
+  setSectionLocked('d', recHasDefenseData(rec), i18nText('txtSectionLockedDefense')||'ส่วน 3.2 (การสอบป้องกัน/IS) มีข้อมูลบันทึกไว้แล้ว');
   renderAttachmentList('proposal');
   renderAttachmentList('defense');
   renderAttachmentList('publication');
@@ -6624,7 +6671,7 @@ function renderAttachmentList(section){
   if(!currentDraftId) return;
   filesGetByRecordId(currentDraftId).then(function(files){
     files = files.filter(function(f){ return f.section===section; });
-    if(files.length===0){ container.appendChild(el('div',{class:'help',text:'ยังไม่มีไฟล์แนบ'})); return; }
+    if(files.length===0){ container.appendChild(el('div',{class:'help', 'data-i18n':'txtNoAttachedFiles', text:(i18nText('txtNoAttachedFiles')||'ยังไม่มีไฟล์แนบ')})); return; }
     files.forEach(function(f){
       var row;
       if(f.isLink){
@@ -6636,14 +6683,14 @@ function renderAttachmentList(section){
       } else {
         var driveBtn;
         if(f.driveFileId){
-          driveBtn = el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', text:'📂 เปิดใน Drive'});
+          driveBtn = el('a',{href:f.driveLink||'#', target:'_blank', class:'link-btn', 'data-i18n':'btnOpenInDrive', text:(i18nText('btnOpenInDrive')||'📂 เปิดใน Drive')});
         } else {
-          driveBtn = el('button',{type:'button', class:'link-btn', onclick:function(){ uploadAttachmentToDrive(f.id, section); }, text:'☁️ ส่งไป Drive'});
+          driveBtn = el('button',{type:'button', class:'link-btn', onclick:function(){ uploadAttachmentToDrive(f.id, section); }, 'data-i18n':'btnSendToDrive', text:(i18nText('btnSendToDrive')||'☁️ ส่งไป Drive')});
         }
         row = el('div',{class:'attach-item'},[
           el('span',{class:'name', text:'📄 '+f.name}),
           el('span',{class:'size', text:fmtBytes(f.size)}),
-          el('button',{type:'button', class:'link-btn', onclick:function(){ downloadFile(f.id); }, text:'⬇ ดาวน์โหลด'}),
+          el('button',{type:'button', class:'link-btn', onclick:function(){ downloadFile(f.id); }, 'data-i18n':'btnDownload', text:(i18nText('btnDownload')||'⬇ ดาวน์โหลด')}),
           driveBtn,
           el('button',{type:'button', class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteFile(f.id, section); }, 'data-i18n':'txtDelete', text:(i18nText('txtDelete')||'ลบ')})
         ]);
@@ -6771,7 +6818,7 @@ function renderList(){
   var tbodyLoading = document.getElementById('listTbody');
   var emptyElLoading = document.getElementById('listEmpty');
   tbodyLoading.innerHTML='';
-  emptyElLoading.textContent = 'กำลังโหลดข้อมูล...';
+  emptyElLoading.textContent = i18nText('txtLoadingData')||'กำลังโหลดข้อมูล...';
   emptyElLoading.classList.add('is-loading');
   emptyElLoading.style.display = '';
   getFilteredRecords().then(function(allRows){
@@ -6779,7 +6826,7 @@ function renderList(){
     tbody.innerHTML='';
     var emptyEl = document.getElementById('listEmpty');
     emptyEl.classList.remove('is-loading');
-    emptyEl.textContent = 'ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย';
+    emptyEl.textContent = i18nText('listEmptyState')||'ยังไม่มีข้อมูล — เริ่มบันทึกข้อมูลใหม่ได้เลย';
     emptyEl.style.display = allRows.length===0 ? '' : 'none';
 
     var totalPages = Math.max(1, Math.ceil(allRows.length / LIST_PAGE_SIZE));
@@ -6794,7 +6841,7 @@ function renderList(){
     if(allRows.length===0){
       pageInfoEl.textContent = '';
     } else {
-      pageInfoEl.textContent = 'แสดง '+(startIdx+1)+'-'+(startIdx+rows.length)+' จาก '+allRows.length+' รายการ (หน้า '+(listPage+1)+'/'+totalPages+')';
+      pageInfoEl.textContent = (i18nText('txtShowingRangePrefix')||'แสดง ')+(startIdx+1)+'-'+(startIdx+rows.length)+(i18nText('txtShowingRangeMid')||' จาก ')+allRows.length+(i18nText('txtShowingRangeItemsMid')||' รายการ (หน้า ')+(listPage+1)+'/'+totalPages+')';
     }
     prevBtn.disabled = listPage<=0;
     nextBtn.disabled = listPage>=totalPages-1;
@@ -6807,8 +6854,8 @@ function renderList(){
         var hasP = recHasProposalData(r), hasD = recHasDefenseData(r);
         function resultClassOf(res){ return res==='ผ่าน' ? 'pass' : (res==='ผ่านแบบมีเงื่อนไข' ? 'cond' : 'fail'); }
         var typeTagEls = [];
-        if(hasP) typeTagEls.push(el('span',{class:'exam-type-tag proposal', style:'margin-right:4px;display:inline-block;margin-bottom:4px;', text:'สอบเค้าโครง'}));
-        if(hasD) typeTagEls.push(el('span',{class:'exam-type-tag defense', style:'display:inline-block;', text:'สอบป้องกัน/IS'}));
+        if(hasP) typeTagEls.push(el('span',{class:'exam-type-tag proposal', style:'margin-right:4px;display:inline-block;margin-bottom:4px;', text:(i18nText('txtExamTypeProposal')||'สอบเค้าโครง')}));
+        if(hasD) typeTagEls.push(el('span',{class:'exam-type-tag defense', style:'display:inline-block;', text:(i18nText('txtExamTypeDefense')||'สอบป้องกัน/IS')}));
         if(!typeTagEls.length) typeTagEls.push(el('span',{text:'-'}));
         var resultTagEls = [];
         if(hasP) resultTagEls.push(el('div',{style:'margin-bottom:4px;'},[el('span',{class:'result-tag '+resultClassOf(r.proposalResult), text:'3.1: '+(r.proposalResult||'-')})]));
@@ -6824,10 +6871,10 @@ function renderList(){
           el('td',{}, typeTagEls),
           el('td',{text: dateParts.length ? dateParts.join(' / ') : '-'}),
           el('td',{}, resultTagEls),
-          el('td',{text: counts[i] + ' ไฟล์'}),
+          el('td',{text: counts[i] + (i18nText('txtFilesCountSuffix')||' ไฟล์')}),
           el('td',{style:'white-space:nowrap;'},[
-            el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ recordsGet(r.id).then(loadRecordIntoForm); switchView('form'); }, text:'แก้ไข'}),
-            el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ startNewExamForStudent(r.studentId); }, text:'➕ เพิ่มการสอบใหม่'}),
+            el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ recordsGet(r.id).then(loadRecordIntoForm); switchView('form'); }, 'data-i18n':'btnEditShort', text:(i18nText('btnEditShort')||'แก้ไข')}),
+            el('button',{class:'link-btn', style:'margin-right:10px;', onclick:function(){ startNewExamForStudent(r.studentId); }, 'data-i18n':'btnAddNewExam', text:(i18nText('btnAddNewExam')||'➕ เพิ่มการสอบใหม่')}),
             el('button',{class:'link-btn', style:'color:#c0392b', onclick:function(){ deleteRecordConfirm(r.id); }, 'data-i18n':'txtDelete', text:(i18nText('txtDelete')||'ลบ')})
           ])
         ]);
